@@ -1,0 +1,223 @@
+---
+title: "Assignments Week 1"
+author: "Wouter van Amsterdam"
+date: 2017-10-23
+output: html_document
+---
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+```
+
+<!-- Update knitr chunk options -->
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+<!-- Insert the date the file was last updated -->
+```{r last-updated, echo=FALSE, results='asis'}
+```
+
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+```{r code-version, echo=FALSE, results='asis'}
+```
+
+<!-- Add your analysis here -->
+
+## Day 1
+### 1. Left-handedness, binomial distribution
+> In a population 10% of the individuals is left-handed. We draw a random sample of 20 people from this population and indicate with X the number of “left-handers”. We will calculate the following binomial probabilities with SPSS and R:
+$P(X = 0), P(X = 1), P(X < 3), P(X >3)$.
+
+This question regards the binomial distribution, which for a sample of size $n$, with probability $p$, is given by
+
+$P(X=x) = {n \choose x}*p^{x}*(1-p)^{n-x}$
+
+$P(X = 0)$ and $P(X = 1)$ are probabilities for a single value, so density is what we need:
+```{r}
+dbinom(x = c(0, 1, 2), size = 20, p = .1)
+```
+
+$P(X < 3)$ and $P(X > 3)$ concern quantiles:
+```{r}
+pbinom(q = 2, size = 20, p = 0.1)
+pbinom(q = 4, size = 20, p = 0.1, lower.tail = F)
+1-pbinom(q = 4, size = 20, p = 0.1)
+```
+
+Note that
+```{r}
+pbinom(q = 2, size = 20, p = 0.1)
+sum(dbinom(x = c(0,1,2), size = 20, p = 0.1))
+```
+
+
+Plot all probabilities
+```{r}
+x_seq = 0:20
+densities <- dbinom(x = x_seq, size = 20, p = 0.1)
+plot(x_seq, densities, ylim = c(0,1))
+```
+
+### 2. Elevator weight limit
+> A notice in an elevator states that it can carry up to 16 people, with a total weight of 1240 kg. A random sample of 16 people from a distribution with a mean of 72 kg and a standard deviation of 12 kg gets into the elevator. What is the probability that these people weigh more than 1240 kg?
+
+First calculate the standard deviation of the sum of the weights of 16 people
+
+$\sigma_{total} = \sqrt{n}*\sigma_{population}$
+
+```{r}
+n = 16
+mu = 72
+sigma = 12
+sigma_total = sigma * sqrt(n)
+sigma_total
+```
+
+Then calculate the probability of exceeding 1240 kg with 16 people.
+
+```{r}
+pnorm(q = 1240, mean = n * mu, sd = sigma_total, lower.tail = F)
+```
+
+See if this matches the results of a simulation
+```{r}
+nsim = 10000
+set.seed(2)
+x <- matrix(rnorm(n = n * nsim, mean = mu, sd = sigma), ncol = nsim)
+totals <- colSums(x)
+hist(totals)
+abline(v = 1240, lty = 2)
+1 - ecdf(totals)(1240)
+```
+
+### 3. Excercises in SPSS
+Skipped
+
+### 4. Excercises in R
+> In this exercise we will assess whether sample data appear to be normally distributed. Load the library ISwR and open its built-in dataset `rmr`: 
+
+```{r, message = F, warning=F}
+library(ISwR)
+data(rmr)
+help(rmr)
+
+```
+
+> a.	Get some information about the dataset, using `summary(rmr)`
+```{r}
+summary(rmr)
+```
+
+> b.	Make a boxplot of the metabolic rate: `boxplot(rmr$metabolic.rate)`
+> Does it look symmetric? Are there any (extreme) outliers?
+
+```{r}
+boxplot(rmr$metabolic.rate)
+```
+
+It looks pretty symmetric, with a single large outlier
+
+> Make a histogram of the variable `metabolic.rate`:
+
+```{r}
+hist(rmr$metabolic.rate, freq=FALSE)
+```
+
+
+> The option `freq=FALSE` is used here to indicate that, rather than setting out the frequencies on the vertical axis, the densities (“relative frequencies”) are plotted, which results in a histogram with total area equal to 1. This puts it on the same scale as the curve of the normal distribution that we want to add next.
+> c.	A best-fitting normal curve can be added as follows. First store the mean and the standard deviation of height in two variables, for example in `m` and `s`, then pass `curve(dnorm(x,m,s),add=TRUE)`
+
+```{r}
+hist(rmr$metabolic.rate, freq=FALSE)
+m <- mean(rmr$metabolic.rate)
+s <- sd(rmr$metabolic.rate)
+curve(dnorm(x,m,s),add=TRUE)
+```
+
+
+> d.	Does the variable metabolic.rate appear to be normally distributed?
+
+looks pretty normal
+
+> e.	Create a new variable, `lrate`, that is the natural logarithm of `metabolic.rate`  and repeat parts b) and c) for this new variable.
+
+```{r}
+rmr$lrate = log(rmr$metabolic.rate)
+```
+
+> f.	With which variable would you prefer to work, the original or the transformed one?
+
+The original variable is already pretty normaliy distributed, so transformation is not necessary here, and creates superfluous additional steps for interpretation.
+
+### 6. Q-Q plot
+> In this exercise we will build a normal Q-Q plot of the variable `metabolic.rate` from the `rmr` dataset. It assumes that you have already done the previous exercise and that its resulting objects are still available in the R workspace.
+> a.	To get a normal Q-Q plot in R, simply type `qqnorm(rmr$metabolic.rate)`. To help you judge whether the points are on a straight line you could add the best fitting line to the plot with the command `abline(m,s)`. (Make sure that m and s are the mean and SD of the original data.) What does this command do, and why does it make sense here?
+
+```{r}
+qqnorm(rmr$metabolic.rate)
+abline(m, s, col = "red")
+```
+
+#### Explanation
+This command with `abline(..` creates an intercept line which follows $y = a + b*x$. In the case of the Q-Q plot, on the $y$-axis the measured quantity is shown, on the $x$-axis the number of standard deviations away from the mean. When the variable is normally distributed, it will follow $y = \mu + quantile*\sigma$. This corresponds with the plotted 'abline' when $a =\mu$ and $b = \sigma$. In the Q-Q plot, the actually measured quantities are ordered from low to high. It is expected that most of the measured values will be somewhere around the mean, while only few will be on the extreme ends of the distribution. To be exact, `pnorm(x)` of the observations are expected to have a value of $<x$. Conversely, the $n$ lowest observations are expected at `qnorm(p = n / nTotal, mean = mu, sd = sigma)`, which is equivalent to a $Z$-value of `qnorm(n / nTotal)`. Where
+
+$Z = \frac{x - \mu}{\sigma}$
+
+So the number of standard deviations away from the mean.
+
+For an illustration of this explanation, read the following code.
+
+> b.	To better understand its meaning, we will build it up ourselves:
+
+```{r}
+s.meta <- sort(rmr$metabolic.rate)
+n <- length(rmr$metabolic.rate)
+index <- ((1:n)-0.5)/n
+q.index <- qnorm(index)
+```
+
+> We will now plot our own Q-Q plot next to the one from R.
+
+```{r}
+par(mfrow=c(1,2)) #plots two graphs in 1 row and 2 columns, so next to each other
+qqnorm(rmr$metabolic.rate)
+plot(s.meta~q.index)
+par(mfrow=c(1,1)) #back to one graph (so in 1 row and 1 column)
+```
+
+
+> Try and explain what each line does, and why this results in the desired Q-Q plot.
+
+> c.	Logarithmically transform the metabolic rate data, and redo part b.
+
+```{r}
+qqnorm(log(rmr$metabolic.rate))
+m_log = mean(log(rmr$metabolic.rate))
+s_log = sd(log(rmr$metabolic.rate))
+abline(m_log, s_log, col = "red")
+```
+
+Not much difference
+
+Adding a few cases on the lower end of the distribution will change the Q-Q plot drastically.
+
+```{r}
+par(mfrow = c(1,2))
+qqnorm(rmr$metabolic.rate)
+qqline(rmr$metabolic.rate, col = "red")
+
+qqnorm(c(rep(500, 20), rmr$metabolic.rate))
+qqline(c(rep(500, 20), rmr$metabolic.rate), col = "red")
+
+par(mfrow = c(1,1))
+```
+
+
+## Session information
+
+<!-- Insert the session information into the document -->
+```{r session-info}
+```

@@ -1,0 +1,218 @@
+---
+title: "Intro to intro to statistics, classical methods in statistics"
+author: "Wouter van Amsterdam"
+teacher: "Kruitwagen"
+date: 2017-10-23
+output: html_document
+---
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+```
+
+<!-- Update knitr chunk options -->
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+<!-- Insert the date the file was last updated -->
+```{r last-updated, echo=FALSE, results='asis'}
+```
+
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+```{r code-version, echo=FALSE, results='asis'}
+```
+
+<!-- Add your analysis here -->
+## Setup
+Teacher: Cas Kruitwagen, <c.l.j.j.kruitwagen@umcutrecht.nl>
+
+### Load some R-packages
+```{r, message = F}
+library(data.table)
+library(amstR)
+library(magrittr)
+library(ggplot2)
+```
+
+
+## Introduction to case studies
+**Basic steps**
+
+1. research objective
+2. which variables in your datacan be analyzed to answer the objective
+3. explore data
+4. decide on statistical analysis
+5. interpret the output
+6. draw conclusions
+7. relate results back to research question
+
+### Definitions
+
+* 'skew' direction: based on the **tail** of the data.
+
+### Case study: Balance
+Authors: Teasdal et al.
+
+**Research question**
+
+* Maintain balance when you are concentrating
+* Is the difficulty more pronounced in the elderly
+* Is there a difference between swaying in the forward/backward and side-to-side direction
+
+Old: mean age 71.1
+Young: mean age 24.8
+
+**Variables**
+FB: forwards / backwards motion (mm)
+SS: Side-to-side motion (mm)
+Age-group
+
+```{r}
+load(amstR::fromParentDir("data/balance.RData"))
+summary(balance)
+head(balance)
+```
+
+#### Plots
+```{r}
+boxplot(FB~age, data = balance)
+boxplot(SS~age, data = balance)
+
+# pairs(balance)
+```
+
+Distributions in scatterplot
+
+```{r}
+with(balance,
+     amstR::marginal_plot(x = FB,
+                          y = SS,
+                          group = age))
+```
+
+
+
+#### Stats
+```{r}
+t.test(balance$FB)
+t.test(FB~age, data = balance)
+t.test(SS~age, data = balance)
+t.test(balance$FB, balance$SS, paired = T)
+t.test(balance$FB - balance$SS)
+```
+
+
+
+#### Conclusions
+
+* Research question 1 is not answerable, there is no comparison between concentrating
+* Whith a paired t-test, the amount of sway is different between forward/backward and sideward
+
+### Case study Eggs
+Quin(1988)
+Effect of season (winter/spring and summer/autumn) and adult density (8, 15, 30, 45 per 225cm^2 enclosure), on prudiction of egg masses by intertidal pulmona limpets (Siphonaria diemenensis)
+
+3 replicates per exposure situation
+
+#### import data
+```{r}
+load(fromParentDir("data/eggs.Rdata"))
+summary(limpet.eggs)
+```
+
+#### Plots
+```{r}
+boxplot(eggs~season, data = limpet.eggs)
+boxplot(eggs~as.factor(density), data = limpet.eggs)
+boxplot(eggs~season*density, data = limpet.eggs,
+        col = c("blue","red"))
+
+limpet.eggs %>%
+  ggplot(aes(x = as.factor(density), y = eggs, col = season)) + 
+  geom_boxplot() + 
+  geom_point()
+```
+
+#### Stats
+
+```{r}
+fit0 <- lm(eggs~season + density, data = limpet.eggs)
+fit1 <- lm(eggs~season + density + season*density, data = limpet.eggs)
+summary(fit0)
+summary(fit1)
+```
+
+```{r}
+plot(fit0)
+```
+
+### Case study: platelet calcium and blood pressure
+Reation between calcium in cells (platetelet) and blood pressure
+* 38 subjects with normal blood pressure
+* Blood pressure (average of systolic and diastolic blood pressure)
+* Free calcium concentration in blood platelets
+
+#### Import data
+```{r}
+load(fromParentDir("data/bloodpressurecalcium.RData"))
+```
+
+#### Plots
+```{r}
+plot(calcium~bp, data = bloodpressurecalcium)
+```
+
+
+#### Stats
+```{r}
+fit0 <- lm(calcium~bp, data = bloodpressurecalcium)
+summary(fit0)
+plot(fit0)
+cor.test(~bp+calcium, data = bloodpressurecalcium)
+```
+
+### SO2 (with latex $SO_{2}$)
+Air pollution with sulfur dioxide, $SO_{2}$
+
+-	Temp	mean year temperature (in oF)
+-	Factories	number of factories with more than 20 employees
+-	Population	size of the population (in thousands)
+-	Wind	mean wind speed over a year (miles per hour)
+-	Rainfall	mean yearly rainfall (in inches)
+-	Daysrain	mean number of days of rainfall per year
+-	SO2	The amount of SO2 in the air (in μg/m3)
+
+#### import data
+```{r}
+load(fromParentDir("data/so2.RData"))
+summary(so2)
+head(so2)
+```
+
+#### Plots
+```{r}
+plot(SO2~temp, data = so2)
+boxplot(SO2~region, data = so2)
+pairs(so2[, setdiff(colnames(so2), c("city"))])
+```
+
+#### Stats
+```{r}
+fit_all <- lm(
+  reformulate(termlabels = setdiff(colnames(so2), c("SO2", "city", "factories")),
+              response = "SO2"), 
+  data = so2)
+plot(fit_all)
+summary(fit_all)
+```
+
+
+
+## Session information
+
+<!-- Insert the session information into the document -->
+```{r session-info}
+```
