@@ -8,4 +8,4 @@ output:
 This website is made to share my lecture notes on "Classical Methods in Data Analysis" from the Epidemiology Graduate Program of the Julius Center, Utrecht, the Netherlands
 
 [intro lecture](intro.html)
-(assignments_week1.html)
+assignments_week1.html
