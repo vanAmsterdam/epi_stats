@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+<meta name="author" content="Wouter van Amsterdam" />
+
+<meta name="date" content="2017-10-23" />
+
+<title>Assignments Week 1</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-1.1/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-1.1/highlight.js"></script>
+<link href="site_libs/font-awesome-4.5.0/css/font-awesome.min.css" rel="stylesheet" />
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs && document.readyState && document.readyState === "complete") {
+   window.setTimeout(function() {
+      hljs.initHighlighting();
+   }, 0);
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+
+<div class="container-fluid main-container">
+
+<!-- tabsets -->
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+</script>
+
+<!-- code folding -->
+
+
+
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+  padding-left: 25px;
+  text-indent: 0;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">epi_stats</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/jdblischak/workflowr">
+    <span class="fa fa-github"></span>
+     
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">Assignments Week 1</h1>
+<h4 class="author"><em>Wouter van Amsterdam</em></h4>
+<h4 class="date"><em>2017-10-23</em></h4>
+
+</div>
+
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+<!-- Update knitr chunk options -->
+<!-- Insert the date the file was last updated -->
+<p><strong>Last updated:</strong> 2017-10-23</p>
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+<p><strong>Code version:</strong> 660b1f3</p>
+<!-- Add your analysis here -->
+<div id="day-1" class="section level2">
+<h2>Day 1</h2>
+<div id="left-handedness-binomial-distribution" class="section level3">
+<h3>1. Left-handedness, binomial distribution</h3>
+<blockquote>
+<p>In a population 10% of the individuals is left-handed. We draw a random sample of 20 people from this population and indicate with X the number of â€œleft-handersâ€. We will calculate the following binomial probabilities with SPSS and R: <span class="math inline">\(P(X = 0), P(X = 1), P(X &lt; 3), P(X &gt;3)\)</span>.</p>
+</blockquote>
+<p>This question regards the binomial distribution, which for a sample of size <span class="math inline">\(n\)</span>, with probability <span class="math inline">\(p\)</span>, is given by</p>
+<p><span class="math inline">\(P(X=x) = {n \choose x}*p^{x}*(1-p)^{n-x}\)</span></p>
+<p><span class="math inline">\(P(X = 0)\)</span> and <span class="math inline">\(P(X = 1)\)</span> are probabilities for a single value, so density is what we need:</p>
+<pre class="r"><code>dbinom(x = c(0, 1, 2), size = 20, p = .1)</code></pre>
+<pre><code>[1] 0.1215767 0.2701703 0.2851798</code></pre>
+<p><span class="math inline">\(P(X &lt; 3)\)</span> and <span class="math inline">\(P(X &gt; 3)\)</span> concern quantiles:</p>
+<pre class="r"><code>pbinom(q = 2, size = 20, p = 0.1)</code></pre>
+<pre><code>[1] 0.6769268</code></pre>
+<pre class="r"><code>pbinom(q = 4, size = 20, p = 0.1, lower.tail = F)</code></pre>
+<pre><code>[1] 0.0431745</code></pre>
+<pre class="r"><code>1-pbinom(q = 4, size = 20, p = 0.1)</code></pre>
+<pre><code>[1] 0.0431745</code></pre>
+<p>Note that</p>
+<pre class="r"><code>pbinom(q = 2, size = 20, p = 0.1)</code></pre>
+<pre><code>[1] 0.6769268</code></pre>
+<pre class="r"><code>sum(dbinom(x = c(0,1,2), size = 20, p = 0.1))</code></pre>
+<pre><code>[1] 0.6769268</code></pre>
+<p>Plot all probabilities</p>
+<pre class="r"><code>x_seq = 0:20
+densities &lt;- dbinom(x = x_seq, size = 20, p = 0.1)
+plot(x_seq, densities, ylim = c(0,1))</code></pre>
+<p><img src="figure/assignments_week1.Rmd/unnamed-chunk-4-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="elevator-weight-limit" class="section level3">
+<h3>2. Elevator weight limit</h3>
+<blockquote>
+<p>A notice in an elevator states that it can carry up to 16 people, with a total weight of 1240 kg. A random sample of 16 people from a distribution with a mean of 72 kg and a standard deviation of 12 kg gets into the elevator. What is the probability that these people weigh more than 1240 kg?</p>
+</blockquote>
+<p>First calculate the standard deviation of the sum of the weights of 16 people</p>
+<p><span class="math inline">\(\sigma_{total} = \sqrt{n}*\sigma_{population}\)</span></p>
+<pre class="r"><code>n = 16
+mu = 72
+sigma = 12
+sigma_total = sigma * sqrt(n)
+sigma_total</code></pre>
+<pre><code>[1] 48</code></pre>
+<p>Then calculate the probability of exceeding 1240 kg with 16 people.</p>
+<pre class="r"><code>pnorm(q = 1240, mean = n * mu, sd = sigma_total, lower.tail = F)</code></pre>
+<pre><code>[1] 0.03337651</code></pre>
+<p>See if this matches the results of a simulation</p>
+<pre class="r"><code>nsim = 10000
+set.seed(2)
+x &lt;- matrix(rnorm(n = n * nsim, mean = mu, sd = sigma), ncol = nsim)
+totals &lt;- colSums(x)
+hist(totals)
+abline(v = 1240, lty = 2)</code></pre>
+<p><img src="figure/assignments_week1.Rmd/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>1 - ecdf(totals)(1240)</code></pre>
+<pre><code>[1] 0.0338</code></pre>
+</div>
+<div id="excercises-in-spss" class="section level3">
+<h3>3. Excercises in SPSS</h3>
+<p>Skipped</p>
+</div>
+<div id="excercises-in-r" class="section level3">
+<h3>4. Excercises in R</h3>
+<blockquote>
+<p>In this exercise we will assess whether sample data appear to be normally distributed. Load the library ISwR and open its built-in dataset <code>rmr</code>:</p>
+</blockquote>
+<pre class="r"><code>library(ISwR)
+data(rmr)
+help(rmr)</code></pre>
+<blockquote>
+<ol style="list-style-type: lower-alpha">
+<li>Get some information about the dataset, using <code>summary(rmr)</code></li>
+</ol>
+</blockquote>
+<pre class="r"><code>summary(rmr)</code></pre>
+<pre><code>  body.weight     metabolic.rate
+ Min.   : 43.10   Min.   : 870  
+ 1st Qu.: 57.20   1st Qu.:1160  
+ Median : 64.90   Median :1334  
+ Mean   : 74.88   Mean   :1340  
+ 3rd Qu.: 88.78   3rd Qu.:1468  
+ Max.   :143.30   Max.   :2074  </code></pre>
+<blockquote>
+<ol start="2" style="list-style-type: lower-alpha">
+<li>Make a boxplot of the metabolic rate: <code>boxplot(rmr$metabolic.rate)</code> Does it look symmetric? Are there any (extreme) outliers?</li>
+</ol>
+</blockquote>
+<pre class="r"><code>boxplot(rmr$metabolic.rate)</code></pre>
+<p><img src="figure/assignments_week1.Rmd/unnamed-chunk-10-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>It looks pretty symmetric, with a single large outlier</p>
+<blockquote>
+<p>Make a histogram of the variable <code>metabolic.rate</code>:</p>
+</blockquote>
+<pre class="r"><code>hist(rmr$metabolic.rate, freq=FALSE)</code></pre>
+<p><img src="figure/assignments_week1.Rmd/unnamed-chunk-11-1.png" width="672" style="display: block; margin: auto;" /></p>
+<blockquote>
+<p>The option <code>freq=FALSE</code> is used here to indicate that, rather than setting out the frequencies on the vertical axis, the densities (â€œrelative frequenciesâ€) are plotted, which results in a histogram with total area equal to 1. This puts it on the same scale as the curve of the normal distribution that we want to add next. c. A best-fitting normal curve can be added as follows. First store the mean and the standard deviation of height in two variables, for example in <code>m</code> and <code>s</code>, then pass <code>curve(dnorm(x,m,s),add=TRUE)</code></p>
+</blockquote>
+<pre class="r"><code>hist(rmr$metabolic.rate, freq=FALSE)
+m &lt;- mean(rmr$metabolic.rate)
+s &lt;- sd(rmr$metabolic.rate)
+curve(dnorm(x,m,s),add=TRUE)</code></pre>
+<p><img src="figure/assignments_week1.Rmd/unnamed-chunk-12-1.png" width="672" style="display: block; margin: auto;" /></p>
+<blockquote>
+<ol start="4" style="list-style-type: lower-alpha">
+<li>Does the variable metabolic.rate appear to be normally distributed?</li>
+</ol>
+</blockquote>
+<p>looks pretty normal</p>
+<blockquote>
+<ol start="5" style="list-style-type: lower-alpha">
+<li>Create a new variable, <code>lrate</code>, that is the natural logarithm of <code>metabolic.rate</code> and repeat parts b) and c) for this new variable.</li>
+</ol>
+</blockquote>
+<pre class="r"><code>rmr$lrate = log(rmr$metabolic.rate)</code></pre>
+<blockquote>
+<ol start="6" style="list-style-type: lower-alpha">
+<li>With which variable would you prefer to work, the original or the transformed one?</li>
+</ol>
+</blockquote>
+<p>The original variable is already pretty normaliy distributed, so transformation is not necessary here, and creates superfluous additional steps for interpretation.</p>
+</div>
+<div id="q-q-plot" class="section level3">
+<h3>6. Q-Q plot</h3>
+<blockquote>
+<p>In this exercise we will build a normal Q-Q plot of the variable <code>metabolic.rate</code> from the <code>rmr</code> dataset. It assumes that you have already done the previous exercise and that its resulting objects are still available in the R workspace. a. To get a normal Q-Q plot in R, simply type <code>qqnorm(rmr$metabolic.rate)</code>. To help you judge whether the points are on a straight line you could add the best fitting line to the plot with the command <code>abline(m,s)</code>. (Make sure that m and s are the mean and SD of the original data.) What does this command do, and why does it make sense here?</p>
+</blockquote>
+<pre class="r"><code>qqnorm(rmr$metabolic.rate)
+abline(m, s, col = &quot;red&quot;)</code></pre>
+<p><img src="figure/assignments_week1.Rmd/unnamed-chunk-14-1.png" width="672" style="display: block; margin: auto;" /></p>
+<div id="explanation" class="section level4">
+<h4>Explanation</h4>
+<p>This command with <code>abline(..</code> creates an intercept line which follows <span class="math inline">\(y = a + b*x\)</span>. In the case of the Q-Q plot, on the <span class="math inline">\(y\)</span>-axis the measured quantity is shown, on the <span class="math inline">\(x\)</span>-axis the number of standard deviations away from the mean. When the variable is normally distributed, it will follow <span class="math inline">\(y = \mu + quantile*\sigma\)</span>. This corresponds with the plotted ‘abline’ when <span class="math inline">\(a =\mu\)</span> and <span class="math inline">\(b = \sigma\)</span>. In the Q-Q plot, the actually measured quantities are ordered from low to high. It is expected that most of the measured values will be somewhere around the mean, while only few will be on the extreme ends of the distribution. To be exact, <code>pnorm(x)</code> of the observations are expected to have a value of <span class="math inline">\(&lt;x\)</span>. Conversely, the <span class="math inline">\(n\)</span> lowest observations are expected at <code>qnorm(p = n / nTotal, mean = mu, sd = sigma)</code>, which is equivalent to a <span class="math inline">\(Z\)</span>-value of <code>qnorm(n / nTotal)</code>. Where</p>
+<p><span class="math inline">\(Z = \frac{x - \mu}{\sigma}\)</span></p>
+<p>So the number of standard deviations away from the mean.</p>
+<p>For an illustration of this explanation, read the following code.</p>
+<blockquote>
+<ol start="2" style="list-style-type: lower-alpha">
+<li>To better understand its meaning, we will build it up ourselves:</li>
+</ol>
+</blockquote>
+<pre class="r"><code>s.meta &lt;- sort(rmr$metabolic.rate)
+n &lt;- length(rmr$metabolic.rate)
+index &lt;- ((1:n)-0.5)/n
+q.index &lt;- qnorm(index)</code></pre>
+<blockquote>
+<p>We will now plot our own Q-Q plot next to the one from R.</p>
+</blockquote>
+<pre class="r"><code>par(mfrow=c(1,2)) #plots two graphs in 1 row and 2 columns, so next to each other
+qqnorm(rmr$metabolic.rate)
+plot(s.meta~q.index)</code></pre>
+<p><img src="figure/assignments_week1.Rmd/unnamed-chunk-16-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>par(mfrow=c(1,1)) #back to one graph (so in 1 row and 1 column)</code></pre>
+<blockquote>
+<p>Try and explain what each line does, and why this results in the desired Q-Q plot.</p>
+</blockquote>
+<blockquote>
+<ol start="3" style="list-style-type: lower-alpha">
+<li>Logarithmically transform the metabolic rate data, and redo part b.</li>
+</ol>
+</blockquote>
+<pre class="r"><code>qqnorm(log(rmr$metabolic.rate))
+m_log = mean(log(rmr$metabolic.rate))
+s_log = sd(log(rmr$metabolic.rate))
+abline(m_log, s_log, col = &quot;red&quot;)</code></pre>
+<p><img src="figure/assignments_week1.Rmd/unnamed-chunk-17-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Not much difference</p>
+<p>Adding a few cases on the lower end of the distribution will change the Q-Q plot drastically.</p>
+<pre class="r"><code>par(mfrow = c(1,2))
+qqnorm(rmr$metabolic.rate)
+qqline(rmr$metabolic.rate, col = &quot;red&quot;)
+
+qqnorm(c(rep(500, 20), rmr$metabolic.rate))
+qqline(c(rep(500, 20), rmr$metabolic.rate), col = &quot;red&quot;)</code></pre>
+<p><img src="figure/assignments_week1.Rmd/unnamed-chunk-18-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>par(mfrow = c(1,1))</code></pre>
+</div>
+</div>
+</div>
+<div id="session-information" class="section level2">
+<h2>Session information</h2>
+<!-- Insert the session information into the document -->
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 3.4.1 (2017-06-30)
+Platform: x86_64-w64-mingw32/x64 (64-bit)
+Running under: Windows 7 x64 (build 7601) Service Pack 1
+
+Matrix products: default
+
+locale:
+[1] LC_COLLATE=Dutch_Netherlands.1252  LC_CTYPE=Dutch_Netherlands.1252   
+[3] LC_MONETARY=Dutch_Netherlands.1252 LC_NUMERIC=C                      
+[5] LC_TIME=Dutch_Netherlands.1252    
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+[1] ISwR_2.0-7
+
+loaded via a namespace (and not attached):
+ [1] compiler_3.4.1  backports_1.1.0 magrittr_1.5    rprojroot_1.2  
+ [5] tools_3.4.1     htmltools_0.3.6 yaml_2.1.14     Rcpp_0.12.12   
+ [9] stringi_1.1.5   rmarkdown_1.6   knitr_1.17      git2r_0.19.0   
+[13] stringr_1.2.0   digest_0.6.12   evaluate_0.10.1</code></pre>
+</div>
+
+<hr>
+<p>
+    This <a href="http://rmarkdown.rstudio.com">R Markdown</a> site was created with <a href="https://github.com/jdblischak/workflowr">workflowr</a>
+</p>
+<hr>
+
+<!-- To enable disqus, uncomment the section below and provide your disqus_shortname -->
+
+<!-- disqus
+  <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+        var disqus_shortname = 'rmarkdown'; // required: replace example with your forum shortname
+
+        /* * * DON'T EDIT BELOW THIS LINE * * */
+        (function() {
+            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+-->
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
