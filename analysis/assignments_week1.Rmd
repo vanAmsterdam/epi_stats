@@ -102,7 +102,7 @@ Skipped
 ```{r, message = F, warning=F}
 library(ISwR)
 data(rmr)
-help(rmr)
+# help(rmr)
 
 ```
 
@@ -215,6 +215,277 @@ qqline(c(rep(500, 20), rmr$metabolic.rate), col = "red")
 par(mfrow = c(1,1))
 ```
 
+## Day 2. Estimating with uncertainty
+### Excercises without SPSS or R
+>1.	The following sample represents systolic blood pressure measurements for six patients: 121, 130, 127, 142, 139, 115
+a.	Using your pocket calculator and suitable tables, compute a 95% confidence interval for the mean blood pressure in the population.
+b.	Test at a confidence level of 95% the hypothesis that in the population the mean is 120.
+
+$$n = 6$$
+$$mean = (130+127+142+139+115+121)/6 = 129$$
+$$sd^2 = (1+2^2+13^2+10^2+14^2+8^2)/(6-1) = 106.8$$
+$$sd = 10.33$$
+$$SE = \frac{10.33}{\sqrt{6}} = 4.219$$
+
+Grab critical value from T-table with 5 degrees of freedom, at 0.025: 2.571 (which equals the R-command `qt(p = .025, df = 5)`). 
+
+Then the 95% confidence interval is 
+$$mean \pm SE*2.571 = {118.2, 139.8}$$
+
+Which equals:
+```{r}
+t.test(c(130,127,142,139,115,121))$conf.int
+```
+
+> 2.	Researchers often compute intervals as estimates of population means. Since these are calculated based on sample data you cannot be sure that such an interval will really cover the population mean. But you can tell the probability with which this will be the case. A common value for this probability is 0.95. Suppose that a scientist carries out 20 independent studies where he computes a single 95% confidence interval every time.
+a.	What is the probability that all intervals will cover the true population mean?
+b.	What is the probability that one CI will not cover the true mean? And for two CI’s?
+(Source: R.G.D. Steel & J.H. Torrie, Principles and procedures of statistics, a biometrical approach, McGraw-Hill, International student edition).
+
+For each study, the chance of coverage is 95% ($p=0.95$), and each study is assumed to be independent of each other, and based on the same population (so independent and identically distributed, i.i.d.)
+
+Then
+$$P(n_{no\ coverage}=0) = p^{20} = `r round(.95^20, 3)`$$
+
+For 1 confidence interval not covering the true mean:
+$$P(n_{no\ coverage}=1) = {20 \choose 1} * p^{19}*(1-p)^1 = `r round(choose(n = 20, k = 1)*.95^19*.05, 3)`$$
+
+
+For 2 confidence intervals not covering the true mean
+$$P(n_{no\ coverage}=2) = {20 \choose 2} * p^{18}*(1-p)^2 = `r round(choose(n = 20, k = 2)*.95^18*.05^2, 3)`$$
+
+> 3.	
+a.	Use the data from exercise 1 to construct 90%, 96% and 99% confidence intervals for the mean blood pressure in the population. Use the T distribution from  http://homepage.stat.uiowa.edu/~mbognar/ to get the correct critical values for the confidence intervals by filling in the appropriate degrees of freedom and the left- or right-tail probability and pressing Esc.
+b.	Use the table of the t-distribution on Moodle (under Introductory matters, Tables) to confirm the critical values for the 90% and 99% confidence intervals. Can you use this table for a 96% confidence interval?
+
+Left for the reader. Same as a. but using different critical values of the t-distribution
+
+### Excercises in SPSS
+Not covered here
+
+### Excercises in R
+
+>8.	Open the built-in dataset faithful in R (by typing data(faithful) )
+a.	Get some information about the dataset using the command:
+help(faithful)
+
+```{r}
+data(faithful)
+# help(faithful)
+```
+
+> b.	The dataset contains the variables eruptions and waiting. Make QQ-plots of both these variables.
+
+```{r}
+qqnorm(faithful$eruptions)
+qqline(faithful$eruptions, col = "red")
+qqnorm(faithful$waiting)
+qqline(faithful$waiting, col = "red")
+```
+
+Both are not very normally distributed
+
+> c.	Make a histograms of the variables eruptions and waiting together with their normal curves.
+For this, create a function that returns a function with the normal distribution for a given $\mu$ and $\sigma$.
+
+```{r}
+norm_function <- function(mu, sd) {
+  f = function(x) (1/(sd*sqrt(2*pi)))*exp(-(x-mu)^2/(2*sd^2))
+  return(f)
+}
+
+hist(faithful$eruptions, freq = F)
+my_norm <- norm_function(
+  mu = mean(faithful$eruptions), 
+  sd = sd(faithful$eruptions))
+curve(my_norm, min(faithful$eruptions), max(faithful$eruptions), add = T, col = "red")
+
+hist(faithful$waiting, freq = F)
+my_norm <- norm_function(
+  mu = mean(faithful$waiting), 
+  sd = sd(faithful$waiting))
+curve(my_norm, min(faithful$waiting), max(faithful$waiting), add = T, col = "red")
+```
+
+> d.	Is it reasonable to assume normality for the variables eruptions and waiting?
+
+Based on the plots, no.
+
+> 9.	(This is a repeat of Exercise #7, but now in R.) Check the central limit theorem by carrying out the following steps:
+a.	Create six variables a, b, c, d, e and f , each of length 200, like this:
+
+```{r}
+a <- runif(200)
+b <- runif(200)
+c <- runif(200)
+d <- runif(200)
+e <- runif(200)
+f <- runif(200)
+```
+
+Note that the `runif` function generates random numbers from a uniform distribution with mimimum 0 and maximum 1.
+
+> b.	Combine the six shorter variables in one long variable x like this:
+
+```{r}
+x <- c(a,b,c,d,e,f)
+```
+
+> Check the variable x for normality.
+
+```{r}
+hist(x)
+qqnorm(x)
+qqline(x, col = "red")
+```
+
+
+> c.	Create a variable of 200 means of samples of size 6 like this:
+
+```{r}
+m <- (a+b+c+d+e+f)/6
+```
+
+> (Note that the first elements of variables a-f form one sample, whose mean will be the first element of m, etc.)
+Check this sequence of means m on normality.
+
+```{r}
+hist(m)
+qqnorm(m)
+qqline(m, col =  "red")
+```
+
+
+> d.	Compare the results in b) and c) in the light of the central limit theorem.
+
+The variable `x` is not normally distributed. Instead, it is distributed like the distribution it was drawn from, namely the uniform distribution. However, when taking means of 6 draws from this distrubtion, these means themselves are a random variable, which by the central limit theorem is known to be approximately normally distributed.
+
+
+> 10.	The aim of this exercise is to make you “feel” the central limit theorem.
+a.	In your workspace, create an object pop containing the numbers 1, 2, . . . , 8.
+
+```{r}
+pop <- 1:8
+```
+
+From this population of size 8, samples of size 5 are drawn with replacement. There are 85 = 32768 such samples possible. A complete list of all these samples can be retrieved by loading the dataset samples.RData. (Use File, Load workspace…)
+
+```{r}
+load(amstR::fromParentDir("data/samples.RData"))
+```
+
+
+b.	Load the dataset samples.RData. This will create a 32768x5-matrix in your workspace. The rows of this matrix represent all possible samples from pop. View the first 10 samples by giving the command samples[1:10,].
+
+```{r}
+samples[1:10,]
+```
+
+
+> c.	Create a sequence M of 32768 sample means by passing the command
+
+```{r}
+M <- rowMeans(samples)
+```
+
+> Without having a look at the content of M, can you predict how often the value 1 will occur among the 32768 sample means? The same question for the values 8, 1.2 and 7.8.
+
+The samples are drawn with replacement, so the mean 1 is a possible value, however, it is not very likely to occur. Using probability theory
+
+$$P(mean = 1) = p^5 = (1/6)^5 = `r round((1/6)^5, 3)` = P(mean = 8)$$
+
+The answer for the value 8 is exactly the same.
+
+The values 1.2 and 7.8 can only occur when all values are a 1 (or an 8), and 1 is a 2. So now:
+
+$$P(mean = 1.2) = {5 \choose 1}*p(1)^4*p(2)^1 = 5*(1/6)^5 = `r round(5*(1/6)^5, 3)`=P(mean = 7.8)$$
+
+> d.	Make a frequency table of M by running the command below.
+
+```{r}
+table(M)
+```
+
+
+> Check your answers from c). What is the frequency of occurrence of the number 2? And that of the number 7?
+e.	Make an appropriate graph of the frequency table by giving the command:
+
+```{r}
+barplot(table(M))
+```
+
+> Is this what you could expect according to the Central Limit Theorem?
+
+Yes, this shows that the means of samples drawn from the uniform distrubution are normally distributed (or better: t-distributed with $n$ degrees of freedom, where $n$ is the sample size).
+
+##### 11.
+>	This exercise is intended to give you a better understanding of 95% confidence intervals. The distribution of bladder volume in the population of adult men is approximately normal with mean 550 ml and standard deviation 100 ml. We will draw samples of N=25 from this population and for each sample we will calculate the mean and a 95% confidence interval for the mean. What is the standard error of the mean for samples of N=25 from this population?
+
+This time, whe have the actual population standard deviation, instead of only our estimate of the sample standard deviation.
+
+```{r}
+n  = 25
+mu = 550
+s  = 100 
+se = s / sqrt(n)
+se
+```
+
+
+> To draw 100 samples from this distribution, we will make a matrix of 2500 draws from this normal population, and put them into a matrix mymat with 25 rows and 100 columns, corresponding to 100 samples (columns) of 25 men per sample (rows). To make calculations with the matrix easier, we will then make a data frame mysamples from the matrix:
+
+NB. using the command `set.seed` ensures that anyone else can replicate this code and achieve the exact same numbers.
+
+```{r}
+set.seed(1)
+mymat <- matrix(rnorm(2500, mean=550, sd=100), 25, 100)
+mysamples <- data.frame(mymat)
+head(mysamples)
+```
+
+
+> Now we take the mean of each row of the data, resulting in a column of 100 sample means. We use the apply function to accomplish this (see the R help for information about this function):
+
+```{r}
+smeans <- apply(mysamples,2,mean)
+```
+
+
+> Now we want to plot the means, together with their 95% CIs. We will plot them against sample number (1 through 100). Add a horizontal line at the true population mean:
+
+```{r}
+x <- 1:100
+plot(x, smeans, ylab="sample mean",xlab="sample number")
+abline(h=550)
+
+```
+
+
+> To the above plot we will add 95% CIs. We use the arrow command to add “arrows” (without arrowheads: length=0) that are 1.96*SE long above and below the sample mean (why 1.96?):
+
+We use 1.96 because `qnorm(p = 0.025)` equals 1.96. The point at which the cumulative probability density reaches 2.5% is 1.96 (measured in standard deviations, when using the standard normal distribution with $\mu = 0$ and $\sigma = 1$)
+
+```{r}
+plot(x, smeans, ylab="sample mean",xlab="sample number")
+abline(h=550)
+arrows(x, smeans - 1.96*20, x, smeans + 1.96*20, angle=90, length=0)
+
+```
+
+
+> How many of your 95% CIs contained the true population mean?
+
+```{r}
+not_too_low  = smeans + 1.96*20 > 550
+not_too_high = smeans - 1.96*20 < 550
+sum(not_too_low & not_too_high)
+```
+
+So in this case, `r sum(not_too_low & not_too_high)` of the confidence intervals cover the true mean of 550ml.
+
+> If you put the above commands in an R “script” you can re-run them several times. How does your graph change?
+
+All point estimates and confidence intervals change, but the number of confidence intervals covering the true mean of 550ml stays approximately the same.
 
 ## Session information
 

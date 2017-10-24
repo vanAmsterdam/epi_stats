@@ -7,5 +7,10 @@ output:
 
 This website is made to share my lecture notes on "Classical Methods in Data Analysis" from the Epidemiology Graduate Program of the Julius Center, Utrecht, the Netherlands
 
+### Lectures
 [intro lecture](intro.html)
+
+[estimating with uncertainty](2_estimating_with_uncertainty.html)
+
+### Assignments
 [assignments week 1](assignments_week1.html)
