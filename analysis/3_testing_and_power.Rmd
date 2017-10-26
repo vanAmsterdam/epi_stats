@@ -1,0 +1,143 @@
+---
+title: "Significance testing and Power 1"
+author: "Wouter van Amsterdam"
+date: 2017-10-26
+output: html_document
+---
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+```
+
+<!-- Update knitr chunk options -->
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+<!-- Insert the date the file was last updated -->
+```{r last-updated, echo=FALSE, results='asis'}
+```
+
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+```{r code-version, echo=FALSE, results='asis'}
+```
+
+<!-- Add your analysis here -->
+## Intro
+Tutor: Rebecca Stellato
+
+### Testing with T-distributions
+T-statistic for single sample t-test:
+
+$$T = \frac{\bar{Y}-\mu_{0}}{s/\sqrt{n}}$$
+
+
+There are infinetly many possible $h_1$ hypothesis, we take a single $h_0$ hypothesis.
+
+**Three ways of testing**
+
+* Take $H_0$, sample size $n$, significance level $\alpha$. Take critical values of 
+$T$ for given $\alpha$ and $n$. Check T-statistic of sample and compare with rejection region.
+* For a given sample T-statistic, calculate probability of finding a T-statistic or more extreme under $H_0$
+* Calculate a $100*(1-\alpha)$% confidence interval around the sample mean, and check if $H_0$ is included in the interval.
+
+For continuous data, these three approaches are equivalent. For categorical data, there can be differences.
+
+### Two sample tests
+Model
+
+$$Y_{ij} = \mu_i + \beta_i + \epsilon_{ij}$$
+
+Measured = group mean + block effect + error
+$i = 1,2$ (the groups), $j = 1,2,3,...,n$ (the individuals)
+$$\epsilon \sim N(0, \sigma_{\epsilon}),\ \beta_i \sim N(0, \sigma_{\beta})$$
+
+Now the T-statistic
+
+$$T = \frac{\bar{d}-\mu_{0}}{s_{d}/\sqrt{n}}$$
+
+Where $d$ are all differences, $n$ is the number of pairs.
+
+```{r}
+load(amstR::fromParentDir("data/balance.RData"))
+t.test(balance[balance$age == "Elderly",]$FB,
+       balance[balance$age == "Elderly",]$SS, paired = T)
+
+t.test(balance$FB,
+       balance$SS, paired = T)
+```
+
+QQ-plot:
+Goes wrong when you see patterns
+* J-shape = left-skewed
+
+Most of the time: close to the mean it is normally distributed.
+
+Catch-22 situation of small samples
+* You cannot rely on the central limit theory, so you need normality
+* You cannot really test normality for small samples
+
+For paired data: spaghetti plots can be very informative
+
+### Different distributions
+Different test-statistic, but keep the same algorithm:
+* state $H_0$ and $\alpha$ (one-sided or two-sided)
+* determine test statistic (decide on the test to use)
+* calculate test statistic ($T$, $\chi^2$)
+* decide whether to reject $H_0$ (with one of 3 options)
+* state conclusion  
+
+## Power
+
+* Type 1 error = $\alpha$
+* Type 2 error = $\beta$
+* Power = $1-\beta$
+
+For educational reasons, firstly stick to one-sided tests
+
+```{r}
+norm_function <- function(mu, sd) {
+  f = function(x) (1/(sd*sqrt(2*pi)))*exp(-(x-mu)^2/(2*sd^2))
+  return(f)
+}
+# create distributions for sample means under H0 and H1
+# assuming large sample size, so T-distribution converges to normal distribution
+mu0 = 0; sd0 = 1;
+mu1 = 2; sd1 = 1.2;
+h0_distribution = norm_function(mu = mu0, sd = sd0)
+h1_distribution = norm_function(mu = mu1, sd = sd1)
+alpha = 0.05
+boundary_value = qnorm(p = .95, mean = mu0, sd = sd0)
+
+curve(h0_distribution, xlim = c(-3, 6))
+curve(h1_distribution, add = T)
+lines(x = rep(boundary_value, 2), y = c(0, h1_distribution(boundary_value)), lty = 2)
+text(x = boundary_value, y = .5*h0_distribution(boundary_value), labels = "a", pos = 4)
+# abline(v = mu0, lty = 2)
+# abline(v = mu1, lty = 2)
+
+```
+
+Get boundary value $b$ from:
+$$P(\bar{Y}>b|H_0) = P(Z>frac{b-\mu_{0}}{\sigma/\sqrt{n}} = \alpha$$
+Plug $b$ here to find power:
+$$P(\bar{Y}>b|H_1) = P(Z>frac{b-\mu_{1}}{\sigma/\sqrt{n}}$$
+
+So again:
+* Get decision boundary from $H_{0}$
+* Get probability of getting boundary value or more extreme under $H_{1}$
+
+Power of one-sided test is higher, provided that the direction is correct.
+
+You can do this using the T-distribution, than the standard deviation does not need to be known.
+
+
+Power calculations *post-hoc* are controversial.
+
+## Session information
+
+<!-- Insert the session information into the document -->
+```{r session-info}
+```
