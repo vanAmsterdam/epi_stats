@@ -760,6 +760,262 @@ This is pretty close to the calculated power with `power.t.test`.
 
 > NOTE: Obviously it is not necessary to use simulations to get the power if you know that the assumption of normally distributed data is true, but you could use this method for situations where the data do not come from a normal distribution and if the sample size is small. This way you could compare the power of the t-test to alternative (non-parametric) tests.
 
+## Day 4: HYPOTHESIS TESTING + POWER 2
+### (Power and) sample size estimation in R
+> The following give two possibilities (there are more) for estimating the sample size using the statistical package R.
+
+#### The function POWER.T.TEST( )
+> The minimum sample size to detect a difference of δ in a normally distributed outcome variable can be estimated by using the function power.t.test(). The general call to this function is of the form
+`power.t.test(n=…,delta=…,sd=…,sig.level=…,power=…,type=…,alternative=…)`
+(Use the call ?power.t.test to get information about all the options of this function). This function can be used in case of a one sample design or two (independent or paired) samples design.
+
+#### The library PWR
+> The statistical package R may be extended by the library pwr. This library offers several utilities to carry out basic sample size computations. It contains, among others, the functions:
+`pwr.t.test()` and `pwr.t2n.test()`.
+> The first function very much resembles the function power.t.test():
+`-	pwr.t.test(n=…,d=…,sig.level=…,power=…,type=…,alternative=…)
+with d = effect size (µ1 - µ0) /σ`
+
+> If the sample sizes will be unequal, then one can use the function pwr.t2n.test(). A general call to this function is of the form:
+-	pwr.t2n.test()
+`pwr.t2n.test(n1=..,n2=..,d=..,sig.level=..,power=..,type=..,alternative=..)`
+> with n1 and n2 are the sample sizes in the two groups  and d is effect size (µ1 - µ0) /σ
+
+### Exercises without SPSS or R
+
+> 1.	Recall the exercise from yesterday: does alcohol affect your reaction time? Subjects were given a psychological test when they were sober (no alcohol) and after drinking two beers. The dataset contained reaction times (in ms) for 6 subjects while sober and after drinking alcohol. 
+
+```{r}
+sober = c(73, 57, 97, 60, 76, 87)
+with_alcohol = c(81, 80, 121, 94, 85, 102)
+```
+
+> Yesterday, the researcher correctly used a paired samples t-test to answer this question. What would have happened if he had accidentally used an unpaired samples t-test? Here is the output that he would have gotten:
+ 
+```{r}
+t.test(with_alcohol, sober, paired = F, var.equal = T)
+t.test(sober, with_alcohol, paired = T)
+diff_paired <- with_alcohol - sober
+se_diff_paired <- sd(diff_paired) / sqrt(length(diff_paired))
+se_diff_paired
+
+sd_pooled = sqrt(((length(sober)-1)*sd(sober)^2 + (length(with_alcohol)-1)*sd(with_alcohol)^2)/(length(sober)+length(with_alcohol) - 2))
+se_pooled = sd_pooled * sqrt(1/length(sober)+1/length(with_alcohol))
+se_pooled
+
+(mean(with_alcohol) - mean(sober)) + c(-1,1)*qt(p = .975, df = length(sober)+length(with_alcohol)-2)*se_pooled
+
+```
+
+> Compare these results from with the results from day 3 (Exercise 1). What do you notice about the mean difference? About the standard error of the difference in means? And about the p-value?
+
+The difference in means remains equal, the standard error is approximately doubled, the p-value is lower in the paired example.
+
+> In the following questions, two studies are performed. Using pictures or words, argue the cases described below.
+
+> 2.	In the first study, two treatments are compared in two groups of 30 patients, in the second study, the same two treatments are compared in two groups of, respectively, 30 and 20 patients. The expected effect size is in both studies the same. Which of the studies will have more power?
+
+The study with two groups of 30 patients will have the most power. The T-statistic is determined by the difference in means between the two groups, the pooled standard deviation (assuming equal variance) of the samples and the sample sizes. The t-statistic scales with roughly $\sqrt{n}$, and will be larger when $n$ is larger, leading to a higher chance of rejecting $H_0$ in the case that $H_1$ is true.
+
+```{r, include = F}
+norm_function <- function(mu, sd) {
+  f = function(x) (1/(sd*sqrt(2*pi)))*exp(-(x-mu)^2/(2*sd^2))
+  return(f)
+}
+# create distributions for sample means under H0 and H1
+# assuming large sample size, so T-distribution converges to normal distribution
+mu0 = 0; sd0 = 1;
+mu1 = 2; sd1 = 1.2;
+h0_distribution = norm_function(mu = mu0, sd = sd0)
+h1_distribution = norm_function(mu = mu1, sd = sd1)
+alpha = 0.05
+boundary_value = qnorm(p = .95, mean = mu0, sd = sd0)
+xmin = -3
+xmax = 6
+
+
+require(ggplot2)
+ggplot(data.frame(x = c(xmin, xmax)), aes(x)) + 
+  stat_function(fun = h0_distribution) + 
+  stat_function(fun = h0_distribution, 
+                xlim = c(boundary_value,xmax),
+                geom = "area", alpha = 0.5) + 
+  stat_function(fun = h1_distribution) +
+  stat_function(fun = h1_distribution,
+                xlim = c(xmin, boundary_value),
+                geom = "area", alpha = 0.25) + 
+  theme_bw()
+```
+
+> 3.	In both studies, two treatments are compared in two groups of 30 patients, in the first study, the standard deviation was 6 and in the second study 5. The expected effect size is in both studies the same. Which of the research designs will have more power?
+
+The second study with lower variance will have more power, since power increases when variance decreases.
+
+> 4.	In both studies, two treatments are compared in two groups of patients, and in the first study the standard deviation is 6 and in the second study 5. The expected effect size and the required power is both studies the same. Which of the two studies will need a larger number of patients?
+
+By the same reasoning as in 3. the study with lower variance will need fewer patients to achieve the same power
+
+> 5.	In both studies, two treatments are compared in two groups of patients of the same size. The standard deviations are the same. The expected effect size is in the first study twice as large as in the second. Which of the studies will have more power?
+
+The study with a higher expected effect size will have larger power
+
+> 6.	In both studies, two treatments are compared in two groups of patients. The standard deviations are the same. The expected effect size is in the first study twice as large as in the second. The required  power is for both studies equal to 0.90. Which of the two studies will need a larger number of patients?
+
+Assuming equal study sizes for the 2 studies, the study with larger effect size will need fewer patients.
+
+> 7.	Researchers want to evaluate whether there is a significant difference in mean heart rate between two different drugs. A difference of 4 beats per minute is considered relevant. Based on other studies the standard deviation in both groups was assumed to be 8 beats per minute. The type I error was set at 5% (two-sided) and type II error at 10% (one-sided). No sample size calculation was carried out ahead of time; a total of 135 patients were randomized to the two drugs. Argue whether 135 patients were enough for this study.
+
+For 2 independent samples and equal variances, the power can be calculated with iteratively with
+
+$$n \geq 2*(\frac{s_p}{\mu_1-\mu_0}*(t_{\alpha,v}+t_{\beta(1),v}))^2$$
+
+Where $v$ gets updated with each iteration.
+
+```{r}
+alpha = 0.05
+beta = 0.1
+diff = 4
+s = 8
+
+n0 = 2*((s/diff) * (qnorm(alpha/2, lower.tail = F) + qnorm(beta, lower.tail = F)))^2
+n0 = ceiling(n0) # round upwards to an integer
+n0
+n1 = 2*((s/diff) * (qt(alpha/2, lower.tail = F, df = 2*n0-2) + qt(beta, lower.tail = F, df = 2*n0-2)))^2
+n1 = ceiling(n1)
+n1
+n1 = 85.03
+n1 = 85.06159
+n2 = 2*((s/diff) * (qt(alpha/2, lower.tail = F, df = 2*n1-2) + qt(beta, lower.tail = F, df = 2*n1-2)))^2
+n2 = ceiling(n2)
+n2
+```
+
+So 87 people per group = 174 would be enough, which means that the study is underpowered. NB we take $\alpha/2$ because this difference was two-sided, while the type II error is always one-sided. NB2 if the population variance is known, we could have stopped at `n0` (`r n0`), taking quantiles from the normal distribution instead of a t-distribution.
+
+### Excercises in R
+> 11.	Start this exercise by getting the built-in dataset ToothGrowth.
+a.	Get some information about the dataset by running the command:
+
+```{r}
+data("ToothGrowth")
+# help(ToothGrowth)
+
+```
+
+> b.	Attach the headers of this dataset to your workspace and run the commands:
+
+```{r}
+attach(ToothGrowth)
+```
+
+> Because you have ‘attached’ the dataset, you can use the headers in the dataset as if they were variables:
+
+```{r}
+boxplot(len)
+boxplot(len~supp)
+
+```
+
+
+> Interpret the plots.
+c.	Run a suitable t-test to check whether the supplements resort in significantly different effects.
+
+From the description, it looks like the data were not paired. So an unpaired t-test will be used, not assuming equal variance.
+
+```{r}
+t.test(len~supp, var.equal = F, paired = F)
+```
+
+> d.	Are the conditions for the t-test in c) met?
+
+We did not assume equal variance. To check for normality in the residuals:
+
+```{r, message = F, warning = F}
+resid_OJ = len[supp == "OJ"] - mean(len[supp == "OJ"])
+resid_VC = len[supp == "VC"] - mean(len[supp == "VC"])
+
+resid_both <- c(resid_OJ, resid_VC)
+
+qqnorm(resid_both)
+qqline(resid_both, col = "red")
+
+```
+
+The residuals look pretty normally distributed, save for some data points on the extreme sides of the distribution, which is common for limited sample sizes.
+
+> e.	When you are done with a dataset, remember to detach it before working with a new dataset within the same R session:
+
+```{r}
+detach(ToothGrowth)
+```
+
+
+> 12.	In this exercise you will need a dataset energy in the package ISwR. Load this package by passing the command
+
+```{r}
+library(ISwR)
+
+```
+
+> If this library is not installed on your computer (and cannot be installed), then load the dataset energy.RData from Moodle.
+a.	To get some descriptive statistics, pass the following commands:
+
+```{r}
+plot(expend~stature, data=energy)
+tapply(energy$expend, energy$stature,mean)
+tapply(energy$expend, energy$stature,sd)
+```
+
+> b.	Check whether there is a significant difference in mean expenditure between lean and obese women.
+
+```{r}
+t.test(expend~stature, data = energy, var.equal = F, paired = F)
+```
+
+> c.	Which assumption(s) do you make when applying this test? Do you think the assumptions are reasonable?
+
+Assumptions are: unequal variance (which is liberal), normal distribution of residuals. To inspect these, we will make the residual plot in a different way, using a linear regression model. This model assumes equal variance, but this will not influence the residuals as these are just $x_ij - \mu_i$ for individual $j$ belonging to group $i$. Colors are added to indicate the group of an individual.
+
+```{r}
+fit <- lm(expend~stature, data = energy)
+plot(fit, which = 2, col = energy$stature)
+```
+
+In this case, there is quite some deviation from the normal distribution for higher expenditures, so we cannot be sure that the t-test is appropriate.
+
+### Exercises using nQuery, PS, or R
+
+> 13.	Calculate in each of the following situations the minimum required total sample size.
+a.	Use one of the software packages to estimate the required sample size for exercise #7 above.
+
+```{r}
+alpha = 0.05
+beta = 0.1
+diff = 4
+sigma = 8
+
+power.t.test(delta = diff, sd = sigma, sig.level = alpha, power = 1-beta, type = "two.sample", alternative = "two.sided")
+
+# using samplesize package
+samplesize::n.ttest(power = 1-beta, alpha = alpha, mean.diff = diff, sd1 = sigma, sd2 = sigma, k = 1, design = "unpaired", fraction = "balanced", variance = "equal")
+
+samplesize::n.ttest(power = 1-beta, alpha = alpha, mean.diff = diff, sd1 = sigma, sd2 = sigma, 
+                    design = "unpaired", variance = "unequal")
+```
+
+> b.	The dissolving time t of a drug in gastric juice is known to be normally distributed with a mean of 45 seconds and an estimated standard deviation s of 3 seconds. Under an experimental condition, a difference in the average dissolving time of at least 2 sec is to be detected, if it is present. The goal is to detect this difference with a two-sided α of 0.05 and a power of 0.90.
+
+```{r}
+power.t.test(delta = 2, sd = 3, sig.level = 0.05, power = 0.9, type = "one.sample", alternative = "two.sided")
+```
+
+> c.	A study on the difference in concentration in tubes with liquid medicine will be planned. Half of the tubes are exposed to sunlight and the other half not. It is expected that the average concentration changes with 3.5 mg/l after the drug has been in sunlight. The expected standard deviation is 6 mg/l. The risk of type I error (two-sided) will be set to 0.05 and the risk of type II error to 0.20. How many tubes are at least required for this study?
+
+```{r}
+power.t.test(delta = 3.5, sd = 6, sig.level = 0.05, power = 0.8, type = "two.sample", alternative = "two.sided")
+```
+
+
 
 ## Session information
 
