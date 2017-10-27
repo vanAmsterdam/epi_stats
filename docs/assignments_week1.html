@@ -313,17 +313,17 @@ div.tocify {
 shared across the workflowr files. -->
 <!-- Update knitr chunk options -->
 <!-- Insert the date the file was last updated -->
-<p><strong>Last updated:</strong> 2017-10-26</p>
+<p><strong>Last updated:</strong> 2017-10-27</p>
 <!-- Insert the code version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
-<p><strong>Code version:</strong> b498b13</p>
+<p><strong>Code version:</strong> e1c217c</p>
 <!-- Add your analysis here -->
 <div id="day-1" class="section level2">
 <h2>Day 1</h2>
 <div id="left-handedness-binomial-distribution" class="section level3">
 <h3>1. Left-handedness, binomial distribution</h3>
 <blockquote>
-<p>In a population 10% of the individuals is left-handed. We draw a random sample of 20 people from this population and indicate with X the number of â€œleft-handersâ€. We will calculate the following binomial probabilities with SPSS and R: <span class="math inline">\(P(X = 0), P(X = 1), P(X &lt; 3), P(X &gt;3)\)</span>.</p>
+<p>In a population 10% of the individuals is left-handed. We draw a random sample of 20 people from this population and indicate with X the number of “left-handers”. We will calculate the following binomial probabilities with SPSS and R: <span class="math inline">\(P(X = 0), P(X = 1), P(X &lt; 3), P(X &gt;3)\)</span>.</p>
 </blockquote>
 <p>This question regards the binomial distribution, which for a sample of size <span class="math inline">\(n\)</span>, with probability <span class="math inline">\(p\)</span>, is given by</p>
 <p><span class="math inline">\(P(X=x) = {n \choose x}*p^{x}*(1-p)^{n-x}\)</span></p>
@@ -414,7 +414,7 @@ data(rmr)
 <pre class="r"><code>hist(rmr$metabolic.rate, freq=FALSE)</code></pre>
 <p><img src="figure/assignments_week1.Rmd/unnamed-chunk-11-1.png" width="672" style="display: block; margin: auto;" /></p>
 <blockquote>
-<p>The option <code>freq=FALSE</code> is used here to indicate that, rather than setting out the frequencies on the vertical axis, the densities (â€œrelative frequenciesâ€) are plotted, which results in a histogram with total area equal to 1. This puts it on the same scale as the curve of the normal distribution that we want to add next. c. A best-fitting normal curve can be added as follows. First store the mean and the standard deviation of height in two variables, for example in <code>m</code> and <code>s</code>, then pass <code>curve(dnorm(x,m,s),add=TRUE)</code></p>
+<p>The option <code>freq=FALSE</code> is used here to indicate that, rather than setting out the frequencies on the vertical axis, the densities (“relative frequencies”) are plotted, which results in a histogram with total area equal to 1. This puts it on the same scale as the curve of the normal distribution that we want to add next. c. A best-fitting normal curve can be added as follows. First store the mean and the standard deviation of height in two variables, for example in <code>m</code> and <code>s</code>, then pass <code>curve(dnorm(x,m,s),add=TRUE)</code></p>
 </blockquote>
 <pre class="r"><code>hist(rmr$metabolic.rate, freq=FALSE)
 m &lt;- mean(rmr$metabolic.rate)
@@ -524,7 +524,7 @@ attr(,&quot;conf.level&quot;)
 </ol>
 <ol style="list-style-type: lower-alpha">
 <li>What is the probability that all intervals will cover the true population mean?</li>
-<li>What is the probability that one CI will not cover the true mean? And for two CIâ€™s? (Source: R.G.D. Steel &amp; J.H. Torrie, Principles and procedures of statistics, a biometrical approach, McGraw-Hill, International student edition).</li>
+<li>What is the probability that one CI will not cover the true mean? And for two CI’s? (Source: R.G.D. Steel &amp; J.H. Torrie, Principles and procedures of statistics, a biometrical approach, McGraw-Hill, International student edition).</li>
 </ol>
 </blockquote>
 <p>For each study, the chance of coverage is 95% (<span class="math inline">\(p=0.95\)</span>), and each study is assumed to be independent of each other, and based on the same population (so independent and identically distributed, i.i.d.)</p>
@@ -649,14 +649,14 @@ qqline(m, col =  &quot;red&quot;)</code></pre>
 <p>The variable <code>x</code> is not normally distributed. Instead, it is distributed like the distribution it was drawn from, namely the uniform distribution. However, when taking means of 6 draws from this distrubtion, these means themselves are a random variable, which by the central limit theorem is known to be approximately normally distributed.</p>
 <blockquote>
 <ol start="10" style="list-style-type: decimal">
-<li>The aim of this exercise is to make you â€œfeelâ€ the central limit theorem.</li>
+<li>The aim of this exercise is to make you “feel” the central limit theorem.</li>
 </ol>
 <ol style="list-style-type: lower-alpha">
 <li>In your workspace, create an object pop containing the numbers 1, 2, . . . , 8.</li>
 </ol>
 </blockquote>
 <pre class="r"><code>pop &lt;- 1:8</code></pre>
-<p>From this population of size 8, samples of size 5 are drawn with replacement. There are 85 = 32768 such samples possible. A complete list of all these samples can be retrieved by loading the dataset samples.RData. (Use File, Load workspaceâ€¦)</p>
+<p>From this population of size 8, samples of size 5 are drawn with replacement. There are 85 = 32768 such samples possible. A complete list of all these samples can be retrieved by loading the dataset samples.RData. (Use File, Load workspace…)</p>
 <pre class="r"><code>load(amstR::fromParentDir(&quot;data/samples.RData&quot;))</code></pre>
 <ol start="2" style="list-style-type: lower-alpha">
 <li>Load the dataset samples.RData. This will create a 32768x5-matrix in your workspace. The rows of this matrix represent all possible samples from pop. View the first 10 samples by giving the command samples[1:10,].</li>
@@ -832,7 +832,7 @@ plot(x, smeans, ylab=&quot;sample mean&quot;,xlab=&quot;sample number&quot;)
 abline(h=550)</code></pre>
 <p><img src="figure/assignments_week1.Rmd/unnamed-chunk-37-1.png" width="672" style="display: block; margin: auto;" /></p>
 <blockquote>
-<p>To the above plot we will add 95% CIs. We use the arrow command to add â€œarrowsâ€ (without arrowheads: length=0) that are 1.96*SE long above and below the sample mean (why 1.96?):</p>
+<p>To the above plot we will add 95% CIs. We use the arrow command to add “arrows” (without arrowheads: length=0) that are 1.96*SE long above and below the sample mean (why 1.96?):</p>
 </blockquote>
 <p>We use 1.96 because <code>qnorm(p = 0.025)</code> equals 1.96. The point at which the cumulative probability density reaches 2.5% is 1.96 (measured in standard deviations, when using the standard normal distribution with <span class="math inline">\(\mu = 0\)</span> and <span class="math inline">\(\sigma = 1\)</span>)</p>
 <pre class="r"><code>plot(x, smeans, ylab=&quot;sample mean&quot;,xlab=&quot;sample number&quot;)
@@ -848,7 +848,7 @@ sum(not_too_low &amp; not_too_high)</code></pre>
 <pre><code>[1] 96</code></pre>
 <p>So in this case, 96 of the confidence intervals cover the true mean of 550ml.</p>
 <blockquote>
-<p>If you put the above commands in an R â€œscriptâ€ you can re-run them several times. How does your graph change?</p>
+<p>If you put the above commands in an R “script” you can re-run them several times. How does your graph change?</p>
 </blockquote>
 <p>All point estimates and confidence intervals change, but the number of confidence intervals covering the true mean of 550ml stays approximately the same.</p>
 </div>
@@ -867,7 +867,7 @@ sum(not_too_low &amp; not_too_high)</code></pre>
 with_alcohol = c(81, 80, 121, 94, 85, 102)</code></pre>
 <blockquote>
 <ol style="list-style-type: lower-alpha">
-<li>To answer this question, a researcher uses a paired design, measuring reaction time twice on each subject: once while sober; and once with alcohol. (To minimize the effect of learning, subjects were randomized to either sober first and then with beer, or the other way around. This is called a â€œcross-overâ€ design. Here we will ignore the possible effect of which condition was given first.) Use a suitable test to check whether the mean reaction times with and without alcohol differ significantly.</li>
+<li>To answer this question, a researcher uses a paired design, measuring reaction time twice on each subject: once while sober; and once with alcohol. (To minimize the effect of learning, subjects were randomized to either sober first and then with beer, or the other way around. This is called a “cross-over” design. Here we will ignore the possible effect of which condition was given first.) Use a suitable test to check whether the mean reaction times with and without alcohol differ significantly.</li>
 </ol>
 </blockquote>
 <p>The appropriate test here is a matched two-sample t-test, assuming equal variance of the groups. This is equivalent to substracting the reaction times of the different conditions for each patients, and then performing a single sample t-test, where a significant difference will be inferred if the confidence boundries exclude 0. We will first do it ‘by hand’, and then with the r-command.</p>
@@ -1042,7 +1042,7 @@ mean of x mean of y
  51.46857  60.28929 </code></pre>
 <blockquote>
 <ol start="4" style="list-style-type: lower-alpha">
-<li>Donâ€™t forget to detach the data before using the next data frame in R!</li>
+<li>Don’t forget to detach the data before using the next data frame in R!</li>
 </ol>
 </blockquote>
 <pre class="r"><code>detach(Loblolly)</code></pre>
@@ -1086,7 +1086,7 @@ sleep</code></pre>
 extra2 &lt;- sleep[11:20,1]
 diff &lt;- extra1 - extra2</code></pre>
 <blockquote>
-<p>Test whether the mean extra hours of sleep differ for the two treatments. c. Part c) can be done quickly without â€œsplittingâ€ the dataset:</p>
+<p>Test whether the mean extra hours of sleep differ for the two treatments. c. Part c) can be done quickly without “splitting” the dataset:</p>
 </blockquote>
 <pre class="r"><code>t.test(extra~group, data = sleep, paired = T)</code></pre>
 <pre><code>
@@ -1116,7 +1116,7 @@ qqline(diff, col = &quot;red&quot;)</code></pre>
 <div id="the-function-power.t.test" class="section level4">
 <h4>The function power.t.test( )</h4>
 <blockquote>
-<p>The power of a t-test to detect a difference of Î´ in a normally distributed outcome variable can be estimated by using the function power.t.test(). The general call to this function is of the form <code>power.t.test(n=â€¦,delta=â€¦,sd=â€¦,sig.level=â€¦,power=â€¦,type=â€¦,alternative=â€¦)</code> (Use the call <code>?power.t.test</code> to get information about all the options of this function). This function can be used in case of a one sample design or two (independent or paired) samples design.</p>
+<p>The power of a t-test to detect a difference of δ in a normally distributed outcome variable can be estimated by using the function power.t.test(). The general call to this function is of the form <code>power.t.test(n=…,delta=…,sd=…,sig.level=…,power=…,type=…,alternative=…)</code> (Use the call <code>?power.t.test</code> to get information about all the options of this function). This function can be used in case of a one sample design or two (independent or paired) samples design.</p>
 </blockquote>
 <pre class="r"><code>args(power.t.test)</code></pre>
 <pre><code>function (n = NULL, delta = NULL, sd = 1, sig.level = 0.05, power = NULL, 
@@ -1128,7 +1128,7 @@ NULL</code></pre>
 <li>An established hypothesis states that in the Netherlands the mean height of the adult male population is 175 cm. We want to determine the power of the one sample t-test for certain specific values of mu under the alternative hypothesis, for a sample size of 50 and a sample standard deviation of 10.</li>
 </ol>
 <ol style="list-style-type: lower-alpha">
-<li>Determine the power of the test against an alternative Âµ = 176, using the function power.t.test. Do the same against an alternative Âµ = 178.</li>
+<li>Determine the power of the test against an alternative µ = 176, using the function power.t.test. Do the same against an alternative µ = 178.</li>
 </ol>
 </blockquote>
 <pre class="r"><code>n = 50
@@ -1158,7 +1158,7 @@ power.t.test(n = n, sd = s, sig.level = 0.05, delta = mu1-mu0, type = &quot;one.
     alternative = two.sided</code></pre>
 <blockquote>
 <ol start="2" style="list-style-type: lower-alpha">
-<li>You could compute the power for some more alternatives and then make a curve. To make life a bit easier, R makes it possible to define the parameter delta (i.e. the difference between mu under the alternative and the null hypothesis) as a vector for several values of mu under the alternative hypothesis. For example, you could store the alternatives Âµ = 176 and Âµ = 178 in a variable (vector) alt and the deltas in a variable d:</li>
+<li>You could compute the power for some more alternatives and then make a curve. To make life a bit easier, R makes it possible to define the parameter delta (i.e. the difference between mu under the alternative and the null hypothesis) as a vector for several values of mu under the alternative hypothesis. For example, you could store the alternatives µ = 176 and µ = 178 in a variable (vector) alt and the deltas in a variable d:</li>
 </ol>
 </blockquote>
 <pre class="r"><code>alt &lt;- c(176,178) 
@@ -1199,7 +1199,7 @@ plot(mus, powers)</code></pre>
 <pre class="r"><code>set.seed(2)
 samp &lt;- rnorm(50,176,10)</code></pre>
 <blockquote>
-<p>Test this sample in a t-test against the test value Âµ = 175. Store the results of the t-test in, say, an object result.T:</p>
+<p>Test this sample in a t-test against the test value µ = 175. Store the results of the t-test in, say, an object result.T:</p>
 </blockquote>
 <pre class="r"><code>result.T &lt;- t.test(samp, mu=175) </code></pre>
 <blockquote>
@@ -1223,7 +1223,7 @@ samp &lt;- rnorm(50,176,10)</code></pre>
     alternative = two.sided</code></pre>
 <blockquote>
 <ol start="4" style="list-style-type: lower-alpha">
-<li>[Challenge exercise] In this exercise we will try to determine the power of a one sample t-test by using simulations. Using R, we are going to draw 2000 samples, each of size n=50, from a normal distribution with mean 176 and standard deviation 10. For each of these samples we want to perform a t-test to test the null hypothesis that Âµ = 175. We will then determine in how many of the samples the null hypothesis is (correctly) rejected.</li>
+<li>[Challenge exercise] In this exercise we will try to determine the power of a one sample t-test by using simulations. Using R, we are going to draw 2000 samples, each of size n=50, from a normal distribution with mean 176 and standard deviation 10. For each of these samples we want to perform a t-test to test the null hypothesis that µ = 175. We will then determine in how many of the samples the null hypothesis is (correctly) rejected.</li>
 </ol>
 </blockquote>
 <blockquote>
@@ -1258,39 +1258,364 @@ sum(RES&lt;0.05); sum(RES&lt;0.05)/2000</code></pre>
 </div>
 </div>
 </div>
+<div id="day-4-hypothesis-testing-power-2" class="section level2">
+<h2>Day 4: HYPOTHESIS TESTING + POWER 2</h2>
+<div id="power-and-sample-size-estimation-in-r-1" class="section level3">
+<h3>(Power and) sample size estimation in R</h3>
+<blockquote>
+<p>The following give two possibilities (there are more) for estimating the sample size using the statistical package R.</p>
+</blockquote>
+<div id="the-function-power.t.test-1" class="section level4">
+<h4>The function POWER.T.TEST( )</h4>
+<blockquote>
+<p>The minimum sample size to detect a difference of δ in a normally distributed outcome variable can be estimated by using the function power.t.test(). The general call to this function is of the form <code>power.t.test(n=…,delta=…,sd=…,sig.level=…,power=…,type=…,alternative=…)</code> (Use the call ?power.t.test to get information about all the options of this function). This function can be used in case of a one sample design or two (independent or paired) samples design.</p>
+</blockquote>
+</div>
+<div id="the-library-pwr" class="section level4">
+<h4>The library PWR</h4>
+<blockquote>
+<p>The statistical package R may be extended by the library pwr. This library offers several utilities to carry out basic sample size computations. It contains, among others, the functions: <code>pwr.t.test()</code> and <code>pwr.t2n.test()</code>. The first function very much resembles the function power.t.test(): <code>-  pwr.t.test(n=…,d=…,sig.level=…,power=…,type=…,alternative=…) with d = effect size (µ1 - µ0) /σ</code></p>
+</blockquote>
+<blockquote>
+<p>If the sample sizes will be unequal, then one can use the function pwr.t2n.test(). A general call to this function is of the form: - pwr.t2n.test() <code>pwr.t2n.test(n1=..,n2=..,d=..,sig.level=..,power=..,type=..,alternative=..)</code> with n1 and n2 are the sample sizes in the two groups and d is effect size (µ1 - µ0) /σ</p>
+</blockquote>
+</div>
+</div>
+<div id="exercises-without-spss-or-r-1" class="section level3">
+<h3>Exercises without SPSS or R</h3>
+<blockquote>
+<ol style="list-style-type: decimal">
+<li>Recall the exercise from yesterday: does alcohol affect your reaction time? Subjects were given a psychological test when they were sober (no alcohol) and after drinking two beers. The dataset contained reaction times (in ms) for 6 subjects while sober and after drinking alcohol.</li>
+</ol>
+</blockquote>
+<pre class="r"><code>sober = c(73, 57, 97, 60, 76, 87)
+with_alcohol = c(81, 80, 121, 94, 85, 102)</code></pre>
+<blockquote>
+<p>Yesterday, the researcher correctly used a paired samples t-test to answer this question. What would have happened if he had accidentally used an unpaired samples t-test? Here is the output that he would have gotten:</p>
+</blockquote>
+<pre class="r"><code>t.test(with_alcohol, sober, paired = F, var.equal = T)</code></pre>
+<pre><code>
+    Two Sample t-test
+
+data:  with_alcohol and sober
+t = 2.0966, df = 10, p-value = 0.06244
+alternative hypothesis: true difference in means is not equal to 0
+95 percent confidence interval:
+ -1.182057 38.848724
+sample estimates:
+mean of x mean of y 
+ 93.83333  75.00000 </code></pre>
+<pre class="r"><code>t.test(sober, with_alcohol, paired = T)</code></pre>
+<pre><code>
+    Paired t-test
+
+data:  sober and with_alcohol
+t = -4.6002, df = 5, p-value = 0.005839
+alternative hypothesis: true difference in means is not equal to 0
+95 percent confidence interval:
+ -29.357382  -8.309285
+sample estimates:
+mean of the differences 
+              -18.83333 </code></pre>
+<pre class="r"><code>diff_paired &lt;- with_alcohol - sober
+se_diff_paired &lt;- sd(diff_paired) / sqrt(length(diff_paired))
+se_diff_paired</code></pre>
+<pre><code>[1] 4.094034</code></pre>
+<pre class="r"><code>sd_pooled = sqrt(((length(sober)-1)*sd(sober)^2 + (length(with_alcohol)-1)*sd(with_alcohol)^2)/(length(sober)+length(with_alcohol) - 2))
+se_pooled = sd_pooled * sqrt(1/length(sober)+1/length(with_alcohol))
+se_pooled</code></pre>
+<pre><code>[1] 8.983009</code></pre>
+<pre class="r"><code>(mean(with_alcohol) - mean(sober)) + c(-1,1)*qt(p = .975, df = length(sober)+length(with_alcohol)-2)*se_pooled</code></pre>
+<pre><code>[1] -1.182057 38.848724</code></pre>
+<blockquote>
+<p>Compare these results from with the results from day 3 (Exercise 1). What do you notice about the mean difference? About the standard error of the difference in means? And about the p-value?</p>
+</blockquote>
+<p>The difference in means remains equal, the standard error is approximately doubled, the p-value is lower in the paired example.</p>
+<blockquote>
+<p>In the following questions, two studies are performed. Using pictures or words, argue the cases described below.</p>
+</blockquote>
+<blockquote>
+<ol start="2" style="list-style-type: decimal">
+<li>In the first study, two treatments are compared in two groups of 30 patients, in the second study, the same two treatments are compared in two groups of, respectively, 30 and 20 patients. The expected effect size is in both studies the same. Which of the studies will have more power?</li>
+</ol>
+</blockquote>
+<p>The study with two groups of 30 patients will have the most power. The T-statistic is determined by the difference in means between the two groups, the pooled standard deviation (assuming equal variance) of the samples and the sample sizes. The t-statistic scales with roughly <span class="math inline">\(\sqrt{n}\)</span>, and will be larger when <span class="math inline">\(n\)</span> is larger, leading to a higher chance of rejecting <span class="math inline">\(H_0\)</span> in the case that <span class="math inline">\(H_1\)</span> is true.</p>
+<blockquote>
+<ol start="3" style="list-style-type: decimal">
+<li>In both studies, two treatments are compared in two groups of 30 patients, in the first study, the standard deviation was 6 and in the second study 5. The expected effect size is in both studies the same. Which of the research designs will have more power?</li>
+</ol>
+</blockquote>
+<p>The second study with lower variance will have more power, since power increases when variance decreases.</p>
+<blockquote>
+<ol start="4" style="list-style-type: decimal">
+<li>In both studies, two treatments are compared in two groups of patients, and in the first study the standard deviation is 6 and in the second study 5. The expected effect size and the required power is both studies the same. Which of the two studies will need a larger number of patients?</li>
+</ol>
+</blockquote>
+<p>By the same reasoning as in 3. the study with lower variance will need fewer patients to achieve the same power</p>
+<blockquote>
+<ol start="5" style="list-style-type: decimal">
+<li>In both studies, two treatments are compared in two groups of patients of the same size. The standard deviations are the same. The expected effect size is in the first study twice as large as in the second. Which of the studies will have more power?</li>
+</ol>
+</blockquote>
+<p>The study with a higher expected effect size will have larger power</p>
+<blockquote>
+<ol start="6" style="list-style-type: decimal">
+<li>In both studies, two treatments are compared in two groups of patients. The standard deviations are the same. The expected effect size is in the first study twice as large as in the second. The required power is for both studies equal to 0.90. Which of the two studies will need a larger number of patients?</li>
+</ol>
+</blockquote>
+<p>Assuming equal study sizes for the 2 studies, the study with larger effect size will need fewer patients.</p>
+<blockquote>
+<ol start="7" style="list-style-type: decimal">
+<li>Researchers want to evaluate whether there is a significant difference in mean heart rate between two different drugs. A difference of 4 beats per minute is considered relevant. Based on other studies the standard deviation in both groups was assumed to be 8 beats per minute. The type I error was set at 5% (two-sided) and type II error at 10% (one-sided). No sample size calculation was carried out ahead of time; a total of 135 patients were randomized to the two drugs. Argue whether 135 patients were enough for this study.</li>
+</ol>
+</blockquote>
+<p>For 2 independent samples and equal variances, the power can be calculated with iteratively with</p>
+<p><span class="math display">\[n \geq 2*(\frac{s_p}{\mu_1-\mu_0}*(t_{\alpha,v}+t_{\beta(1),v}))^2\]</span></p>
+<p>Where <span class="math inline">\(v\)</span> gets updated with each iteration.</p>
+<pre class="r"><code>alpha = 0.05
+beta = 0.1
+diff = 4
+s = 8
+
+n0 = 2*((s/diff) * (qnorm(alpha/2, lower.tail = F) + qnorm(beta, lower.tail = F)))^2
+n0 = ceiling(n0) # round upwards to an integer
+n0</code></pre>
+<pre><code>[1] 85</code></pre>
+<pre class="r"><code>n1 = 2*((s/diff) * (qt(alpha/2, lower.tail = F, df = 2*n0-2) + qt(beta, lower.tail = F, df = 2*n0-2)))^2
+n1 = ceiling(n1)
+n1</code></pre>
+<pre><code>[1] 86</code></pre>
+<pre class="r"><code>n1 = 85.03
+n1 = 85.06159
+n2 = 2*((s/diff) * (qt(alpha/2, lower.tail = F, df = 2*n1-2) + qt(beta, lower.tail = F, df = 2*n1-2)))^2
+n2 = ceiling(n2)
+n2</code></pre>
+<pre><code>[1] 86</code></pre>
+<p>So 87 people per group = 174 would be enough, which means that the study is underpowered. NB we take <span class="math inline">\(\alpha/2\)</span> because this difference was two-sided, while the type II error is always one-sided. NB2 if the population variance is known, we could have stopped at <code>n0</code> (85), taking quantiles from the normal distribution instead of a t-distribution.</p>
+</div>
+<div id="excercises-in-r-2" class="section level3">
+<h3>Excercises in R</h3>
+<blockquote>
+<ol start="11" style="list-style-type: decimal">
+<li>Start this exercise by getting the built-in dataset ToothGrowth.</li>
+</ol>
+<ol style="list-style-type: lower-alpha">
+<li>Get some information about the dataset by running the command:</li>
+</ol>
+</blockquote>
+<pre class="r"><code>data(&quot;ToothGrowth&quot;)
+# help(ToothGrowth)</code></pre>
+<blockquote>
+<ol start="2" style="list-style-type: lower-alpha">
+<li>Attach the headers of this dataset to your workspace and run the commands:</li>
+</ol>
+</blockquote>
+<pre class="r"><code>attach(ToothGrowth)</code></pre>
+<blockquote>
+<p>Because you have ‘attached’ the dataset, you can use the headers in the dataset as if they were variables:</p>
+</blockquote>
+<pre class="r"><code>boxplot(len)</code></pre>
+<p><img src="figure/assignments_week1.Rmd/unnamed-chunk-73-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>boxplot(len~supp)</code></pre>
+<p><img src="figure/assignments_week1.Rmd/unnamed-chunk-73-2.png" width="672" style="display: block; margin: auto;" /></p>
+<blockquote>
+<p>Interpret the plots. c. Run a suitable t-test to check whether the supplements resort in significantly different effects.</p>
+</blockquote>
+<p>From the description, it looks like the data were not paired. So an unpaired t-test will be used, not assuming equal variance.</p>
+<pre class="r"><code>t.test(len~supp, var.equal = F, paired = F)</code></pre>
+<pre><code>
+    Welch Two Sample t-test
+
+data:  len by supp
+t = 1.9153, df = 55.309, p-value = 0.06063
+alternative hypothesis: true difference in means is not equal to 0
+95 percent confidence interval:
+ -0.1710156  7.5710156
+sample estimates:
+mean in group OJ mean in group VC 
+        20.66333         16.96333 </code></pre>
+<blockquote>
+<ol start="4" style="list-style-type: lower-alpha">
+<li>Are the conditions for the t-test in c) met?</li>
+</ol>
+</blockquote>
+<p>We did not assume equal variance. To check for normality in the residuals:</p>
+<pre class="r"><code>resid_OJ = len[supp == &quot;OJ&quot;] - mean(len[supp == &quot;OJ&quot;])
+resid_VC = len[supp == &quot;VC&quot;] - mean(len[supp == &quot;VC&quot;])
+
+resid_both &lt;- c(resid_OJ, resid_VC)
+
+qqnorm(resid_both)
+qqline(resid_both, col = &quot;red&quot;)</code></pre>
+<p><img src="figure/assignments_week1.Rmd/unnamed-chunk-75-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>The residuals look pretty normally distributed, save for some data points on the extreme sides of the distribution, which is common for limited sample sizes.</p>
+<blockquote>
+<ol start="5" style="list-style-type: lower-alpha">
+<li>When you are done with a dataset, remember to detach it before working with a new dataset within the same R session:</li>
+</ol>
+</blockquote>
+<pre class="r"><code>detach(ToothGrowth)</code></pre>
+<blockquote>
+<ol start="12" style="list-style-type: decimal">
+<li>In this exercise you will need a dataset energy in the package ISwR. Load this package by passing the command</li>
+</ol>
+</blockquote>
+<pre class="r"><code>library(ISwR)</code></pre>
+<blockquote>
+<p>If this library is not installed on your computer (and cannot be installed), then load the dataset energy.RData from Moodle. a. To get some descriptive statistics, pass the following commands:</p>
+</blockquote>
+<pre class="r"><code>plot(expend~stature, data=energy)</code></pre>
+<p><img src="figure/assignments_week1.Rmd/unnamed-chunk-78-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>tapply(energy$expend, energy$stature,mean)</code></pre>
+<pre><code>     lean     obese 
+ 8.066154 10.297778 </code></pre>
+<pre class="r"><code>tapply(energy$expend, energy$stature,sd)</code></pre>
+<pre><code>    lean    obese 
+1.238080 1.397871 </code></pre>
+<blockquote>
+<ol start="2" style="list-style-type: lower-alpha">
+<li>Check whether there is a significant difference in mean expenditure between lean and obese women.</li>
+</ol>
+</blockquote>
+<pre class="r"><code>t.test(expend~stature, data = energy, var.equal = F, paired = F)</code></pre>
+<pre><code>
+    Welch Two Sample t-test
+
+data:  expend by stature
+t = -3.8555, df = 15.919, p-value = 0.001411
+alternative hypothesis: true difference in means is not equal to 0
+95 percent confidence interval:
+ -3.459167 -1.004081
+sample estimates:
+ mean in group lean mean in group obese 
+           8.066154           10.297778 </code></pre>
+<blockquote>
+<ol start="3" style="list-style-type: lower-alpha">
+<li>Which assumption(s) do you make when applying this test? Do you think the assumptions are reasonable?</li>
+</ol>
+</blockquote>
+<p>Assumptions are: unequal variance (which is liberal), normal distribution of residuals. To inspect these, we will make the residual plot in a different way, using a linear regression model. This model assumes equal variance, but this will not influence the residuals as these are just <span class="math inline">\(x_ij - \mu_i\)</span> for individual <span class="math inline">\(j\)</span> belonging to group <span class="math inline">\(i\)</span>. Colors are added to indicate the group of an individual.</p>
+<pre class="r"><code>fit &lt;- lm(expend~stature, data = energy)
+plot(fit, which = 2, col = energy$stature)</code></pre>
+<p><img src="figure/assignments_week1.Rmd/unnamed-chunk-80-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>In this case, there is quite some deviation from the normal distribution for higher expenditures, so we cannot be sure that the t-test is appropriate.</p>
+</div>
+<div id="exercises-using-nquery-ps-or-r" class="section level3">
+<h3>Exercises using nQuery, PS, or R</h3>
+<blockquote>
+<ol start="13" style="list-style-type: decimal">
+<li>Calculate in each of the following situations the minimum required total sample size.</li>
+</ol>
+<ol style="list-style-type: lower-alpha">
+<li>Use one of the software packages to estimate the required sample size for exercise #7 above.</li>
+</ol>
+</blockquote>
+<pre class="r"><code>alpha = 0.05
+beta = 0.1
+diff = 4
+sigma = 8
+
+power.t.test(delta = diff, sd = sigma, sig.level = alpha, power = 1-beta, type = &quot;two.sample&quot;, alternative = &quot;two.sided&quot;)</code></pre>
+<pre><code>
+     Two-sample t test power calculation 
+
+              n = 85.03129
+          delta = 4
+             sd = 8
+      sig.level = 0.05
+          power = 0.9
+    alternative = two.sided
+
+NOTE: n is number in *each* group</code></pre>
+<pre class="r"><code># using samplesize package
+samplesize::n.ttest(power = 1-beta, alpha = alpha, mean.diff = diff, sd1 = sigma, sd2 = sigma, k = 1, design = &quot;unpaired&quot;, fraction = &quot;balanced&quot;, variance = &quot;equal&quot;)</code></pre>
+<pre><code>$`Total sample size`
+[1] 172
+
+$`Sample size group 1`
+[1] 86
+
+$`Sample size group 2`
+[1] 86</code></pre>
+<pre class="r"><code>samplesize::n.ttest(power = 1-beta, alpha = alpha, mean.diff = diff, sd1 = sigma, sd2 = sigma, 
+                    design = &quot;unpaired&quot;, variance = &quot;unequal&quot;)</code></pre>
+<pre><code>Warning in samplesize::n.ttest(power = 1 - beta, alpha = alpha, mean.diff
+= diff, : Arguments -fraction- and -k- are not used, when variances are
+unequal</code></pre>
+<pre><code>$`Total sample size`
+[1] 172
+
+$`Sample size group 1`
+[1] 86
+
+$`sample size group 2`
+[1] 86</code></pre>
+<blockquote>
+<ol start="2" style="list-style-type: lower-alpha">
+<li>The dissolving time t of a drug in gastric juice is known to be normally distributed with a mean of 45 seconds and an estimated standard deviation s of 3 seconds. Under an experimental condition, a difference in the average dissolving time of at least 2 sec is to be detected, if it is present. The goal is to detect this difference with a two-sided α of 0.05 and a power of 0.90.</li>
+</ol>
+</blockquote>
+<pre class="r"><code>power.t.test(delta = 2, sd = 3, sig.level = 0.05, power = 0.9, type = &quot;one.sample&quot;, alternative = &quot;two.sided&quot;)</code></pre>
+<pre><code>
+     One-sample t test power calculation 
+
+              n = 25.6399
+          delta = 2
+             sd = 3
+      sig.level = 0.05
+          power = 0.9
+    alternative = two.sided</code></pre>
+<blockquote>
+<ol start="3" style="list-style-type: lower-alpha">
+<li>A study on the difference in concentration in tubes with liquid medicine will be planned. Half of the tubes are exposed to sunlight and the other half not. It is expected that the average concentration changes with 3.5 mg/l after the drug has been in sunlight. The expected standard deviation is 6 mg/l. The risk of type I error (two-sided) will be set to 0.05 and the risk of type II error to 0.20. How many tubes are at least required for this study?</li>
+</ol>
+</blockquote>
+<pre class="r"><code>power.t.test(delta = 3.5, sd = 6, sig.level = 0.05, power = 0.8, type = &quot;two.sample&quot;, alternative = &quot;two.sided&quot;)</code></pre>
+<pre><code>
+     Two-sample t test power calculation 
+
+              n = 47.11207
+          delta = 3.5
+             sd = 6
+      sig.level = 0.05
+          power = 0.8
+    alternative = two.sided
+
+NOTE: n is number in *each* group</code></pre>
+</div>
+</div>
 <div id="session-information" class="section level2">
 <h2>Session information</h2>
 <!-- Insert the session information into the document -->
 <pre class="r"><code>sessionInfo()</code></pre>
-<pre><code>R version 3.4.1 (2017-06-30)
-Platform: x86_64-w64-mingw32/x64 (64-bit)
-Running under: Windows 7 x64 (build 7601) Service Pack 1
-
-Matrix products: default
+<pre><code>R version 3.3.2 (2016-10-31)
+Platform: x86_64-apple-darwin13.4.0 (64-bit)
+Running under: macOS Sierra 10.12.6
 
 locale:
-[1] LC_COLLATE=Dutch_Netherlands.1252  LC_CTYPE=Dutch_Netherlands.1252   
-[3] LC_MONETARY=Dutch_Netherlands.1252 LC_NUMERIC=C                      
-[5] LC_TIME=Dutch_Netherlands.1252    
+[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
 
 attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
 other attached packages:
-[1] ISwR_2.0-7
+[1] ggplot2_2.2.1 ISwR_2.0-7   
 
 loaded via a namespace (and not attached):
- [1] bootstrap_2017.2    survcomp_1.27.0     Rcpp_0.12.12       
- [4] knitr_1.17          magrittr_1.5        splines_3.4.1      
- [7] prodlim_1.6.1       lattice_0.20-35     stringr_1.2.0      
-[10] survivalROC_1.0.3   tools_3.4.1         grid_3.4.1         
-[13] data.table_1.10.4-2 KernSmooth_2.23-15  rmeta_2.16         
-[16] git2r_0.19.0        htmltools_0.3.6     yaml_2.1.14        
-[19] survival_2.41-3     rprojroot_1.2       digest_0.6.12      
-[22] Matrix_1.2-10       lava_1.5.1          RColorBrewer_1.1-2 
-[25] SuppDists_1.1-9.4   evaluate_0.10.1     rmarkdown_1.6      
-[28] stringi_1.1.5       compiler_3.4.1      amstR_0.1.3        
-[31] backports_1.1.0    </code></pre>
+ [1] Rcpp_0.12.11       survcomp_1.22.0    RColorBrewer_1.1-2
+ [4] git2r_0.19.0       plyr_1.8.4         tools_3.3.2       
+ [7] digest_0.6.12      evaluate_0.10.1    tibble_1.3.3      
+[10] gtable_0.2.0       lattice_0.20-35    rlang_0.1.1       
+[13] Matrix_1.2-10      yaml_2.1.14        prodlim_1.6.1     
+[16] bootstrap_2017.2   amstR_0.1.3        stringr_1.2.0     
+[19] knitr_1.17         SuppDists_1.1-9.4  rprojroot_1.2     
+[22] grid_3.3.2         samplesize_0.2-4   data.table_1.10.4 
+[25] survival_2.41-3    rmarkdown_1.6      lava_1.5          
+[28] rmeta_2.16         magrittr_1.5       backports_1.1.0   
+[31] scales_0.4.1       htmltools_0.3.6    survivalROC_1.0.3 
+[34] splines_3.3.2      colorspace_1.3-2   labeling_0.3      
+[37] KernSmooth_2.23-15 stringi_1.1.5      lazyeval_0.2.0    
+[40] munsell_0.4.3     </code></pre>
 </div>
 
 <hr>
