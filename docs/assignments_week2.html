@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+<meta name="author" content="Wouter van Amsterdam" />
+
+<meta name="date" content="2017-10-29" />
+
+<title>Assignments week 2 for Classical Methods in Data Analysis</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-1.1/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-1.1/highlight.js"></script>
+<link href="site_libs/font-awesome-4.5.0/css/font-awesome.min.css" rel="stylesheet" />
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs && document.readyState && document.readyState === "complete") {
+   window.setTimeout(function() {
+      hljs.initHighlighting();
+   }, 0);
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+
+<div class="container-fluid main-container">
+
+<!-- tabsets -->
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+</script>
+
+<!-- code folding -->
+
+
+
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+  padding-left: 25px;
+  text-indent: 0;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">epi_stats</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/jdblischak/workflowr">
+    <span class="fa fa-github"></span>
+     
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">Assignments week 2 for Classical Methods in Data Analysis</h1>
+<h4 class="author"><em>Wouter van Amsterdam</em></h4>
+<h4 class="date"><em>2017-10-29</em></h4>
+
+</div>
+
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+<!-- Update knitr chunk options -->
+<!-- Insert the date the file was last updated -->
+<p><strong>Last updated:</strong> 2017-10-30</p>
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+<p><strong>Code version:</strong> 2d66380</p>
+<!-- Add your analysis here -->
+<div id="day-5-anova-and-non-parametric-methods" class="section level2">
+<h2>Day 5: ANOVA and non-parametric methods</h2>
+<div id="exercises-without-spss-or-r" class="section level3">
+<h3>Exercises without SPSS or R</h3>
+<div id="section" class="section level4">
+<h4>1.</h4>
+<blockquote>
+<p>Twelve plots of land were randomly divided into three groups of four plots. Two fertilizers, A and B, are applied for the cultivation of wheat while the third group C serves as a control group, without application of fertilizer. The wheat yields are as follows:</p>
+</blockquote>
+<pre class="r"><code>yields &lt;- matrix(c(72, 74, 60, 
+          67, 78, 64,
+          60, 72, 65, 
+          66, 68, 55),
+          nrow = 4, byrow = T,
+       dimnames = list(1:4, c(&quot;A&quot;, &quot;B&quot;, &quot;C&quot;)))
+yields</code></pre>
+<pre><code>   A  B  C
+1 72 74 60
+2 67 78 64
+3 60 72 65
+4 66 68 55</code></pre>
+<blockquote>
+<ol style="list-style-type: lower-alpha">
+<li>How would you perform the randomization for this study?</li>
+</ol>
+</blockquote>
+<p>Randomize assignment to fertilizers or control. Perform double blinding, including ‘placebo’ fertilizer.</p>
+<blockquote>
+<p>The following ANOVA table was produced on the basis of data above:</p>
+</blockquote>
+<blockquote>
+<p>Sum of Squares df Mean Square F p-value Between Groups 289.50 ? ? ? 0.015 Within Groups 186.75 ? ?<br />
+Total 476.25 ?</p>
+</blockquote>
+<blockquote>
+<ol start="2" style="list-style-type: lower-alpha">
+<li>Fill in the missing parts of the ANOVA table. See if you can find the p-value in the F tables.</li>
+</ol>
+</blockquote>
+<p>Recall that:</p>
+<p><span class="math display">\[df_{total} = \sum{(n_j)}-1\]</span> <span class="math display">\[df_{within} = \sum({n_j-1})\]</span> <span class="math display">\[df_{between} = J-1\]</span></p>
+<p>Here <span class="math inline">\(J = 3\)</span> the number of groups.</p>
+<pre class="r"><code>n_total = length(yields)
+n_groups = ncol(yields)
+n_pergroup = nrow(yields)
+
+sum_squares &lt;- function(x) sum((x-mean(x))^2)
+
+ss_total = sum_squares(as.vector(yields))
+ss_within = sum(apply(yields, 2, sum_squares)) # this applies &#39;sum_squares&#39; to each collum of yields
+ss_between = sum(n_pergroup*(colMeans(yields) - mean(yields))^2)
+
+df_total = n_total - 1
+df_within = 3*(n_pergroup - 1)
+df_between = n_groups - 1
+
+ms_within = ss_within / df_within
+ms_between = ss_between / df_between
+
+f_value = ms_between / ms_within
+
+qf(p = 0.95, df1 = df_between, df2 = df_within)</code></pre>
+<pre><code>[1] 4.256495</code></pre>
+<p>So here <span class="math inline">\(a = 2\)</span> and <span class="math inline">\(b = 9\)</span>.</p>
+<blockquote>
+<ol start="3" style="list-style-type: lower-alpha">
+<li>Test the null hypothesis that there is no difference among the three treatments A, B and C, meaning that the use of fertilizers under the conditions of the experiment has no effect.</li>
+</ol>
+</blockquote>
+<pre class="r"><code>pf(q = f_value, df1 = df_between, df2 = df_within, lower.tail = F)</code></pre>
+<pre><code>[1] 0.01480523</code></pre>
+<blockquote>
+<ol start="4" style="list-style-type: lower-alpha">
+<li>If no significant overall result had been found by ANOVA, would the result of multiple post-hoc tests be valid?</li>
+</ol>
+</blockquote>
+<p>No, this is only meaningful when there is an overall effect found.</p>
+<p>Now replicate with built-in anova:</p>
+<pre class="r"><code>yields_melted = data.frame(group = rep(c(&quot;A&quot;, &quot;B&quot;, &quot;C&quot;), each = 4),
+                          yield = as.vector(yields))
+yields_melted</code></pre>
+<pre><code>   group yield
+1      A    72
+2      A    67
+3      A    60
+4      A    66
+5      B    74
+6      B    78
+7      B    72
+8      B    68
+9      C    60
+10     C    64
+11     C    65
+12     C    55</code></pre>
+<pre class="r"><code>summary(aov(yield~group, data = yields_melted))</code></pre>
+<pre><code>            Df Sum Sq Mean Sq F value Pr(&gt;F)  
+group        2  289.5  144.75   6.976 0.0148 *
+Residuals    9  186.8   20.75                 
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+</div>
+<div id="section-1" class="section level4">
+<h4>2.</h4>
+<blockquote>
+<p>The aim of a certain survey in a hospital was to compare the waiting times of patients in two clinics. The waiting times (in minutes) were as follows:</p>
+</blockquote>
+<pre class="r"><code>load(amstR::fromParentDir(&quot;data/clinic.RData&quot;))
+summary(clinic)</code></pre>
+<pre><code>      TIME            CLINIC  
+ Min.   : 4.00   clinic 1:61  
+ 1st Qu.:11.00   clinic 2:11  
+ Median :16.00   NA&#39;s    : 1  
+ Mean   :18.94                
+ 3rd Qu.:21.00                
+ Max.   :90.00                
+ NA&#39;s   :1                    </code></pre>
+<p>Looks like there is a row with only missing values, let’s remove that row.</p>
+<pre class="r"><code>clinic[is.na(clinic$TIME),]</code></pre>
+<pre><code>   TIME CLINIC
+73   NA   &lt;NA&gt;</code></pre>
+<pre class="r"><code>full_clinic &lt;- clinic
+clinic &lt;- clinic[!is.na(clinic$TIME),]</code></pre>
+<p>Create plots of the densities</p>
+<pre class="r"><code>require(ggplot2)</code></pre>
+<pre><code>Loading required package: ggplot2</code></pre>
+<pre class="r"><code>ggplot(clinic, aes(x = TIME, fill = CLINIC)) + 
+  geom_density(alpha = .7)</code></pre>
+<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Both distributions of waiting times seem approximately normally distributed, with some right skewness and (of course) a lower bound of (&gt;)0.</p>
+<blockquote>
+<p>What are the problems when you compare these data? What type of analysis would you prefer? Which questions exactly are answered with your analysis? What would you do if some waiting times were â€˜censoredâ€™ because patients left the hospital? The data are given in the file clinic.sav or clinic.RData, if you want to easily get some descriptive statistics to help you answer the questions above.</p>
+</blockquote>
+<p>Both groups are of unequal size, and their variances seem to differ. This will cause troubles with ANOVA as it violates homoscedasticity. Since these are left-bounded varaibles, they seem approximately poisson-distributed. Currently we have no tools to deal with censored data. The most straightforward approach seems to be to do a Welch unpaired two-sample T-test (Welch = no equal variance assumption). We could look at the Wilcoxon rank sum test or the Mann-Whitney test. These tests do not require normality, however they do require homoscedasticity. Looking at the distributions of our data, heteroscedasticity seems to be a bigger problem than non-normality.</p>
+<pre class="r"><code>t.test(TIME ~ CLINIC, data = clinic, paired = F, var.equal = F)</code></pre>
+<pre><code>
+    Welch Two Sample t-test
+
+data:  TIME by CLINIC
+t = -2.1655, df = 10.724, p-value = 0.05381
+alternative hypothesis: true difference in means is not equal to 0
+95 percent confidence interval:
+ -32.8550782   0.3185656
+sample estimates:
+mean in group clinic 1 mean in group clinic 2 
+              16.45902               32.72727 </code></pre>
+<p>Check distribution of residuals</p>
+<pre class="r"><code>fit &lt;- lm(TIME~CLINIC, data = clinic)
+plot(fit, which = 2)</code></pre>
+<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-9-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>The residuals are higher than expected on the upper side of the distribution, which indicates right skewed data, as could be seen from the density plots.</p>
+</div>
+</div>
+<div id="exercises-in-r" class="section level3">
+<h3>Exercises in R</h3>
+<div id="section-2" class="section level4">
+<h4>9.</h4>
+<blockquote>
+<p>Answer the research questions from exercise #1, but now in R (use dataset wheat.RData). a. Make sure to perform a complete analysis, including checking the model assumptions.</p>
+</blockquote>
+<p>Perform ANOVA</p>
+<pre class="r"><code>load(amstR::fromParentDir(&quot;data/wheat.RData&quot;))
+fit &lt;- aov(YIELD~FERTILIZ, data = wheat)
+summary(fit)</code></pre>
+<pre><code>            Df Sum Sq Mean Sq F value Pr(&gt;F)  
+FERTILIZ     2  289.5  144.75   6.976 0.0148 *
+Residuals    9  186.8   20.75                 
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<pre class="r"><code>pairwise.t.test(wheat$YIELD, wheat$FERTILIZ, p.adj = &quot;none&quot;)</code></pre>
+<pre><code>
+    Pairwise comparisons using t tests with pooled SD 
+
+data:  wheat$YIELD and wheat$FERTILIZ 
+
+  A      B     
+B 0.0656 -     
+C 0.1376 0.0047
+
+P value adjustment method: none </code></pre>
+<p>Dunnay post-hoc analysis (comparing with a basline) is not available in R We used no p-value adjustment, since only two comparisons were performed that are of interest: A vs C and B vs C. However, we could apply Bonferroni adjustment by taking these p-values and multiplying them by 2 (instead of 3 for aforementioned reasons).</p>
+<p>Check assumptions: Normal distribution of residuals Recall that the <code>lm</code> function is used for linear regression. In our case of a interval outcome variable and a categorical independent variable, it calculates the mean for each level of our independent variable. The resulting residuals are the difference between the observed value and the mean for the corresponding group. So these are exactly the same as for the ANOVA method, and can be used to easily get the residuals from our model.</p>
+<pre class="r"><code>fit &lt;- lm(YIELD~FERTILIZ, data = wheat)
+plot(fit, which = c(1,2))</code></pre>
+<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-11-1.png" width="672" style="display: block; margin: auto;" /><img src="figure/assignments_week2.Rmd/unnamed-chunk-11-2.png" width="672" style="display: block; margin: auto;" /></p>
+<ul>
+<li>From the first plot (fitted vs residuals), we can see that the spread is more or less the same for each group, so homoscedasticity seems to hold.</li>
+<li>From the second plot, we see that the residuals fit the normal distribution quite OK, exept for the lower tail, where it seems that the actual values are a little lower than what would be expected from a normal distribution.</li>
+<li>Independence of observations can not be checked from the data, but should follow from the study design</li>
+</ul>
+<blockquote>
+<ol start="2" style="list-style-type: lower-alpha">
+<li>How does the output for this analysis compare to the output for the same analysis in SPSS?</li>
+</ol>
+</blockquote>
+<p>The same F-value and p-value are calculated. Comparing with SPSS, this table does not include a row for ‘total’.</p>
+</div>
+<div id="starfish" class="section level4">
+<h4>10. Starfish</h4>
+<p>Answer the research questions from exercise #3, but now in R (use dataset starfish.RData).</p>
+<blockquote>
+<ol start="3" style="list-style-type: decimal">
+<li>To study the reproductive cycle of a specific species of starfish, individuals from two different locations were observed. To check whether the populations of starfishes at the two places differ in the mean metabole, two random samples were compared. The data has been saved in the file starfish.sav.</li>
+</ol>
+</blockquote>
+<blockquote>
+<ol style="list-style-type: lower-alpha">
+<li>Perform an independent samples t-test to test whether the mean metabole differs between the two locations and comment on the result.</li>
+</ol>
+</blockquote>
+<pre class="r"><code>load(amstR::fromParentDir(&quot;data/starfish.RData&quot;))
+t.test(metabole~location, data = starfish, var.equal = F, paired = F)</code></pre>
+<pre><code>
+    Welch Two Sample t-test
+
+data:  metabole by location
+t = -0.71322, df = 10.254, p-value = 0.4916
+alternative hypothesis: true difference in means is not equal to 0
+95 percent confidence interval:
+ -11.459307   5.887879
+sample estimates:
+mean in group A mean in group B 
+       170.7143        173.5000 </code></pre>
+<pre class="r"><code>t.test(metabole~location, data = starfish, var.equal = T, paired = F)</code></pre>
+<pre><code>
+    Two Sample t-test
+
+data:  metabole by location
+t = -0.71937, df = 11, p-value = 0.4869
+alternative hypothesis: true difference in means is not equal to 0
+95 percent confidence interval:
+ -11.308907   5.737478
+sample estimates:
+mean in group A mean in group B 
+       170.7143        173.5000 </code></pre>
+<blockquote>
+<ol start="2" style="list-style-type: lower-alpha">
+<li>Also perform a one-way analysis of variance and compare this with the result from a).</li>
+</ol>
+</blockquote>
+<pre class="r"><code>summary(aov(metabole~location, data = starfish))</code></pre>
+<pre><code>            Df Sum Sq Mean Sq F value Pr(&gt;F)
+location     1   25.1   25.07   0.517  0.487
+Residuals   11  532.9   48.45               </code></pre>
+<p>For a single independent variable with only 2-levels, the one-way ANOVA is equivalent to the unpaired two-sample T-test, assuming equal variance.</p>
+<blockquote>
+<ol start="3" style="list-style-type: lower-alpha">
+<li>What is the relation between the t-value of the t-test and the F-value of the ANOVA?</li>
+</ol>
+</blockquote>
+<pre class="r"><code>t.test(metabole~location, data = starfish, var.equal = T, paired = F)$statistic^2</code></pre>
+<pre><code>       t 
+0.517491 </code></pre>
+<p>The F-value is the squared t-value.</p>
+</div>
+<div id="sleep" class="section level4">
+<h4>11. Sleep</h4>
+<blockquote>
+<p>This exercise uses the built-in dataset sleep. a. Load the built-in dataset sleep into your workspace: data(sleep). (Type help(sleep) for information on the study design.)</p>
+</blockquote>
+<pre class="r"><code>data(sleep)</code></pre>
+<blockquote>
+<ol start="2" style="list-style-type: lower-alpha">
+<li>Make a boxplot and QQ-plot of the difference in extra hours of sleep for the two drugs for each patient.</li>
+</ol>
+</blockquote>
+<p>Note that these are paired data</p>
+<pre class="r"><code>diff = sleep[sleep$group == &quot;1&quot;, &quot;extra&quot;] - sleep[sleep$group == &quot;2&quot;, &quot;extra&quot;]
+boxplot(diff)</code></pre>
+<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-16-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>qqnorm(diff)
+qqline(diff, col = &quot;red&quot;)</code></pre>
+<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-16-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Looks pretty normally distributed.</p>
+<blockquote>
+<ol start="3" style="list-style-type: lower-alpha">
+<li>Which parametric test would you want to use to detect a difference in sleep for the two drugs? Is this test allowed? Would a non-parametric test be allowed here?</li>
+</ol>
+</blockquote>
+<p>A paired t-test could be used. The differences look pretty normally distributed. Otherwiss the Wilcoxon signed rank test could be used, assuming independent samples.</p>
+<pre class="r"><code>t.test(extra~group, data = sleep)</code></pre>
+<pre><code>
+    Welch Two Sample t-test
+
+data:  extra by group
+t = -1.8608, df = 17.776, p-value = 0.07939
+alternative hypothesis: true difference in means is not equal to 0
+95 percent confidence interval:
+ -3.3654832  0.2054832
+sample estimates:
+mean in group 1 mean in group 2 
+           0.75            2.33 </code></pre>
+<pre class="r"><code>wilcox.test(extra~group, data = sleep)</code></pre>
+<pre><code>Warning in wilcox.test.default(x = c(0.7, -1.6, -0.2, -1.2, -0.1, 3.4,
+3.7, : cannot compute exact p-value with ties</code></pre>
+<pre><code>
+    Wilcoxon rank sum test with continuity correction
+
+data:  extra by group
+W = 25.5, p-value = 0.06933
+alternative hypothesis: true location shift is not equal to 0</code></pre>
+<blockquote>
+<ol start="12" style="list-style-type: decimal">
+<li>Open the dataset water.RData. The dataset describes mortality and drinking water hardness for 61 cities in England and Wales. The column mortality is the averaged annual mortality per 100000 male inhabitants and the column hardness represents the calcium concentration (in parts per million). The meaning of the remaining columns is self-explanatory.</li>
+</ol>
+<ol style="list-style-type: lower-alpha">
+<li>Make a boxplot in which the hardness of the water in northern and southern regions is compared.</li>
+</ol>
+</blockquote>
+<pre class="r"><code>load(amstR::fromParentDir(&quot;data/water.RData&quot;))
+str(water)</code></pre>
+<pre><code>&#39;data.frame&#39;:   61 obs. of  4 variables:
+ $ location : Factor w/ 2 levels &quot;North&quot;,&quot;South&quot;: 2 1 2 1 1 1 1 2 1 2 ...
+ $ town     : chr  &quot;Bath&quot; &quot;Birkenhead&quot; &quot;Birmingham&quot; &quot;Blackburn&quot; ...
+ $ mortality: int  1247 1668 1466 1800 1609 1558 1807 1299 1637 1359 ...
+ $ hardness : int  105 17 5 14 18 10 15 78 10 84 ...</code></pre>
+<pre class="r"><code>boxplot(hardness~location, data = water)</code></pre>
+<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-18-1.png" width="672" style="display: block; margin: auto;" /></p>
+<blockquote>
+<ol start="2" style="list-style-type: lower-alpha">
+<li>Compare the hardness of water in northern and southern regions in a t-test. Are the conditions of a t-test met?</li>
+</ol>
+</blockquote>
+<pre class="r"><code>t.test(hardness~location, data = water, var.equal = F, paired = F)</code></pre>
+<pre><code>
+    Welch Two Sample t-test
+
+data:  hardness by location
+t = -4.3432, df = 40.136, p-value = 9.284e-05
+alternative hypothesis: true difference in means is not equal to 0
+95 percent confidence interval:
+ -57.68764 -21.05082
+sample estimates:
+mean in group North mean in group South 
+           30.40000            69.76923 </code></pre>
+<p>Equal variance does not have to be assumed. Normality of residuals however does need to be assumed. Inspect them with a QQ-plot:</p>
+<pre class="r"><code>plot(lm(hardness~location, data = water), which = 2)</code></pre>
+<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-20-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Does not look all too bad.</p>
+<blockquote>
+<ol start="3" style="list-style-type: lower-alpha">
+<li>Could you use a non-parametric test instead of the t-test in part b)?</li>
+</ol>
+</blockquote>
+<p>The variance in the South region is much higher than in the North region, this violates the assumptions from the Wilcoxon rank-sum test and the Mann-Whitney test, so no.</p>
+</div>
+<div id="student-incomes" class="section level4">
+<h4>13. Student incomes</h4>
+<blockquote>
+<p>This is a repeat of exercise #8, but now in R. In the dataset incomes.RData the column income represents a (would-be) sample of incomes for 100 randomly chosen students in Utrecht. The aim of this exercise is to make you aware of the risks involved when using transformation techniques in parametric statistics. a. Compute the mean income in this sample.</p>
+</blockquote>
+<pre class="r"><code>load(amstR::fromParentDir(&quot;data/incomes.RData&quot;))
+str(incomes)</code></pre>
+<pre><code>&#39;data.frame&#39;:   100 obs. of  1 variable:
+ $ income: num  486 1235 233 462 723 ...</code></pre>
+<pre class="r"><code>mean(incomes$income)</code></pre>
+<pre><code>[1] 685</code></pre>
+<blockquote>
+<ol start="2" style="list-style-type: lower-alpha">
+<li>Ignoring all conditions, compute a 95% confidence interval for the mean income of all students in Utrecht.</li>
+</ol>
+</blockquote>
+<pre class="r"><code>t.test(incomes$income)$conf.int</code></pre>
+<pre><code>[1] 529.4857 840.5142
+attr(,&quot;conf.level&quot;)
+[1] 0.95</code></pre>
+<blockquote>
+<ol start="3" style="list-style-type: lower-alpha">
+<li>Is the interval found in b) reliable?</li>
+</ol>
+</blockquote>
+<p>This interval should be reliable when the income in the population is normally distributed, or when the central-limit theorem helps us. First take a look at the distribution of our sample</p>
+<pre class="r"><code>hist(incomes$income)</code></pre>
+<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-23-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>These are highly skewed, now it is hard to know whether the central limit theorem will help us. We could try bootstrapping to see if our sample-mean looks T-distributed, but that will go too far for now.</p>
+<blockquote>
+<ol start="4" style="list-style-type: lower-alpha">
+<li>Transform the column income into a column logincome by taking the logarithms of the values in income.</li>
+</ol>
+</blockquote>
+<pre class="r"><code>incomes$logincome &lt;- log(incomes$income)
+hist(incomes$logincome)</code></pre>
+<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-24-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Looks much nicer.</p>
+<blockquote>
+<ol start="5" style="list-style-type: lower-alpha">
+<li>Compute a 95% confidence interval for the mean of log transformed student incomes in Utrecht.</li>
+</ol>
+</blockquote>
+<pre class="r"><code>t.test(incomes$logincome)$conf.int</code></pre>
+<pre><code>[1] 5.909353 6.272293
+attr(,&quot;conf.level&quot;)
+[1] 0.95</code></pre>
+<blockquote>
+<ol start="6" style="list-style-type: lower-alpha">
+<li>On the interval found in e), carry out a backward transformation to obtain an interval estimate for the mean income of all students in Utrecht.</li>
+</ol>
+</blockquote>
+<pre class="r"><code>exp(t.test(incomes$logincome)$conf.int)</code></pre>
+<pre><code>[1] 368.4675 529.6905
+attr(,&quot;conf.level&quot;)
+[1] 0.95</code></pre>
+<blockquote>
+<ol start="7" style="list-style-type: lower-alpha">
+<li>Is the interval found in f) reliable?</li>
+</ol>
+</blockquote>
+<pre class="r"><code>t.test(incomes$income)$conf.int</code></pre>
+<pre><code>[1] 529.4857 840.5142
+attr(,&quot;conf.level&quot;)
+[1] 0.95</code></pre>
+<pre class="r"><code>exp(t.test(incomes$logincome)$conf.int)</code></pre>
+<pre><code>[1] 368.4675 529.6905
+attr(,&quot;conf.level&quot;)
+[1] 0.95</code></pre>
+<p>The confidence intervals for both methods are pretty different, there is hardly any overlap. Since the log-transformed variable fits the model assumptions better, this result is deemed more reliable</p>
+<p>NB todo: create histogram, and plot both confidence intervals and the median in a single plot</p>
+</div>
+</div>
+</div>
+<div id="session-information" class="section level2">
+<h2>Session information</h2>
+<!-- Insert the session information into the document -->
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 3.4.1 (2017-06-30)
+Platform: x86_64-w64-mingw32/x64 (64-bit)
+Running under: Windows 7 x64 (build 7601) Service Pack 1
+
+Matrix products: default
+
+locale:
+[1] LC_COLLATE=Dutch_Netherlands.1252  LC_CTYPE=Dutch_Netherlands.1252   
+[3] LC_MONETARY=Dutch_Netherlands.1252 LC_NUMERIC=C                      
+[5] LC_TIME=Dutch_Netherlands.1252    
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+[1] ggplot2_2.2.1.9000
+
+loaded via a namespace (and not attached):
+ [1] Rcpp_0.12.12        survcomp_1.27.0     compiler_3.4.1     
+ [4] RColorBrewer_1.1-2  git2r_0.19.0        plyr_1.8.4         
+ [7] tools_3.4.1         digest_0.6.12       evaluate_0.10.1    
+[10] tibble_1.3.4        gtable_0.2.0        lattice_0.20-35    
+[13] rlang_0.1.2         Matrix_1.2-10       yaml_2.1.14        
+[16] prodlim_1.6.1       bootstrap_2017.2    amstR_0.1.3        
+[19] stringr_1.2.0       knitr_1.17          SuppDists_1.1-9.4  
+[22] rprojroot_1.2       grid_3.4.1          data.table_1.10.4-2
+[25] survival_2.41-3     rmarkdown_1.6       lava_1.5.1         
+[28] rmeta_2.16          magrittr_1.5        backports_1.1.0    
+[31] scales_0.5.0.9000   htmltools_0.3.6     survivalROC_1.0.3  
+[34] splines_3.4.1       colorspace_1.3-2    labeling_0.3       
+[37] KernSmooth_2.23-15  stringi_1.1.5       lazyeval_0.2.0     
+[40] munsell_0.4.3      </code></pre>
+</div>
+
+<hr>
+<p>
+    This <a href="http://rmarkdown.rstudio.com">R Markdown</a> site was created with <a href="https://github.com/jdblischak/workflowr">workflowr</a>
+</p>
+<hr>
+
+<!-- To enable disqus, uncomment the section below and provide your disqus_shortname -->
+
+<!-- disqus
+  <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+        var disqus_shortname = 'rmarkdown'; // required: replace example with your forum shortname
+
+        /* * * DON'T EDIT BELOW THIS LINE * * */
+        (function() {
+            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+-->
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

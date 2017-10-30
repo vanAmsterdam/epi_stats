@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+<meta name="author" content="Wouter van Amsterdam" />
+
+<meta name="date" content="2017-10-30" />
+
+<title>ANOVA and non parametric tests</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-1.1/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-1.1/highlight.js"></script>
+<link href="site_libs/font-awesome-4.5.0/css/font-awesome.min.css" rel="stylesheet" />
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs && document.readyState && document.readyState === "complete") {
+   window.setTimeout(function() {
+      hljs.initHighlighting();
+   }, 0);
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+
+<div class="container-fluid main-container">
+
+<!-- tabsets -->
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+</script>
+
+<!-- code folding -->
+
+
+
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+  padding-left: 25px;
+  text-indent: 0;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">epi_stats</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/jdblischak/workflowr">
+    <span class="fa fa-github"></span>
+     
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">ANOVA and non parametric tests</h1>
+<h4 class="author"><em>Wouter van Amsterdam</em></h4>
+<h4 class="date"><em>2017-10-30</em></h4>
+
+</div>
+
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+<!-- Update knitr chunk options -->
+<!-- Insert the date the file was last updated -->
+<p><strong>Last updated:</strong> 2017-10-30</p>
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+<p><strong>Code version:</strong> 2d66380</p>
+<!-- Add your analysis here -->
+<p>Teacher: Maria Schipper</p>
+<ul>
+<li>one-way ANOVA</li>
+<li>F-distribution (Fischer-distribution)</li>
+<li>Post-hoc tests</li>
+<li>Assumptions of ANOVA</li>
+<li>non-parametric statistics</li>
+<li>flow-chart of the statistical Tests</li>
+</ul>
+<div id="anova" class="section level2">
+<h2>ANOVA</h2>
+<p>Example data: eggs.</p>
+<p>Set density as factor variable</p>
+<pre class="r"><code>require(amstR)</code></pre>
+<pre><code>Loading required package: amstR</code></pre>
+<pre class="r"><code>load(fromParentDir(&quot;data/eggs.RData&quot;))
+summary(limpet.eggs)</code></pre>
+<pre><code>    season      density           eggs       
+ spring:12   Min.   : 8.00   Min.   :0.3560  
+ summer:12   1st Qu.:13.25   1st Qu.:0.9165  
+             Median :22.50   Median :1.4330  
+             Mean   :24.50   Mean   :1.4717  
+             3rd Qu.:33.75   3rd Qu.:1.9227  
+             Max.   :45.00   Max.   :2.8750  </code></pre>
+<pre class="r"><code>limpet.eggs$density &lt;- as.factor(limpet.eggs$density)
+xtabs((eggs)~as.factor(density)+season, data = limpet.eggs)</code></pre>
+<pre><code>                  season
+as.factor(density) spring summer
+                8   7.250  5.500
+                15  6.532  3.533
+                30  4.696  2.434
+                45  3.599  1.778</code></pre>
+<pre class="r"><code>boxplot(eggs~density, data = limpet.eggs)</code></pre>
+<p><img src="figure/5_anova_non_parametric.Rmd/unnamed-chunk-1-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Observe: less spread in group with lower mean. Usually: spread scales with mean.</p>
+<div id="assumptions" class="section level3">
+<h3>Assumptions</h3>
+<ul>
+<li>Homoscedasticity: equal variances among different groups</li>
+<li>Normal distribution of residuals</li>
+<li>Independence of the measurements (this you cannot check in data; requires a good design)</li>
+</ul>
+<p>You can do many tests</p>
+<pre class="r"><code>level_combinations &lt;- combn(1:4, m = 2)
+for (i in 1:ncol(level_combinations)) {
+  cat_levels = levels(limpet.eggs$density)[level_combinations[, i]]
+  cat(&quot;\n&quot;, cat_levels)
+  res &lt;- t.test(eggs~density, 
+         data = limpet.eggs[limpet.eggs$density %in% 
+                              cat_levels,])
+  print(res$p.value)
+}</code></pre>
+<pre><code>
+ 8 15[1] 0.2304204
+
+ 8 30[1] 0.0194186
+
+ 8 45[1] 0.001233278
+
+ 15 30[1] 0.2212155
+
+ 15 45[1] 0.0381764
+
+ 30 45[1] 0.3555619</code></pre>
+<p>Pooled variance between group 8 and 45 is lower than in group 8 and 15. So by this, the p-value will decrease.</p>
+<p>Take total variance, split it up into componants: variance explained by groups + extra variance.</p>
+</div>
+<div id="types" class="section level3">
+<h3>Types</h3>
+<ul>
+<li>one-way: test for difference among three or more independent groups</li>
+<li>factorial ANOVA is used when the experimenter wants to study the effects of two or more treatment variables. includes interaction effects; e.g. two-way, three-way</li>
+<li>repeated measurement ANOVA is used when the subjects are subjected to repeated measures or matched observations; e.g. 4 different treatments, 4 time observations per subject; like paired T-test; can also be used for clustering / stratification.</li>
+<li>multivariate analysis of variance (MANOVA) is used when there is more than one dependent variable.</li>
+</ul>
+</div>
+<div id="model" class="section level3">
+<h3>Model</h3>
+<p><span class="math display">\[y_{ij} = \hat{\mu} + \hat{\tau_j} + \hat{\epsilon_{ij}}\]</span></p>
+<p><span class="math inline">\(i = 1, ..., n_j\)</span>; <span class="math inline">\(j = 1, ..., J\)</span>; <span class="math inline">\(\sum_{j = 1}^{J}{\tau_j=0}\)</span>; <span class="math inline">\(\epsilon \sim N(0, \sigma_{\epsilon}^2)\)</span></p>
+<p>Note: variance of residuals is not dependent on group</p>
+<p><span class="math display">\[H_0 = \tau_1 = \tau_2 = ... = \tau_j = 0\]</span></p>
+<p><span class="math inline">\(H_1\)</span> is that 2 or more <span class="math inline">\(\tau_j \neq 0\)</span></p>
+<p>The do post-hoc test (with correction of significance). Than possibilities: test all groups against total mean. You can also do contrasts (2 groups against each other).</p>
+<p>Optimize <span class="math display">\[y_{ij} - \bar{y}\]</span> residuals by overall mean; variance under <span class="math inline">\(H_0\)</span>. <span class="math display">\[y_{ij} - \bar{y}_j\]</span> residuals by group</p>
+<p><span class="math display">\[y_{ij} - \bar{y} = \bar{y}_j - \bar{y} + y_{ij} - \bar{y}_j\]</span>; variance under <span class="math inline">\(H_1\)</span>. <span class="math display">\[\bar{y}_j - \bar{y}\]</span> is variance explained by model (group effects)</p>
+<table>
+<thead>
+<tr class="header">
+<th>test</th>
+<th>table</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>n1</td>
+<td>n2</td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr class="header">
+<th>Source</th>
+<th>SS</th>
+<th>df</th>
+<th>MS</th>
+<th>F</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Between</td>
+<td><span class="math inline">\(SS_{between}\)</span></td>
+</tr>
+<tr class="even">
+<td>Within</td>
+<td><span class="math inline">\(SS_{within}\)</span></td>
+</tr>
+<tr class="odd">
+<td>Total</td>
+<td><span class="math inline">\(SS_{total}\)</span></td>
+</tr>
+</tbody>
+</table>
+<p><span class="math inline">\(SS\)</span> = Sum of squares</p>
+<p><span class="math inline">\(SS_{between} = \sum_{j}{n_j(\bar{y}_j-\bar{y})^2}\)</span>; <span class="math inline">\(SS_{within} = \sum_i\sum_j{(y_{ij} - \bar{y}_j)^2}\)</span>; <span class="math inline">\(SS_{total} = \sum_i\sum_j{(y_{ij} - \bar{y})^2} = SS_{between} + SS_{within}\)</span>;</p>
+<p><span class="math inline">\(SS_between\)</span></p>
+<p>Total: <span class="math inline">\(df_{total} = \sum{(n_j)}-1\)</span></p>
+<p>Within groups: <span class="math inline">\(df_{within} = \sum({n_j-1})\)</span></p>
+<p>Between groups <span class="math inline">\(df_{between} = J-1\)</span></p>
+<p>Mean squares = sum of squares / degrees of freedom</p>
+<p><span class="math display">\[F = MS_{between} / MS_{within}\]</span></p>
+<p>F is F-distributed with <span class="math inline">\(a = J-1\)</span> and <span class="math inline">\(b = \sum({n_j-1})\)</span> degrees of freedom</p>
+<p>Numerator degrees of freedom: a Denomerator degrees of freedom: b</p>
+<p>Null hypothesis: <span class="math inline">\(MS_{between} = MS_{within}\)</span></p>
+<p>Always single side test: is my F statistic greater than 1?</p>
+<p>Anova with 2 groups = T.Test with a = 1; <span class="math display">\[T^2 = F\]</span></p>
+<ul>
+<li>Look up if T is example of ANOVA *</li>
+</ul>
+<pre class="r"><code>summary(aov(eggs ~ density, data = limpet.eggs))</code></pre>
+<pre><code>            Df Sum Sq Mean Sq F value  Pr(&gt;F)   
+density      3  5.284  1.7614   5.566 0.00607 **
+Residuals   20  6.330  0.3165                   
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+</div>
+<div id="post-hoc" class="section level3">
+<h3>Post-hoc</h3>
+<p>Do only when an overall effect is found.</p>
+<p>choice for test is determined by:</p>
+<ul>
+<li>number of comparisons</li>
+<li>whether or not the multiple comparisons were planned</li>
+<li>other criteria (sample sizes are equal, variances are equal, multiple comparisons are orthogonal, …)</li>
+</ul>
+<p>No correction with &lt;=3 comparisons, and each correction holds unique information (= orthogonal)</p>
+</div>
+<div id="fishers-least-significant-difference-lsd-test" class="section level3">
+<h3>Fisher’s least significant difference (LSD) test</h3>
+<ul>
+<li>regular unpaired t-test, but with <span class="math inline">\(MS_{residual}\)</span> instead of <span class="math inline">\(\sigma_{p}\)</span>, <span class="math inline">\(n-J\)</span> degrees of freedom (=df associated within-groups SS); so for each comparison, all observations are used for estimating sigma (thus the high degrees of freedom, more power)</li>
+<li>P-value is <em>not</em> corrected for multiple comparisons</li>
+<li>sometimes used for a small number of planned (<em>a priori</em>) comparisons</li>
+</ul>
+</div>
+<div id="fishers-lsd-with-bonferroni-correction" class="section level3">
+<h3>Fisher’s LSD with Bonferroni correction</h3>
+<ul>
+<li>Take p-value from Fisher’s LSD test multiplied by the number of tests</li>
+<li>Better for a small number of <em>a priori</em> defined comparison than LSD</li>
+<li>Too conservative when testing <em>all possible</em> pairwise comparisons</li>
+</ul>
+</div>
+<div id="tukeys-hsd-test-or-turkey-kramer-test" class="section level3">
+<h3>Tukey’s HSD test (or Turkey-Kramer test)</h3>
+<ul>
+<li>Like T-test, but with Studentized range distribution; larger critical value</li>
+<li>Used for testing all possible pairwise comparisons (preferred)</li>
+</ul>
+</div>
+<div id="dunnetts-test" class="section level3">
+<h3>Dunnett’s test</h3>
+<ul>
+<li>Compare experimental groups to a control group (so less pair-wise comparisons)</li>
+</ul>
+</div>
+<div id="contrasts-linear-combinations-of-means-in-general" class="section level3">
+<h3>Contrasts (linear combinations of means) in general</h3>
+<ul>
+<li>t-tests based on weighted sum of the group means</li>
+</ul>
+</div>
+<div id="scheffe-test" class="section level3">
+<h3>Scheffe test</h3>
+<ul>
+<li>used for controlling type I error when testing all possible linear combinations of means</li>
+</ul>
+<pre class="r"><code>TukeyHSD(aov(eggs ~ density, data = limpet.eggs))</code></pre>
+<pre><code>  Tukey multiple comparisons of means
+    95% family-wise confidence level
+
+Fit: aov(formula = eggs ~ density, data = limpet.eggs)
+
+$density
+            diff       lwr        upr     p adj
+15-8  -0.4475000 -1.356581  0.4615808 0.5269322
+30-8  -0.9366667 -1.845747 -0.0275859 0.0419815
+45-8  -1.2288333 -2.137914 -0.3197526 0.0059035
+30-15 -0.4891667 -1.398247  0.4199141 0.4525566
+45-15 -0.7813333 -1.690414  0.1277474 0.1082534
+45-30 -0.2921667 -1.201247  0.6169141 0.8051677</code></pre>
+<p>With T-tests: <span class="math display">\[ T = \frac{\bar{X_1}-\bar{X_2}}{s_{p}\sqrt{\frac{1}{n_1}+\frac{1}{n_2}}}\]</span></p>
+<p>Now use: <span class="math display">\[s_{p} = \sqrt(MS_{residual})\]</span></p>
+</div>
+<div id="evaluating-assumptions" class="section level3">
+<h3>Evaluating assumptions</h3>
+<div id="normality-of-residuals" class="section level4">
+<h4>Normality of residuals</h4>
+<p>Check normal distribution of residuals. This is easiest by using a linear model.</p>
+<pre class="r"><code>fit &lt;- lm(eggs~density, data = limpet.eggs)
+summary(fit)</code></pre>
+<pre><code>
+Call:
+lm(formula = eggs ~ density, data = limpet.eggs)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-0.81050 -0.40333  0.02775  0.30775  1.04167 
+
+Coefficients:
+            Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept)   2.1250     0.2297   9.253 1.15e-08 ***
+density15    -0.4475     0.3248  -1.378  0.18349    
+density30    -0.9367     0.3248  -2.884  0.00918 ** 
+density45    -1.2288     0.3248  -3.783  0.00117 ** 
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+Residual standard error: 0.5626 on 20 degrees of freedom
+Multiple R-squared:  0.455, Adjusted R-squared:  0.3732 
+F-statistic: 5.566 on 3 and 20 DF,  p-value: 0.006071</code></pre>
+<pre class="r"><code>plot(fit, which = c(1,2))</code></pre>
+<p><img src="figure/5_anova_non_parametric.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /><img src="figure/5_anova_non_parametric.Rmd/unnamed-chunk-5-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Formal tests: * Kolmogorov-Smirnov test * Shapiro-Wilk test</p>
+<pre class="r"><code>ks.test(resid(fit), y = &quot;pnorm&quot;)</code></pre>
+<pre><code>Warning in ks.test(resid(fit), y = &quot;pnorm&quot;): ties should not be present for
+the Kolmogorov-Smirnov test</code></pre>
+<pre><code>
+    One-sample Kolmogorov-Smirnov test
+
+data:  resid(fit)
+D = 0.20883, p-value = 0.2461
+alternative hypothesis: two-sided</code></pre>
+<pre class="r"><code>shapiro.test(resid(fit))</code></pre>
+<pre><code>
+    Shapiro-Wilk normality test
+
+data:  resid(fit)
+W = 0.96941, p-value = 0.6524</code></pre>
+<p>Caveats for formal testing for normality: * many data points means high power for testing, also for testing for non-normalitys</p>
+<p>NB: central limit theorem weakens the reliance of ANOVA on this assumption, given homoscedascicity</p>
+<p>NB: ANOVA robus against to non-normality when sample sizes are equal</p>
+</div>
+<div id="check-homogeneity-of-variance" class="section level4">
+<h4>Check homogeneity of variance</h4>
+<ul>
+<li>plot residuals vs fitted (which is residuals per gropu)</li>
+</ul>
+<div id="formal-testing" class="section level5">
+<h5>Formal testing</h5>
+<p>use Levene’s test or Brown-Forsyth test * Tests the null hypothesis that the population variances are equal * In practice the test is equal to a one way ANOVA analysis on a transformation (|y_ijâˆ’y_j |) of the original data * One advantage of Levene’s test is that it does not require normality of the underlying data. * Another good test is the Brown-Forsyth test in which the mean is replaced by the median in the transformation.</p>
+<p>NB ANOVA not robust to clear differences between variances, especially when the sample sizes differ considerably.</p>
+<p>NB Transformations can make distributions more normal and variances more homogeneous.</p>
+</div>
+</div>
+<div id="check-independence-of-observations" class="section level4">
+<h4>Check independence of observations</h4>
+<p>Very imporant, but it can’t be checked.</p>
+</div>
+</div>
+<div id="when-assumptions-are-not-met" class="section level3">
+<h3>When assumptions are not met</h3>
+<ul>
+<li>Weighted ANOVA or weighted regression -&gt; groups with lower variance are weighted more</li>
+<li>non-arametric statistics; generally non-normality is OK, but homoscedasticity is usually needed</li>
+<li>transform data: when non-normal distribution, and when there is also no homscedasticity</li>
+<li>bootstrapping can always be used</li>
+</ul>
+</div>
+</div>
+<div id="non-parametric-tests" class="section level2">
+<h2>Non-parametric tests</h2>
+<p>In general: replace values with ranks, do a test on the ranks No need for assumption on distribution, but the distribution should be the same for each group. Only location can be different, spread should be comparable.</p>
+<table style="width:11%;">
+<colgroup>
+<col width="5%" />
+<col width="5%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>parametric</th>
+<th>non-parametric</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1-sample t-test or paired sample t-test</td>
+<td>Wilcoxon signed-rank test or Sign Test (difference pos vs negative, and use binomial distribution)</td>
+</tr>
+<tr class="even">
+<td>2-sample t-test</td>
+<td>Wilcoxon rank sum test or Mann-Whitney test</td>
+</tr>
+<tr class="odd">
+<td>one-way ANOVA</td>
+<td>Kruskal-Wallice test</td>
+</tr>
+<tr class="even">
+<td>two-way ANOVA</td>
+<td><strong>no non-parametric variant</strong></td>
+</tr>
+<tr class="odd">
+<td>randomized block design</td>
+<td>Friedman test</td>
+</tr>
+<tr class="even">
+<td>Pearson correlation</td>
+<td>Spearman rank correlation</td>
+</tr>
+</tbody>
+</table>
+<div id="wilcoxon-rank-sum-and-kruskal-wallis-test-assumptions" class="section level4">
+<h4>Wilcoxon rank-sum and Kruskal-Wallis test assumptions</h4>
+<ul>
+<li>iid-random samples</li>
+<li>measurements scale is at least ordinal</li>
+<li>population distribution functions are identical for groups except for a possible difference in location (not spread)</li>
+</ul>
+</div>
+<div id="wilcoxon-signed-rank-test" class="section level4">
+<h4>Wilcoxon signed rank test</h4>
+<ul>
+<li>Differences are mutually independent (random sample)</li>
+<li>measurement scale of the differences is at least interval</li>
+<li>the distribution of the differences is symmetric</li>
+</ul>
+</div>
+</div>
+<div id="session-information" class="section level2">
+<h2>Session information</h2>
+<!-- Insert the session information into the document -->
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 3.4.1 (2017-06-30)
+Platform: x86_64-w64-mingw32/x64 (64-bit)
+Running under: Windows 7 x64 (build 7601) Service Pack 1
+
+Matrix products: default
+
+locale:
+[1] LC_COLLATE=Dutch_Netherlands.1252  LC_CTYPE=Dutch_Netherlands.1252   
+[3] LC_MONETARY=Dutch_Netherlands.1252 LC_NUMERIC=C                      
+[5] LC_TIME=Dutch_Netherlands.1252    
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+[1] amstR_0.1.3
+
+loaded via a namespace (and not attached):
+ [1] bootstrap_2017.2    survcomp_1.27.0     Rcpp_0.12.12       
+ [4] knitr_1.17          magrittr_1.5        splines_3.4.1      
+ [7] prodlim_1.6.1       lattice_0.20-35     stringr_1.2.0      
+[10] survivalROC_1.0.3   tools_3.4.1         grid_3.4.1         
+[13] data.table_1.10.4-2 KernSmooth_2.23-15  rmeta_2.16         
+[16] git2r_0.19.0        htmltools_0.3.6     yaml_2.1.14        
+[19] survival_2.41-3     rprojroot_1.2       digest_0.6.12      
+[22] Matrix_1.2-10       lava_1.5.1          RColorBrewer_1.1-2 
+[25] SuppDists_1.1-9.4   evaluate_0.10.1     rmarkdown_1.6      
+[28] stringi_1.1.5       compiler_3.4.1      backports_1.1.0    </code></pre>
+</div>
+
+<hr>
+<p>
+    This <a href="http://rmarkdown.rstudio.com">R Markdown</a> site was created with <a href="https://github.com/jdblischak/workflowr">workflowr</a>
+</p>
+<hr>
+
+<!-- To enable disqus, uncomment the section below and provide your disqus_shortname -->
+
+<!-- disqus
+  <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+        var disqus_shortname = 'rmarkdown'; // required: replace example with your forum shortname
+
+        /* * * DON'T EDIT BELOW THIS LINE * * */
+        (function() {
+            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+-->
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
