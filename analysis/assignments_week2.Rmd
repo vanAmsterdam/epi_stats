@@ -1,0 +1,336 @@
+---
+title: "Assignments week 2 for Classical Methods in Data Analysis"
+author: "Wouter van Amsterdam"
+date: 2017-10-29
+output: html_document
+---
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+```
+
+<!-- Update knitr chunk options -->
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+<!-- Insert the date the file was last updated -->
+```{r last-updated, echo=FALSE, results='asis'}
+```
+
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+```{r code-version, echo=FALSE, results='asis'}
+```
+
+<!-- Add your analysis here -->
+
+## Day 5: ANOVA and non-parametric methods
+### Exercises without SPSS or R
+
+#### 1.	
+> Twelve plots of land were randomly divided into three groups of four plots. Two fertilizers, A and B, are applied for the cultivation of wheat while the third group C serves as a control group, without application of fertilizer. The wheat yields are as follows:
+
+```{r}
+yields <- matrix(c(72, 74, 60, 
+          67, 78, 64,
+          60, 72, 65, 
+          66, 68, 55),
+          nrow = 4, byrow = T,
+       dimnames = list(1:4, c("A", "B", "C")))
+yields
+```
+
+> a.	How would you perform the randomization for this study?
+
+Randomize assignment to fertilizers or control. Perform double blinding, including 'placebo' fertilizer.
+
+> The following ANOVA table was produced on the basis of data above:
+
+> Sum of Squares	df	Mean Square	F	p-value
+> Between Groups	289.50	?	?	?	0.015
+> Within Groups	186.75	?	?		
+> Total	476.25	?			
+
+> b.	Fill in the missing parts of the ANOVA table. See if you can find the p-value in the F tables.
+
+Recall that:
+
+$$df_{total} = \sum{(n_j)}-1$$
+$$df_{within} = \sum({n_j-1})$$
+$$df_{between} = J-1$$
+
+Here $J = 3$ the number of groups.
+ 
+```{r}
+n_total = length(yields)
+n_groups = ncol(yields)
+n_pergroup = nrow(yields)
+
+sum_squares <- function(x) sum((x-mean(x))^2)
+
+ss_total = sum_squares(as.vector(yields))
+ss_within = sum(apply(yields, 2, sum_squares)) # this applies 'sum_squares' to each collum of yields
+ss_between = sum(n_pergroup*(colMeans(yields) - mean(yields))^2)
+
+df_total = n_total - 1
+df_within = 3*(n_pergroup - 1)
+df_between = n_groups - 1
+
+ms_within = ss_within / df_within
+ms_between = ss_between / df_between
+
+f_value = ms_between / ms_within
+
+qf(p = 0.95, df1 = df_between, df2 = df_within)
+
+```
+
+So here $a = `r df_between`$ and $b = `r df_within`$.
+
+> c.	Test the null hypothesis that there is no difference among the three treatments A, B and C, meaning that the use of fertilizers under the conditions of the experiment has no effect.
+
+```{r}
+pf(q = f_value, df1 = df_between, df2 = df_within, lower.tail = F)
+```
+
+
+> d.	If no significant overall result had been found by ANOVA, would the result of multiple post-hoc tests be valid?
+
+No, this is only meaningful when there is an overall effect found.
+
+Now replicate with built-in anova:
+```{r}
+yields_melted = data.frame(group = rep(c("A", "B", "C"), each = 4),
+                          yield = as.vector(yields))
+yields_melted
+summary(aov(yield~group, data = yields_melted))
+```
+
+
+#### 2.	
+> The aim of a certain survey in a hospital was to compare the waiting times of patients in two clinics. The waiting times (in minutes) were as follows: 
+
+```{r}
+load(amstR::fromParentDir("data/clinic.RData"))
+summary(clinic)
+```
+
+Looks like there is a row with only missing values, let's remove that row.
+```{r}
+clinic[is.na(clinic$TIME),]
+full_clinic <- clinic
+clinic <- clinic[!is.na(clinic$TIME),]
+```
+
+Create plots of the densities
+```{r}
+require(ggplot2)
+ggplot(clinic, aes(x = TIME, fill = CLINIC)) + 
+  geom_density(alpha = .7)
+```
+
+Both distributions of waiting times seem approximately normally distributed, with some right skewness and (of course) a lower bound of (>)0.
+
+> What are the problems when you compare these data? What type of analysis would you prefer? Which questions exactly are answered with your analysis? What would you do if some waiting times were ‘censored’ because patients left the hospital? The data are given in the file clinic.sav or clinic.RData, if you want to easily get some descriptive statistics to help you answer the questions above.
+
+Both groups are of unequal size, and their variances seem to differ. This will cause troubles with ANOVA as it violates homoscedasticity. Since these are left-bounded varaibles, they seem approximately poisson-distributed. Currently we have no tools to deal with censored data. The most straightforward approach seems to be to do a Welch unpaired two-sample T-test (Welch = no equal variance assumption). We could look at the Wilcoxon rank sum test or the Mann-Whitney test. These tests do not require normality, however they do require homoscedasticity. Looking at the distributions of our data, heteroscedasticity seems to be a bigger problem than non-normality.
+
+```{r}
+t.test(TIME ~ CLINIC, data = clinic, paired = F, var.equal = F)
+```
+
+Check distribution of residuals
+```{r}
+fit <- lm(TIME~CLINIC, data = clinic)
+plot(fit, which = 2)
+```
+
+The residuals are higher than expected on the upper side of the distribution, which indicates right skewed data, as could be seen from the density plots. 
+
+
+### Exercises in R
+
+#### 9.	
+> Answer the research questions from exercise #1, but now in R (use dataset wheat.RData).
+> a.	Make sure to perform a complete analysis, including checking the model assumptions. 
+
+Perform ANOVA
+```{r}
+load(amstR::fromParentDir("data/wheat.RData"))
+fit <- aov(YIELD~FERTILIZ, data = wheat)
+summary(fit)
+pairwise.t.test(wheat$YIELD, wheat$FERTILIZ, p.adj = "none")
+```
+
+Dunnay post-hoc analysis (comparing with a basline) is not available in R
+We used no p-value adjustment, since only two comparisons were performed that are of interest: A vs C and B vs C. However, we could apply Bonferroni adjustment by taking these p-values and multiplying them by 2 (instead of 3 for aforementioned reasons).
+
+Check assumptions:
+Normal distribution of residuals
+Recall that the `lm` function is used for linear regression. In our case of a interval outcome variable and a categorical independent variable, it calculates the mean for each level of our independent variable. The resulting residuals are the difference between the observed value and the mean for the corresponding group. So these are exactly the same as for the ANOVA method, and can be used to easily get the residuals from our model.
+```{r}
+fit <- lm(YIELD~FERTILIZ, data = wheat)
+plot(fit, which = c(1,2))
+```
+
+* From the first plot (fitted vs residuals), we can see that the spread is more or less the same for each group, so homoscedasticity seems to hold. 
+* From the second plot, we see that the residuals fit the normal distribution quite OK, exept for the lower tail, where it seems that the actual values are a little lower than what would be expected from a normal distribution. 
+* Independence of observations can not be checked from the data, but should follow from the study design
+
+> b.	How does the output for this analysis compare to the output for the same analysis in SPSS?
+
+The same F-value and p-value are calculated. Comparing with SPSS, this table does not include a row for 'total'.
+
+#### 10. Starfish
+Answer the research questions from exercise #3, but now in R (use dataset starfish.RData).
+
+> 3.	To study the reproductive cycle of a specific species of starfish, individuals from two different locations were observed. To check whether the populations of starfishes at the two places differ in the mean metabole, two random samples were compared. The data has been saved in the file starfish.sav.
+
+> a.	Perform an independent samples t-test to test whether the mean metabole differs between the two locations and comment on the result.
+
+```{r}
+load(amstR::fromParentDir("data/starfish.RData"))
+t.test(metabole~location, data = starfish, var.equal = F, paired = F)
+t.test(metabole~location, data = starfish, var.equal = T, paired = F)
+```
+
+> b.	Also perform a one-way analysis of variance and compare this with the result from a). 
+
+```{r}
+summary(aov(metabole~location, data = starfish))
+```
+
+For a single independent variable with only 2-levels, the one-way ANOVA is equivalent to the unpaired two-sample T-test, assuming equal variance.
+
+> c.	What is the relation between the t-value of the t-test and the F-value of the ANOVA?
+
+```{r}
+t.test(metabole~location, data = starfish, var.equal = T, paired = F)$statistic^2
+```
+
+The F-value is the squared t-value.
+
+#### 11. Sleep
+> This exercise uses the built-in dataset sleep.
+> a.	Load the built-in dataset sleep into your workspace: data(sleep). (Type help(sleep) for information on the study design.)
+
+```{r}
+data(sleep)
+```
+
+> b.	Make a boxplot and QQ-plot of the difference in extra hours of sleep for the two drugs for each patient.
+
+Note that these are paired data
+
+```{r}
+diff = sleep[sleep$group == "1", "extra"] - sleep[sleep$group == "2", "extra"]
+boxplot(diff)
+qqnorm(diff)
+qqline(diff, col = "red")
+```
+
+Looks pretty normally distributed.
+
+> c.	Which parametric test would you want to use to detect a difference in sleep for the two drugs? Is this test allowed? Would a non-parametric test be allowed here?
+
+A paired t-test could be used. The differences look pretty normally distributed. Otherwiss the Wilcoxon signed rank test could be used, assuming independent samples.
+
+```{r}
+t.test(extra~group, data = sleep)
+wilcox.test(extra~group, data = sleep)
+```
+
+> 12.	Open the dataset water.RData. The dataset describes mortality and drinking water hardness for 61 cities in England and Wales. The column mortality is the averaged annual mortality per 100000 male inhabitants and the column hardness represents the calcium concentration (in parts per million). The meaning of the remaining columns is self-explanatory.
+a.	Make a boxplot in which the hardness of the water in northern and southern regions is compared.
+
+```{r}
+load(amstR::fromParentDir("data/water.RData"))
+str(water)
+boxplot(hardness~location, data = water)
+```
+
+> b.	Compare the hardness of water in northern and southern regions in a t-test. Are the conditions of a t-test met?
+
+```{r}
+t.test(hardness~location, data = water, var.equal = F, paired = F)
+```
+
+Equal variance does not have to be assumed. Normality of residuals however does need to be assumed. Inspect them with a QQ-plot:
+
+```{r}
+plot(lm(hardness~location, data = water), which = 2)
+```
+
+Does not look all too bad.
+
+> c.	Could you use a non-parametric test instead of the t-test in part b)?
+
+The variance in the South region is much higher than in the North region, this violates the assumptions from the Wilcoxon rank-sum test and the Mann-Whitney test, so no.
+
+#### 13.	Student incomes
+> This is a repeat of exercise #8, but now in R. In the dataset incomes.RData the column income represents a (would-be) sample of incomes for 100 randomly chosen students in Utrecht. The aim of this exercise is to make you aware of the risks involved when using transformation techniques in parametric statistics.
+a.	Compute the mean income in this sample.
+
+```{r}
+load(amstR::fromParentDir("data/incomes.RData"))
+str(incomes)
+mean(incomes$income)
+```
+
+> b.	Ignoring all conditions, compute a 95% confidence interval for the mean income of all students in Utrecht.
+
+```{r}
+t.test(incomes$income)$conf.int
+```
+
+> c.	Is the interval found in b) reliable?
+
+This interval should be reliable when the income in the population is normally distributed, or when the central-limit theorem helps us. First take a look at the distribution of our sample
+
+```{r}
+hist(incomes$income)
+```
+
+These are highly skewed, now it is hard to know whether the central limit theorem will help us. We could try bootstrapping to see if our sample-mean looks T-distributed, but that will go too far for now.
+
+> d.	Transform the column income into a column logincome by taking the logarithms of the values in income.
+
+```{r}
+incomes$logincome <- log(incomes$income)
+hist(incomes$logincome)
+```
+
+Looks much nicer.
+
+> e.	Compute a 95% confidence interval for the mean of log transformed student incomes in Utrecht.
+
+```{r}
+t.test(incomes$logincome)$conf.int
+```
+
+
+> f.	On the interval found in e), carry out a backward transformation to obtain an interval estimate for the mean income of all students in Utrecht.
+
+```{r}
+exp(t.test(incomes$logincome)$conf.int)
+```
+
+> g.	Is the interval found in f) reliable?
+
+```{r}
+t.test(incomes$income)$conf.int
+exp(t.test(incomes$logincome)$conf.int)
+```
+
+The confidence intervals for both methods are pretty different, there is hardly any overlap. Since the log-transformed variable fits the model assumptions better, this result is deemed more reliable
+
+NB todo: create histogram, and plot both confidence intervals and the median in a single plot
+
+
+## Session information
+
+<!-- Insert the session information into the document -->
+```{r session-info}
+```
