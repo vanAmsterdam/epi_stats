@@ -313,19 +313,18 @@ div.tocify {
 shared across the workflowr files. -->
 <!-- Update knitr chunk options -->
 <!-- Insert the date the file was last updated -->
-<p><strong>Last updated:</strong> 2017-10-26</p>
+<p><strong>Last updated:</strong> 2017-10-31</p>
 <!-- Insert the code version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
-<p><strong>Code version:</strong> b498b13</p>
+<p><strong>Code version:</strong> 52f415c</p>
 <!-- Add your analysis here -->
 <div id="setup" class="section level2">
 <h2>Setup</h2>
 <p>Teacher: Cas Kruitwagen, <a href="mailto:c.l.j.j.kruitwagen@umcutrecht.nl">c.l.j.j.kruitwagen@umcutrecht.nl</a></p>
 <div id="load-some-r-packages" class="section level3">
 <h3>Load some R-packages</h3>
-<pre class="r"><code>library(data.table)</code></pre>
-<pre><code>Warning: package &#39;data.table&#39; was built under R version 3.4.2</code></pre>
-<pre class="r"><code>library(amstR)
+<pre class="r"><code>library(data.table)
+library(amstR)
 library(magrittr)
 library(ggplot2)</code></pre>
 </div>
@@ -405,7 +404,7 @@ alternative hypothesis: true mean is not equal to 0
 sample estimates:
 mean of x 
  22.47059 </code></pre>
-<pre class="r"><code>t.test(FB~age, data = balance)</code></pre>
+<pre class="r"><code>t.test(FB~age, data = balance, paired = F)</code></pre>
 <pre><code>
     Welch Two Sample t-test
 
@@ -417,7 +416,7 @@ alternative hypothesis: true difference in means is not equal to 0
 sample estimates:
 mean in group Elderly   mean in group Young 
              26.33333              18.12500 </code></pre>
-<pre class="r"><code>t.test(SS~age, data = balance)</code></pre>
+<pre class="r"><code>t.test(SS~age, data = balance, paired = F)</code></pre>
 <pre><code>
     Welch Two Sample t-test
 
@@ -602,7 +601,7 @@ sample estimates:
 <li>Wind mean wind speed over a year (miles per hour)</li>
 <li>Rainfall mean yearly rainfall (in inches)</li>
 <li>Daysrain mean number of days of rainfall per year</li>
-<li>SO2 The amount of SO2 in the air (in Î¼g/m3)</li>
+<li>SO2 The amount of SO2 in the air (in μg/m3)</li>
 </ul>
 <div id="import-data-2" class="section level4">
 <h4>import data</h4>
@@ -698,37 +697,33 @@ F-statistic: 6.996 on 7 and 33 DF,  p-value: 3.922e-05</code></pre>
 <h2>Session information</h2>
 <!-- Insert the session information into the document -->
 <pre class="r"><code>sessionInfo()</code></pre>
-<pre><code>R version 3.4.1 (2017-06-30)
-Platform: x86_64-w64-mingw32/x64 (64-bit)
-Running under: Windows 7 x64 (build 7601) Service Pack 1
-
-Matrix products: default
+<pre><code>R version 3.3.2 (2016-10-31)
+Platform: x86_64-apple-darwin13.4.0 (64-bit)
+Running under: macOS Sierra 10.12.6
 
 locale:
-[1] LC_COLLATE=Dutch_Netherlands.1252  LC_CTYPE=Dutch_Netherlands.1252   
-[3] LC_MONETARY=Dutch_Netherlands.1252 LC_NUMERIC=C                      
-[5] LC_TIME=Dutch_Netherlands.1252    
+[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
 
 attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
 other attached packages:
-[1] scales_0.5.0.9000   ggplot2_2.2.1.9000  magrittr_1.5       
-[4] amstR_0.1.3         data.table_1.10.4-2
+[1] scales_0.4.1      ggplot2_2.2.1     magrittr_1.5      amstR_0.1.3      
+[5] data.table_1.10.4
 
 loaded via a namespace (and not attached):
- [1] Rcpp_0.12.12       survcomp_1.27.0    compiler_3.4.1    
- [4] RColorBrewer_1.1-2 git2r_0.19.0       plyr_1.8.4        
- [7] tools_3.4.1        digest_0.6.12      evaluate_0.10.1   
-[10] tibble_1.3.4       gtable_0.2.0       lattice_0.20-35   
-[13] rlang_0.1.2        Matrix_1.2-10      yaml_2.1.14       
-[16] prodlim_1.6.1      bootstrap_2017.2   stringr_1.2.0     
-[19] knitr_1.17         SuppDists_1.1-9.4  rprojroot_1.2     
-[22] grid_3.4.1         survival_2.41-3    rmarkdown_1.6     
-[25] lava_1.5.1         rmeta_2.16         backports_1.1.0   
-[28] htmltools_0.3.6    survivalROC_1.0.3  splines_3.4.1     
-[31] colorspace_1.3-2   labeling_0.3       KernSmooth_2.23-15
-[34] stringi_1.1.5      lazyeval_0.2.0     munsell_0.4.3     </code></pre>
+ [1] Rcpp_0.12.11       survcomp_1.22.0    RColorBrewer_1.1-2
+ [4] git2r_0.19.0       plyr_1.8.4         tools_3.3.2       
+ [7] digest_0.6.12      evaluate_0.10.1    tibble_1.3.3      
+[10] gtable_0.2.0       lattice_0.20-35    rlang_0.1.1       
+[13] Matrix_1.2-10      yaml_2.1.14        prodlim_1.6.1     
+[16] bootstrap_2017.2   stringr_1.2.0      knitr_1.17        
+[19] SuppDists_1.1-9.4  rprojroot_1.2      grid_3.3.2        
+[22] survival_2.41-3    rmarkdown_1.6      lava_1.5          
+[25] rmeta_2.16         backports_1.1.0    htmltools_0.3.6   
+[28] survivalROC_1.0.3  splines_3.3.2      colorspace_1.3-2  
+[31] labeling_0.3       KernSmooth_2.23-15 stringi_1.1.5     
+[34] lazyeval_0.2.0     munsell_0.4.3     </code></pre>
 </div>
 
 <hr>

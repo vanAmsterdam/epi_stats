@@ -313,10 +313,10 @@ div.tocify {
 shared across the workflowr files. -->
 <!-- Update knitr chunk options -->
 <!-- Insert the date the file was last updated -->
-<p><strong>Last updated:</strong> 2017-10-30</p>
+<p><strong>Last updated:</strong> 2017-10-31</p>
 <!-- Insert the code version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
-<p><strong>Code version:</strong> 2d66380</p>
+<p><strong>Code version:</strong> 52f415c</p>
 <!-- Add your analysis here -->
 <div id="day-5-anova-and-non-parametric-methods" class="section level2">
 <h2>Day 5: ANOVA and non-parametric methods</h2>
@@ -367,8 +367,8 @@ n_pergroup = nrow(yields)
 sum_squares &lt;- function(x) sum((x-mean(x))^2)
 
 ss_total = sum_squares(as.vector(yields))
-ss_within = sum(apply(yields, 2, sum_squares)) # this applies &#39;sum_squares&#39; to each collum of yields
-ss_between = sum(n_pergroup*(colMeans(yields) - mean(yields))^2)
+ss_within = sum(apply(yields, 2, sum_squares)) # this applies &#39;sum_squares&#39; to each column of yields
+ss_between = sum(n_pergroup*((colMeans(yields) - mean(yields))^2))
 
 df_total = n_total - 1
 df_within = 3*(n_pergroup - 1)
@@ -448,7 +448,7 @@ clinic &lt;- clinic[!is.na(clinic$TIME),]</code></pre>
 <p><img src="figure/assignments_week2.Rmd/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>Both distributions of waiting times seem approximately normally distributed, with some right skewness and (of course) a lower bound of (&gt;)0.</p>
 <blockquote>
-<p>What are the problems when you compare these data? What type of analysis would you prefer? Which questions exactly are answered with your analysis? What would you do if some waiting times were â€˜censoredâ€™ because patients left the hospital? The data are given in the file clinic.sav or clinic.RData, if you want to easily get some descriptive statistics to help you answer the questions above.</p>
+<p>What are the problems when you compare these data? What type of analysis would you prefer? Which questions exactly are answered with your analysis? What would you do if some waiting times were ‘censored’ because patients left the hospital? The data are given in the file clinic.sav or clinic.RData, if you want to easily get some descriptive statistics to help you answer the questions above.</p>
 </blockquote>
 <p>Both groups are of unequal size, and their variances seem to differ. This will cause troubles with ANOVA as it violates homoscedasticity. Since these are left-bounded varaibles, they seem approximately poisson-distributed. Currently we have no tools to deal with censored data. The most straightforward approach seems to be to do a Welch unpaired two-sample T-test (Welch = no equal variance assumption). We could look at the Wilcoxon rank sum test or the Mann-Whitney test. These tests do not require normality, however they do require homoscedasticity. Looking at the distributions of our data, heteroscedasticity seems to be a bigger problem than non-normality.</p>
 <pre class="r"><code>t.test(TIME ~ CLINIC, data = clinic, paired = F, var.equal = F)</code></pre>
@@ -734,6 +734,471 @@ attr(,&quot;conf.level&quot;)
 [1] 0.95</code></pre>
 <p>The confidence intervals for both methods are pretty different, there is hardly any overlap. Since the log-transformed variable fits the model assumptions better, this result is deemed more reliable</p>
 <p>NB todo: create histogram, and plot both confidence intervals and the median in a single plot</p>
+<p>Now for a normally distributed variable:</p>
+<pre class="r"><code>set.seed(2)
+x &lt;- 10+ rnorm(100)
+hist(x)</code></pre>
+<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-28-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>t.test(x)$conf.int</code></pre>
+<pre><code>[1]  9.739095 10.199509
+attr(,&quot;conf.level&quot;)
+[1] 0.95</code></pre>
+<pre class="r"><code>exp(t.test(log(x))$conf.int)</code></pre>
+<pre><code>[1]  9.674883 10.134954
+attr(,&quot;conf.level&quot;)
+[1] 0.95</code></pre>
+<p>Now check a two sample test for (random) groups</p>
+<pre class="r"><code>require(ggplot2)
+incomes$group &lt;- sample(c(&quot;A&quot;, &quot;B&quot;), p = c(0.5,0.5), size = nrow(incomes), replace = T)
+# increase the income of group B a little
+incomes$new_income &lt;- incomes$income + as.numeric(incomes$group == &quot;B&quot;) * .5 * (median(incomes$income))
+incomes$log_new_income &lt;- log(incomes$new_income)
+
+ggplot(incomes, aes(x = new_income, fill = group)) + 
+  geom_density(alpha = 0.7)</code></pre>
+<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-29-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggplot(incomes, aes(x = log_new_income, fill = group)) + 
+  geom_density(alpha = 0.7)</code></pre>
+<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-29-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>t.test(new_income ~ group, data = incomes)</code></pre>
+<pre><code>
+    Welch Two Sample t-test
+
+data:  new_income by group
+t = -2.4005, df = 91.482, p-value = 0.0184
+alternative hypothesis: true difference in means is not equal to 0
+95 percent confidence interval:
+ -694.09505  -65.54443
+sample estimates:
+mean in group A mean in group B 
+       617.3772        997.1970 </code></pre>
+<pre class="r"><code>t.test(log_new_income ~ group, data = incomes)</code></pre>
+<pre><code>
+    Welch Two Sample t-test
+
+data:  log_new_income by group
+t = -4.0519, df = 95.791, p-value = 0.0001033
+alternative hypothesis: true difference in means is not equal to 0
+95 percent confidence interval:
+ -0.9109779 -0.3118915
+sample estimates:
+mean in group A mean in group B 
+       6.044898        6.656333 </code></pre>
+<p>The T-test seems to have higher power in for the log-transformed income.</p>
+</div>
+</div>
+</div>
+<div id="day-6-correlation-and-regression" class="section level2">
+<h2>Day 6: Correlation and regression</h2>
+<blockquote>
+<p>Start every exercise by thinking about the research question(s), the research design, the dependent and explanatory variables, the descriptive statistics and the analysis plan. Discuss these issues with your fellow students. The further you are in the course, the easier it should be to identify the research question and the proper approach(es) to answering that question.</p>
+</blockquote>
+<div id="exercises-without-spss-or-r-1" class="section level3">
+<h3>Exercises without SPSS or R</h3>
+<div id="section-3" class="section level4">
+<h4>1.</h4>
+<blockquote>
+<p>In a sample of 10 animals of a certain species the lengths of the right foreleg and the right hind leg have been measured.</p>
+</blockquote>
+<pre class="r"><code>y1 = c(54, 53, 58, 55, 56, 55, 56, 57, 53, 57) # Foreleg
+y2 = c(56, 55, 57, 57, 56, 58, 59, 59, 56, 58) # Hind leg</code></pre>
+<blockquote>
+<p>The mean (standard deviation) for both legs are 55.4 (1.71) and 57.1 (1.37) respectively and the covariance is 1.51. Study the association between the length of the foreleg and the hind leg. a. Would you prefer correlation or regression?</p>
+</blockquote>
+<p>Correlation would be preferred, as there is no a priori reason to believe that one is cause by the other, or should predict the other.</p>
+<blockquote>
+<ol start="2" style="list-style-type: lower-alpha">
+<li>Make a scatter plot. Try to guess the value of the Pearson’s correlation coefficient.</li>
+</ol>
+</blockquote>
+<pre class="r"><code>plot(y1, y2)</code></pre>
+<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-31-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>A guess would be around 0.5</p>
+<blockquote>
+<ol start="3" style="list-style-type: lower-alpha">
+<li>Calculate the Pearson’s correlation coefficient and its standard error. Check the significance. What does the significance mean?</li>
+</ol>
+</blockquote>
+<pre class="r"><code>n = length(y1)
+r = sum((y1 - mean(y1))*(y2 - mean(y2))) / sqrt((sum_squares(y1)*sum_squares(y2)))
+r</code></pre>
+<pre><code>[1] 0.6438632</code></pre>
+<pre class="r"><code>cor(y1, y2)</code></pre>
+<pre><code>[1] 0.6438632</code></pre>
+<pre class="r"><code>se_r = sqrt((1-r^2)/(n-2))
+se_r</code></pre>
+<pre><code>[1] 0.2705181</code></pre>
+<pre class="r"><code>t = r / se_r
+2*pt(q = t, df = n-2, lower.tail = F)</code></pre>
+<pre><code>[1] 0.04453792</code></pre>
+<pre class="r"><code>cor.test(y1, y2)</code></pre>
+<pre><code>
+    Pearson&#39;s product-moment correlation
+
+data:  y1 and y2
+t = 2.3801, df = 8, p-value = 0.04454
+alternative hypothesis: true correlation is not equal to 0
+95 percent confidence interval:
+ 0.02394336 0.90614462
+sample estimates:
+      cor 
+0.6438632 </code></pre>
+<blockquote>
+<ol start="4" style="list-style-type: lower-alpha">
+<li>Calculate a 95% confidence interval for the correlation coefficient, using Fisher’s Z transformation procedure.</li>
+</ol>
+</blockquote>
+<pre class="r"><code>z = .5*log((1+r)/(1-r))
+lo = z - qnorm(p = 0.025)/sqrt(n-3)
+hi = z + qnorm(p = 0.025)/sqrt(n-3)
+lo_r = (exp(2*lo)-1)/(exp(2*lo)+1)
+hi_r = (exp(2*hi)-1)/(exp(2*hi)+1)
+lo_r; hi_r</code></pre>
+<pre><code>[1] 0.9061446</code></pre>
+<pre><code>[1] 0.02394336</code></pre>
+<pre class="r"><code>cor.test(y1, y2)$conf.int</code></pre>
+<pre><code>[1] 0.02394336 0.90614462
+attr(,&quot;conf.level&quot;)
+[1] 0.95</code></pre>
+</div>
+</div>
+<div id="exercises-with-r" class="section level3">
+<h3>Exercises with R</h3>
+<div id="section-4" class="section level4">
+<h4>6.</h4>
+<blockquote>
+<p>In a sample of 10 animals of a certain species the lengths of the foreleg and the hind leg have been measured. The data are also given in the dataset <code>legs.RData</code>. Study the association between the length of the foreleg and the hind leg.</p>
+</blockquote>
+<pre class="r"><code>load(amstR::fromParentDir(&quot;data/legs.RData&quot;))
+plot(y1, y2)</code></pre>
+<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-34-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>cor.test(y1, y2)</code></pre>
+<pre><code>
+    Pearson&#39;s product-moment correlation
+
+data:  y1 and y2
+t = 2.3801, df = 8, p-value = 0.04454
+alternative hypothesis: true correlation is not equal to 0
+95 percent confidence interval:
+ 0.02394336 0.90614462
+sample estimates:
+      cor 
+0.6438632 </code></pre>
+<pre class="r"><code>qqnorm(y1); qqline(y1, col = &quot;red&quot;)</code></pre>
+<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-34-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>qqnorm(y2); qqline(y2, col = &quot;red&quot;)</code></pre>
+<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-34-3.png" width="672" style="display: block; margin: auto;" /></p>
+<p>There is a statistically significant association between the foreleg and the hind leg in our data.</p>
+</div>
+<div id="section-5" class="section level4">
+<h4>7.</h4>
+<blockquote>
+<p>Get the data in the file infantmortality.txt in R. The dataset is about infant mortality in the USA. The first column in the dataset presents the state of the USA to which the data applies; name it therefore state. The second column presents the teenage birth rate per 1000 births and could be named teen. The third column presents the infant mortality rate per 1000 live births; name this column mort. In the USA there is a conjecture that infant mortality is in many cases caused by teenage mothers who do not receive proper prenatal care. a. Perform a linear regression with teen as explanatory variable and mort as the response variable.</p>
+</blockquote>
+<pre class="r"><code>infants &lt;- read.table(amstR::fromParentDir(&quot;data/infantmortality.txt&quot;), header = F)
+colnames(infants) &lt;- c(&quot;state&quot;, &quot;teen&quot;, &quot;mort&quot;)
+head(infants)</code></pre>
+<pre><code>  state teen mort
+1    AL 17.4 13.3
+2    AR 19.0 10.3
+3    AZ 13.8  9.4
+4    CA 10.9  8.9
+5    CO 10.2  8.6
+6    CT  8.8  9.1</code></pre>
+<pre class="r"><code>plot(mort~teen, data = infants)</code></pre>
+<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-35-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>fit &lt;- lm(mort~teen, data = infants)
+summary(fit)</code></pre>
+<pre><code>
+Call:
+lm(formula = mort ~ teen, data = infants)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-1.6429 -1.0348 -0.0184  0.6831  3.5902 
+
+Coefficients:
+            Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept)  7.52640    0.64930  11.592 3.03e-15 ***
+teen         0.22509    0.05052   4.456 5.32e-05 ***
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+Residual standard error: 1.14 on 46 degrees of freedom
+Multiple R-squared:  0.3015,    Adjusted R-squared:  0.2863 
+F-statistic: 19.85 on 1 and 46 DF,  p-value: 5.317e-05</code></pre>
+<blockquote>
+<ol start="2" style="list-style-type: lower-alpha">
+<li>Do not forget to check the regression conditions!</li>
+</ol>
+</blockquote>
+<pre class="r"><code>plot(fit, which = c(1,2))</code></pre>
+<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-36-1.png" width="672" style="display: block; margin: auto;" /><img src="figure/assignments_week2.Rmd/unnamed-chunk-36-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>From plot 1: the relationship between <code>teen</code> and <code>mort</code> seems more or less linear. From plot 2: variance seems equal across all levels of <code>teen</code>. From plot 3: residuals look OK normally distributed, with a little heavy tail on the left.</p>
+<p>Independence of observations cannot be checked from the data, but is probable due to the study design.</p>
+<blockquote>
+<ol start="3" style="list-style-type: lower-alpha">
+<li>Do your results in a) confirm the conjecture?</li>
+</ol>
+</blockquote>
+<p>Yes, they provide evidence that with increasing amount of teenage pregnancy, infant mortality rises. However, whether or not this is a causal relationship cannot be judged from the data alone. For instance, there may be another unmeasured variable that explains the observed association.</p>
+<blockquote>
+<ol start="4" style="list-style-type: lower-alpha">
+<li>Calculate two 95% confidence intervals: one for the infant mortality for cases in which the teenage birth rate is equal to the sample mean, and one for an individual case with teenage birth rate equal to the sample mean. Comment on the difference between those intervals.</li>
+</ol>
+</blockquote>
+<pre class="r"><code># by &#39;hand&#39; 
+n = nrow(infants)
+se = sd(fit$residuals)
+y0 = fit$coefficients[1] + fit$coefficients[2] * mean(infants$teen)
+## mean prediction
+y0 + c(1,-1) * qt(df = n-1, p = .025, lower.tail = T)  * se * sqrt(1/n)</code></pre>
+<pre><code>[1]  9.997392 10.652608</code></pre>
+<pre class="r"><code>## individual prediction
+y0 + c(1,-1) * qt(df = n-1, p = .025, lower.tail = T)  * se * sqrt(1+1/n)</code></pre>
+<pre><code>[1]  8.031746 12.618254</code></pre>
+<pre class="r"><code>predict(fit, newdata = data.frame(teen = mean(infants$teen)), type = &quot;response&quot;, interval = &quot;confidence&quot;, level = 0.95)</code></pre>
+<pre><code>     fit     lwr      upr
+1 10.325 9.99366 10.65634</code></pre>
+<pre class="r"><code>predict(fit, newdata = data.frame(teen = mean(infants$teen)), type = &quot;response&quot;, interval = &quot;prediction&quot;, level = 0.95)</code></pre>
+<pre><code>     fit      lwr      upr
+1 10.325 8.005622 12.64438</code></pre>
+<p>Calculating a confidence interval for the mean predicted infant mortality for a certain level of <code>teen</code> with our model is dependent on the model variance <span class="math inline">\(\sigma_{\epsilon}\)</span> and the location of the predictor (closer or further away from the mean). It is calculated with the function:</p>
+<p><span class="math display">\[\hat{y}_0 \pm t_{(n-2, \alpha/2)}\sigma_{\epsilon}\sqrt{\frac{1}{n} + \frac{(x_0-\bar{x})}{\sum_{i = 1}^n{(x_i-\bar{x})^2}}}\]</span></p>
+<p>Predicting the risk of mortality for an individual for a certain level of <code>teen</code> also requires to take into account the level of spread at that level of <code>teen</code> (although this spread is assumed to be equal for each value of <code>teen</code>…), so it is a wider confidence interval. It is calculated with the function:</p>
+<p><span class="math display">\[\hat{y}_0 \pm t_{(n-2, \alpha/2)}\sigma_{\epsilon}\sqrt{1 + \frac{1}{n} + \frac{(x_0-\bar{x})}{\sum_{i = 1}^n{(x_i-\bar{x})^2}}}\]</span></p>
+<p>Note that the hand-calculated confidence intervals differ slightly from the confidence intervals which r gives us.</p>
+</div>
+<div id="section-6" class="section level4">
+<h4>8.</h4>
+<blockquote>
+<p>In the file <code>heparin.RData</code> the clotting times of blood samples are registered for different doses of heparin. Research is directed towards the relationship between these quantities. a. Perform a regression analysis and check whether the assumptions of normality, linearity and homoscedasticity are fulfilled.</p>
+</blockquote>
+<pre class="r"><code>load(amstR::fromParentDir(&quot;data/heparin.RData&quot;))
+plot(TIME~DOSE, data = heparine)</code></pre>
+<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-38-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>fit &lt;- lm(TIME~DOSE, data = heparine)
+plot(fit, which = c(1,2))</code></pre>
+<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-38-2.png" width="672" style="display: block; margin: auto;" /><img src="figure/assignments_week2.Rmd/unnamed-chunk-38-3.png" width="672" style="display: block; margin: auto;" /></p>
+<p>From plot 1: the relationship seems more or less linear From plot 2: there is clear heteroscedasticity: variance increases with DOSE From plot 3: the residuals look somewhat normally distributed, with heavier tails</p>
+<blockquote>
+<ol start="2" style="list-style-type: lower-alpha">
+<li>A logarithmic transformation on the dependent variable is often proposed when assump¬tions are not fulfilled. Check whether this transformation leads to fulfilment of the three assumptions.</li>
+</ol>
+</blockquote>
+<pre class="r"><code>heparine$log_time &lt;- log(heparine$TIME)
+plot(log_time~DOSE, data = heparine)</code></pre>
+<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-39-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>fit2 &lt;- lm(log_time~DOSE, data = heparine)
+plot(fit2, which = c(1,2))</code></pre>
+<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-39-2.png" width="672" style="display: block; margin: auto;" /><img src="figure/assignments_week2.Rmd/unnamed-chunk-39-3.png" width="672" style="display: block; margin: auto;" /></p>
+<p>From plot 1: Linearity seems to be less in the log-transformed time From plot 2: The spread in residuals is relatively equal accross levels of <code>DOSE</code>, so homoscedasticity seems to hold From plot 3: residuals are nicely normally distribueted</p>
+<blockquote>
+<ol start="3" style="list-style-type: lower-alpha">
+<li>Carry out another regression analysis in which both variables are logarithmically transformed. Check again the assumptions and conclude on the results.</li>
+</ol>
+</blockquote>
+<pre class="r"><code>heparine$log_dose &lt;- log(heparine$DOSE)
+plot(log_time~log_dose, data = heparine)</code></pre>
+<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-40-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>fit3 &lt;- lm(log_time~log_dose, data = heparine)
+plot(fit3, which = c(1,2))</code></pre>
+<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-40-2.png" width="672" style="display: block; margin: auto;" /><img src="figure/assignments_week2.Rmd/unnamed-chunk-40-3.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Everything looks better when both variables are log-transformed!</p>
+</div>
+</div>
+<div id="challenge-exercise" class="section level3">
+<h3>Challenge exercise</h3>
+<div id="section-7" class="section level5">
+<h5>9.</h5>
+<blockquote>
+<p>The question arises how body mass index (BMI) is related to the process of gastric emptying, measured by the percentage of retention after 120 minutes (ret120). The data of 55 patients of a certain hospital can be found in the file diabetes.sav or diabetes.RData. a. Make a scatter plot of BMI and ret120 and give an interpretation of the correlation coefficient and its significance.</p>
+</blockquote>
+<pre class="r"><code>load(amstR::fromParentDir(&quot;data/diabetes.RData&quot;))
+plot(ret120~bmi, data = diabetes.df)</code></pre>
+<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-41-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>cor.test(~ret120+bmi, data = diabetes.df)</code></pre>
+<pre><code>
+    Pearson&#39;s product-moment correlation
+
+data:  ret120 and bmi
+t = 0.49223, df = 53, p-value = 0.6246
+alternative hypothesis: true correlation is not equal to 0
+95 percent confidence interval:
+ -0.2014435  0.3269056
+sample estimates:
+       cor 
+0.06745889 </code></pre>
+<p>Based on the scatter plot, there seems to be no correlation between <code>bmi</code> and <code>ret120</code>. It is therefore not surprising that the correlation-coefficient is not statistically significantly different from 0.</p>
+<blockquote>
+<ol start="2" style="list-style-type: lower-alpha">
+<li>The file consists of two groups of patients, diabetes and non-diabetes. Try to make a scatter plot in which the two groups can be distinguished</li>
+</ol>
+</blockquote>
+<pre class="r"><code>require(ggplot2)
+ggplot(diabetes.df, aes(x = bmi, y = ret120, col = diabetes, shape = diabetes)) + 
+  geom_point()</code></pre>
+<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-42-1.png" width="672" style="display: block; margin: auto;" /></p>
+<blockquote>
+<ol start="3" style="list-style-type: lower-alpha">
+<li>Calculate the correlation coefficient for the two groups separately and give your conclusion</li>
+</ol>
+</blockquote>
+<pre class="r"><code>cor.test(~ret120+bmi, data = diabetes.df[diabetes.df$diabetes==&quot;Yes&quot;,])</code></pre>
+<pre><code>
+    Pearson&#39;s product-moment correlation
+
+data:  ret120 and bmi
+t = 2.3647, df = 32, p-value = 0.02428
+alternative hypothesis: true correlation is not equal to 0
+95 percent confidence interval:
+ 0.05463693 0.64032903
+sample estimates:
+      cor 
+0.3856767 </code></pre>
+<pre class="r"><code>cor.test(~ret120+bmi, data = diabetes.df[diabetes.df$diabetes==&quot;No&quot;,])</code></pre>
+<pre><code>
+    Pearson&#39;s product-moment correlation
+
+data:  ret120 and bmi
+t = -3.1963, df = 19, p-value = 0.004753
+alternative hypothesis: true correlation is not equal to 0
+95 percent confidence interval:
+ -0.8149817 -0.2143745
+sample estimates:
+       cor 
+-0.5913374 </code></pre>
+<p>It looks like there is an association between <code>bmi</code> and <code>ret120</code>, but is different in the group with diabetes from the patients without diabetes. In a model this can be seen as interaction.</p>
+<pre class="r"><code>fit0 &lt;- lm(ret120~bmi, data = diabetes.df)
+summary(fit0)</code></pre>
+<pre><code>
+Call:
+lm(formula = ret120 ~ bmi, data = diabetes.df)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-14.2922  -5.3188   0.7915   4.5624  12.4345 
+
+Coefficients:
+            Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept) 24.14883    5.69207   4.243 8.91e-05 ***
+bmi          0.06481    0.13167   0.492    0.625    
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+Residual standard error: 6.655 on 53 degrees of freedom
+Multiple R-squared:  0.004551,  Adjusted R-squared:  -0.01423 
+F-statistic: 0.2423 on 1 and 53 DF,  p-value: 0.6246</code></pre>
+<pre class="r"><code>plot(fit0, which = c(1,2))</code></pre>
+<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-44-1.png" width="672" style="display: block; margin: auto;" /><img src="figure/assignments_week2.Rmd/unnamed-chunk-44-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>fit1 &lt;- lm(ret120~bmi*diabetes, data = diabetes.df)
+summary(fit1)</code></pre>
+<pre><code>
+Call:
+lm(formula = ret120 ~ bmi * diabetes, data = diabetes.df)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-13.9786  -4.7620   0.4032   3.8993  11.3598 
+
+Coefficients:
+                Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept)      61.4222    11.2366   5.466 1.39e-06 ***
+bmi              -0.8323     0.2582  -3.224 0.002208 ** 
+diabetesYes     -46.4974    12.5446  -3.707 0.000518 ***
+bmi:diabetesYes   1.1371     0.2889   3.936 0.000251 ***
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+Residual standard error: 5.841 on 51 degrees of freedom
+Multiple R-squared:  0.2621,    Adjusted R-squared:  0.2187 
+F-statistic:  6.04 on 3 and 51 DF,  p-value: 0.001337</code></pre>
+<pre class="r"><code>plot(fit1, which = c(1,2))</code></pre>
+<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-44-3.png" width="672" style="display: block; margin: auto;" /><img src="figure/assignments_week2.Rmd/unnamed-chunk-44-4.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Adding <code>diabetes</code> as an interaction term in model 1 is the same as making two models, one for each group:</p>
+<pre class="r"><code>fit_no = lm(ret120~bmi, data = diabetes.df[diabetes.df$diabetes == &quot;No&quot;,])
+summary(fit_no)</code></pre>
+<pre><code>
+Call:
+lm(formula = ret120 ~ bmi, data = diabetes.df[diabetes.df$diabetes == 
+    &quot;No&quot;, ])
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-13.9786  -3.5358   0.0707   4.3658   8.8026 
+
+Coefficients:
+            Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept)  61.4222    11.3331   5.420 3.14e-05 ***
+bmi          -0.8323     0.2604  -3.196  0.00475 ** 
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+Residual standard error: 5.891 on 19 degrees of freedom
+Multiple R-squared:  0.3497,    Adjusted R-squared:  0.3155 
+F-statistic: 10.22 on 1 and 19 DF,  p-value: 0.004753</code></pre>
+<pre class="r"><code>fit_yes = lm(ret120~bmi, data = diabetes.df[diabetes.df$diabetes == &quot;Yes&quot;,])
+summary(fit_yes)</code></pre>
+<pre><code>
+Call:
+lm(formula = ret120 ~ bmi, data = diabetes.df[diabetes.df$diabetes == 
+    &quot;Yes&quot;, ])
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-10.8878  -5.5619   0.4182   3.7021  11.3598 
+
+Coefficients:
+            Estimate Std. Error t value Pr(&gt;|t|)  
+(Intercept)  14.9247     5.5487   2.690   0.0113 *
+bmi           0.3048     0.1289   2.365   0.0243 *
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+Residual standard error: 5.811 on 32 degrees of freedom
+Multiple R-squared:  0.1487,    Adjusted R-squared:  0.1221 
+F-statistic: 5.592 on 1 and 32 DF,  p-value: 0.02428</code></pre>
+<p>Is model 1 better than model 0?</p>
+<pre class="r"><code>anova(fit0, fit1)</code></pre>
+<pre><code>Analysis of Variance Table
+
+Model 1: ret120 ~ bmi
+Model 2: ret120 ~ bmi * diabetes
+  Res.Df    RSS Df Sum of Sq      F    Pr(&gt;F)    
+1     53 2347.3                                  
+2     51 1739.9  2    607.41 8.9024 0.0004828 ***
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<p>Yes</p>
+<p>To interpret the coefficients of fit1:</p>
+<p>for patients without diabetes: <span class="math display">\[ret120 = 61.422 - 0.8323 * bmi\]</span> for patients with diabetes: <span class="math display">\[ret120 = 61.422 - 46.3974 + (0.8323 + 1.1371)*bmi\]</span></p>
+<p>In a plot</p>
+<pre class="r"><code># some plot parameters
+xmin = floor(min(diabetes.df$bmi))
+xmax = ceiling(max(diabetes.df$bmi))
+ymin = floor(min(diabetes.df$ret120))
+ymax = ceiling(max(diabetes.df$ret120))
+
+par(mfrow = c(1,2))
+
+
+plot(ret120~bmi, data = diabetes.df[diabetes.df$diabetes == &quot;No&quot;,], 
+     xlim = c(xmin, xmax), ylim = c(ymin, ymax), main = &quot;Without diabetes&quot;)
+abline(a = fit1$coefficients[&quot;(Intercept)&quot;], b = fit1$coefficients[&quot;bmi&quot;], col = &quot;red&quot;)
+
+plot(ret120~bmi, data = diabetes.df[diabetes.df$diabetes == &quot;Yes&quot;,], 
+     xlim = c(xmin, xmax), ylim = c(ymin, ymax), main = &quot;With diabetes&quot;)
+abline(a = (fit1$coefficients[&quot;(Intercept)&quot;] + fit1$coefficients[&quot;diabetesYes&quot;]), 
+       b = (fit1$coefficients[&quot;bmi&quot;] + fit1$coefficients[&quot;bmi:diabetesYes&quot;]), col = &quot;red&quot;)</code></pre>
+<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-47-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>par(mfrow = c(1,1))</code></pre>
+<p>This plot can be made very easily with ggplot2</p>
+<pre class="r"><code>require(ggplot2)
+ggplot(diabetes.df, aes(x = bmi, y = ret120)) + # define dataset, x and y variable
+  geom_point() + # add points to the plot, making this a scatterplot
+  geom_smooth(method = &quot;lm&quot;) + # add linear regression line
+  facet_wrap(~diabetes) # make this plot for all levels of the factor variable `diabetes`</code></pre>
+<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-48-1.png" width="672" style="display: block; margin: auto;" /></p>
 </div>
 </div>
 </div>
@@ -741,38 +1206,33 @@ attr(,&quot;conf.level&quot;)
 <h2>Session information</h2>
 <!-- Insert the session information into the document -->
 <pre class="r"><code>sessionInfo()</code></pre>
-<pre><code>R version 3.4.1 (2017-06-30)
-Platform: x86_64-w64-mingw32/x64 (64-bit)
-Running under: Windows 7 x64 (build 7601) Service Pack 1
-
-Matrix products: default
+<pre><code>R version 3.3.2 (2016-10-31)
+Platform: x86_64-apple-darwin13.4.0 (64-bit)
+Running under: macOS Sierra 10.12.6
 
 locale:
-[1] LC_COLLATE=Dutch_Netherlands.1252  LC_CTYPE=Dutch_Netherlands.1252   
-[3] LC_MONETARY=Dutch_Netherlands.1252 LC_NUMERIC=C                      
-[5] LC_TIME=Dutch_Netherlands.1252    
+[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
 
 attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
 other attached packages:
-[1] ggplot2_2.2.1.9000
+[1] ggplot2_2.2.1
 
 loaded via a namespace (and not attached):
- [1] Rcpp_0.12.12        survcomp_1.27.0     compiler_3.4.1     
- [4] RColorBrewer_1.1-2  git2r_0.19.0        plyr_1.8.4         
- [7] tools_3.4.1         digest_0.6.12       evaluate_0.10.1    
-[10] tibble_1.3.4        gtable_0.2.0        lattice_0.20-35    
-[13] rlang_0.1.2         Matrix_1.2-10       yaml_2.1.14        
-[16] prodlim_1.6.1       bootstrap_2017.2    amstR_0.1.3        
-[19] stringr_1.2.0       knitr_1.17          SuppDists_1.1-9.4  
-[22] rprojroot_1.2       grid_3.4.1          data.table_1.10.4-2
-[25] survival_2.41-3     rmarkdown_1.6       lava_1.5.1         
-[28] rmeta_2.16          magrittr_1.5        backports_1.1.0    
-[31] scales_0.5.0.9000   htmltools_0.3.6     survivalROC_1.0.3  
-[34] splines_3.4.1       colorspace_1.3-2    labeling_0.3       
-[37] KernSmooth_2.23-15  stringi_1.1.5       lazyeval_0.2.0     
-[40] munsell_0.4.3      </code></pre>
+ [1] Rcpp_0.12.11       survcomp_1.22.0    RColorBrewer_1.1-2
+ [4] git2r_0.19.0       plyr_1.8.4         tools_3.3.2       
+ [7] digest_0.6.12      evaluate_0.10.1    tibble_1.3.3      
+[10] gtable_0.2.0       lattice_0.20-35    rlang_0.1.1       
+[13] Matrix_1.2-10      yaml_2.1.14        prodlim_1.6.1     
+[16] bootstrap_2017.2   amstR_0.1.3        stringr_1.2.0     
+[19] knitr_1.17         SuppDists_1.1-9.4  rprojroot_1.2     
+[22] grid_3.3.2         data.table_1.10.4  survival_2.41-3   
+[25] rmarkdown_1.6      lava_1.5           rmeta_2.16        
+[28] magrittr_1.5       backports_1.1.0    scales_0.4.1      
+[31] htmltools_0.3.6    survivalROC_1.0.3  splines_3.3.2     
+[34] colorspace_1.3-2   labeling_0.3       KernSmooth_2.23-15
+[37] stringi_1.1.5      lazyeval_0.2.0     munsell_0.4.3     </code></pre>
 </div>
 
 <hr>

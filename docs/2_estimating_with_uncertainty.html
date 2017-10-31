@@ -313,10 +313,10 @@ div.tocify {
 shared across the workflowr files. -->
 <!-- Update knitr chunk options -->
 <!-- Insert the date the file was last updated -->
-<p><strong>Last updated:</strong> 2017-10-26</p>
+<p><strong>Last updated:</strong> 2017-10-31</p>
 <!-- Insert the code version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
-<p><strong>Code version:</strong> b498b13</p>
+<p><strong>Code version:</strong> 52f415c</p>
 <!-- Add your analysis here -->
 <div id="estimating-with-uncertainty" class="section level2">
 <h2>Estimating with uncertainty</h2>
@@ -369,7 +369,7 @@ lapply(list(fit1, fit2), function(x)
 <div id="unequal-variance-unpaired-measurements" class="section level5">
 <h5>Unequal variance, unpaired measurements</h5>
 <p><span class="math display">\[t = \frac{\bar{Y_{1}} - \bar{Y_{2}}}{s_{\bar{\Delta}}}\]</span> Where <span class="math display">\[s_{\bar{\Delta}} = \sqrt{\frac{s_{1}^2}{n_{1}} + \frac{s_{2}^2}{n_{2}}}\]</span></p>
-<p>Then, for the T-distribution, the degrees of freedom is estimated by the Welchâ€“Satterthwaite equation <span class="math display">\[df = \frac{(\frac{s_{1}^2}{n_{1}} + \frac{s_{2}^2}{n_{2}})^2}{(\frac{s_{1}^2}{n_{1}})^2/(n_{1}-1) + (\frac{s_{2}^2}{n_{2}})^2/(n_{2}-1)}\]</span></p>
+<p>Then, for the T-distribution, the degrees of freedom is estimated by the Welch–Satterthwaite equation <span class="math display">\[df = \frac{(\frac{s_{1}^2}{n_{1}} + \frac{s_{2}^2}{n_{2}})^2}{(\frac{s_{1}^2}{n_{1}})^2/(n_{1}-1) + (\frac{s_{2}^2}{n_{2}})^2/(n_{2}-1)}\]</span></p>
 </div>
 </div>
 </div>
@@ -381,25 +381,21 @@ lapply(list(fit1, fit2), function(x)
 <h2>Session information</h2>
 <!-- Insert the session information into the document -->
 <pre class="r"><code>sessionInfo()</code></pre>
-<pre><code>R version 3.4.1 (2017-06-30)
-Platform: x86_64-w64-mingw32/x64 (64-bit)
-Running under: Windows 7 x64 (build 7601) Service Pack 1
-
-Matrix products: default
+<pre><code>R version 3.3.2 (2016-10-31)
+Platform: x86_64-apple-darwin13.4.0 (64-bit)
+Running under: macOS Sierra 10.12.6
 
 locale:
-[1] LC_COLLATE=Dutch_Netherlands.1252  LC_CTYPE=Dutch_Netherlands.1252   
-[3] LC_MONETARY=Dutch_Netherlands.1252 LC_NUMERIC=C                      
-[5] LC_TIME=Dutch_Netherlands.1252    
+[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
 
 attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
 loaded via a namespace (and not attached):
- [1] compiler_3.4.1  backports_1.1.0 magrittr_1.5    rprojroot_1.2  
- [5] tools_3.4.1     htmltools_0.3.6 yaml_2.1.14     Rcpp_0.12.12   
- [9] stringi_1.1.5   rmarkdown_1.6   knitr_1.17      git2r_0.19.0   
-[13] stringr_1.2.0   digest_0.6.12   evaluate_0.10.1</code></pre>
+ [1] backports_1.1.0 magrittr_1.5    rprojroot_1.2   tools_3.3.2    
+ [5] htmltools_0.3.6 yaml_2.1.14     Rcpp_0.12.11    stringi_1.1.5  
+ [9] rmarkdown_1.6   knitr_1.17      git2r_0.19.0    stringr_1.2.0  
+[13] digest_0.6.12   evaluate_0.10.1</code></pre>
 </div>
 
 <hr>

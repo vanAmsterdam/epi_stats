@@ -313,13 +313,13 @@ div.tocify {
 shared across the workflowr files. -->
 <!-- Update knitr chunk options -->
 <!-- Insert the date the file was last updated -->
-<p><strong>Last updated:</strong> 2017-10-26</p>
+<p><strong>Last updated:</strong> 2017-10-31</p>
 <!-- Insert the code version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
-<p><strong>Code version:</strong> b498b13</p>
+<p><strong>Code version:</strong> 52f415c</p>
 <!-- Add your analysis here -->
-<div id="intro" class="section level2">
-<h2>Intro</h2>
+<div id="day-3-intro" class="section level2">
+<h2>Day 3: Intro</h2>
 <p>Tutor: Rebecca Stellato</p>
 <div id="testing-with-t-distributions" class="section level3">
 <h3>Testing with T-distributions</h3>
@@ -378,9 +378,8 @@ mean of the differences
 <h3>Different distributions</h3>
 <p>Different test-statistic, but keep the same algorithm: * state <span class="math inline">\(H_0\)</span> and <span class="math inline">\(\alpha\)</span> (one-sided or two-sided) * determine test statistic (decide on the test to use) * calculate test statistic (<span class="math inline">\(T\)</span>, <span class="math inline">\(\chi^2\)</span>) * decide whether to reject <span class="math inline">\(H_0\)</span> (with one of 3 options) * state conclusion</p>
 </div>
-</div>
-<div id="power" class="section level2">
-<h2>Power</h2>
+<div id="power" class="section level3">
+<h3>Power</h3>
 <ul>
 <li>Type 1 error = <span class="math inline">\(\alpha\)</span></li>
 <li>Type 2 error = <span class="math inline">\(\beta\)</span></li>
@@ -399,50 +398,155 @@ h0_distribution = norm_function(mu = mu0, sd = sd0)
 h1_distribution = norm_function(mu = mu1, sd = sd1)
 alpha = 0.05
 boundary_value = qnorm(p = .95, mean = mu0, sd = sd0)
+xmin = -3
+xmax = 6
 
-curve(h0_distribution, xlim = c(-3, 6))
-curve(h1_distribution, add = T)
-lines(x = rep(boundary_value, 2), y = c(0, h1_distribution(boundary_value)), lty = 2)
-text(x = boundary_value, y = .5*h0_distribution(boundary_value), labels = &quot;a&quot;, pos = 4)</code></pre>
+## using ggplot
+require(ggplot2)</code></pre>
+<pre><code>Loading required package: ggplot2</code></pre>
+<pre class="r"><code>ggplot(data.frame(x = c(xmin, xmax)), aes(x)) + 
+  stat_function(fun = h0_distribution) + 
+  stat_function(fun = h0_distribution, 
+                xlim = c(boundary_value,xmax),
+                geom = &quot;area&quot;, alpha = 0.5) + 
+  stat_function(fun = h1_distribution) +
+  stat_function(fun = h1_distribution,
+                xlim = c(xmin, boundary_value),
+                geom = &quot;area&quot;, alpha = 0.25) + 
+  theme_bw()</code></pre>
 <p><img src="figure/3_testing_and_power.Rmd/unnamed-chunk-2-1.png" width="672" style="display: block; margin: auto;" /></p>
-<pre class="r"><code># abline(v = mu0, lty = 2)
+<pre class="r"><code>## using base plot
+# curve(h0_distribution, xlim = c(-3, 6))
+# curve(h1_distribution, add = T)
+# lines(x = rep(boundary_value, 2), y = c(0, h1_distribution(boundary_value)), lty = 2)
+# text(x = boundary_value, y = .5*h0_distribution(boundary_value), labels = &quot;a&quot;, pos = 4)
+# abline(v = mu0, lty = 2)
 # abline(v = mu1, lty = 2)</code></pre>
-<p>Get boundary value <span class="math inline">\(b\)</span> from: <span class="math display">\[P(\bar{Y}&gt;b|H_0) = P(Z&gt;frac{b-\mu_{0}}{\sigma/\sqrt{n}} = \alpha\]</span> Plug <span class="math inline">\(b\)</span> here to find power: <span class="math display">\[P(\bar{Y}&gt;b|H_1) = P(Z&gt;frac{b-\mu_{1}}{\sigma/\sqrt{n}}\]</span></p>
+<p>Get boundary value <span class="math inline">\(b\)</span> from: <span class="math display">\[P(\bar{Y}&gt;b|H_0) = P(Z&gt;\frac{b-\mu_{0}}{\sigma/\sqrt{n}}) = \alpha\]</span> Plug <span class="math inline">\(b\)</span> here to find power: <span class="math display">\[P(\bar{Y}&gt;b|H_1) = P(Z&gt;\frac{b-\mu_{1}}{\sigma/\sqrt{n}}) = 1-\beta\]</span></p>
 <p>So again: * Get decision boundary from <span class="math inline">\(H_{0}\)</span> * Get probability of getting boundary value or more extreme under <span class="math inline">\(H_{1}\)</span></p>
 <p>Power of one-sided test is higher, provided that the direction is correct.</p>
 <p>You can do this using the T-distribution, than the standard deviation does not need to be known.</p>
 <p>Power calculations <em>post-hoc</em> are controversial.</p>
 </div>
+</div>
+<div id="day-4" class="section level2">
+<h2>Day 4</h2>
+<div id="two-independent-sample-t.test" class="section level3">
+<h3>Two independent sample t.test</h3>
+<div id="with-unequal-variances" class="section level4">
+<h4>With unequal variances</h4>
+<p>Measurement = group mean + error <span class="math display">\[Y_{ij} = \mu_i + \epsilon_{ij} \]</span> <span class="math inline">\(i = 1,2\)</span>; <span class="math inline">\(j = 1, ..., n_i\)</span> <span class="math inline">\(\epsilon_{ij} \sim N(0, \sigma_i^2)\)</span> and independent.</p>
+<p><span class="math display">\[H_0:\ \mu_1-\mu_2 = \mu_0 = 0\]</span> <span class="math display">\[H_1:\ \mu_1-\mu_2 \neq \mu_0\]</span></p>
+<p>Welch’s standard error</p>
+<p><span class="math display">\[SE(\bar{Y_1}-\bar{Y_2}) = \sqrt{\frac{s_1^2}{n_1}+\frac{s_2^2}{n_2}}\]</span></p>
+<p>Welch T is t-distributed with a non-integer degrees of freedom.</p>
+</div>
+<div id="with-equal-variance-assumption" class="section level4">
+<h4>With equal variance assumption:</h4>
+<p>** note <span class="math inline">\(\sigma_i\)</span> vs <span class="math inline">\(\sigma\)</span> <span class="math inline">\(\epsilon_{ij} \sim N(0, \sigma^2)\)</span> and independent, homegeneity of variances <span class="math inline">\(\sigma_1^2 = \sigma_2^2 = \sigma^2\)</span></p>
+<p>Or with Levence’s test: problem is that you can never prove <span class="math inline">\(H_0\)</span>, we can only reject it given some data. Furthermore: every test will increase the risk of getting a type-1 error (false-positives).</p>
+<p>Best way of assessing assumptions: qreate QQ-plot with all residuals</p>
+<p>Pooled method <span class="math display">\[SE(\bar{Y_1}-\bar{Y_2}) = s_p*\sqrt{\frac{1}{n_1}+\frac{1}{n_2}}\]</span> With <span class="math display">\[s_{pooled} = \frac{(n_{1}-1)*s_{1}^2 + (n_{2}-1)*s_{2}^2}{n_{1}+n_{2}-2}\]</span></p>
+<p>Due to three problems, always do Welch. * we can never prove <span class="math inline">\(H_0\)</span> * increased risk of type-1 errors</p>
+<p>In the case of actually equal variance, you lose some power.</p>
+<pre class="r"><code>load(amstR::fromParentDir(&quot;data/balance.RData&quot;))
+fit_old &lt;- lm(balance[balance$age == &quot;Elderly&quot;,]$SS~1)
+fit_young &lt;- lm(balance[balance$age == &quot;Young&quot;,]$SS~1)
+resid_old &lt;- resid(fit_old)
+resid_young &lt;- resid(fit_young)
+qqnorm(c(resid_old, resid_young))
+qqline(c(resid_old, resid_young), col = &quot;red&quot;)</code></pre>
+<p><img src="figure/3_testing_and_power.Rmd/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code># summary(fit_old)
+# t.test(balance$FB~balance$age)
+# plot(fit_old, which = 2)
+# plot(fit_young, which = 2)
+
+fit1 &lt;- lm(SS ~ age, data = balance)
+plot(fit1, which = 2)</code></pre>
+<p><img src="figure/3_testing_and_power.Rmd/unnamed-chunk-3-2.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+</div>
+<div id="one-sided-t-test" class="section level3">
+<h3>One-sided t-test</h3>
+<p>Do only when research question is one-sided. <em>Are women shorter than men</em></p>
+<p>If you think a new therapy is better, but you are not sure, use two-sided.</p>
+<p>To go from two-sided to one-sided, devide p-value by 2.</p>
+</div>
+<div id="sample-size-estimation" class="section level3">
+<h3>Sample size estimation</h3>
+<p>Remaining question: * Validity of determining minimally detectable effect <em>post-hoc</em></p>
+<div id="for-known-sigma" class="section level4">
+<h4>For known <span class="math inline">\(\sigma\)</span></h4>
+<p><span class="math display">\[n = ((Z_{\alpha}+Z_{1-\beta})*\frac{\sigma}{h_1-h_0})^2\]</span></p>
+<p>With <span class="math inline">\(Z_{\alpha}\)</span> one-sided or two-sided, <span class="math inline">\(Z_{\beta}\)</span> always one-sided</p>
+</div>
+<div id="for-unknown-sigma" class="section level4">
+<h4>For unknown <span class="math inline">\(\sigma\)</span></h4>
+<p>Do iterative t-statistic sample size calculation.</p>
+<p><span class="math display">\[n = ((t_{/alpha, v}+t_{1-/beta, v})*\frac{s}{h_1-h_0})^2\]</span></p>
+<p>Where s is the estimated standard deviation, and <span class="math inline">\(v\)</span> is iteratively determined. * start with infinitely high d.f. (which is equivalent to <span class="math inline">\(Z\)</span>-value from normal distribution) and find optimal sample size * plug rounded up sample size minus 1 as d.f. and redo calculation * iterate until conversion</p>
+<p>Paired t-test is equivalent to single sample t-test with standard deviation of the difference. That can be estimated with</p>
+<p><span class="math display">\[S_d = \sqrt{2*s^2*(1-\rho)}\]</span></p>
+<p>Where <span class="math inline">\(\rho\)</span> is the correlation between measurements of the 2 groups.</p>
+</div>
+<div id="for-unpaired-groups" class="section level4">
+<h4>For unpaired groups</h4>
+<p><span class="math display">\[n = 2*((Z_{\alpha}+Z_{\beta})*\frac{s_p}{h_1-h_0})^2\]</span></p>
+<p>Where <span class="math inline">\(s_p\)</span> is the pooled variance, <span class="math inline">\(n\)</span> is the number of people in each group.</p>
+<p>For unequal variance: use the r-package <code>samplesize</code>.</p>
+</div>
+<div id="cohens-effect-size-for-unknown-difference-and-standard-deviation" class="section level4">
+<h4>Cohen’s effect-size: for unknown difference and standard deviation</h4>
+<p>Effect size in terms of differences in terms of standard deviations.</p>
+<ul>
+<li>small: 0.2</li>
+<li>medium: 0.5</li>
+<li><p>large: 0.8</p></li>
+<li>1 mean: <span class="math inline">\(ES = (\mu_1-\mu_0)/\sigma\)</span></li>
+<li>2 paired means: <span class="math inline">\(ES = (\mu_1-\mu_0)/\sigma_d\)</span> (d = difference)</li>
+<li>2 independent means: <span class="math inline">\(ES = (\mu_1-\mu_0)/\sigma\)</span></li>
+<li><p>etc etc for each test</p></li>
+<li>Two means or proportions small (0.2) medium (0.5) large (0.8)</li>
+<li>Correlation or contingency tables small (0.1) medium (0.3) large (0.5)</li>
+<li>Linear regression small (0.02) medium (0.15) large (0.35)</li>
+<li><p>More than two means (ANOVA) small (0.1) medium (0.25) large (0.4)</p></li>
+</ul>
+<p>If you have no idea, do not choose a large effect size.</p>
+</div>
+</div>
+</div>
 <div id="session-information" class="section level2">
 <h2>Session information</h2>
 <!-- Insert the session information into the document -->
 <pre class="r"><code>sessionInfo()</code></pre>
-<pre><code>R version 3.4.1 (2017-06-30)
-Platform: x86_64-w64-mingw32/x64 (64-bit)
-Running under: Windows 7 x64 (build 7601) Service Pack 1
-
-Matrix products: default
+<pre><code>R version 3.3.2 (2016-10-31)
+Platform: x86_64-apple-darwin13.4.0 (64-bit)
+Running under: macOS Sierra 10.12.6
 
 locale:
-[1] LC_COLLATE=Dutch_Netherlands.1252  LC_CTYPE=Dutch_Netherlands.1252   
-[3] LC_MONETARY=Dutch_Netherlands.1252 LC_NUMERIC=C                      
-[5] LC_TIME=Dutch_Netherlands.1252    
+[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
 
 attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
+other attached packages:
+[1] ggplot2_2.2.1
+
 loaded via a namespace (and not attached):
- [1] bootstrap_2017.2    survcomp_1.27.0     Rcpp_0.12.12       
- [4] knitr_1.17          magrittr_1.5        splines_3.4.1      
- [7] prodlim_1.6.1       lattice_0.20-35     stringr_1.2.0      
-[10] survivalROC_1.0.3   tools_3.4.1         grid_3.4.1         
-[13] data.table_1.10.4-2 KernSmooth_2.23-15  rmeta_2.16         
-[16] git2r_0.19.0        htmltools_0.3.6     yaml_2.1.14        
-[19] survival_2.41-3     rprojroot_1.2       digest_0.6.12      
-[22] Matrix_1.2-10       lava_1.5.1          RColorBrewer_1.1-2 
-[25] SuppDists_1.1-9.4   evaluate_0.10.1     rmarkdown_1.6      
-[28] stringi_1.1.5       compiler_3.4.1      amstR_0.1.3        
-[31] backports_1.1.0    </code></pre>
+ [1] Rcpp_0.12.11       survcomp_1.22.0    RColorBrewer_1.1-2
+ [4] git2r_0.19.0       plyr_1.8.4         tools_3.3.2       
+ [7] digest_0.6.12      evaluate_0.10.1    tibble_1.3.3      
+[10] gtable_0.2.0       lattice_0.20-35    rlang_0.1.1       
+[13] Matrix_1.2-10      yaml_2.1.14        prodlim_1.6.1     
+[16] bootstrap_2017.2   amstR_0.1.3        stringr_1.2.0     
+[19] knitr_1.17         SuppDists_1.1-9.4  rprojroot_1.2     
+[22] grid_3.3.2         data.table_1.10.4  survival_2.41-3   
+[25] rmarkdown_1.6      lava_1.5           rmeta_2.16        
+[28] magrittr_1.5       backports_1.1.0    scales_0.4.1      
+[31] htmltools_0.3.6    survivalROC_1.0.3  splines_3.3.2     
+[34] colorspace_1.3-2   labeling_0.3       KernSmooth_2.23-15
+[37] stringi_1.1.5      lazyeval_0.2.0     munsell_0.4.3     </code></pre>
 </div>
 
 <hr>

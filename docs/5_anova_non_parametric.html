@@ -313,10 +313,10 @@ div.tocify {
 shared across the workflowr files. -->
 <!-- Update knitr chunk options -->
 <!-- Insert the date the file was last updated -->
-<p><strong>Last updated:</strong> 2017-10-30</p>
+<p><strong>Last updated:</strong> 2017-10-31</p>
 <!-- Insert the code version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
-<p><strong>Code version:</strong> 2d66380</p>
+<p><strong>Code version:</strong> 52f415c</p>
 <!-- Add your analysis here -->
 <p>Teacher: Maria Schipper</p>
 <ul>
@@ -590,7 +590,7 @@ W = 0.96941, p-value = 0.6524</code></pre>
 </ul>
 <div id="formal-testing" class="section level5">
 <h5>Formal testing</h5>
-<p>use Levene’s test or Brown-Forsyth test * Tests the null hypothesis that the population variances are equal * In practice the test is equal to a one way ANOVA analysis on a transformation (|y_ijâˆ’y_j |) of the original data * One advantage of Levene’s test is that it does not require normality of the underlying data. * Another good test is the Brown-Forsyth test in which the mean is replaced by the median in the transformation.</p>
+<p>use Levene’s test or Brown-Forsyth test * Tests the null hypothesis that the population variances are equal * In practice the test is equal to a one way ANOVA analysis on a transformation (|y_ij−y_j |) of the original data * One advantage of Levene’s test is that it does not require normality of the underlying data. * Another good test is the Brown-Forsyth test in which the mean is replaced by the median in the transformation.</p>
 <p>NB ANOVA not robust to clear differences between variances, especially when the sample sizes differ considerably.</p>
 <p>NB Transformations can make distributions more normal and variances more homogeneous.</p>
 </div>
@@ -672,16 +672,12 @@ W = 0.96941, p-value = 0.6524</code></pre>
 <h2>Session information</h2>
 <!-- Insert the session information into the document -->
 <pre class="r"><code>sessionInfo()</code></pre>
-<pre><code>R version 3.4.1 (2017-06-30)
-Platform: x86_64-w64-mingw32/x64 (64-bit)
-Running under: Windows 7 x64 (build 7601) Service Pack 1
-
-Matrix products: default
+<pre><code>R version 3.3.2 (2016-10-31)
+Platform: x86_64-apple-darwin13.4.0 (64-bit)
+Running under: macOS Sierra 10.12.6
 
 locale:
-[1] LC_COLLATE=Dutch_Netherlands.1252  LC_CTYPE=Dutch_Netherlands.1252   
-[3] LC_MONETARY=Dutch_Netherlands.1252 LC_NUMERIC=C                      
-[5] LC_TIME=Dutch_Netherlands.1252    
+[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
 
 attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
@@ -690,16 +686,16 @@ other attached packages:
 [1] amstR_0.1.3
 
 loaded via a namespace (and not attached):
- [1] bootstrap_2017.2    survcomp_1.27.0     Rcpp_0.12.12       
- [4] knitr_1.17          magrittr_1.5        splines_3.4.1      
- [7] prodlim_1.6.1       lattice_0.20-35     stringr_1.2.0      
-[10] survivalROC_1.0.3   tools_3.4.1         grid_3.4.1         
-[13] data.table_1.10.4-2 KernSmooth_2.23-15  rmeta_2.16         
-[16] git2r_0.19.0        htmltools_0.3.6     yaml_2.1.14        
-[19] survival_2.41-3     rprojroot_1.2       digest_0.6.12      
-[22] Matrix_1.2-10       lava_1.5.1          RColorBrewer_1.1-2 
-[25] SuppDists_1.1-9.4   evaluate_0.10.1     rmarkdown_1.6      
-[28] stringi_1.1.5       compiler_3.4.1      backports_1.1.0    </code></pre>
+ [1] bootstrap_2017.2   survcomp_1.22.0    Rcpp_0.12.11      
+ [4] knitr_1.17         magrittr_1.5       splines_3.3.2     
+ [7] prodlim_1.6.1      lattice_0.20-35    stringr_1.2.0     
+[10] survivalROC_1.0.3  tools_3.3.2        grid_3.3.2        
+[13] data.table_1.10.4  KernSmooth_2.23-15 rmeta_2.16        
+[16] git2r_0.19.0       htmltools_0.3.6    yaml_2.1.14       
+[19] survival_2.41-3    rprojroot_1.2      digest_0.6.12     
+[22] Matrix_1.2-10      lava_1.5           RColorBrewer_1.1-2
+[25] SuppDists_1.1-9.4  evaluate_0.10.1    rmarkdown_1.6     
+[28] stringi_1.1.5      backports_1.1.0   </code></pre>
 </div>
 
 <hr>
