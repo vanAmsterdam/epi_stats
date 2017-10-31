@@ -71,8 +71,8 @@ n_pergroup = nrow(yields)
 sum_squares <- function(x) sum((x-mean(x))^2)
 
 ss_total = sum_squares(as.vector(yields))
-ss_within = sum(apply(yields, 2, sum_squares)) # this applies 'sum_squares' to each collum of yields
-ss_between = sum(n_pergroup*(colMeans(yields) - mean(yields))^2)
+ss_within = sum(apply(yields, 2, sum_squares)) # this applies 'sum_squares' to each column of yields
+ss_between = sum(n_pergroup*((colMeans(yields) - mean(yields))^2))
 
 df_total = n_total - 1
 df_within = 3*(n_pergroup - 1)
@@ -327,6 +327,303 @@ exp(t.test(incomes$logincome)$conf.int)
 The confidence intervals for both methods are pretty different, there is hardly any overlap. Since the log-transformed variable fits the model assumptions better, this result is deemed more reliable
 
 NB todo: create histogram, and plot both confidence intervals and the median in a single plot
+
+Now for a normally distributed variable:
+
+```{r}
+set.seed(2)
+x <- 10+ rnorm(100)
+hist(x)
+t.test(x)$conf.int
+exp(t.test(log(x))$conf.int)
+```
+
+
+Now check a two sample test for (random) groups
+```{r}
+require(ggplot2)
+incomes$group <- sample(c("A", "B"), p = c(0.5,0.5), size = nrow(incomes), replace = T)
+# increase the income of group B a little
+incomes$new_income <- incomes$income + as.numeric(incomes$group == "B") * .5 * (median(incomes$income))
+incomes$log_new_income <- log(incomes$new_income)
+
+ggplot(incomes, aes(x = new_income, fill = group)) + 
+  geom_density(alpha = 0.7)
+
+ggplot(incomes, aes(x = log_new_income, fill = group)) + 
+  geom_density(alpha = 0.7)
+
+t.test(new_income ~ group, data = incomes)
+t.test(log_new_income ~ group, data = incomes)
+
+```
+
+The T-test seems to have higher power in for the log-transformed income.
+
+## Day 6: Correlation and regression
+> Start every exercise by thinking about the research question(s), the research design, the dependent and explanatory variables, the descriptive statistics and the analysis plan. Discuss these issues with your fellow students. The further you are in the course, the easier it should be to identify the research question and the proper approach(es) to answering that question.
+
+### Exercises without SPSS or R
+
+#### 1.
+> In a sample of 10 animals of a certain species the lengths of the right foreleg and the right hind leg have been measured. 
+
+```{r}
+y1 = c(54, 53, 58, 55, 56, 55, 56, 57, 53, 57) # Foreleg
+y2 = c(56, 55, 57, 57, 56, 58, 59, 59, 56, 58) # Hind leg
+```
+
+> The mean (standard deviation) for both legs are 55.4 (1.71) and 57.1 (1.37) respectively and the covariance is 1.51. Study the association between the length of the foreleg and the hind leg. 
+a.	Would you prefer correlation or regression?
+
+Correlation would be preferred, as there is no a priori reason to believe that 
+one is cause by the other, or should predict the other.
+
+> b.	Make a scatter plot. Try to guess the value of the Pearson’s correlation coefficient.
+
+```{r}
+plot(y1, y2)
+```
+
+A guess would be around 0.5
+
+> c.	Calculate  the Pearson’s correlation coefficient and its standard error. Check the significance. What does the significance mean?
+
+```{r}
+n = length(y1)
+r = sum((y1 - mean(y1))*(y2 - mean(y2))) / sqrt((sum_squares(y1)*sum_squares(y2)))
+r
+cor(y1, y2)
+
+se_r = sqrt((1-r^2)/(n-2))
+se_r
+
+t = r / se_r
+2*pt(q = t, df = n-2, lower.tail = F)
+cor.test(y1, y2)
+```
+
+> d.	Calculate a 95% confidence interval for the correlation coefficient, using Fisher's Z transformation procedure. 
+
+```{r}
+z = .5*log((1+r)/(1-r))
+lo = z - qnorm(p = 0.025)/sqrt(n-3)
+hi = z + qnorm(p = 0.025)/sqrt(n-3)
+lo_r = (exp(2*lo)-1)/(exp(2*lo)+1)
+hi_r = (exp(2*hi)-1)/(exp(2*hi)+1)
+lo_r; hi_r
+cor.test(y1, y2)$conf.int
+```
+
+### Exercises with R
+#### 6.
+> In a sample of 10 animals of a certain species the lengths of the foreleg and the hind leg have been measured. The data are also given in the dataset `legs.RData`. Study the association between the length of the foreleg and the hind leg. 
+
+```{r}
+load(amstR::fromParentDir("data/legs.RData"))
+plot(y1, y2)
+cor.test(y1, y2)
+
+qqnorm(y1); qqline(y1, col = "red")
+qqnorm(y2); qqline(y2, col = "red")
+```
+
+There is a statistically significant association between the foreleg and the hind leg in our data.
+
+#### 7. 
+> Get the data in the file infantmortality.txt in R. The dataset is about infant mortality in the USA. The first column in the dataset presents the state of the USA to which the data applies; name it therefore state. The second column presents the teenage birth rate per 1000 births and could be named teen. The third column presents the infant mortality rate per 1000 live births; name this column mort. In the USA there is a conjecture that infant mortality is in many cases caused by teenage mothers who do not receive proper prenatal care. 
+a.	Perform a linear regression with teen as explanatory variable and mort as the response variable. 
+
+```{r}
+infants <- read.table(amstR::fromParentDir("data/infantmortality.txt"), header = F)
+colnames(infants) <- c("state", "teen", "mort")
+head(infants)
+plot(mort~teen, data = infants)
+fit <- lm(mort~teen, data = infants)
+summary(fit)
+```
+
+> b.	Do not forget to check the regression conditions!
+
+```{r}
+plot(fit, which = c(1,2))
+```
+
+From plot 1: the relationship between `teen` and `mort` seems more or less linear.
+From plot 2: variance seems equal across all levels of `teen`. 
+From plot 3: residuals look OK normally distributed, with a little heavy tail on the left.
+
+Independence of observations cannot be checked from the data, but is probable due to the study design.
+
+> c.	Do your results in a) confirm the conjecture?
+
+Yes, they provide evidence that with increasing amount of teenage pregnancy, infant mortality rises. 
+However, whether or not this is a causal relationship cannot be judged from the data alone. 
+For instance, there may be another unmeasured variable that explains the observed association.
+
+> d.	Calculate two 95% confidence intervals: one for the infant mortality for cases in which the teenage birth rate is equal to the sample mean, and one for an individual case with teenage birth rate equal to the sample mean. Comment on the difference between those intervals.
+
+```{r}
+# by 'hand' 
+n = nrow(infants)
+se = sd(fit$residuals)
+y0 = fit$coefficients[1] + fit$coefficients[2] * mean(infants$teen)
+## mean prediction
+y0 + c(1,-1) * qt(df = n-1, p = .025, lower.tail = T)  * se * sqrt(1/n)
+## individual prediction
+y0 + c(1,-1) * qt(df = n-1, p = .025, lower.tail = T)  * se * sqrt(1+1/n)
+
+
+predict(fit, newdata = data.frame(teen = mean(infants$teen)), type = "response", interval = "confidence", level = 0.95)
+predict(fit, newdata = data.frame(teen = mean(infants$teen)), type = "response", interval = "prediction", level = 0.95)
+```
+
+Calculating a confidence interval for the mean predicted infant mortality for a certain level of `teen` with our model is dependent on the 
+model variance $\sigma_{\epsilon}$ and the location of the predictor (closer or further away from the mean). It is calculated with the function:
+
+$$\hat{y}_0 \pm t_{(n-2, \alpha/2)}\sigma_{\epsilon}\sqrt{\frac{1}{n} + \frac{(x_0-\bar{x})}{\sum_{i = 1}^n{(x_i-\bar{x})^2}}}$$
+
+Predicting the risk of mortality for an individual for a certain level of `teen` also requires to take into account the level of spread at that level of `teen` (although this spread is assumed to be equal for each value of `teen`...), so it is a wider confidence interval. It is calculated with the function:
+
+$$\hat{y}_0 \pm t_{(n-2, \alpha/2)}\sigma_{\epsilon}\sqrt{1 + \frac{1}{n} + \frac{(x_0-\bar{x})}{\sum_{i = 1}^n{(x_i-\bar{x})^2}}}$$
+
+Note that the hand-calculated confidence intervals differ slightly from the confidence intervals which r gives us.
+
+#### 8.
+> In the file `heparin.RData` the clotting times of blood samples are registered for different doses of heparin. Research is directed towards the relationship between these quantities.
+> a.	Perform a regression analysis and check whether the assumptions of normality, linearity and homoscedasticity are fulfilled.
+
+```{r}
+load(amstR::fromParentDir("data/heparin.RData"))
+plot(TIME~DOSE, data = heparine)
+fit <- lm(TIME~DOSE, data = heparine)
+plot(fit, which = c(1,2))
+
+```
+
+From plot 1: the relationship seems more or less linear
+From plot 2: there is clear heteroscedasticity: variance increases with DOSE
+From plot 3: the residuals look somewhat normally distributed, with heavier tails
+
+> b.	A logarithmic transformation on the dependent variable is often proposed when assump¬tions are not fulfilled. Check whether this transformation leads to fulfilment of the three assumptions.
+
+```{r}
+heparine$log_time <- log(heparine$TIME)
+plot(log_time~DOSE, data = heparine)
+fit2 <- lm(log_time~DOSE, data = heparine)
+plot(fit2, which = c(1,2))
+```
+
+From plot 1: Linearity seems to be less in the log-transformed time
+From plot 2: The spread in residuals is relatively equal accross levels of `DOSE`, so homoscedasticity seems to hold
+From plot 3: residuals are nicely normally distribueted
+
+> c.	Carry out another regression analysis in which both variables are logarithmically transformed. Check again the assumptions and conclude on the results. 
+
+```{r}
+heparine$log_dose <- log(heparine$DOSE)
+plot(log_time~log_dose, data = heparine)
+fit3 <- lm(log_time~log_dose, data = heparine)
+plot(fit3, which = c(1,2))
+```
+
+Everything looks better when both variables are log-transformed!
+
+### Challenge exercise
+##### 9.
+> The question arises how body mass index (BMI) is related to the process of gastric emptying, measured by the percentage of retention after 120 minutes (ret120). The data of 55 patients of a certain hospital can be found in the file diabetes.sav or diabetes.RData.
+a.	Make a scatter plot of BMI and ret120 and give an interpretation of the correlation coefficient and its significance.
+
+```{r}
+load(amstR::fromParentDir("data/diabetes.RData"))
+plot(ret120~bmi, data = diabetes.df)
+cor.test(~ret120+bmi, data = diabetes.df)
+```
+
+Based on the scatter plot, there seems to be no correlation between `bmi` and `ret120`.
+It is therefore not surprising that the correlation-coefficient is not statistically significantly different from 0.
+
+> b.	The file consists of two groups of patients, diabetes and non-diabetes. Try to make a scatter plot in which the two groups can be distinguished 
+
+```{r}
+require(ggplot2)
+ggplot(diabetes.df, aes(x = bmi, y = ret120, col = diabetes, shape = diabetes)) + 
+  geom_point()
+```
+
+> c.	Calculate the correlation coefficient for the two groups separately and give your conclusion
+
+```{r}
+cor.test(~ret120+bmi, data = diabetes.df[diabetes.df$diabetes=="Yes",])
+cor.test(~ret120+bmi, data = diabetes.df[diabetes.df$diabetes=="No",])
+```
+
+It looks like there is an association between `bmi` and `ret120`, but is different 
+in the group with diabetes from the patients without diabetes. In a model this can be seen as interaction.
+
+```{r}
+fit0 <- lm(ret120~bmi, data = diabetes.df)
+summary(fit0)
+plot(fit0, which = c(1,2))
+fit1 <- lm(ret120~bmi*diabetes, data = diabetes.df)
+summary(fit1)
+plot(fit1, which = c(1,2))
+```
+
+Adding `diabetes` as an interaction term in model 1 is the same as making two models, one for each group:
+```{r}
+fit_no = lm(ret120~bmi, data = diabetes.df[diabetes.df$diabetes == "No",])
+summary(fit_no)
+fit_yes = lm(ret120~bmi, data = diabetes.df[diabetes.df$diabetes == "Yes",])
+summary(fit_yes)
+```
+
+
+Is model 1 better than model 0?
+```{r}
+anova(fit0, fit1)
+```
+
+Yes
+
+To interpret the coefficients of fit1:
+
+for patients without diabetes:
+$$ret120 = 61.422 - 0.8323 * bmi$$
+for patients with diabetes:
+$$ret120 = 61.422 - 46.3974 + (0.8323 + 1.1371)*bmi$$
+
+In a plot
+
+```{r}
+# some plot parameters
+xmin = floor(min(diabetes.df$bmi))
+xmax = ceiling(max(diabetes.df$bmi))
+ymin = floor(min(diabetes.df$ret120))
+ymax = ceiling(max(diabetes.df$ret120))
+
+par(mfrow = c(1,2))
+
+
+plot(ret120~bmi, data = diabetes.df[diabetes.df$diabetes == "No",], 
+     xlim = c(xmin, xmax), ylim = c(ymin, ymax), main = "Without diabetes")
+abline(a = fit1$coefficients["(Intercept)"], b = fit1$coefficients["bmi"], col = "red")
+
+plot(ret120~bmi, data = diabetes.df[diabetes.df$diabetes == "Yes",], 
+     xlim = c(xmin, xmax), ylim = c(ymin, ymax), main = "With diabetes")
+abline(a = (fit1$coefficients["(Intercept)"] + fit1$coefficients["diabetesYes"]), 
+       b = (fit1$coefficients["bmi"] + fit1$coefficients["bmi:diabetesYes"]), col = "red")
+par(mfrow = c(1,1))
+```
+
+This plot can be made very easily with ggplot2
+```{r}
+require(ggplot2)
+ggplot(diabetes.df, aes(x = bmi, y = ret120)) + # define dataset, x and y variable
+  geom_point() + # add points to the plot, making this a scatterplot
+  geom_smooth(method = "lm") + # add linear regression line
+  facet_wrap(~diabetes) # make this plot for all levels of the factor variable `diabetes`
+```
 
 
 ## Session information

@@ -98,8 +98,8 @@ with(balance,
 #### Stats
 ```{r}
 t.test(balance$FB)
-t.test(FB~age, data = balance)
-t.test(SS~age, data = balance)
+t.test(FB~age, data = balance, paired = F)
+t.test(SS~age, data = balance, paired = F)
 t.test(balance$FB, balance$SS, paired = T)
 t.test(balance$FB - balance$SS)
 ```

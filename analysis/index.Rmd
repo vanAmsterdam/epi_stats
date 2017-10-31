@@ -9,3 +9,4 @@ This website is made to share the assignments I worked out for "Classical Method
 
 ### Assignments
 [assignments week 1](assignments_week1.html)
+[assignments week 2](assignments_week2.html)
