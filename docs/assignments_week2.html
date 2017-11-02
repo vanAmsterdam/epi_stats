@@ -313,10 +313,10 @@ div.tocify {
 shared across the workflowr files. -->
 <!-- Update knitr chunk options -->
 <!-- Insert the date the file was last updated -->
-<p><strong>Last updated:</strong> 2017-10-31</p>
+<p><strong>Last updated:</strong> 2017-11-02</p>
 <!-- Insert the code version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
-<p><strong>Code version:</strong> 52f415c</p>
+<p><strong>Code version:</strong> db626e1</p>
 <!-- Add your analysis here -->
 <div id="day-5-anova-and-non-parametric-methods" class="section level2">
 <h2>Day 5: ANOVA and non-parametric methods</h2>
@@ -1006,17 +1006,74 @@ plot(fit3, which = c(1,2))</code></pre>
 <p><img src="figure/assignments_week2.Rmd/unnamed-chunk-40-2.png" width="672" style="display: block; margin: auto;" /><img src="figure/assignments_week2.Rmd/unnamed-chunk-40-3.png" width="672" style="display: block; margin: auto;" /></p>
 <p>Everything looks better when both variables are log-transformed!</p>
 </div>
+<div id="more-simulations-on-log-transformation" class="section level4">
+<h4>More simulations on log transformation</h4>
+<p>Create variables with linear correlation.</p>
+<pre class="r"><code>set.seed(2)
+x &lt;- runif(n = 100)
+y &lt;- x + rnorm(100, sd = .2)
+plot(x, y)</code></pre>
+<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-41-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>fit0 &lt;- lm(y~x)
+summary(fit0)</code></pre>
+<pre><code>
+Call:
+lm(formula = y ~ x)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-0.44615 -0.17082  0.00341  0.18597  0.41970 
+
+Coefficients:
+            Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept) 0.009864   0.043454   0.227    0.821    
+x           0.989705   0.075656  13.082   &lt;2e-16 ***
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+Residual standard error: 0.2247 on 98 degrees of freedom
+Multiple R-squared:  0.6359,    Adjusted R-squared:  0.6321 
+F-statistic: 171.1 on 1 and 98 DF,  p-value: &lt; 2.2e-16</code></pre>
+<pre class="r"><code>plot(fit0, which = 1)</code></pre>
+<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-41-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Nice: no heteroscedasticity</p>
+<pre class="r"><code>plot(exp(x), exp(y))</code></pre>
+<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-42-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>fit1 &lt;- lm(exp(y)~exp(x))
+summary(fit1)</code></pre>
+<pre><code>
+Call:
+lm(formula = exp(y) ~ exp(x))
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-0.98398 -0.30306 -0.02978  0.23005  1.21803 
+
+Coefficients:
+            Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept) -0.04753    0.15412  -0.308    0.758    
+exp(x)       1.05901    0.08636  12.262   &lt;2e-16 ***
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+Residual standard error: 0.4433 on 98 degrees of freedom
+Multiple R-squared:  0.6054,    Adjusted R-squared:  0.6014 
+F-statistic: 150.4 on 1 and 98 DF,  p-value: &lt; 2.2e-16</code></pre>
+<pre class="r"><code>plot(fit1, which = 1)</code></pre>
+<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-42-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Now we see heteroscedasticity: increasing variance with values of y.</p>
+</div>
 </div>
 <div id="challenge-exercise" class="section level3">
 <h3>Challenge exercise</h3>
-<div id="section-7" class="section level5">
-<h5>9.</h5>
+<div id="section-7" class="section level4">
+<h4>9.</h4>
 <blockquote>
 <p>The question arises how body mass index (BMI) is related to the process of gastric emptying, measured by the percentage of retention after 120 minutes (ret120). The data of 55 patients of a certain hospital can be found in the file diabetes.sav or diabetes.RData. a. Make a scatter plot of BMI and ret120 and give an interpretation of the correlation coefficient and its significance.</p>
 </blockquote>
 <pre class="r"><code>load(amstR::fromParentDir(&quot;data/diabetes.RData&quot;))
 plot(ret120~bmi, data = diabetes.df)</code></pre>
-<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-41-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-43-1.png" width="672" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>cor.test(~ret120+bmi, data = diabetes.df)</code></pre>
 <pre><code>
     Pearson&#39;s product-moment correlation
@@ -1038,7 +1095,7 @@ sample estimates:
 <pre class="r"><code>require(ggplot2)
 ggplot(diabetes.df, aes(x = bmi, y = ret120, col = diabetes, shape = diabetes)) + 
   geom_point()</code></pre>
-<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-42-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-44-1.png" width="672" style="display: block; margin: auto;" /></p>
 <blockquote>
 <ol start="3" style="list-style-type: lower-alpha">
 <li>Calculate the correlation coefficient for the two groups separately and give your conclusion</li>
@@ -1090,7 +1147,7 @@ Residual standard error: 6.655 on 53 degrees of freedom
 Multiple R-squared:  0.004551,  Adjusted R-squared:  -0.01423 
 F-statistic: 0.2423 on 1 and 53 DF,  p-value: 0.6246</code></pre>
 <pre class="r"><code>plot(fit0, which = c(1,2))</code></pre>
-<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-44-1.png" width="672" style="display: block; margin: auto;" /><img src="figure/assignments_week2.Rmd/unnamed-chunk-44-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-46-1.png" width="672" style="display: block; margin: auto;" /><img src="figure/assignments_week2.Rmd/unnamed-chunk-46-2.png" width="672" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>fit1 &lt;- lm(ret120~bmi*diabetes, data = diabetes.df)
 summary(fit1)</code></pre>
 <pre><code>
@@ -1114,7 +1171,7 @@ Residual standard error: 5.841 on 51 degrees of freedom
 Multiple R-squared:  0.2621,    Adjusted R-squared:  0.2187 
 F-statistic:  6.04 on 3 and 51 DF,  p-value: 0.001337</code></pre>
 <pre class="r"><code>plot(fit1, which = c(1,2))</code></pre>
-<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-44-3.png" width="672" style="display: block; margin: auto;" /><img src="figure/assignments_week2.Rmd/unnamed-chunk-44-4.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-46-3.png" width="672" style="display: block; margin: auto;" /><img src="figure/assignments_week2.Rmd/unnamed-chunk-46-4.png" width="672" style="display: block; margin: auto;" /></p>
 <p>Adding <code>diabetes</code> as an interaction term in model 1 is the same as making two models, one for each group:</p>
 <pre class="r"><code>fit_no = lm(ret120~bmi, data = diabetes.df[diabetes.df$diabetes == &quot;No&quot;,])
 summary(fit_no)</code></pre>
@@ -1190,7 +1247,7 @@ plot(ret120~bmi, data = diabetes.df[diabetes.df$diabetes == &quot;Yes&quot;,],
      xlim = c(xmin, xmax), ylim = c(ymin, ymax), main = &quot;With diabetes&quot;)
 abline(a = (fit1$coefficients[&quot;(Intercept)&quot;] + fit1$coefficients[&quot;diabetesYes&quot;]), 
        b = (fit1$coefficients[&quot;bmi&quot;] + fit1$coefficients[&quot;bmi:diabetesYes&quot;]), col = &quot;red&quot;)</code></pre>
-<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-47-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-49-1.png" width="672" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>par(mfrow = c(1,1))</code></pre>
 <p>This plot can be made very easily with ggplot2</p>
 <pre class="r"><code>require(ggplot2)
@@ -1198,7 +1255,566 @@ ggplot(diabetes.df, aes(x = bmi, y = ret120)) + # define dataset, x and y variab
   geom_point() + # add points to the plot, making this a scatterplot
   geom_smooth(method = &quot;lm&quot;) + # add linear regression line
   facet_wrap(~diabetes) # make this plot for all levels of the factor variable `diabetes`</code></pre>
-<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-48-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-50-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+</div>
+</div>
+<div id="day-7-categorical-data" class="section level2">
+<h2>Day 7: Categorical data</h2>
+<div id="sample-size-determination-via-r" class="section level3">
+<h3>Sample size determination via R</h3>
+<blockquote>
+<p>The statistical package R may be extended by the library <code>pwr</code>. This library offers several utilities to carry out basic sample size computations. It contains, among others, the functions: - 1-sample proportion. To determine sample size in a 1-sample proportion test one may use this function: pwr.p.test(n=..,h=..,sig.level=..,power=..,alternative=..) with h is the effect size h = 2|arcsin(√p1)- arcsin(√p0)| - 2-samples proportion To determine sample size in a 2-sample proportion test one may use this function: pwr.2p.test(n=..,h=..,sig.level=..,power=..,alternative=..) with h is the effect size h = 2|arcsin(√p2)- arcsin(√p1)| - If the sample sizes are going to be unequal, then one may use the function: pwr.2p2n.test(n1=..,n2=..,h=..,sig.level=..,power=..,alternative=..) with h is the effect size h = 2|arcsin(√p2)- arcsin(√p1)| (Note that in this case one of the two sample sizes must be given beforehand.) - Instead of explicitly calculating the effect size using the arcsin, you can use the R command ES.h() to obtain this effect size. - Chi-square test In case of a chi-square test you can use the function: pwr.chisq.test(w=..,n=..,df=..,sig.level=..,power=..) with w is the effect size. Use the function ES.w2 to obtain the effect size for the chi-square test for association in a contingency table.</p>
+</blockquote>
+<p>Example ES.w2 test.</p>
+<pre class="r"><code># install.packages(&quot;pwr&quot;)
+library(pwr)
+
+# simulate a contingy table
+set.seed(2)
+n = 50
+myData &lt;- data.frame(
+  id = 1:n,
+  # first a categorical variable with 2 levels: true or false, with p = 0.5 each
+  a  = sample(c(T,F), replace = T, size = n)
+)
+
+# then a second categorical variable that is the same as the first
+myData$b &lt;- myData$a
+# though with some values randomly flipped from true to false or vice versa...
+p_flip = 0.2
+flippers &lt;- sample(1:n, size = p_flip*n, replace = F)
+myData$b[flippers] &lt;- !myData$b[flippers]
+
+myData</code></pre>
+<pre><code>   id     a     b
+1   1  TRUE FALSE
+2   2 FALSE FALSE
+3   3 FALSE FALSE
+4   4  TRUE  TRUE
+5   5 FALSE FALSE
+6   6 FALSE FALSE
+7   7  TRUE  TRUE
+8   8 FALSE FALSE
+9   9  TRUE  TRUE
+10 10 FALSE FALSE
+11 11 FALSE FALSE
+12 12  TRUE  TRUE
+13 13 FALSE  TRUE
+14 14  TRUE  TRUE
+15 15  TRUE  TRUE
+16 16 FALSE FALSE
+17 17 FALSE FALSE
+18 18  TRUE  TRUE
+19 19  TRUE  TRUE
+20 20  TRUE  TRUE
+21 21 FALSE FALSE
+22 22  TRUE  TRUE
+23 23 FALSE FALSE
+24 24  TRUE  TRUE
+25 25  TRUE  TRUE
+26 26  TRUE FALSE
+27 27  TRUE  TRUE
+28 28  TRUE  TRUE
+29 29 FALSE FALSE
+30 30  TRUE FALSE
+31 31  TRUE  TRUE
+32 32  TRUE  TRUE
+33 33 FALSE  TRUE
+34 34 FALSE FALSE
+35 35 FALSE  TRUE
+36 36 FALSE FALSE
+37 37 FALSE  TRUE
+38 38  TRUE  TRUE
+39 39 FALSE FALSE
+40 40  TRUE  TRUE
+41 41 FALSE FALSE
+42 42  TRUE  TRUE
+43 43  TRUE FALSE
+44 44  TRUE FALSE
+45 45 FALSE FALSE
+46 46 FALSE FALSE
+47 47 FALSE FALSE
+48 48  TRUE  TRUE
+49 49 FALSE FALSE
+50 50 FALSE  TRUE</code></pre>
+<pre class="r"><code>myTable &lt;-xtabs(~a+b, data = myData)
+myTable</code></pre>
+<pre><code>       b
+a       FALSE TRUE
+  FALSE    20    5
+  TRUE      5   20</code></pre>
+<pre class="r"><code>ES.w2(myTable)</code></pre>
+<pre><code>[1] 49.00367</code></pre>
+</div>
+<div id="exercises-without-spss-or-r-2" class="section level3">
+<h3>Exercises without SPSS or R</h3>
+<div id="section-8" class="section level4">
+<h4>1.</h4>
+<blockquote>
+<p>To improve the wellbeing of laboratory mice a test was carried out to see whether mice should be housed solitarily or in the company of another mouse. In this preference test 20 mice were given the choice of sleeping alone or together with a (dominant) mouse of equal sex. Seventeen of the mice preferred sleeping in company while 3 chose to sleep solitarily. Give a 95% confidence interval for the population proportion of mice that prefer sleeping alone.</p>
+</blockquote>
+<pre class="r"><code>n = 20
+r = 3
+a = 0.05
+
+p_0   = 0.5
+p_hat = r / n
+p_hat</code></pre>
+<pre><code>[1] 0.15</code></pre>
+<pre class="r"><code>p_value = choose(n, r)*p_0^r*(1-p_0)^(n-r)
+p_value</code></pre>
+<pre><code>[1] 0.001087189</code></pre>
+<pre class="r"><code>## Pick the Agresti-Coull confidence interval
+rb &lt;- r + qnorm(a/2, lower.tail = F)^2 / 2
+nb &lt;- n + qnorm(a/2, lower.tail = F)^2
+pb &lt;- rb/nb
+se_pb &lt;- sqrt(pb*(1-pb)/nb)
+
+pb + c(-1,1)*qnorm(a/2, lower.tail = F)*se_pb</code></pre>
+<pre><code>[1] 0.04393901 0.36884860</code></pre>
+<pre class="r"><code>unlist(binom::binom.agresti.coull(x = r, n = n, conf.level = 1-a)[c(&quot;lower&quot;, &quot;upper&quot;)])</code></pre>
+<pre><code>     lower      upper 
+0.04393901 0.36884860 </code></pre>
+<p>Our manual calculation matches the result from the R-function <code>binom.agresti.coull</code>.</p>
+</div>
+<div id="section-9" class="section level4">
+<h4>2.</h4>
+<blockquote>
+<p>Two groups of patients, say group A and B, are checked whether they are contaminated by a certain virus. Group A consists of 50 persons and 30 of them are contaminated. Group B consists of 60 persons and 30 of them are contaminated. a. Compute a 95% confidence interval for the contaminated proportion in the population associated with group A.</p>
+</blockquote>
+<pre class="r"><code>a = 0.05
+na = 50
+ra = 30
+
+# manual calculation follow the exact code from above. Let&#39;s use the R-function
+unlist(binom::binom.agresti.coull(x = ra, n = na, conf.level = 1-a)[c(&quot;lower&quot;, &quot;upper&quot;)])</code></pre>
+<pre><code>    lower     upper 
+0.4616341 0.7240963 </code></pre>
+<blockquote>
+<ol start="2" style="list-style-type: lower-alpha">
+<li>Compute a 95% confidence interval for the contaminated proportion in the population associated with group B.</li>
+</ol>
+</blockquote>
+<pre class="r"><code>nb = 60
+rb = 30
+
+unlist(binom::binom.agresti.coull(x = rb, n = nb, conf.level = 1-a)[c(&quot;lower&quot;, &quot;upper&quot;)])</code></pre>
+<pre><code>    lower     upper 
+0.3773502 0.6226498 </code></pre>
+<blockquote>
+<ol start="3" style="list-style-type: lower-alpha">
+<li>Compute a 95% confidence interval for the difference of the two contaminated proportions in the associated populations.</li>
+</ol>
+</blockquote>
+<p>NB these are unpaired observations. Use Agresti-Coull again.</p>
+<pre class="r"><code>z  = qnorm(a/2, lower.tail = F)
+z2 = z^2
+
+na2 = na + z2/2
+ra2 = ra + z2/4
+pa2 = ra2/na2
+
+nb2 = nb + z2/2
+rb2 = rb + z2/4
+pb2 = rb2/nb2
+
+pdiff &lt;- pb2-pa2
+
+pdiff + c(-1,1)*z*sqrt(pa2*(1-pa2)/na2 + pb2*(1-pb2)/nb2)</code></pre>
+<pre><code>[1] -0.27883884  0.08623754</code></pre>
+<p>NB I could not find any R package that does this calculation.</p>
+</div>
+<div id="section-10" class="section level4">
+<h4>3.</h4>
+<blockquote>
+<p>In a study the researchers want to compare a new treatment against the standard treatment. When calculating the required number of patients, the researchers assumed a normal 30% failure rate due to adverse events, and it is expected that the new treatment reduces the number of adverse events with 50% (from 30% to 15%). Afterwards, it seemed that their starting point was not completely correct. In the group with the standard treatment, they find a failure rate of 38% and in the group with the new treatment the expected rate is still 15%. If the assumption was 38% instead of 30% argue whether fewer or more patients would have been required for the study.</p>
+</blockquote>
+<p>Recall that</p>
+<p><span class="math display">\[n \geq \frac{(Z_{\alpha}\sqrt{2\bar{p}(1-\bar{p})} + Z_{\beta}\sqrt{p_1(1-p_1)+p_2(1-p_2)})^2}{\delta^2}\]</span></p>
+<p>With <span class="math inline">\(\bar{p} = \frac{p_1+p_2}{2}\)</span>; <span class="math inline">\(\delta = p_2 - p_1\)</span>;</p>
+<p>We can see that if the hypothesized difference between the proportions increases, the required sample size decreases (in other words: a bigger effect is easier to detect.)</p>
+</div>
+</div>
+<div id="exercises-with-r-1" class="section level3">
+<h3>Exercises with R</h3>
+<div id="section-11" class="section level4">
+<h4>11.</h4>
+<blockquote>
+<p>This is a repeat of exercise 5, so you can compare the results to those from SPSS. The table below is about 636 Peruvian children. It presents a cross classification as to gender of the children (girl or boy) and respiratory problems (yes or no). a. Enter the data in R</p>
+</blockquote>
+<pre class="r"><code>peru &lt;- data.frame(
+  sex     = c(rep(&quot;girl&quot;, 335), rep(&quot;boy&quot;, 301)),
+  problems = c(rep(T, 254), rep(F, 81), rep(T, 237), rep(F, 64))
+)
+peruT &lt;- xtabs(~sex+problems, data = peru)
+peruT</code></pre>
+<pre><code>      problems
+sex    FALSE TRUE
+  boy     64  237
+  girl    81  254</code></pre>
+<blockquote>
+<ol start="2" style="list-style-type: lower-alpha">
+<li>Determine the proportion of girls in the dataset.</li>
+</ol>
+</blockquote>
+<pre class="r"><code>addmargins(peruT, margin = c(1,2))</code></pre>
+<pre><code>      problems
+sex    FALSE TRUE Sum
+  boy     64  237 301
+  girl    81  254 335
+  Sum    145  491 636</code></pre>
+<pre class="r"><code>prop.table(addmargins(peruT, margin = 2), margin = 2)</code></pre>
+<pre><code>      problems
+sex        FALSE      TRUE       Sum
+  boy  0.4413793 0.4826884 0.4732704
+  girl 0.5586207 0.5173116 0.5267296</code></pre>
+<blockquote>
+<ol start="3" style="list-style-type: lower-alpha">
+<li>Does the sample proportion in a) differ significantly from the worldwide proportion 0.49?</li>
+</ol>
+</blockquote>
+<pre class="r"><code>unlist(binom::binom.agresti.coull(x = 301, n = 636, conf.level = .95)[c(&quot;lower&quot;, &quot;upper&quot;)])</code></pre>
+<pre><code>    lower     upper 
+0.4347437 0.5121182 </code></pre>
+<p>The confidence interval contains the <span class="math inline">\(H_0\)</span> value, so there is not enough proof to reject the null hypothesis.</p>
+</div>
+<div id="section-12" class="section level4">
+<h4>12.</h4>
+<blockquote>
+<p>This is a repeat of exercise 6, so you can compare the results to those from SPSS. In a 1997 poll on smoking habits 220 of 750 American males indicated that they smoked cigarettes. In a 2002 poll (of different American males) the results were 194 out of 750. a. Create the dataset. It is not necessary to make a datasheet of 1500 rows but just 4 rows where every row is one cell of the contingency table. Figure out how you can do this.</p>
+</blockquote>
+<pre class="r"><code>smoke &lt;- data.frame(
+  year = factor(c(1997, 1997, 2002, 2002)),
+  smoking = c(T, F, T, F),
+  number = c(220, 750-220, 194, 750-194)
+)
+smoke</code></pre>
+<pre><code>  year smoking number
+1 1997    TRUE    220
+2 1997   FALSE    530
+3 2002    TRUE    194
+4 2002   FALSE    556</code></pre>
+<blockquote>
+<ol start="2" style="list-style-type: lower-alpha">
+<li>Carry out a chi-square test to test whether the population proportions are different.</li>
+</ol>
+</blockquote>
+<pre class="r"><code>xtabs(number~year+smoking, data = smoke)</code></pre>
+<pre><code>      smoking
+year   FALSE TRUE
+  1997   530  220
+  2002   556  194</code></pre>
+<pre class="r"><code>chisq.test(xtabs(number~year+smoking, data = smoke))</code></pre>
+<pre><code>
+    Pearson&#39;s Chi-squared test with Yates&#39; continuity correction
+
+data:  xtabs(number ~ year + smoking, data = smoke)
+X-squared = 2.0852, df = 1, p-value = 0.1487</code></pre>
+</div>
+<div id="section-13" class="section level4">
+<h4>13.</h4>
+<blockquote>
+<p>This is a repeat of exercise 8, so you can compare the results to those from SPSS. A psychiatrist wants to investigate the effect of the symptom ‘depersonalization’ on the prognosis of patients suffering from depression. For this study 23 patients with signs of depersonalization are matched one by one with 23 other patients with no signs of depersonalization. The matching is with respect to age, gender, duration of illness (depression) and some other variables concerning the personality of the patients. In the table the numbers of patients are given who were declared cured or not cured at the moment of discharge from the hospital after an EEG was made. What is your conclusion with respect to the effect of the symptom? Carry out an appropriate test and formulate a conclusion.</p>
+</blockquote>
+<pre class="r"><code>dep_table &lt;- matrix(c(14, 5, 2, 2), nrow = 2, byrow = T,
+                dimnames = list(c(&quot;no_dep_cured&quot;, &quot;no_dep_not_cured&quot;), 
+                                c(&quot;dep_cured&quot;, &quot;dep_not_cured&quot;)))
+dep_table</code></pre>
+<pre><code>                 dep_cured dep_not_cured
+no_dep_cured            14             5
+no_dep_not_cured         2             2</code></pre>
+<pre class="r"><code>mcnemar.test(dep_table)</code></pre>
+<pre><code>
+    McNemar&#39;s Chi-squared test with continuity correction
+
+data:  dep_table
+McNemar&#39;s chi-squared = 0.57143, df = 1, p-value = 0.4497</code></pre>
+<p>No statistically significant effect of the symptom on the chance of being cured.</p>
+</div>
+<div id="section-14" class="section level4">
+<h4>14.</h4>
+<blockquote>
+<p>The following table compiles data from six studies designed to investigate the accuracy of death certificates. The results of 5,373 autopsies were compared to the causes of death listed on the certificates. Of those considered, 3,726 certificates were confirmed to be accurate, 783 either lacked information or contained inaccuracies but did not require recoding of the underlying cause of death, and 864 were incorrect and required recoding. The data is stored in autopsie.RData.</p>
+</blockquote>
+<pre class="r"><code>load(amstR::fromParentDir(&quot;data/autopsie.RData&quot;))
+str(autopsie)</code></pre>
+<pre><code>List of 3
+ $ DATE  : num [1:18] 1 1 1 2 2 2 3 3 3 4 ...
+ $ STATUS: num [1:18] 1 2 3 1 2 3 1 2 3 1 ...
+ $ FREQ  : num [1:18] 2040 367 327 149 60 48 288 25 70 703 ...
+ - attr(*, &quot;label.table&quot;)=List of 3
+  ..$ DATE  : NULL
+  ..$ STATUS: NULL
+  ..$ FREQ  : NULL
+ - attr(*, &quot;variable.labels&quot;)= Named chr [1:3] &quot;date of study&quot; &quot;certificate status&quot; &quot;weight&quot;
+  ..- attr(*, &quot;names&quot;)= chr [1:3] &quot;DATE&quot; &quot;STATUS&quot; &quot;FREQ&quot;</code></pre>
+<blockquote>
+<ol style="list-style-type: lower-alpha">
+<li>Try to reproduce the table above in R.</li>
+</ol>
+</blockquote>
+<pre class="r"><code>autopsie_table &lt;- xtabs(FREQ~DATE+STATUS, data = autopsie)
+addmargins(autopsie_table)</code></pre>
+<pre><code>     STATUS
+DATE     1    2    3  Sum
+  1   2040  367  327 2734
+  2    149   60   48  257
+  3    288   25   70  383
+  4    703  197  252 1152
+  5    425   62   88  575
+  6    121   72   79  272
+  Sum 3726  783  864 5373</code></pre>
+<blockquote>
+<ol start="2" style="list-style-type: lower-alpha">
+<li>Test whether the results are homogeneous across the six studies.</li>
+</ol>
+</blockquote>
+<pre class="r"><code>chisq.test(autopsie_table)</code></pre>
+<pre><code>
+    Pearson&#39;s Chi-squared test
+
+data:  autopsie_table
+X-squared = 209.09, df = 10, p-value &lt; 2.2e-16</code></pre>
+<blockquote>
+<ol start="3" style="list-style-type: lower-alpha">
+<li>It should be noted that autopsies are not performed at random; in fact, many are done because the cause of death listed on the certificate is uncertain. What problems might arise if we attempt to use the results of these studies to make inference about the population as a whole? (Source: M Pagano &amp; K Gauvreau, Principles of Biostatistics. Belmont, CA: Wadsworth, Inc 1993.)</li>
+</ol>
+</blockquote>
+<p>The autopsies performed in this study are not a representative sample of the population of all death certificates. As suggested, an autopsy may be performed more often when the cause of death listed on the death certificate is uncertain. In this situation, it may expected that the actual cause of death is more often different from the stated cause of death. This will lead to an overrepresentation of the incorrectly recorded cause of death.</p>
+</div>
+<div id="section-15" class="section level4">
+<h4>15.</h4>
+<blockquote>
+<p>In a study concerning the influence of acid rain on Pinus sylvestris one thousand trees were randomly selected and age and extent of damage of each tree were determined. The results are given in the following summary (see below). The data is also given in the dataset damage.RData. Test whether there is an association between age and influence of acid rain. Does this mean that there is a direct causal relationship?</p>
+</blockquote>
+<pre class="r"><code>load(amstR::fromParentDir(&quot;data/damage.RData&quot;))
+damage_table &lt;- xtabs(~AGE+DAMAGE, data = damage)
+damage_table</code></pre>
+<pre><code>             DAMAGE
+AGE           none fair large
+  &lt;= 20 years  149  303   248
+  &gt; 20 years   151   97    52</code></pre>
+<pre class="r"><code>chisq.test(damage_table)</code></pre>
+<pre><code>
+    Pearson&#39;s Chi-squared test
+
+data:  damage_table
+X-squared = 88.282, df = 2, p-value &lt; 2.2e-16</code></pre>
+<p>There is a statistically significant different in damage between the two age groups. This does not mean that there is any causal connection. There may for instance be a third, unmeasured variable that explains the association. Or there may be some form of bias in the measurements.</p>
+</div>
+<div id="section-16" class="section level4">
+<h4>16.</h4>
+<blockquote>
+<p>Below several datasets are given. Describe for each case the design, choose the most appropriate test and give an answer to the research questions. a. The following table displays the preferences of ice cream flavors of three age groups of randomly selected young adults. Is there a relationship between age group and ice cream flavor preference?</p>
+</blockquote>
+<p>Design: cross-sectional</p>
+<pre class="r"><code>x &lt;- matrix(c(130, 110, 74, 105, 135, 80, 93, 154, 78), byrow = T, nrow = 3)
+x</code></pre>
+<pre><code>     [,1] [,2] [,3]
+[1,]  130  110   74
+[2,]  105  135   80
+[3,]   93  154   78</code></pre>
+<pre class="r"><code>chisq.test(x)</code></pre>
+<pre><code>
+    Pearson&#39;s Chi-squared test
+
+data:  x
+X-squared = 13.943, df = 4, p-value = 0.00748</code></pre>
+<p>Yes there is a relationship.</p>
+<blockquote>
+<ol start="2" style="list-style-type: lower-alpha">
+<li>In the past, a number of professions were prohibited from advertising. In 1977, the U.S. Supreme Court ruled that prohibiting doctors and lawyers from advertising violated their right to free-speech. The article “Should Dentists Advertise?” (.J. of Ad. Research (June 1982): 33-38) compared the attitudes of consumers and dentists toward the advertising of dental services. Independent random samples of 101 consumers and 124 dentists were asked to respond to the following statement: “I favor the use of advertising by dentists to attract new patients.” Possible responses were strongly agree, agree, neutral, disagree, and strongly disagree. The data presented in the article appears in the table below. The authors were interested in determining whether the two groups - consumers and dentists - differed in their attitudes toward advertising</li>
+</ol>
+</blockquote>
+<p>Design: independent unpaired samples</p>
+<pre class="r"><code>x &lt;- matrix(c(34, 49, 9, 4, 5, 9, 18, 23, 28, 46), nrow = 2, byrow = T)
+x</code></pre>
+<pre><code>     [,1] [,2] [,3] [,4] [,5]
+[1,]   34   49    9    4    5
+[2,]    9   18   23   28   46</code></pre>
+<pre class="r"><code>chisq.test(x)</code></pre>
+<pre><code>
+    Pearson&#39;s Chi-squared test
+
+data:  x
+X-squared = 84.496, df = 4, p-value &lt; 2.2e-16</code></pre>
+<p>It looks like dentists are more likely to oppose advertising than consumers.</p>
+<blockquote>
+<ol start="3" style="list-style-type: lower-alpha">
+<li>A pollster sampled 200 voters, 100 from District 1 and 100 from District 2, to determine their opinion on an upcoming referendum. The results of the survey are given in the table below. Is there evidence that the two districts will vote differently in the referendum?</li>
+</ol>
+</blockquote>
+<p>Design: independent unpaired sample</p>
+<pre class="r"><code>x &lt;- matrix(c(72, 21, 7, 60, 34, 6), nrow = 2, byrow = T)
+x</code></pre>
+<pre><code>     [,1] [,2] [,3]
+[1,]   72   21    7
+[2,]   60   34    6</code></pre>
+<pre class="r"><code>chisq.test(x)</code></pre>
+<pre><code>
+    Pearson&#39;s Chi-squared test
+
+data:  x
+X-squared = 4.2406, df = 2, p-value = 0.12</code></pre>
+<blockquote>
+<ol start="4" style="list-style-type: lower-alpha">
+<li>A random sample of 400 undergraduate college students were classified according to class and study habits. From the data in the table below, test to see whether the two classifications are independent.</li>
+</ol>
+</blockquote>
+<p>Design: cross-sectional</p>
+<pre class="r"><code>x &lt;- matrix(c(20, 42, 58, 25, 48, 32, 31, 28, 35, 24, 27, 30), byrow = T, nrow = 4)
+x</code></pre>
+<pre><code>     [,1] [,2] [,3]
+[1,]   20   42   58
+[2,]   25   48   32
+[3,]   31   28   35
+[4,]   24   27   30</code></pre>
+<pre class="r"><code>chisq.test(x)</code></pre>
+<pre><code>
+    Pearson&#39;s Chi-squared test
+
+data:  x
+X-squared = 15.216, df = 6, p-value = 0.01864</code></pre>
+<blockquote>
+<ol start="5" style="list-style-type: lower-alpha">
+<li>A recent experiment investigated the relationship between smoking and urinary incontinence. Of the 322 subjects in the study who were incontinent, 113 were smokers, 51 were former smokers, and 158 had never smoked. Of the 284 control subjects who were not incontinent, 68 were smokers, 23 were former smokers, and 193 had never smoked.</li>
+</ol>
+</blockquote>
+<p>Design: case-control</p>
+<pre class="r"><code>x &lt;- matrix(c(113, 51, 158, 68, 23, 193), ncol = 2, byrow = F,
+            dimnames = list(c(&quot;smoker&quot;, &quot;former_smoker&quot;, &quot;never_smoker&quot;),
+                            c(&quot;case&quot;, &quot;control&quot;)))
+x</code></pre>
+<pre><code>              case control
+smoker         113      68
+former_smoker   51      23
+never_smoker   158     193</code></pre>
+<pre class="r"><code>chisq.test(x)</code></pre>
+<pre><code>
+    Pearson&#39;s Chi-squared test
+
+data:  x
+X-squared = 22.98, df = 2, p-value = 1.023e-05</code></pre>
+<blockquote>
+<ol start="6" style="list-style-type: lower-alpha">
+<li>Some parents of the West Bay little leaguers think that they are noticing a pattern. There seems to be a relationship between the number on the kids’ jerseys and their position. These parents decide to record what they see. The hypothetical data appear below. Test whether the parents’ suspicion that there is a relationship between jersey number and position is right.</li>
+</ol>
+</blockquote>
+<p>Design: cross-sectional</p>
+<pre class="r"><code>x &lt;- matrix(c(12, 5, 5, 5, 10, 2, 4, 4, 7), nrow = 3, byrow = T)
+x</code></pre>
+<pre><code>     [,1] [,2] [,3]
+[1,]   12    5    5
+[2,]    5   10    2
+[3,]    4    4    7</code></pre>
+<pre class="r"><code>fisher.test(x)</code></pre>
+<pre><code>
+    Fisher&#39;s Exact Test for Count Data
+
+data:  x
+p-value = 0.05387
+alternative hypothesis: two.sided</code></pre>
+</div>
+<div id="section-17" class="section level4">
+<h4>17.</h4>
+<blockquote>
+<p>Calculate in each of the following situations the minimum required total sample size. a. In a certain (high risk) population the incidence of thrombosis is assumed to be 30%, that is H0: p0 = 0.3. We want to sample a group large enough to detect an incidence of 40%, that is H1: p1 = 0.4, if that is the real, true incidence. We set the two-sided α at 0.05 and want a power of 0.90 to detect the difference in incidence.</p>
+</blockquote>
+<pre class="r"><code>library(pwr)
+p0 = .3
+p1 = .4
+a = .05
+b = .9
+
+h = ES.h(p0, p1)
+pwr.p.test(h = h, sig.level = a, power = b, alternative = &quot;two.sided&quot;)</code></pre>
+<pre><code>
+     proportion power calculation for binomial distribution (arcsine transformation) 
+
+              h = 0.2101589
+              n = 237.9033
+      sig.level = 0.05
+          power = 0.9
+    alternative = two.sided</code></pre>
+<blockquote>
+<ol start="2" style="list-style-type: lower-alpha">
+<li>In a randomized clinical trial the control treatment is assumed to have a “success” rate of 0.2. The experimental treatment is expected to lead to a “success” rate of at least 0.4. The goal is to detect this difference of 0.2 with a two-sided α of 0.05 and a power of 0.80.</li>
+</ol>
+</blockquote>
+<p>Calculate power for 2 unpaired samples of equal size.</p>
+<pre class="r"><code>p0 = .2
+p1 = .4
+a = .05
+b = .8
+
+h = ES.h(p0, p1)
+pwr.2p.test(h = h, sig.level = a, power = b, alternative = &quot;two.sided&quot;)</code></pre>
+<pre><code>
+     Difference of proportion power calculation for binomial distribution (arcsine transformation) 
+
+              h = 0.4421432
+              n = 80.29912
+      sig.level = 0.05
+          power = 0.8
+    alternative = two.sided
+
+NOTE: same sample sizes</code></pre>
+<blockquote>
+<ol start="3" style="list-style-type: lower-alpha">
+<li>Using a paired design we want to compare two tests A and B with respect to their dichotomous outcome “positive” or “negative” in a group of individuals. How large should the sample size n be, or the number of informative pairs to detect an OR equal to 2 with a two-sided α of 0.05 and a power of 0.80?</li>
+</ol>
+</blockquote>
+<p>This calls for the McNemar test. The <code>MESS</code> package contains a function for calculating sample sizes of this test. However, this function requires 2 estimated parameters: both a <code>psi</code> and an <code>paid</code> argument, which are probably equivalent to the <span class="math inline">\(\Psi\)</span> and <span class="math inline">\(p\)</span> from the equations of the lecture.</p>
+<p><span class="math display">\[n = f_{11} + f_{12} + f_{21} + f_{22}\]</span> <span class="math display">\[p = min(\frac{f_{12}}{n}, \frac{f_{21}}{n})\]</span> <span class="math display">\[\Psi = max(\frac{f_{12}}{f_{21}}, \frac{f_{21}}{f_{12}})\]</span></p>
+<p><span class="math display">\[n \geq \frac{(Z_{\alpha}\sqrt{\Psi + 1} + Z_{\beta(1)}\sqrt{(\Psi+1)-p(\Psi-1)})^2}{p(\Psi-1)^2}\]</span></p>
+<p>We know that for paired data, the odds ratio is the fraction of the anti-diagonal elements, so <span class="math inline">\(OR = \Psi = 2\)</span>. The power of the McNemar test is said to be only dependent on the anti-diagonal (=informative) pairs, we can calculate their sum for a few values of p, and see if this sum stays the same. We will write the 2x2 table in such a way that <span class="math inline">\(f_{12} &lt; f_{21}\)</span>, so that:</p>
+<p><span class="math inline">\(p = \frac{f_12}{n}\)</span>; thus <span class="math inline">\(f_{12} = n*p\)</span> (we will set p, and get n from the sample size calculation)</p>
+<p><span class="math inline">\(\Psi = \frac{f_{21}}{f_{12}}\)</span>; so <span class="math inline">\(f_{21} = \Psi*f_{12}\)</span> This gives us:</p>
+<p><span class="math display">\[n_{informative\ pairs} = f_{12} + f_{21} = n*p + \Psi*n*p = (1+\Psi)*n*p\]</span></p>
+<pre class="r"><code>psi = 2
+p_sequence = 1:9 / 10
+n_sequence = sapply(p_sequence, function(p) {
+  res = MESS::power_mcnemar_test(paid = p, psi = psi,
+                                 sig.level = 0.05, power = 0.8, 
+                                 alternative = &quot;two.sided&quot;)
+  res$n
+})
+informative_pairs = (psi+1)*p_sequence*n_sequence
+data.frame(p = p_sequence, n = informative_pairs)</code></pre>
+<pre><code>    p        n
+1 0.1 69.92836
+2 0.2 69.20814
+3 0.3 68.47874
+4 0.4 67.73968
+5 0.5 66.99040
+6 0.6 66.23028
+7 0.7 65.45867
+8 0.8 64.67464
+9 0.9 63.87756</code></pre>
+<p>This gives us 9 different values for the required number of informative pairs. They are not equal, but all between 70 and 63. Probably taking &gt;70 would be the best guess.</p>
+<blockquote>
+<ol start="4" style="list-style-type: lower-alpha">
+<li>In a randomized controlled trial two methods to quit smoking will be compared. The first method is through support groups and the second method uses nicotine patches. Based on previous publications it is known that through support groups 30% of the people who have stopped smoking still not smoke after 6 months. The researchers expect that by the use of nicotine patches this proportion will be twice as high. How many smokers should the researchers include in their trial to demonstrate this difference with a power of 80% and a one-sided alpha of 5%?</li>
+</ol>
+</blockquote>
+<pre class="r"><code>p0 = .3
+p1 = .6
+a = .05
+b = .8
+
+h = ES.h(p0, p1)
+pwr.2p.test(h = h, sig.level = a, power = b, alternative = &quot;less&quot;)</code></pre>
+<pre><code>
+     Difference of proportion power calculation for binomial distribution (arcsine transformation) 
+
+              h = -0.6128748
+              n = 32.91961
+      sig.level = 0.05
+          power = 0.8
+    alternative = less
+
+NOTE: same sample sizes</code></pre>
 </div>
 </div>
 </div>
@@ -1217,22 +1833,24 @@ attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
 other attached packages:
-[1] ggplot2_2.2.1
+[1] pwr_1.2-1     ggplot2_2.2.1
 
 loaded via a namespace (and not attached):
  [1] Rcpp_0.12.11       survcomp_1.22.0    RColorBrewer_1.1-2
- [4] git2r_0.19.0       plyr_1.8.4         tools_3.3.2       
- [7] digest_0.6.12      evaluate_0.10.1    tibble_1.3.3      
-[10] gtable_0.2.0       lattice_0.20-35    rlang_0.1.1       
-[13] Matrix_1.2-10      yaml_2.1.14        prodlim_1.6.1     
-[16] bootstrap_2017.2   amstR_0.1.3        stringr_1.2.0     
-[19] knitr_1.17         SuppDists_1.1-9.4  rprojroot_1.2     
-[22] grid_3.3.2         data.table_1.10.4  survival_2.41-3   
-[25] rmarkdown_1.6      lava_1.5           rmeta_2.16        
-[28] magrittr_1.5       backports_1.1.0    scales_0.4.1      
-[31] htmltools_0.3.6    survivalROC_1.0.3  splines_3.3.2     
-[34] colorspace_1.3-2   labeling_0.3       KernSmooth_2.23-15
-[37] stringi_1.1.5      lazyeval_0.2.0     munsell_0.4.3     </code></pre>
+ [4] git2r_0.19.0       plyr_1.8.4         MESS_0.4-15       
+ [7] tools_3.3.2        digest_0.6.12      evaluate_0.10.1   
+[10] tibble_1.3.3       gtable_0.2.0       lattice_0.20-35   
+[13] rlang_0.1.1        Matrix_1.2-10      yaml_2.1.14       
+[16] geeM_0.10.0        prodlim_1.6.1      bootstrap_2017.2  
+[19] amstR_0.1.3        stringr_1.2.0      knitr_1.17        
+[22] SuppDists_1.1-9.4  rprojroot_1.2      grid_3.3.2        
+[25] data.table_1.10.4  geepack_1.2-1      survival_2.41-3   
+[28] binom_1.1-1        rmarkdown_1.6      lava_1.5          
+[31] rmeta_2.16         magrittr_1.5       backports_1.1.0   
+[34] scales_0.4.1       htmltools_0.3.6    survivalROC_1.0.3 
+[37] splines_3.3.2      colorspace_1.3-2   labeling_0.3      
+[40] KernSmooth_2.23-15 stringi_1.1.5      lazyeval_0.2.0    
+[43] munsell_0.4.3     </code></pre>
 </div>
 
 <hr>
