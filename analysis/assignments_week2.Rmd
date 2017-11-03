@@ -1012,9 +1012,14 @@ $\Psi = \frac{f_{21}}{f_{12}}$; so $f_{21} = \Psi*f_{12}$ This gives us:
 
 $$n_{informative\ pairs} = f_{12} + f_{21} = n*p + \Psi*n*p = (1+\Psi)*n*p$$
 
+The range of values for $p$ is restricted by $0 < p \leq 1/3$. Since we said that 
+$p = f_{12}/n < f_{21}/n$ and $\frac{f_{21}}{f_{12}} = 2$, whe know that 
+$p_{12} + p_{21} = p_{12} + 2*p_{12} = 3*p_{12} \leq 1$ because the sum of the 
+4 probabilities is always 1. So $p_{12} \leq 1/3$
+
 ```{r}
 psi = 2
-p_sequence = 1:9 / 10
+p_sequence = seq(from = 0.03, to = .33, length.out = 10)
 n_sequence = sapply(p_sequence, function(p) {
   res = MESS::power_mcnemar_test(paid = p, psi = psi,
                                  sig.level = 0.05, power = 0.8, 
@@ -1022,12 +1027,15 @@ n_sequence = sapply(p_sequence, function(p) {
   res$n
 })
 informative_pairs = (psi+1)*p_sequence*n_sequence
-data.frame(p = p_sequence, n = informative_pairs)
+data.frame(p = p_sequence, n_total = n_sequence, n_informative = informative_pairs)
+n_inf_min = floor(10*min(informative_pairs)) / 10
+n_inf_max = ceiling(10*max(informative_pairs)) / 10
 ```
 
-This gives us 9 different values for the required number of informative pairs.
-They are not equal, but all between 70 and 63. Probably taking >70 would be 
-the best guess.
+This gives us `r length(informative_pairs)` different values for the required number of informative pairs.
+They are not exactly equal, but all range between 
+`r n_inf_min` and `r n_inf_max`. Probably taking >`r ceiling(n_inf_max) would be 
+the a good guess.
 
 > d.	In a randomized controlled trial two methods to quit smoking will be compared. The first method is through support groups and the second method uses nicotine patches. Based on previous publications it is known that through support groups 30% of the people who have stopped smoking still not smoke after 6 months. The researchers expect that by the use of nicotine patches this proportion will be twice as high. How many smokers should the researchers include in their trial to demonstrate this difference with a power of 80% and a one-sided alpha of 5%?
 
