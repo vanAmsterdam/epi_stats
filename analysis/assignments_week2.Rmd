@@ -1037,6 +1037,56 @@ They are not exactly equal, but all range between
 `r n_inf_min` and `r n_inf_max`. Probably taking >71 would be 
 the a good guess.
 
+
+We can make a function that uses this workflow to calculate the required number 
+of required informative pairs for a given odds ratio ($/Psi$). For each given 
+$\Psi$ get the range of possible $p$ probabilities (like between 0 and 1/3 above). 
+Calculate the required number of informative pairs for each of these $p$ values 
+and compare the results.
+
+
+```{r}
+sample_size.mcnemar <- function(psi, 
+                                n_estimations = 10,
+                                sig.level = 0.05, power = 0.8,
+                                alternative = "two.sided") {
+  # determine max p for a given psi
+  p_max = 1/(1+psi)
+  p_sequence = seq(from = p_max / n_estimations, to = p_max, 
+                   length.out = n_estimations)
+  n_sequence = sapply(p_sequence, function(p) {
+    res = MESS::power_mcnemar_test(paid = p, psi = psi,
+                                   sig.level = 0.05, power = 0.8, 
+                                   alternative = "two.sided")
+    res$n
+  })
+  n_informative_pairs = (psi+1)*p_sequence*n_sequence
+  data.frame(p = p_sequence, n_total = n_sequence, n_informative = n_informative_pairs)
+}
+
+str(sample_size.mcnemar(2))
+
+ors <- seq(1.2, 4, by = 0.2) # set a range of odds ratios
+sizes <- sapply(ors, function(psi) {
+  res <- sample_size.mcnemar(psi)
+  res$n_informative
+})
+
+size_ranges <- apply(sizes, 2, range) # get range of values from each column
+
+# create a data.frame for pretty printing
+size_df <- data.frame(OR = ors, 
+                      min_informative_pairs = size_ranges[1,],
+                      max_informative_pairs = size_ranges[2,])
+size_df$range_diff <- size_df$max_informative_pairs-size_df$min_informative_pairs
+
+size_df
+```
+
+For each of these odds ratios, the range of calculated sample sizes of 
+informative pairs differs by only 2, so indeed this number seems to be determined 
+*mostly* by the odds ratio. Although for higher odds ratios the range becomes wider.
+
 > d.	In a randomized controlled trial two methods to quit smoking will be compared. The first method is through support groups and the second method uses nicotine patches. Based on previous publications it is known that through support groups 30% of the people who have stopped smoking still not smoke after 6 months. The researchers expect that by the use of nicotine patches this proportion will be twice as high. How many smokers should the researchers include in their trial to demonstrate this difference with a power of 80% and a one-sided alpha of 5%?
 
 ```{r}
@@ -1048,6 +1098,170 @@ b = .8
 h = ES.h(p0, p1)
 pwr.2p.test(h = h, sig.level = a, power = b, alternative = "less")
 ```
+
+## Day 8 Survial analysis
+### Exercises with R
+> Start R and change your working directory if necessary (File, Change dir…) 
+To do survival analysis in R, we first need to make the survival library available:
+
+```{r}
+library(survival)
+```
+
+
+#### 7.	
+> A random sample of 12 multiple myeloma patients was taken from the dataset in exercise #5. We will produce the estimates of mean and median survival times via three different methods and draw a simple Kaplan-Meier curve from this random sample.
+a.	First, enter the data and create a data frame:
+
+```{r}
+time <- c(4,5,7,10,12,15,17,18,40,51,66,91)
+status <- c(1,1,0,1,1,0,1,0,0,1,1,1)
+km.df <- data.frame(cbind(time,status))
+```
+
+> b.	Get the mean and median survival time for the whole dataset and for only the non-censored observations:
+
+```{r}
+mean(km.df$time); median(km.df$time)
+mean(km.df$time[km.df$status==1]) 
+median(km.df$time[km.df$status==1])
+```
+
+> What are the problems with these estimates?
+
+The mean and median follow-up times for the entire dataset are underestimations 
+of the actual survival due to censoring. 
+The mean and median survival time of the deceased are also an underestimation 
+of the actual survival time.
+
+
+> c.	Make a ”survival object” of the data, examine the object, and make a Kaplan-Meier plot:
+
+```{r}
+surv_object <- Surv(km.df$time, km.df$status) # this is a surv-object, it combines follow-up time with exit status (event or sensoring)
+surv_object[1:10]
+km <- survfit(surv_object~1,conf.type="none") # this a fit performed on a surv-object
+summary(km)
+plot(km)
+lines(c(0,51),c(.5,.5), lty = 2
+      )
+
+```
+
+> This last command adds a horizontal line through (0, 0.5) and (51, 0.5) to the K-M plot. It intersects at (51, 0.5), indicating that 51 is the median survival time, corrected for censoring.
+
+> 8.	Freireich et al. (1963) compared the times in remission of a group of leukemia patients treated with 6-mercuraptopurine and of an untreated control group. The event of interest was the first relapse (end of remission period). The outcome was time from entry into the study to first relapse. (Source: Anderson S. et al. Statistical Methods for Comparative Studies. New York: John Wiley & Sons, 1980.)
+a.	Read in the data:
+
+```{r}
+Fr <- read.table(amstR::fromParentDir("data/Anderson.txt"), header = T)
+
+```
+
+> Make a ”survival object” of the data, examine the object, and make a Kaplan-Meier plot:
+
+```{r}
+Freisurv<-survfit(Surv(Fr$TIME, Fr$STAT)~Fr$GROUP)
+summary(Freisurv)
+plot(Freisurv, lty=c(1,2))
+legend(x=25,y=1.0,legend=c("control","treatment"),lty=c(1,2))
+lines(c(0,35),c(.5,.5), col = "blue")
+
+```
+
+> b.	Perform a log-rank test to see if there is a difference between groups:
+
+```{r}
+survdiff(Surv(Fr$TIME, Fr$STAT)~ Fr$GROUP)
+```
+
+> 9.	Normally you often deal with time in the form of dates in calendar format. Different formats are used in different places of the world and even different formats in the same data file. However, in survival analysis the number of days between the starting date and the end date are used.  How can we deal with the different formats of the dates and extract the number of days between two dates.
+a.	Read the raw data file stroke.csv in the rawdata directory of the package ISwR:
+
+```{r}
+library(ISwR)
+data("stroke")
+
+stroke <- read.csv2(system.file("rawdata","stroke.csv", package="ISwR",na.strings="."))
+head(stroke)
+
+```
+
+> b.	Change the capitals of the variable names into lovercase
+
+```{r}
+names(stroke)<-tolower(names(stroke))
+head(stroke)
+
+```
+
+c.	Change the date format to the standard date format (“YYYY-MM-DD”) of R:
+
+```{r}
+stroke <- transform(stroke, died = as.Date(died, format="%d.%m.%Y"), dstr = as.Date(dstr, format="%d.%m.%Y"))
+head(stroke)
+
+```
+
+> d.	It is possible to perform arithmetic on dates, that is, they behave mostly like numeric vectors. Discuss the results:
+
+```{r}
+summary(stroke$died)
+summary(stroke$dstr)
+summary(stroke$died - stroke$dstr)
+head(stroke$died - stroke$dstr)
+
+
+```
+
+> e.	Replace the missing dates with the date of the end of the study (“1996-1-1”) and put the results in a new variable “end”. Also make a status variable with denotes whether the end date is a real date (TRUE) or censored to end of study date (False) 
+
+```{r}
+stroke<-transform(stroke, end = pmin(died, as.Date("1996-1-1"), na.rm=T), 
+                  dead =!is.na(died)& died < as.Date("1996-1-1"))
+head(stroke)
+
+```
+
+> f.	Calculate the number of days 
+
+```{r}
+stroke <- transform(stroke, obstime = as.numeric(end-dstr, units="days"))
+head(stroke)
+```
+
+> g.	Try also the same commands of the previous question but then with the units=”weeks”, unit=”months”, unit=”hours”. What do you see?
+
+```{r}
+data.frame(hours = as.numeric(stroke$end - stroke$dstr, unit = "hours")[1:10],
+           days  = as.numeric(stroke$end - stroke$dstr, unit = "days")[1:10],
+           weeks = as.numeric(stroke$end - stroke$dstr, unit = "weeks")[1:10])
+```
+
+> 10. An experiment will be conducted to test the effectiveness of a new treatment on a total of 100 patients. The current treatment for this disease achieves 50% survival after two years. The researcher believes that if the survival proportion of the treatment group is 0.6 or better, people will begin to use his treatment. He wants to know how many subjects he needs. Testing will be done at the 0.05 significance level and the required power is set to 90%. Calculate the minimum required total sample size.
+
+Using the equations:
+$$\delta_0 = \frac{log(p_1)}{log{p_0}} = HR$$
+$$d = (\frac{1+\delta_0}{1-\delta_0})^2(Z_{\alpha} + Z_{\beta})^2$$
+$$n \geq \frac{2d}{2-p_0-p_1}$$
+
+```{r}
+a   = .05
+pow = .9
+b   = 1-pow
+p0  = .5
+p1  = .6
+
+
+delta0 = log(p1)/log(p0)
+d = ((1+delta0)/(1-delta0))^2*(qnorm(a, lower.tail = F)+qnorm(b, lower.tail = F))^2
+n = 2*d/(2-p0-p1)
+n
+
+```
+
+NB for some reason, I come up with a different number than the official answer. 
+The found a d of 384, our d = 873
 
 
 
