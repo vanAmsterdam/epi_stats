@@ -313,10 +313,10 @@ div.tocify {
 shared across the workflowr files. -->
 <!-- Update knitr chunk options -->
 <!-- Insert the date the file was last updated -->
-<p><strong>Last updated:</strong> 2017-11-02</p>
+<p><strong>Last updated:</strong> 2017-11-03</p>
 <!-- Insert the code version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
-<p><strong>Code version:</strong> db626e1</p>
+<p><strong>Code version:</strong> 6ec575c</p>
 <!-- Add your analysis here -->
 <div id="day-5-anova-and-non-parametric-methods" class="section level2">
 <h2>Day 5: ANOVA and non-parametric methods</h2>
@@ -448,7 +448,7 @@ clinic &lt;- clinic[!is.na(clinic$TIME),]</code></pre>
 <p><img src="figure/assignments_week2.Rmd/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>Both distributions of waiting times seem approximately normally distributed, with some right skewness and (of course) a lower bound of (&gt;)0.</p>
 <blockquote>
-<p>What are the problems when you compare these data? What type of analysis would you prefer? Which questions exactly are answered with your analysis? What would you do if some waiting times were ‘censored’ because patients left the hospital? The data are given in the file clinic.sav or clinic.RData, if you want to easily get some descriptive statistics to help you answer the questions above.</p>
+<p>What are the problems when you compare these data? What type of analysis would you prefer? Which questions exactly are answered with your analysis? What would you do if some waiting times were â€˜censoredâ€™ because patients left the hospital? The data are given in the file clinic.sav or clinic.RData, if you want to easily get some descriptive statistics to help you answer the questions above.</p>
 </blockquote>
 <p>Both groups are of unequal size, and their variances seem to differ. This will cause troubles with ANOVA as it violates homoscedasticity. Since these are left-bounded varaibles, they seem approximately poisson-distributed. Currently we have no tools to deal with censored data. The most straightforward approach seems to be to do a Welch unpaired two-sample T-test (Welch = no equal variance assumption). We could look at the Wilcoxon rank sum test or the Mann-Whitney test. These tests do not require normality, however they do require homoscedasticity. Looking at the distributions of our data, heteroscedasticity seems to be a bigger problem than non-normality.</p>
 <pre class="r"><code>t.test(TIME ~ CLINIC, data = clinic, paired = F, var.equal = F)</code></pre>
@@ -808,7 +808,7 @@ y2 = c(56, 55, 57, 57, 56, 58, 59, 59, 56, 58) # Hind leg</code></pre>
 <p>Correlation would be preferred, as there is no a priori reason to believe that one is cause by the other, or should predict the other.</p>
 <blockquote>
 <ol start="2" style="list-style-type: lower-alpha">
-<li>Make a scatter plot. Try to guess the value of the Pearson’s correlation coefficient.</li>
+<li>Make a scatter plot. Try to guess the value of the Pearsonâ€™s correlation coefficient.</li>
 </ol>
 </blockquote>
 <pre class="r"><code>plot(y1, y2)</code></pre>
@@ -816,7 +816,7 @@ y2 = c(56, 55, 57, 57, 56, 58, 59, 59, 56, 58) # Hind leg</code></pre>
 <p>A guess would be around 0.5</p>
 <blockquote>
 <ol start="3" style="list-style-type: lower-alpha">
-<li>Calculate the Pearson’s correlation coefficient and its standard error. Check the significance. What does the significance mean?</li>
+<li>Calculate the Pearsonâ€™s correlation coefficient and its standard error. Check the significance. What does the significance mean?</li>
 </ol>
 </blockquote>
 <pre class="r"><code>n = length(y1)
@@ -983,7 +983,7 @@ plot(fit, which = c(1,2))</code></pre>
 <p>From plot 1: the relationship seems more or less linear From plot 2: there is clear heteroscedasticity: variance increases with DOSE From plot 3: the residuals look somewhat normally distributed, with heavier tails</p>
 <blockquote>
 <ol start="2" style="list-style-type: lower-alpha">
-<li>A logarithmic transformation on the dependent variable is often proposed when assump¬tions are not fulfilled. Check whether this transformation leads to fulfilment of the three assumptions.</li>
+<li>A logarithmic transformation on the dependent variable is often proposed when assumpÂ¬tions are not fulfilled. Check whether this transformation leads to fulfilment of the three assumptions.</li>
 </ol>
 </blockquote>
 <pre class="r"><code>heparine$log_time &lt;- log(heparine$TIME)
@@ -1264,13 +1264,13 @@ ggplot(diabetes.df, aes(x = bmi, y = ret120)) + # define dataset, x and y variab
 <div id="sample-size-determination-via-r" class="section level3">
 <h3>Sample size determination via R</h3>
 <blockquote>
-<p>The statistical package R may be extended by the library <code>pwr</code>. This library offers several utilities to carry out basic sample size computations. It contains, among others, the functions: - 1-sample proportion. To determine sample size in a 1-sample proportion test one may use this function: pwr.p.test(n=..,h=..,sig.level=..,power=..,alternative=..) with h is the effect size h = 2|arcsin(√p1)- arcsin(√p0)| - 2-samples proportion To determine sample size in a 2-sample proportion test one may use this function: pwr.2p.test(n=..,h=..,sig.level=..,power=..,alternative=..) with h is the effect size h = 2|arcsin(√p2)- arcsin(√p1)| - If the sample sizes are going to be unequal, then one may use the function: pwr.2p2n.test(n1=..,n2=..,h=..,sig.level=..,power=..,alternative=..) with h is the effect size h = 2|arcsin(√p2)- arcsin(√p1)| (Note that in this case one of the two sample sizes must be given beforehand.) - Instead of explicitly calculating the effect size using the arcsin, you can use the R command ES.h() to obtain this effect size. - Chi-square test In case of a chi-square test you can use the function: pwr.chisq.test(w=..,n=..,df=..,sig.level=..,power=..) with w is the effect size. Use the function ES.w2 to obtain the effect size for the chi-square test for association in a contingency table.</p>
+<p>The statistical package R may be extended by the library <code>pwr</code>. This library offers several utilities to carry out basic sample size computations. It contains, among others, the functions: - 1-sample proportion. To determine sample size in a 1-sample proportion test one may use this function: pwr.p.test(n=..,h=..,sig.level=..,power=..,alternative=..) with h is the effect size h = 2|arcsin(âˆšp1)- arcsin(âˆšp0)| - 2-samples proportion To determine sample size in a 2-sample proportion test one may use this function: pwr.2p.test(n=..,h=..,sig.level=..,power=..,alternative=..) with h is the effect size h = 2|arcsin(âˆšp2)- arcsin(âˆšp1)| - If the sample sizes are going to be unequal, then one may use the function: pwr.2p2n.test(n1=..,n2=..,h=..,sig.level=..,power=..,alternative=..) with h is the effect size h = 2|arcsin(âˆšp2)- arcsin(âˆšp1)| (Note that in this case one of the two sample sizes must be given beforehand.) - Instead of explicitly calculating the effect size using the arcsin, you can use the R command ES.h() to obtain this effect size. - Chi-square test In case of a chi-square test you can use the function: pwr.chisq.test(w=..,n=..,df=..,sig.level=..,power=..) with w is the effect size. Use the function ES.w2 to obtain the effect size for the chi-square test for association in a contingency table.</p>
 </blockquote>
 <p>Example ES.w2 test.</p>
 <pre class="r"><code># install.packages(&quot;pwr&quot;)
-library(pwr)
-
-# simulate a contingy table
+library(pwr)</code></pre>
+<pre><code>Warning: package &#39;pwr&#39; was built under R version 3.4.2</code></pre>
+<pre class="r"><code># simulate a contingy table
 set.seed(2)
 n = 50
 myData &lt;- data.frame(
@@ -1624,7 +1624,7 @@ X-squared = 13.943, df = 4, p-value = 0.00748</code></pre>
 <p>Yes there is a relationship.</p>
 <blockquote>
 <ol start="2" style="list-style-type: lower-alpha">
-<li>In the past, a number of professions were prohibited from advertising. In 1977, the U.S. Supreme Court ruled that prohibiting doctors and lawyers from advertising violated their right to free-speech. The article “Should Dentists Advertise?” (.J. of Ad. Research (June 1982): 33-38) compared the attitudes of consumers and dentists toward the advertising of dental services. Independent random samples of 101 consumers and 124 dentists were asked to respond to the following statement: “I favor the use of advertising by dentists to attract new patients.” Possible responses were strongly agree, agree, neutral, disagree, and strongly disagree. The data presented in the article appears in the table below. The authors were interested in determining whether the two groups - consumers and dentists - differed in their attitudes toward advertising</li>
+<li>In the past, a number of professions were prohibited from advertising. In 1977, the U.S. Supreme Court ruled that prohibiting doctors and lawyers from advertising violated their right to free-speech. The article â€œShould Dentists Advertise?â€ (.J. of Ad. Research (June 1982): 33-38) compared the attitudes of consumers and dentists toward the advertising of dental services. Independent random samples of 101 consumers and 124 dentists were asked to respond to the following statement: â€œI favor the use of advertising by dentists to attract new patients.â€ Possible responses were strongly agree, agree, neutral, disagree, and strongly disagree. The data presented in the article appears in the table below. The authors were interested in determining whether the two groups - consumers and dentists - differed in their attitudes toward advertising</li>
 </ol>
 </blockquote>
 <p>Design: independent unpaired samples</p>
@@ -1719,7 +1719,7 @@ alternative hypothesis: two.sided</code></pre>
 <div id="section-17" class="section level4">
 <h4>17.</h4>
 <blockquote>
-<p>Calculate in each of the following situations the minimum required total sample size. a. In a certain (high risk) population the incidence of thrombosis is assumed to be 30%, that is H0: p0 = 0.3. We want to sample a group large enough to detect an incidence of 40%, that is H1: p1 = 0.4, if that is the real, true incidence. We set the two-sided α at 0.05 and want a power of 0.90 to detect the difference in incidence.</p>
+<p>Calculate in each of the following situations the minimum required total sample size. a. In a certain (high risk) population the incidence of thrombosis is assumed to be 30%, that is H0: p0 = 0.3. We want to sample a group large enough to detect an incidence of 40%, that is H1: p1 = 0.4, if that is the real, true incidence. We set the two-sided Î± at 0.05 and want a power of 0.90 to detect the difference in incidence.</p>
 </blockquote>
 <pre class="r"><code>library(pwr)
 p0 = .3
@@ -1739,7 +1739,7 @@ pwr.p.test(h = h, sig.level = a, power = b, alternative = &quot;two.sided&quot;)
     alternative = two.sided</code></pre>
 <blockquote>
 <ol start="2" style="list-style-type: lower-alpha">
-<li>In a randomized clinical trial the control treatment is assumed to have a “success” rate of 0.2. The experimental treatment is expected to lead to a “success” rate of at least 0.4. The goal is to detect this difference of 0.2 with a two-sided α of 0.05 and a power of 0.80.</li>
+<li>In a randomized clinical trial the control treatment is assumed to have a â€œsuccessâ€ rate of 0.2. The experimental treatment is expected to lead to a â€œsuccessâ€ rate of at least 0.4. The goal is to detect this difference of 0.2 with a two-sided Î± of 0.05 and a power of 0.80.</li>
 </ol>
 </blockquote>
 <p>Calculate power for 2 unpaired samples of equal size.</p>
@@ -1762,7 +1762,7 @@ pwr.2p.test(h = h, sig.level = a, power = b, alternative = &quot;two.sided&quot;
 NOTE: same sample sizes</code></pre>
 <blockquote>
 <ol start="3" style="list-style-type: lower-alpha">
-<li>Using a paired design we want to compare two tests A and B with respect to their dichotomous outcome “positive” or “negative” in a group of individuals. How large should the sample size n be, or the number of informative pairs to detect an OR equal to 2 with a two-sided α of 0.05 and a power of 0.80?</li>
+<li>Using a paired design we want to compare two tests A and B with respect to their dichotomous outcome â€œpositiveâ€ or â€œnegativeâ€ in a group of individuals. How large should the sample size n be, or the number of informative pairs to detect an OR equal to 2 with a two-sided Î± of 0.05 and a power of 0.80?</li>
 </ol>
 </blockquote>
 <p>This calls for the McNemar test. The <code>MESS</code> package contains a function for calculating sample sizes of this test. However, this function requires 2 estimated parameters: both a <code>psi</code> and an <code>paid</code> argument, which are probably equivalent to the <span class="math inline">\(\Psi\)</span> and <span class="math inline">\(p\)</span> from the equations of the lecture.</p>
@@ -1772,8 +1772,9 @@ NOTE: same sample sizes</code></pre>
 <p><span class="math inline">\(p = \frac{f_12}{n}\)</span>; thus <span class="math inline">\(f_{12} = n*p\)</span> (we will set p, and get n from the sample size calculation)</p>
 <p><span class="math inline">\(\Psi = \frac{f_{21}}{f_{12}}\)</span>; so <span class="math inline">\(f_{21} = \Psi*f_{12}\)</span> This gives us:</p>
 <p><span class="math display">\[n_{informative\ pairs} = f_{12} + f_{21} = n*p + \Psi*n*p = (1+\Psi)*n*p\]</span></p>
+<p>The range of values for <span class="math inline">\(p\)</span> is restricted by <span class="math inline">\(0 &lt; p \leq 1/3\)</span>. Since we said that <span class="math inline">\(p = f_{12}/n &lt; f_{21}/n\)</span> and <span class="math inline">\(\frac{f_{21}}{f_{12}} = 2\)</span>, whe know that <span class="math inline">\(p_{12} + p_{21} = p_{12} + 2*p_{12} = 3*p_{12} \leq 1\)</span> because the sum of the 4 probabilities is always 1. So <span class="math inline">\(p_{12} \leq 1/3\)</span></p>
 <pre class="r"><code>psi = 2
-p_sequence = 1:9 / 10
+p_sequence = seq(from = 0.03, to = .33, length.out = 10)
 n_sequence = sapply(p_sequence, function(p) {
   res = MESS::power_mcnemar_test(paid = p, psi = psi,
                                  sig.level = 0.05, power = 0.8, 
@@ -1781,18 +1782,21 @@ n_sequence = sapply(p_sequence, function(p) {
   res$n
 })
 informative_pairs = (psi+1)*p_sequence*n_sequence
-data.frame(p = p_sequence, n = informative_pairs)</code></pre>
-<pre><code>    p        n
-1 0.1 69.92836
-2 0.2 69.20814
-3 0.3 68.47874
-4 0.4 67.73968
-5 0.5 66.99040
-6 0.6 66.23028
-7 0.7 65.45867
-8 0.8 64.67464
-9 0.9 63.87756</code></pre>
-<p>This gives us 9 different values for the required number of informative pairs. They are not equal, but all between 70 and 63. Probably taking &gt;70 would be the best guess.</p>
+data.frame(p = p_sequence, n_total = n_sequence, n_informative = informative_pairs)</code></pre>
+<pre><code>            p   n_total n_informative
+1  0.03000000 782.52596      70.42734
+2  0.06333333 369.42237      70.19025
+3  0.09666667 241.21454      69.95222
+4  0.13000000 178.75185      69.71322
+5  0.16333333 141.78214      69.47325
+6  0.19666667 117.34285      69.23228
+7  0.23000000  99.98593      68.99029
+8  0.26333333  87.02186      68.74727
+9  0.29666667  76.96989      68.50320
+10 0.33000000  68.94754      68.25806</code></pre>
+<pre class="r"><code>n_inf_min = floor(10*min(informative_pairs)) / 10
+n_inf_max = ceiling(10*max(informative_pairs)) / 10</code></pre>
+<p>This gives us 10 different values for the required number of informative pairs. They are not exactly equal, but all range between 68.2 and 70.5. Probably taking &gt;`r ceiling(n_inf_max) would be the a good guess.</p>
 <blockquote>
 <ol start="4" style="list-style-type: lower-alpha">
 <li>In a randomized controlled trial two methods to quit smoking will be compared. The first method is through support groups and the second method uses nicotine patches. Based on previous publications it is known that through support groups 30% of the people who have stopped smoking still not smoke after 6 months. The researchers expect that by the use of nicotine patches this proportion will be twice as high. How many smokers should the researchers include in their trial to demonstrate this difference with a power of 80% and a one-sided alpha of 5%?</li>
@@ -1822,35 +1826,39 @@ NOTE: same sample sizes</code></pre>
 <h2>Session information</h2>
 <!-- Insert the session information into the document -->
 <pre class="r"><code>sessionInfo()</code></pre>
-<pre><code>R version 3.3.2 (2016-10-31)
-Platform: x86_64-apple-darwin13.4.0 (64-bit)
-Running under: macOS Sierra 10.12.6
+<pre><code>R version 3.4.1 (2017-06-30)
+Platform: x86_64-w64-mingw32/x64 (64-bit)
+Running under: Windows 7 x64 (build 7601) Service Pack 1
+
+Matrix products: default
 
 locale:
-[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+[1] LC_COLLATE=Dutch_Netherlands.1252  LC_CTYPE=Dutch_Netherlands.1252   
+[3] LC_MONETARY=Dutch_Netherlands.1252 LC_NUMERIC=C                      
+[5] LC_TIME=Dutch_Netherlands.1252    
 
 attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
 other attached packages:
-[1] pwr_1.2-1     ggplot2_2.2.1
+[1] pwr_1.2-1          ggplot2_2.2.1.9000
 
 loaded via a namespace (and not attached):
- [1] Rcpp_0.12.11       survcomp_1.22.0    RColorBrewer_1.1-2
- [4] git2r_0.19.0       plyr_1.8.4         MESS_0.4-15       
- [7] tools_3.3.2        digest_0.6.12      evaluate_0.10.1   
-[10] tibble_1.3.3       gtable_0.2.0       lattice_0.20-35   
-[13] rlang_0.1.1        Matrix_1.2-10      yaml_2.1.14       
-[16] geeM_0.10.0        prodlim_1.6.1      bootstrap_2017.2  
-[19] amstR_0.1.3        stringr_1.2.0      knitr_1.17        
-[22] SuppDists_1.1-9.4  rprojroot_1.2      grid_3.3.2        
-[25] data.table_1.10.4  geepack_1.2-1      survival_2.41-3   
-[28] binom_1.1-1        rmarkdown_1.6      lava_1.5          
-[31] rmeta_2.16         magrittr_1.5       backports_1.1.0   
-[34] scales_0.4.1       htmltools_0.3.6    survivalROC_1.0.3 
-[37] splines_3.3.2      colorspace_1.3-2   labeling_0.3      
-[40] KernSmooth_2.23-15 stringi_1.1.5      lazyeval_0.2.0    
-[43] munsell_0.4.3     </code></pre>
+ [1] Rcpp_0.12.12        survcomp_1.27.0     compiler_3.4.1     
+ [4] RColorBrewer_1.1-2  git2r_0.19.0        plyr_1.8.4         
+ [7] MESS_0.4-15         tools_3.4.1         digest_0.6.12      
+[10] evaluate_0.10.1     tibble_1.3.4        gtable_0.2.0       
+[13] lattice_0.20-35     rlang_0.1.2         Matrix_1.2-10      
+[16] yaml_2.1.14         geeM_0.10.0         prodlim_1.6.1      
+[19] bootstrap_2017.2    amstR_0.1.3         stringr_1.2.0      
+[22] knitr_1.17          SuppDists_1.1-9.4   rprojroot_1.2      
+[25] grid_3.4.1          data.table_1.10.4-2 geepack_1.2-1      
+[28] survival_2.41-3     binom_1.1-1         rmarkdown_1.6      
+[31] lava_1.5.1          rmeta_2.16          magrittr_1.5       
+[34] backports_1.1.0     scales_0.5.0.9000   htmltools_0.3.6    
+[37] survivalROC_1.0.3   splines_3.4.1       colorspace_1.3-2   
+[40] labeling_0.3        KernSmooth_2.23-15  stringi_1.1.5      
+[43] lazyeval_0.2.0      munsell_0.4.3      </code></pre>
 </div>
 
 <hr>
