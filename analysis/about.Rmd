@@ -5,4 +5,5 @@ output:
     toc: false
 ---
 
-Describe your project.
+This website is made to share the assignments I worked out for "Classical Methods in Data Analysis" from the Epidemiology Graduate Program of the Julius Center, Utrecht, the Netherlands
+
