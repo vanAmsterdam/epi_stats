@@ -1034,7 +1034,7 @@ n_inf_max = ceiling(10*max(informative_pairs)) / 10
 
 This gives us `r length(informative_pairs)` different values for the required number of informative pairs.
 They are not exactly equal, but all range between 
-`r n_inf_min` and `r n_inf_max`. Probably taking >`r ceiling(n_inf_max) would be 
+`r n_inf_min` and `r n_inf_max`. Probably taking >71 would be 
 the a good guess.
 
 > d.	In a randomized controlled trial two methods to quit smoking will be compared. The first method is through support groups and the second method uses nicotine patches. Based on previous publications it is known that through support groups 30% of the people who have stopped smoking still not smoke after 6 months. The researchers expect that by the use of nicotine patches this proportion will be twice as high. How many smokers should the researchers include in their trial to demonstrate this difference with a power of 80% and a one-sided alpha of 5%?
