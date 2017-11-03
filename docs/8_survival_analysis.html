@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+<meta name="author" content="Wouter van Amsterdam" />
+
+<meta name="date" content="2017-11-03" />
+
+<title>Survival analysis</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-1.1/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-1.1/highlight.js"></script>
+<link href="site_libs/font-awesome-4.5.0/css/font-awesome.min.css" rel="stylesheet" />
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs && document.readyState && document.readyState === "complete") {
+   window.setTimeout(function() {
+      hljs.initHighlighting();
+   }, 0);
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+
+<div class="container-fluid main-container">
+
+<!-- tabsets -->
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+</script>
+
+<!-- code folding -->
+
+
+
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+  padding-left: 25px;
+  text-indent: 0;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">epi_stats</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/jdblischak/workflowr">
+    <span class="fa fa-github"></span>
+     
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">Survival analysis</h1>
+<h4 class="author"><em>Wouter van Amsterdam</em></h4>
+<h4 class="date"><em>2017-11-03</em></h4>
+
+</div>
+
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+<!-- Update knitr chunk options -->
+<!-- Insert the date the file was last updated -->
+<p><strong>Last updated:</strong> 2017-11-03</p>
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+<p><strong>Code version:</strong> 35a4a09</p>
+<!-- Add your analysis here -->
+<div id="intro" class="section level2">
+<h2>Intro</h2>
+<p>Tutor: Rebecca Stellato</p>
+</div>
+<div id="approach-to-survival-analysis" class="section level2">
+<h2>Approach to survival analysis</h2>
+<pre class="r"><code>library(survival)
+data(&quot;veteran&quot;)
+str(veteran)</code></pre>
+<pre><code>&#39;data.frame&#39;:   137 obs. of  8 variables:
+ $ trt     : num  1 1 1 1 1 1 1 1 1 1 ...
+ $ celltype: Factor w/ 4 levels &quot;squamous&quot;,&quot;smallcell&quot;,..: 1 1 1 1 1 1 1 1 1 1 ...
+ $ time    : num  72 411 228 126 118 10 82 110 314 100 ...
+ $ status  : num  1 1 1 1 1 1 1 1 1 0 ...
+ $ karno   : num  60 70 60 60 70 20 40 80 50 70 ...
+ $ diagtime: num  7 5 3 9 11 5 10 29 18 6 ...
+ $ age     : num  69 64 38 63 65 49 69 68 43 70 ...
+ $ prior   : num  0 10 0 10 10 0 10 0 0 0 ...</code></pre>
+<p>ANOVA on survival time (ignores censoring).</p>
+<pre class="r"><code>fit &lt;- lm(time~celltype, data = veteran)
+summary(fit)</code></pre>
+<pre><code>
+Call:
+lm(formula = time ~ celltype, data = veteran)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-199.20  -63.11  -23.11   30.89  798.80 
+
+Coefficients:
+                  Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept)         200.20      25.00   8.009 5.12e-13 ***
+celltypesmallcell  -128.53      32.87  -3.910 0.000146 ***
+celltypeadeno      -136.09      37.88  -3.593 0.000459 ***
+celltypelarge       -34.09      37.88  -0.900 0.369775    
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+Residual standard error: 147.9 on 133 degrees of freedom
+Multiple R-squared:  0.1413,    Adjusted R-squared:  0.1219 
+F-statistic: 7.295 on 3 and 133 DF,  p-value: 0.0001446</code></pre>
+<pre class="r"><code>anova(fit)</code></pre>
+<pre><code>Analysis of Variance Table
+
+Response: time
+           Df  Sum Sq Mean Sq F value    Pr(&gt;F)    
+celltype    3  478636  159545  7.2955 0.0001446 ***
+Residuals 133 2908596   21869                      
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<pre class="r"><code>summary(aov(time~celltype, data = veteran))</code></pre>
+<pre><code>             Df  Sum Sq Mean Sq F value   Pr(&gt;F)    
+celltype      3  478636  159545   7.295 0.000145 ***
+Residuals   133 2908596   21869                     
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<p>Chi-squared for alive at a certain time point</p>
+<pre class="r"><code>hist(veteran[veteran$status == &quot;1&quot;,]$time)</code></pre>
+<p><img src="figure/8_survival_analysis.Rmd/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>plot(ecdf(veteran[veteran$status == &quot;1&quot;,]$time))</code></pre>
+<p><img src="figure/8_survival_analysis.Rmd/unnamed-chunk-3-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>plot(ecdf(veteran[veteran$status == &quot;0&quot;,]$time))</code></pre>
+<p><img src="figure/8_survival_analysis.Rmd/unnamed-chunk-3-3.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Both methods will make you lose information.</p>
+<p>Survival analysis: in general means time to event (death / disease / relapse / whatever).</p>
+<p>General problems</p>
+<ul>
+<li>Survival time is generally not normally distributed (but right skewed)</li>
+<li>Survival times may often be censored</li>
+</ul>
+<p>Calculate * Cumulative incedence * Incidence ratio (assuming the risk of having the event is independent of time, all participants have the same survival distribution (ignoring groups))</p>
+<p>Assumptions All methods used here assume <strong>uninformative censoring</strong> * censoring unrelated to probability of an event * censoring unrelated to treatment</p>
+<div id="survival-functions" class="section level3">
+<h3>Survival functions</h3>
+<p>Calculate cumulative distribution of survival times <span class="math inline">\(F(t)\)</span></p>
+<p>Always plotted: survival time <span class="math inline">\(S(t) = 1 - F(t)\)</span>.</p>
+<pre class="r"><code>curve(1-ecdf(veteran$time)(x), from = min(veteran$time), to = max(veteran$time))</code></pre>
+<p><img src="figure/8_survival_analysis.Rmd/unnamed-chunk-4-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Hazard function: <span class="math display">\[p(Event | t = t)\]</span></p>
+<p>Chance of getting an event at time t, given survival up to time t. Usually, cumulative hazard is plotted.</p>
+<p>Cumulative hazard is theoretically unbounded.</p>
+<p>Hazard function:</p>
+<p><span class="math display">\[h(t) = -S&#39;(t) / S(t)\]</span></p>
+<p>Parametric approach: Distribution of survival function * Exponential * Weibull</p>
+<p>Non-parametric: Kaplan-Meier</p>
+<p>Cox-proportional hazards: semi-parametric</p>
+<p>Estimate survival function</p>
+<pre class="r"><code>veteran[order(veteran$time), c(&quot;time&quot;, &quot;status&quot;)]</code></pre>
+<pre><code>    time status
+77     1      1
+85     1      1
+95     2      1
+53     3      1
+18     4      1
+42     7      1
+97     7      1
+119    7      1
+12     8      1
+46     8      1
+100    8      1
+116    8      1
+6     10      1
+45    10      1
+15    11      1
+51    12      1
+60    12      1
+20    13      1
+93    13      1
+89    15      1
+130   15      1
+26    16      1
+31    18      1
+37    18      1
+109   18      1
+123   19      1
+128   19      1
+33    20      1
+96    20      1
+30    21      1
+92    21      1
+28    22      1
+98    24      1
+108   24      1
+14    25      0
+81    25      1
+90    25      1
+103   25      1
+40    27      1
+107   29      1
+16    30      1
+86    30      1
+34    31      1
+111   31      1
+80    33      1
+48    35      1
+117   36      1
+11    42      1
+131   43      1
+87    44      1
+124   45      1
+118   48      1
+137   49      1
+38    51      1
+106   51      1
+112   51      1
+35    52      1
+114   52      1
+126   52      1
+129   53      1
+19    54      1
+41    54      1
+29    56      1
+24    59      1
+102   61      1
+43    63      1
+1     72      1
+115   73      1
+105   80      1
+125   80      1
+7     82      1
+110   83      0
+122   84      1
+72    87      0
+94    87      1
+113   90      1
+47    92      1
+54    95      1
+104   95      1
+22    97      0
+99    99      1
+101   99      1
+10   100      0
+69   100      1
+67   103      1
+91   103      0
+66   105      1
+8    110      1
+76   111      1
+134  111      1
+71   112      1
+25   117      1
+49   117      1
+5    118      1
+39   122      1
+21   123      0
+4    126      1
+50   132      1
+133  133      1
+32   139      1
+120  140      1
+65   143      1
+13   144      1
+27   151      1
+23   153      1
+63   156      1
+52   162      1
+56   162      1
+127  164      1
+55   177      1
+64   182      0
+121  186      1
+62   200      1
+84   201      1
+57   216      1
+3    228      1
+73   231      0
+135  231      1
+74   242      1
+68   250      1
+61   260      1
+59   278      1
+88   283      1
+36   287      1
+9    314      1
+132  340      1
+82   357      1
+136  378      1
+17   384      1
+79   389      1
+44   392      1
+2    411      1
+83   467      1
+58   553      1
+78   587      1
+75   991      1
+70   999      1</code></pre>
+<p>Divide survival time in intervals j</p>
+<p>Number at risk at beginning of interval <span class="math inline">\(n_j\)</span> Number of deaths within the interval <span class="math inline">\(d_j\)</span> Proportion surviving interval j <span class="math inline">\(p_j = \frac{n_j-d_j}{n_j}\)</span></p>
+<p><span class="math display">\[S(t_j) = \prod_j{p_j} = \prod_j{\frac{n_j-d_j}{j}}\]</span></p>
+<p><span class="math display">\[S(t_j) = P(T&gt;t_j) = P(Event | t = t_{1-j})*P(T = t_{1-j}) = (1-P(t_{j-1} &lt; t &lt; t_j | T &gt; t_{j-1}))*P(T&gt;t_{j-1}\]</span></p>
+<p>A sensored participant is included up until and including the last preceding event.</p>
+</div>
+<div id="kaplan-meier" class="section level3">
+<h3>Kaplan-Meier</h3>
+<p>Average survival time can be done in several way: 1. Take mean (or median) of the survival times of all subjects, disregarding censoring 2. Take the mean (or median) of those who died 3. Use the Kaplan-Meier curve to estimate the median survival time a which the curve drops below 0.5 <span class="math display">\[min(t_j|S(t_j) \leq 0.5)\]</span></p>
+<p>Since survival time is usually right-skewed, median is usually best.</p>
+<p>NB it only works when the survival cure dips beplow 0.5</p>
+<pre class="r"><code>mean(veteran$time)</code></pre>
+<pre><code>[1] 121.6277</code></pre>
+<pre class="r"><code>median(veteran$time)</code></pre>
+<pre><code>[1] 80</code></pre>
+<pre class="r"><code>km_fit &lt;- survfit(Surv(time, status) ~ 1, data=veteran)
+summary(km_fit, times = c(1,30,60,90*(1:10)))</code></pre>
+<pre><code>Call: survfit(formula = Surv(time, status) ~ 1, data = veteran)
+
+ time n.risk n.event survival std.err lower 95% CI upper 95% CI
+    1    137       2    0.985  0.0102      0.96552       1.0000
+   30     97      39    0.700  0.0392      0.62774       0.7816
+   60     73      22    0.538  0.0427      0.46070       0.6288
+   90     62      10    0.464  0.0428      0.38731       0.5560
+  180     27      30    0.222  0.0369      0.16066       0.3079
+  270     16       9    0.144  0.0319      0.09338       0.2223
+  360     10       6    0.090  0.0265      0.05061       0.1602
+  450      5       5    0.045  0.0194      0.01931       0.1049
+  540      4       1    0.036  0.0175      0.01389       0.0934
+  630      2       2    0.018  0.0126      0.00459       0.0707
+  720      2       0    0.018  0.0126      0.00459       0.0707
+  810      2       0    0.018  0.0126      0.00459       0.0707
+  900      2       0    0.018  0.0126      0.00459       0.0707</code></pre>
+<pre class="r"><code>max(km_fit$time[km_fit$surv &gt;= 0.5])</code></pre>
+<pre><code>[1] 73</code></pre>
+<pre class="r"><code># ggplot2::autoplot(km_fit)
+plot(km_fit)</code></pre>
+<p><img src="figure/8_survival_analysis.Rmd/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Confidence interval:</p>
+<p><span class="math display">\[SE[S(t)] = S(t)\sqrt{\sum_{j=1}^k{\frac{d_j}{n_j(n_j-d_j)}}}\]</span> <span class="math inline">\(t_{k-1} &lt; t &lt; t_k\)</span></p>
+<p>confidence interval:</p>
+<p><span class="math inline">\(S(t) \pm z_{\alpha/2}*SE(S(t))\)</span></p>
+<p>Best way: take log(S(t)) and calculate SE on log scale, then translate back.</p>
+<p><span class="math inline">\(log(S(t)) \pm z_{\alpha/2}*log(SE[S(t)])\)</span></p>
+<p>Which is default way in R.</p>
+<p>Kaplan Meier is non-parametric Assumptions * Prognosis of patient is independent of the moment of inclusion in the study in the timepath of their disease / treatment -&gt; clear inclusion start point * Censoring was independent of the prognosis of the patient * The times at which events occur are known exactly (otherwise it gets tricky) * Patients are monitored throughout the whole study period</p>
+</div>
+<div id="comparison-of-survival-curves-log-rank-test" class="section level3">
+<h3>Comparison of survival curves: Log-Rank test</h3>
+<ul>
+<li>Order al survival times, <span class="math inline">\(t_1 \leq t_2 \leq ... \leq t_j \leq t_n\)</span></li>
+<li>Let <span class="math inline">\(n_{ij}\)</span> be number of paitents in group i = 1, 2, just begore time <span class="math inline">\(t_j\)</span></li>
+<li>Let <span class="math inline">\(d_{ij}\)</span> be the deaths.</li>
+</ul>
+<p>Null hypothesis: <span class="math inline">\(e_{ij} = n_{ij}*(d_j/n_j)\)</span>. So the number of deaths are equally distributed among groups, in proportion to their number of patients at that time-point.</p>
+<p><span class="math display">\[T = \sum_i\sum_j{\frac{(e_{ij}-d_{ij})^2}{n_{ij}}}\]</span></p>
+<p>T is chi-squared distributed with i-1 degrees of freedom.</p>
+<p>Test with chi-square</p>
+<p>Options * Log Rank (Mantel-Cox) * Breslow test (Gehan-Wilcoxon) more weight to short survival times. Unreliable when pattern of censoring is different across groups * Tarone-Ware is less sensitive to censoring patterns than Breslow test.</p>
+</div>
+<div id="sample-size-for-log-rank-tests" class="section level3">
+<h3>Sample size for Log-Rank tests</h3>
+<div id="step-1-effect" class="section level4">
+<h4>Step 1: effect</h4>
+<p>Treatment effect:</p>
+<p><span class="math display">\[\delta_0 = \frac{log(p_1)}{log{p_0}} = HR\]</span></p>
+<p>With <span class="math inline">\(p_1\)</span> and <span class="math inline">\(p_0\)</span> the estimated survival probability after a certain follow-up time t.</p>
+<p>So the power is dependent on the number of events.</p>
+<p>Hazard Ratio is the instatanious risk of dying for group 1, compared to the risk of dying for group 2, at some time-point t.</p>
+</div>
+<div id="step-2-number-of-events" class="section level4">
+<h4>Step 2: number of events</h4>
+<p>Estimate number of events <span class="math display">\[d = (\frac{1+\delta_0}{1-\delta_0})^2(Z_{\alpha} + Z_{\beta})^2\]</span></p>
+</div>
+<div id="step-3-estimate-total-number-of-patients" class="section level4">
+<h4>Step 3: estimate total number of patients</h4>
+<p><span class="math display">\[n \geq \frac{2d}{2-p_0-p_1}\]</span></p>
+<p>Assuming * constant hazard ratio * inclusion time * folow-up time</p>
+</div>
+</div>
+<div id="recurrent-events" class="section level3">
+<h3>Recurrent events</h3>
+<p>There are several ways, all in framework of Cox models with some specific assumptions.</p>
+</div>
+</div>
+<div id="session-information" class="section level2">
+<h2>Session information</h2>
+<!-- Insert the session information into the document -->
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 3.4.1 (2017-06-30)
+Platform: x86_64-w64-mingw32/x64 (64-bit)
+Running under: Windows 7 x64 (build 7601) Service Pack 1
+
+Matrix products: default
+
+locale:
+[1] LC_COLLATE=Dutch_Netherlands.1252  LC_CTYPE=Dutch_Netherlands.1252   
+[3] LC_MONETARY=Dutch_Netherlands.1252 LC_NUMERIC=C                      
+[5] LC_TIME=Dutch_Netherlands.1252    
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+[1] survival_2.41-3
+
+loaded via a namespace (and not attached):
+ [1] Rcpp_0.12.12    lattice_0.20-35 digest_0.6.12   rprojroot_1.2  
+ [5] grid_3.4.1      backports_1.1.0 git2r_0.19.0    magrittr_1.5   
+ [9] evaluate_0.10.1 stringi_1.1.5   Matrix_1.2-10   rmarkdown_1.6  
+[13] splines_3.4.1   tools_3.4.1     stringr_1.2.0   yaml_2.1.14    
+[17] compiler_3.4.1  htmltools_0.3.6 knitr_1.17     </code></pre>
+</div>
+
+<hr>
+<p>
+    This <a href="http://rmarkdown.rstudio.com">R Markdown</a> site was created with <a href="https://github.com/jdblischak/workflowr">workflowr</a>
+</p>
+<hr>
+
+<!-- To enable disqus, uncomment the section below and provide your disqus_shortname -->
+
+<!-- disqus
+  <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+        var disqus_shortname = 'rmarkdown'; // required: replace example with your forum shortname
+
+        /* * * DON'T EDIT BELOW THIS LINE * * */
+        (function() {
+            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+-->
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

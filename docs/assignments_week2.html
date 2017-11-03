@@ -316,7 +316,7 @@ shared across the workflowr files. -->
 <p><strong>Last updated:</strong> 2017-11-03</p>
 <!-- Insert the code version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
-<p><strong>Code version:</strong> 9fe94ae</p>
+<p><strong>Code version:</strong> 35a4a09</p>
 <!-- Add your analysis here -->
 <div id="day-5-anova-and-non-parametric-methods" class="section level2">
 <h2>Day 5: ANOVA and non-parametric methods</h2>
@@ -1797,6 +1797,62 @@ data.frame(p = p_sequence, n_total = n_sequence, n_informative = informative_pai
 <pre class="r"><code>n_inf_min = floor(10*min(informative_pairs)) / 10
 n_inf_max = ceiling(10*max(informative_pairs)) / 10</code></pre>
 <p>This gives us 10 different values for the required number of informative pairs. They are not exactly equal, but all range between 68.2 and 70.5. Probably taking &gt;71 would be the a good guess.</p>
+<p>We can make a function that uses this workflow to calculate the required number of required informative pairs for a given odds ratio (<span class="math inline">\(/Psi\)</span>). For each given <span class="math inline">\(\Psi\)</span> get the range of possible <span class="math inline">\(p\)</span> probabilities (like between 0 and 1/3 above). Calculate the required number of informative pairs for each of these <span class="math inline">\(p\)</span> values and compare the results.</p>
+<pre class="r"><code>sample_size.mcnemar &lt;- function(psi, 
+                                n_estimations = 10,
+                                sig.level = 0.05, power = 0.8,
+                                alternative = &quot;two.sided&quot;) {
+  # determine max p for a given psi
+  p_max = 1/(1+psi)
+  p_sequence = seq(from = p_max / n_estimations, to = p_max, 
+                   length.out = n_estimations)
+  n_sequence = sapply(p_sequence, function(p) {
+    res = MESS::power_mcnemar_test(paid = p, psi = psi,
+                                   sig.level = 0.05, power = 0.8, 
+                                   alternative = &quot;two.sided&quot;)
+    res$n
+  })
+  n_informative_pairs = (psi+1)*p_sequence*n_sequence
+  data.frame(p = p_sequence, n_total = n_sequence, n_informative = n_informative_pairs)
+}
+
+str(sample_size.mcnemar(2))</code></pre>
+<pre><code>&#39;data.frame&#39;:   10 obs. of  3 variables:
+ $ p            : num  0.0333 0.0667 0.1 0.1333 0.1667 ...
+ $ n_total      : num  704 351 233 174 139 ...
+ $ n_informative: num  70.4 70.2 69.9 69.7 69.4 ...</code></pre>
+<pre class="r"><code>ors &lt;- seq(1.2, 4, by = 0.2) # set a range of odds ratios
+sizes &lt;- sapply(ors, function(psi) {
+  res &lt;- sample_size.mcnemar(psi)
+  res$n_informative
+})
+
+size_ranges &lt;- apply(sizes, 2, range) # get range of values from each column
+
+# create a data.frame for pretty printing
+size_df &lt;- data.frame(OR = ors, 
+                      min_informative_pairs = size_ranges[1,],
+                      max_informative_pairs = size_ranges[2,])
+size_df$range_diff &lt;- size_df$max_informative_pairs-size_df$min_informative_pairs
+
+size_df</code></pre>
+<pre><code>    OR min_informative_pairs max_informative_pairs range_diff
+1  1.2             947.35315             949.47863   2.125476
+2  1.4             280.19018             282.32377   2.133589
+3  1.6             145.00408             147.14851   2.144432
+4  1.8              93.75579              95.91265   2.156861
+5  2.0              68.23349              70.40367   2.170182
+6  2.2              53.39394              55.57788   2.183942
+7  2.4              43.85794              46.05588   2.197944
+8  2.6              37.28643              39.49834   2.211918
+9  2.8              32.51829              34.74409   2.225792
+10 3.0              28.91922              31.15869   2.239471
+11 3.2              26.11639              28.36931   2.252919
+12 3.4              23.87783              26.14392   2.266094
+13 3.6              22.05230              24.33126   2.278965
+14 3.8              20.53731              22.82888   2.291567
+15 4.0              19.26129              21.56514   2.303857</code></pre>
+<p>For each of these odds ratios, the range of calculated sample sizes of informative pairs differs by only 2, so indeed this number seems to be determined <em>mostly</em> by the odds ratio. Although for higher odds ratios the range becomes wider.</p>
 <blockquote>
 <ol start="4" style="list-style-type: lower-alpha">
 <li>In a randomized controlled trial two methods to quit smoking will be compared. The first method is through support groups and the second method uses nicotine patches. Based on previous publications it is known that through support groups 30% of the people who have stopped smoking still not smoke after 6 months. The researchers expect that by the use of nicotine patches this proportion will be twice as high. How many smokers should the researchers include in their trial to demonstrate this difference with a power of 80% and a one-sided alpha of 5%?</li>
@@ -1822,6 +1878,274 @@ NOTE: same sample sizes</code></pre>
 </div>
 </div>
 </div>
+<div id="day-8-survial-analysis" class="section level2">
+<h2>Day 8 Survial analysis</h2>
+<div id="exercises-with-r-2" class="section level3">
+<h3>Exercises with R</h3>
+<blockquote>
+<p>Start R and change your working directory if necessary (File, Change dirâ€¦) To do survival analysis in R, we first need to make the survival library available:</p>
+</blockquote>
+<pre class="r"><code>library(survival)</code></pre>
+<div id="section-18" class="section level4">
+<h4>7.</h4>
+<blockquote>
+<p>A random sample of 12 multiple myeloma patients was taken from the dataset in exercise #5. We will produce the estimates of mean and median survival times via three different methods and draw a simple Kaplan-Meier curve from this random sample. a. First, enter the data and create a data frame:</p>
+</blockquote>
+<pre class="r"><code>time &lt;- c(4,5,7,10,12,15,17,18,40,51,66,91)
+status &lt;- c(1,1,0,1,1,0,1,0,0,1,1,1)
+km.df &lt;- data.frame(cbind(time,status))</code></pre>
+<blockquote>
+<ol start="2" style="list-style-type: lower-alpha">
+<li>Get the mean and median survival time for the whole dataset and for only the non-censored observations:</li>
+</ol>
+</blockquote>
+<pre class="r"><code>mean(km.df$time); median(km.df$time)</code></pre>
+<pre><code>[1] 28</code></pre>
+<pre><code>[1] 16</code></pre>
+<pre class="r"><code>mean(km.df$time[km.df$status==1]) </code></pre>
+<pre><code>[1] 32</code></pre>
+<pre class="r"><code>median(km.df$time[km.df$status==1])</code></pre>
+<pre><code>[1] 14.5</code></pre>
+<blockquote>
+<p>What are the problems with these estimates?</p>
+</blockquote>
+<p>The mean and median follow-up times for the entire dataset are underestimations of the actual survival due to censoring. The mean and median survival time of the deceased are also an underestimation of the actual survival time.</p>
+<blockquote>
+<ol start="3" style="list-style-type: lower-alpha">
+<li>Make a â€survival objectâ€ of the data, examine the object, and make a Kaplan-Meier plot:</li>
+</ol>
+</blockquote>
+<pre class="r"><code>surv_object &lt;- Surv(km.df$time, km.df$status) # this is a surv-object, it combines follow-up time with exit status (event or sensoring)
+surv_object[1:10]</code></pre>
+<pre><code> [1]  4   5   7+ 10  12  15+ 17  18+ 40+ 51 </code></pre>
+<pre class="r"><code>km &lt;- survfit(surv_object~1,conf.type=&quot;none&quot;) # this a fit performed on a surv-object
+summary(km)</code></pre>
+<pre><code>Call: survfit(formula = surv_object ~ 1, conf.type = &quot;none&quot;)
+
+ time n.risk n.event survival std.err
+    4     12       1    0.917  0.0798
+    5     11       1    0.833  0.1076
+   10      9       1    0.741  0.1295
+   12      8       1    0.648  0.1426
+   17      6       1    0.540  0.1544
+   51      3       1    0.360  0.1795
+   66      2       1    0.180  0.1558
+   91      1       1    0.000     NaN</code></pre>
+<pre class="r"><code>plot(km)
+lines(c(0,51),c(.5,.5), lty = 2
+      )</code></pre>
+<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-80-1.png" width="672" style="display: block; margin: auto;" /></p>
+<blockquote>
+<p>This last command adds a horizontal line through (0, 0.5) and (51, 0.5) to the K-M plot. It intersects at (51, 0.5), indicating that 51 is the median survival time, corrected for censoring.</p>
+</blockquote>
+<blockquote>
+<ol start="8" style="list-style-type: decimal">
+<li>Freireich et al. (1963) compared the times in remission of a group of leukemia patients treated with 6-mercuraptopurine and of an untreated control group. The event of interest was the first relapse (end of remission period). The outcome was time from entry into the study to first relapse. (Source: Anderson S. et al. Statistical Methods for Comparative Studies. New York: John Wiley &amp; Sons, 1980.)</li>
+</ol>
+<ol style="list-style-type: lower-alpha">
+<li>Read in the data:</li>
+</ol>
+</blockquote>
+<pre class="r"><code>Fr &lt;- read.table(amstR::fromParentDir(&quot;data/Anderson.txt&quot;), header = T)</code></pre>
+<blockquote>
+<p>Make a â€survival objectâ€ of the data, examine the object, and make a Kaplan-Meier plot:</p>
+</blockquote>
+<pre class="r"><code>Freisurv&lt;-survfit(Surv(Fr$TIME, Fr$STAT)~Fr$GROUP)
+summary(Freisurv)</code></pre>
+<pre><code>Call: survfit(formula = Surv(Fr$TIME, Fr$STAT) ~ Fr$GROUP)
+
+                Fr$GROUP=control 
+ time n.risk n.event survival std.err lower 95% CI upper 95% CI
+    1     21       2   0.9048  0.0641      0.78754        1.000
+    2     19       2   0.8095  0.0857      0.65785        0.996
+    3     17       1   0.7619  0.0929      0.59988        0.968
+    4     16       2   0.6667  0.1029      0.49268        0.902
+    5     14       2   0.5714  0.1080      0.39455        0.828
+    8     12       4   0.3810  0.1060      0.22085        0.657
+   11      8       2   0.2857  0.0986      0.14529        0.562
+   12      6       2   0.1905  0.0857      0.07887        0.460
+   15      4       1   0.1429  0.0764      0.05011        0.407
+   17      3       1   0.0952  0.0641      0.02549        0.356
+   22      2       1   0.0476  0.0465      0.00703        0.322
+   23      1       1   0.0000     NaN           NA           NA
+
+                Fr$GROUP=treatmnt 
+ time n.risk n.event survival std.err lower 95% CI upper 95% CI
+    6     21       3    0.857  0.0764        0.720        1.000
+    7     17       1    0.807  0.0869        0.653        0.996
+   10     15       1    0.753  0.0963        0.586        0.968
+   13     12       1    0.690  0.1068        0.510        0.935
+   16     11       1    0.627  0.1141        0.439        0.896
+   22      7       1    0.538  0.1282        0.337        0.858
+   23      6       1    0.448  0.1346        0.249        0.807</code></pre>
+<pre class="r"><code>plot(Freisurv, lty=c(1,2))
+legend(x=25,y=1.0,legend=c(&quot;control&quot;,&quot;treatment&quot;),lty=c(1,2))
+lines(c(0,35),c(.5,.5), col = &quot;blue&quot;)</code></pre>
+<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-82-1.png" width="672" style="display: block; margin: auto;" /></p>
+<blockquote>
+<ol start="2" style="list-style-type: lower-alpha">
+<li>Perform a log-rank test to see if there is a difference between groups:</li>
+</ol>
+</blockquote>
+<pre class="r"><code>survdiff(Surv(Fr$TIME, Fr$STAT)~ Fr$GROUP)</code></pre>
+<pre><code>Call:
+survdiff(formula = Surv(Fr$TIME, Fr$STAT) ~ Fr$GROUP)
+
+                   N Observed Expected (O-E)^2/E (O-E)^2/V
+Fr$GROUP=control  21       21     10.7      9.77      16.8
+Fr$GROUP=treatmnt 21        9     19.3      5.46      16.8
+
+ Chisq= 16.8  on 1 degrees of freedom, p= 4.17e-05 </code></pre>
+<blockquote>
+<ol start="9" style="list-style-type: decimal">
+<li>Normally you often deal with time in the form of dates in calendar format. Different formats are used in different places of the world and even different formats in the same data file. However, in survival analysis the number of days between the starting date and the end date are used. How can we deal with the different formats of the dates and extract the number of days between two dates.</li>
+</ol>
+<ol style="list-style-type: lower-alpha">
+<li>Read the raw data file stroke.csv in the rawdata directory of the package ISwR:</li>
+</ol>
+</blockquote>
+<pre class="r"><code>library(ISwR)</code></pre>
+<pre><code>Warning: package &#39;ISwR&#39; was built under R version 3.4.2</code></pre>
+<pre><code>
+Attaching package: &#39;ISwR&#39;</code></pre>
+<pre><code>The following object is masked from &#39;package:survival&#39;:
+
+    lung</code></pre>
+<pre class="r"><code>data(&quot;stroke&quot;)
+
+stroke &lt;- read.csv2(system.file(&quot;rawdata&quot;,&quot;stroke.csv&quot;, package=&quot;ISwR&quot;,na.strings=&quot;.&quot;))
+head(stroke)</code></pre>
+<pre><code>  SEX       DIED       DSTR AGE DGN COMA DIAB MINF HAN
+1   1  7.01.1991  2.01.1991  76 INF    0    0    1   0
+2   1          .  3.01.1991  58 INF    0    0    0   0
+3   1  2.06.1991  8.01.1991  74 INF    0    0    1   1
+4   0 13.01.1991 11.01.1991  77 ICH    0    1    0   1
+5   0 23.01.1996 13.01.1991  76 INF    0    1    0   1
+6   1 13.01.1991 13.01.1991  48 ICH    1    0    0   1</code></pre>
+<blockquote>
+<ol start="2" style="list-style-type: lower-alpha">
+<li>Change the capitals of the variable names into lovercase</li>
+</ol>
+</blockquote>
+<pre class="r"><code>names(stroke)&lt;-tolower(names(stroke))
+head(stroke)</code></pre>
+<pre><code>  sex       died       dstr age dgn coma diab minf han
+1   1  7.01.1991  2.01.1991  76 INF    0    0    1   0
+2   1          .  3.01.1991  58 INF    0    0    0   0
+3   1  2.06.1991  8.01.1991  74 INF    0    0    1   1
+4   0 13.01.1991 11.01.1991  77 ICH    0    1    0   1
+5   0 23.01.1996 13.01.1991  76 INF    0    1    0   1
+6   1 13.01.1991 13.01.1991  48 ICH    1    0    0   1</code></pre>
+<ol start="3" style="list-style-type: lower-alpha">
+<li>Change the date format to the standard date format (â€œYYYY-MM-DDâ€) of R:</li>
+</ol>
+<pre class="r"><code>stroke &lt;- transform(stroke, died = as.Date(died, format=&quot;%d.%m.%Y&quot;), dstr = as.Date(dstr, format=&quot;%d.%m.%Y&quot;))
+head(stroke)</code></pre>
+<pre><code>  sex       died       dstr age dgn coma diab minf han
+1   1 1991-01-07 1991-01-02  76 INF    0    0    1   0
+2   1       &lt;NA&gt; 1991-01-03  58 INF    0    0    0   0
+3   1 1991-06-02 1991-01-08  74 INF    0    0    1   1
+4   0 1991-01-13 1991-01-11  77 ICH    0    1    0   1
+5   0 1996-01-23 1991-01-13  76 INF    0    1    0   1
+6   1 1991-01-13 1991-01-13  48 ICH    1    0    0   1</code></pre>
+<blockquote>
+<ol start="4" style="list-style-type: lower-alpha">
+<li>It is possible to perform arithmetic on dates, that is, they behave mostly like numeric vectors. Discuss the results:</li>
+</ol>
+</blockquote>
+<pre class="r"><code>summary(stroke$died)</code></pre>
+<pre><code>        Min.      1st Qu.       Median         Mean      3rd Qu. 
+&quot;1991-01-07&quot; &quot;1992-03-14&quot; &quot;1993-01-23&quot; &quot;1993-02-15&quot; &quot;1993-11-04&quot; 
+        Max.         NA&#39;s 
+&quot;1996-02-22&quot;        &quot;338&quot; </code></pre>
+<pre class="r"><code>summary(stroke$dstr)</code></pre>
+<pre><code>        Min.      1st Qu.       Median         Mean      3rd Qu. 
+&quot;1991-01-02&quot; &quot;1991-11-08&quot; &quot;1992-08-12&quot; &quot;1992-07-27&quot; &quot;1993-04-30&quot; 
+        Max. 
+&quot;1993-12-31&quot; </code></pre>
+<pre class="r"><code>summary(stroke$died - stroke$dstr)</code></pre>
+<pre><code>  Length    Class     Mode 
+     829 difftime  numeric </code></pre>
+<pre class="r"><code>head(stroke$died - stroke$dstr)</code></pre>
+<pre><code>Time differences in days
+[1]    5   NA  145    2 1836    0</code></pre>
+<blockquote>
+<ol start="5" style="list-style-type: lower-alpha">
+<li>Replace the missing dates with the date of the end of the study (â€œ1996-1-1â€) and put the results in a new variable â€œendâ€. Also make a status variable with denotes whether the end date is a real date (TRUE) or censored to end of study date (False)</li>
+</ol>
+</blockquote>
+<pre class="r"><code>stroke&lt;-transform(stroke, end = pmin(died, as.Date(&quot;1996-1-1&quot;), na.rm=T), 
+                  dead =!is.na(died)&amp; died &lt; as.Date(&quot;1996-1-1&quot;))
+head(stroke)</code></pre>
+<pre><code>  sex       died       dstr age dgn coma diab minf han        end  dead
+1   1 1991-01-07 1991-01-02  76 INF    0    0    1   0 1991-01-07  TRUE
+2   1       &lt;NA&gt; 1991-01-03  58 INF    0    0    0   0 1996-01-01 FALSE
+3   1 1991-06-02 1991-01-08  74 INF    0    0    1   1 1991-06-02  TRUE
+4   0 1991-01-13 1991-01-11  77 ICH    0    1    0   1 1991-01-13  TRUE
+5   0 1996-01-23 1991-01-13  76 INF    0    1    0   1 1996-01-01 FALSE
+6   1 1991-01-13 1991-01-13  48 ICH    1    0    0   1 1991-01-13  TRUE</code></pre>
+<blockquote>
+<ol start="6" style="list-style-type: lower-alpha">
+<li>Calculate the number of days</li>
+</ol>
+</blockquote>
+<pre class="r"><code>stroke &lt;- transform(stroke, obstime = as.numeric(end-dstr, units=&quot;days&quot;))
+head(stroke)</code></pre>
+<pre><code>  sex       died       dstr age dgn coma diab minf han        end  dead
+1   1 1991-01-07 1991-01-02  76 INF    0    0    1   0 1991-01-07  TRUE
+2   1       &lt;NA&gt; 1991-01-03  58 INF    0    0    0   0 1996-01-01 FALSE
+3   1 1991-06-02 1991-01-08  74 INF    0    0    1   1 1991-06-02  TRUE
+4   0 1991-01-13 1991-01-11  77 ICH    0    1    0   1 1991-01-13  TRUE
+5   0 1996-01-23 1991-01-13  76 INF    0    1    0   1 1996-01-01 FALSE
+6   1 1991-01-13 1991-01-13  48 ICH    1    0    0   1 1991-01-13  TRUE
+  obstime
+1       5
+2    1824
+3     145
+4       2
+5    1814
+6       0</code></pre>
+<blockquote>
+<ol start="7" style="list-style-type: lower-alpha">
+<li>Try also the same commands of the previous question but then with the units=â€weeksâ€, unit=â€monthsâ€, unit=â€hoursâ€. What do you see?</li>
+</ol>
+</blockquote>
+<pre class="r"><code>data.frame(hours = as.numeric(stroke$end - stroke$dstr, unit = &quot;hours&quot;)[1:10],
+           days  = as.numeric(stroke$end - stroke$dstr, unit = &quot;days&quot;)[1:10],
+           weeks = as.numeric(stroke$end - stroke$dstr, unit = &quot;weeks&quot;)[1:10])</code></pre>
+<pre><code>   hours days       weeks
+1    120    5   0.7142857
+2  43776 1824 260.5714286
+3   3480  145  20.7142857
+4     48    2   0.2857143
+5  43536 1814 259.1428571
+6      0    0   0.0000000
+7  25248 1052 150.2857143
+8   7968  332  47.4285714
+9  43488 1812 258.8571429
+10 24720 1030 147.1428571</code></pre>
+<blockquote>
+<ol start="10" style="list-style-type: decimal">
+<li>An experiment will be conducted to test the effectiveness of a new treatment on a total of 100 patients. The current treatment for this disease achieves 50% survival after two years. The researcher believes that if the survival proportion of the treatment group is 0.6 or better, people will begin to use his treatment. He wants to know how many subjects he needs. Testing will be done at the 0.05 significance level and the required power is set to 90%. Calculate the minimum required total sample size.</li>
+</ol>
+</blockquote>
+<p>Using the equations: <span class="math display">\[\delta_0 = \frac{log(p_1)}{log{p_0}} = HR\]</span> <span class="math display">\[d = (\frac{1+\delta_0}{1-\delta_0})^2(Z_{\alpha} + Z_{\beta})^2\]</span> <span class="math display">\[n \geq \frac{2d}{2-p_0-p_1}\]</span></p>
+<pre class="r"><code>a   = .05
+pow = .9
+b   = 1-pow
+p0  = .5
+p1  = .6
+
+
+delta0 = log(p1)/log(p0)
+d = ((1+delta0)/(1-delta0))^2*(qnorm(a, lower.tail = F)+qnorm(b, lower.tail = F))^2
+n = 2*d/(2-p0-p1)
+n</code></pre>
+<pre><code>[1] 829.877</code></pre>
+<p>NB for some reason, I come up with a different number than the official answer. The found a d of 384, our d = 873</p>
+</div>
+</div>
+</div>
 <div id="session-information" class="section level2">
 <h2>Session information</h2>
 <!-- Insert the session information into the document -->
@@ -1841,7 +2165,8 @@ attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
 other attached packages:
-[1] pwr_1.2-1          ggplot2_2.2.1.9000
+[1] ISwR_2.0-7         survival_2.41-3    pwr_1.2-1         
+[4] ggplot2_2.2.1.9000
 
 loaded via a namespace (and not attached):
  [1] Rcpp_0.12.12        survcomp_1.27.0     compiler_3.4.1     
@@ -1853,12 +2178,12 @@ loaded via a namespace (and not attached):
 [19] bootstrap_2017.2    amstR_0.1.3         stringr_1.2.0      
 [22] knitr_1.17          SuppDists_1.1-9.4   rprojroot_1.2      
 [25] grid_3.4.1          data.table_1.10.4-2 geepack_1.2-1      
-[28] survival_2.41-3     binom_1.1-1         rmarkdown_1.6      
-[31] lava_1.5.1          rmeta_2.16          magrittr_1.5       
-[34] backports_1.1.0     scales_0.5.0.9000   htmltools_0.3.6    
-[37] survivalROC_1.0.3   splines_3.4.1       colorspace_1.3-2   
-[40] labeling_0.3        KernSmooth_2.23-15  stringi_1.1.5      
-[43] lazyeval_0.2.0      munsell_0.4.3      </code></pre>
+[28] binom_1.1-1         rmarkdown_1.6       lava_1.5.1         
+[31] rmeta_2.16          magrittr_1.5        backports_1.1.0    
+[34] scales_0.5.0.9000   htmltools_0.3.6     survivalROC_1.0.3  
+[37] splines_3.4.1       colorspace_1.3-2    labeling_0.3       
+[40] KernSmooth_2.23-15  stringi_1.1.5       lazyeval_0.2.0     
+[43] munsell_0.4.3      </code></pre>
 </div>
 
 <hr>
