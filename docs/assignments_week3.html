@@ -316,7 +316,7 @@ shared across the workflowr files. -->
 <p><strong>Last updated:</strong> 2017-11-06</p>
 <!-- Insert the code version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
-<p><strong>Code version:</strong> 22e9fa7</p>
+<p><strong>Code version:</strong> 34e4b73</p>
 <!-- Add your analysis here -->
 <div id="day-9-multiple-regression" class="section level2">
 <h2>Day 9 Multiple regression</h2>
@@ -1002,7 +1002,7 @@ Attaching package: &#39;dplyr&#39;</code></pre>
   select(c(MAXELEV, DOC, CL, H)) %&gt;%
   car::scatterplotMatrix(diagonal = &quot;histogram&quot;)</code></pre>
 <p><img src="figure/assignments_week3.Rmd/unnamed-chunk-27-1.png" width="672" style="display: block; margin: auto;" /></p>
-<p>The distributions look a little nicer now.</p>
+<p>The distributions look a little nicer now. However, for linear regression, normality of the independent variables is not assumed, only a linear relation between the independent variables and the dependent variable.</p>
 <p>To answer the question which variables predict the elevation, lets use the <code>step</code> function with stepwise selection. And lets keep the transformed variables</p>
 <pre class="r"><code>stream$DOC = log(stream$DOC)
 stream$CL  = log(stream$CL)
@@ -1227,6 +1227,10 @@ Multiple R-squared:  0.7259,    Adjusted R-squared:  0.683
 F-statistic: 16.95 on 5 and 32 DF,  p-value: 3.501e-08</code></pre>
 <p>Note that the <code>CL</code> variable remains included, even though we would drop this variable when using the p-values based on the F-statistic.</p>
 <p>Of the variable pairs that were tightly correlated, in none of the cases both variables were included.</p>
+<p>Check assumptions of the model</p>
+<pre class="r"><code>plot(fit_step, which = c(1,2))</code></pre>
+<p><img src="figure/assignments_week3.Rmd/unnamed-chunk-30-1.png" width="672" style="display: block; margin: auto;" /><img src="figure/assignments_week3.Rmd/unnamed-chunk-30-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Residuals are a little skewed, not too much heteroscedasticity.</p>
 </div>
 </div>
 </div>
