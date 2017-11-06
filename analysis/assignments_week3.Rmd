@@ -1,0 +1,374 @@
+---
+title: "Assignments week 3"
+author: "Wouter van Amsterdam"
+date: 2017-11-06
+output: html_document
+---
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+```
+
+<!-- Update knitr chunk options -->
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+<!-- Insert the date the file was last updated -->
+```{r last-updated, echo=FALSE, results='asis'}
+```
+
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+```{r code-version, echo=FALSE, results='asis'}
+```
+
+<!-- Add your analysis here -->
+
+## Day 9 Multiple regression
+### Exercises with R
+> *Introduction*
+> Below you will find a worked example that helps you understand how to perform model building in multiple regression and analysis of covariance in R.
+
+> We are interested in the diastolic blood pressure (y) for people on two different treatments (group). Within the two treatments different dosages were given. First type in the data (or Copy-Paste):
+
+```{r}
+y <- c(87,86.5,89,88.5,87.5,88,86.5,87,85,86,85,83)
+dose <- c(5,6,7,8,9,10,5,6,7,8,9,10)
+group <- c(0,0,0,0,0,0,1,1,1,1,1,1)
+```
+
+Let’s take a look at a plot of the data: 
+
+```{r}
+interaction.plot(dose, group, y , mean, ylab = "Bloodpressure")
+```
+
+
+> Use `help(interaction.plot)` to see how it works. R uses ":" to denote an interaction so group:dose is the R interaction term in a model. 
+
+> It looks like there may be an interaction in the data: group 0 has higher blood pressure levels than group 1 in the higher dosages. If there is an explanatory variable in the data file that is categorical (other than 0-1), then you should tell R this by using the function factor(). So factor(group) tells R that group is not a numeric variable but that its numbers should be used as group labels. To fit an ANOVA model you can use either of the following:
+
+```{r}
+model.an <- lm(y~group) 
+model.an <- glm(y~group, family = gaussian)
+```
+
+> In the second statement, the `family=gaussian` part may be left out since the gaussian (normal) is the default (“GLM” stands for generalized linear model, of which ANOVA, linear regression, and logistic regression models are special cases). The result of the ANOVA model will be stored in model.an. In the second case, this will be an object of glm-type because you used glm to create it. To see what is in it use `names(model.an)` and if you want to see something specific use for instance `model.an$coefficients`. To get the table with the estimates: 
+
+```{r}
+summary(model.an)
+```
+
+> The function `drop1(fit, test = "F")` looks at the variables in the model ‘fit’, then leaves out the terms one by one and calculates the F-test for every term if it were to be left out. Of course, in `model.an` there is only one variable so you just get one test. Note that the p-value of the F-test is exactly the same as the p-value of the t-test in the model summary.
+To fit the model without the interaction: 
+
+```{r}
+model.anc <- glm(y~group + dose, family = gaussian)
+summary(model.anc) 
+drop1(model.anc, test = "F") 
+```
+
+> The column "Deviance" contains the residual sums of squares for different models. The first line gives the residual sums of squares if none of the terms is dropped so for the model with both group and dose in it. The second line gives the residual sum of squares for the model without group so for the model with only dose in it. The difference in these residual sums of squares gives the sum of squares for the group: 29.310-12.976 = 16.334. In the same way the sum of squares for dose can be obtained (14.583-12.976 = 1.607). For dose and group the F-values and the p-values are shown. With this information an ANOVA table could be constructed.
+
+This somewhat elaborate method is simplified by using the Anova function in the library car:
+
+```{r}
+library(car) #Note: you might have to install this library first, using Packages, Install packages 
+Anova(model.anc, test.statistic = "F")
+```
+
+
+> The model with an interaction can be fitted as: (or the exact same model can be given by:)
+
+```{r}
+model.int <- glm(y~group + dose + group:dose, family=gaussian)
+model.int <- glm(y~group*dose, family = gaussian)
+```
+
+> Note that if you now use the drop1 function, only the interaction will be evaluated for possible dropping:
+
+```{r}
+drop1(model.int, test = "F")
+Anova(model.int, test.statistic = "F")
+```
+
+> R does this because it makes little sense to drop a main effect while the interaction is still in the model; generally, one first checks whether the interaction can be removed.
+The interaction term is statistically significant, so the trend in blood pressure over the dosages is different for the two treatment groups.
+
+**this should be somewhere else, as `full` does not exist yet
+> Checking Multicollinearity (used on day 10)
+The variance inflation factor can be obtained using the vif() function in the car package. The argument to the vif() function is a model you have already fit.
+
+> vif(full)
+      temp  factories population       wind   rainfall   daysrain 
+  3.763553  14.703175  14.340318   1.255460   3.404904   3.443932
+
+> To get the tolerance instead, you can invert the VIF:
+> 1/vif(full)
+
+#### A note on automatic variable selection in R
+> R does not have the same type of forward, backward and stepwise selection procedures as SPSS. The add1 and drop1 can be used to examine variables and decide which variable should be added/dropped next. The actual adding and dropping is not done automatically and needs to be done by the analyst, so a new model is fitted and again checked for variables that can be added/dropped. Note that the add1 and drop1 functions both give Akaike’s Information Criterion (AIC, to be treated during Modern Methods in Data Analysis) by default; an F-test can be obtained by using the option test="F" in the command. 
+
+#### 5.
+> This is a repeat of exercise #1, but now in R. Compare the results with those obtained in SPSS. 
+The dataset with SO2 data from the lecture is available in the dataset so2.RData. Try to repeat the findings from the lecture notes using R. How will you do the variable selection in R?
+
+```{r}
+load(amstR::fromParentDir("data/so2.RData"))
+str(so2)
+```
+
+First some histograms of the numeric variables
+
+```{r}
+# find out which variables in so2 are numeric
+num_vars <- colnames(so2)[sapply(so2, is.numeric)]
+
+# how many are there
+length(num_vars)
+
+par(mfrow = c(2, 4))
+for (variable in num_vars) {
+  hist(so2[[variable]], main = variable, xlab = variable)
+}
+  
+par(mfrow = c(1, 1))
+```
+
+Then the pairwise scatterplots
+
+```{r}
+pairs(so2)
+```
+
+Correlation plot of all numeric variables (this can be done nicely with the package `corrplot`)
+```{r}
+cor_matrix <- cor(so2[, num_vars])
+corrplot::corrplot(cor_matrix, method = "number")
+```
+
+Now for the model building. We can use the `step` function for variable selection. 
+Note that it uses the Akaike Information criterion for variable selection.
+NB we must remove the `city` variable, as this is merely a label of the observations, and is unique for each row.
+```{r}
+model_vars <- setdiff(colnames(so2), "city") # take all colnames of so2, remove 'city' from these names
+fit0 <- lm(SO2~1, data = so2[, model_vars])
+fit_full <- lm(SO2~., data = so2[, model_vars]) # use ~. to include all variables except for SO2
+
+steps_forward  <- step(fit0, scope = list(lower = fit0, upper = fit_full), direction = "forward")
+steps_backward <- step(fit_full, data = so2[, model_vars], direction = "backward")
+steps_stepwise <- step(fit0, scope = list(upper = fit_full), data = so2[, model_vars], direction = "both")
+```
+
+The function by default prints all the steps. I do not know how to stop this behaviour
+
+Look at the final models:
+
+```{r}
+summary(steps_forward)
+summary(steps_backward)
+summary(steps_stepwise)
+```
+
+#### 6. Cigarettes
+> This is a repeat of exercise #2, but now in R. Compare the results with those obtained in SPSS. 
+The workspace cigarette.RData contains a dataset cigarettte with data on carbon monoxide, tar and nicotine contents and weight of 25 brands of cigarettes.
+We want to predict the carbon monoxide contents using the other 3 variables.
+a.	Make a scatter plot matrix of the 4 variables, and formulate which variables you expect to predict (part of) carbon monoxide content.
+
+NB the `RData` file did not seem to contain any data, so we imported the SPSS file with package `foreign`
+```{r}
+amstR::fromParentDir("data/cigarette.RData")
+cigarette <- foreign::read.spss(amstR::fromParentDir("data/cigarette.sav"))
+cigarette <- as.data.frame(cigarette)
+# save file:
+# save(cigarette, file = amstR::fromParentDir("data/cigarette2.RData"))
+pairs(cigarette)
+```
+
+Nicotine looks highly correlated with tar and carbonmonoxide. Carbonmonoxide 
+looks highly correlated with tar too.
+
+> b.	Now make a correlation matrix of the 4 variables, and check your expectations from a.
+
+```{r}
+corrplot::corrplot(cor(cigarette), method = "number")
+```
+
+> c.	Build a regression model with all 3 predictor variables. Are all variables significant? Are regression coefficients what you would expect? Can you think of an explanation?
+
+```{r}
+fit_full <- lm(carbonmonoxide~., data = cigarette)
+summary(fit_full)
+```
+
+Only tar is significant. If the explanatory variables were independent, we would 
+expect that nicotine was alsa correlated with carbonmonoxide. However, due 
+to coliniearity, the effect of nicotine vanishes when tar is included in the model.
+
+> d.	Using backward selection reduce the model from c until it contains only significant variables. Which variable(s) are in the final model? Which proportion of the variation in carbon monoxide content is explained by this model?
+
+Let's do manual backward selection
+
+```{r}
+fit_full <- lm(carbonmonoxide~., data = cigarette)
+summary(fit_full)
+```
+
+Use `drop1` to determine which variable to drop first. 
+Remove the coefficient with the highest p-value
+
+```{r}
+drop1(fit_full, test = "F")
+fit_1 <- lm(carbonmonoxide~tar+nicotine, data = cigarette)
+drop1(fit_1, test = "F")
+```
+
+Drop the next variable
+
+```{r}
+fit_2 <- lm(carbonmonoxide ~ tar, data = cigarette)
+drop1(fit_2, test = "F")
+```
+
+Now we cant remove anymore predictors, because 'all' are significant.
+Check assumptions of homoscedasticity and normal distribution of residuals:
+
+```{r}
+plot(fit_2, which = c(1,2))
+```
+
+Residuals look pretty OK. Homoscedasticity is a little hard to judge, but at least there is no clear funnel shape.
+
+> e.	Based on the backward selection model, what is the predicted carbon monoxide content of a cigarette with tar = 13.0, nicotine = 1.0 and weight = 1.0?  What is its 95% prediction interval, and how do you interpret this?
+	(Use the R function predict to obtain predictions for new data based on the model:
+	
+```{r}
+
+new <- data.frame(tar=13.0, nicotine=1.0, weight=1.0)
+predict(fit_2, newdata=new, interval="prediction", level=0.95)
+
+```
+
+#### 7.
+> This is a repeat of exercise #4, but now in R. Compare the results with those obtained in SPSS. 
+The variables in the study of 38 stream sites in New York state by Lovett et al. (2000) fell into two groups measured at different spatial sites – watershed variables (elevation, stream length and area) and chemical variables for a site averaged across sampling dates (averaged over 3 years). We use only the chemical variables. The data are given in the data file stream.RData
+
+> STREAM 	name of the stream (site) from which observations were collected
+MAXELEV 	maximum elevation of stream (m above sea level)
+SAMPELEV 	site elevation (m above sea level)
+LENGTH 	length of stream
+AREA 	area of watershed
+NO3 	concentration (mmol/L) of nitrogen oxide ions 
+TON 	concentration (mmol/L) of total organic nitrogen 
+TN 	concentration (mmol/L) of total nitrogen 
+NH4 	concentration (mmol/L) of ammonia ions 
+DOC 	concentration (mmol/L) of dissolved oxygen 
+SO4 	concentration (mmol/L) of sulphur dioxide ions 
+CL 	concentration (mmol/L) of chloride ions 
+CA 	concentration (mmol/L) of calcium ions 
+MG 	concentration (mmol/L) of magnesium ions 
+H 	concentration (mmol/L) of hydrogen ions 
+
+> Which of the chemical variables can predict  the maximum elevation of the stream?
+Lovett et al. have used the log of the variables DOC, CL and H in their analyses. Can you imagine why they did it and is it necessary? 
+
+```{r}
+load(amstR::fromParentDir("data/stream.RData"))
+str(stream)
+```
+
+All variables are numeric, except for `STREAM`, which is the name of the site.
+Lets remove this variable to make our lives easier
+
+```{r}
+streams <- stream$STREAM
+stream$STREAM <- NULL
+
+car::scatterplotMatrix(stream[, c(1:7)], diagonal = "histogram")
+car::scatterplotMatrix(stream[, c(8:14)], diagonal = "histogram")
+
+```
+
+It looks like `LENGTH` and `AREA` are tightly correlated, like `NO3` and `TN`,
+ also `SO4` and `MG`. Note that many scatterplots were not included due to the limited 
+ plot area.
+ 
+We can formalize this by sorting the correlations
+
+```{r}
+# create correlation matrix
+cor_matrix <- cor(stream)
+
+# to remove the uninformative diagonal, and duplicity, retain only upper triangle
+cor_matrix[lower.tri(cor_matrix, diag = T)] <- NA
+
+# to analyze this, 'melt' the data to a conveniant format
+cor_melted <- data.table::melt(cor_matrix, value.name = "correlation")
+
+# remove the NA values
+cor_melted <- cor_melted[!is.na(cor_melted$correlation),]
+head(cor_melted)
+
+# add a column with absolute correlation
+cor_melted$abs_cor <- abs(cor_melted$correlation)
+
+# sort by that column
+cor_melted[order(cor_melted$abs_cor, decreasing = T), ][1:10,]
+```
+
+
+Zoom in on only `DOC`, `CL` and `H`
+```{r}
+car::scatterplotMatrix(stream[, c("MAXELEV", "DOC", "CL", "H")], diagonal = "histogram")
+```
+
+These 3 variables are right skewed, which is probably why they were log-transformed
+
+Look at the transformed variables
+
+```{r}
+require(dplyr)
+stream %>%
+  mutate(DOC = log(DOC),
+         CL = log(CL),
+         H = log(H)) %>%
+  select(c(MAXELEV, DOC, CL, H)) %>%
+  car::scatterplotMatrix(diagonal = "histogram")
+```
+
+The distributions look a little nicer now.
+
+To answer the question which variables predict the elevation, lets use the 
+`step` function with stepwise selection. And lets keep the transformed variables
+
+```{r}
+stream$DOC = log(stream$DOC)
+stream$CL  = log(stream$CL)
+stream$H   = log(stream$H)
+
+fit0 = lm(MAXELEV ~ 1, data = stream)
+fit_all = lm(MAXELEV ~., data = stream)
+
+fit_step <- step(fit0, scope = list(upper = fit_all), data = stream, direction = "both")
+```
+
+Look at the final model:
+
+```{r}
+summary(fit_step)
+```
+
+Note that the `CL` variable remains included, even though we would drop this 
+variable when using the p-values based on the F-statistic.
+
+Of the variable pairs that were tightly correlated, in none of the cases 
+both variables were included.
+
+## Session information
+
+<!-- Insert the session information into the document -->
+```{r session-info}
+```
