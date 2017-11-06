@@ -339,7 +339,9 @@ stream %>%
   car::scatterplotMatrix(diagonal = "histogram")
 ```
 
-The distributions look a little nicer now.
+The distributions look a little nicer now. However, for linear regression,
+normality of the independent variables is not assumed, only a linear relation 
+between the independent variables and the dependent variable.
 
 To answer the question which variables predict the elevation, lets use the 
 `step` function with stepwise selection. And lets keep the transformed variables
@@ -366,6 +368,15 @@ variable when using the p-values based on the F-statistic.
 
 Of the variable pairs that were tightly correlated, in none of the cases 
 both variables were included.
+
+Check assumptions of the model
+
+```{r}
+plot(fit_step, which = c(1,2))
+```
+
+
+Residuals are a little skewed, not too much heteroscedasticity.
 
 ## Session information
 
