@@ -214,6 +214,11 @@ $(document).ready(function () {
 <p><a href="assignments_week2.html">assignments week 2</a></p>
 <p><a href="assignments_week3.html">assignments week 3</a></p>
 </div>
+<div id="notes" class="section level3">
+<h3>Notes</h3>
+<p>Due to how this website was made, the R-code ‘thinks’ it is in the <code>analysis</code> subdirectory, while the data sits in the <code>data</code> directory, which is found from the parent directory. To circumvent changing directory all the time, this packege uses the function <code>fromParentDir</code>, which allows you to call files from the parent directory. The function can be found in the package <code>epistats</code>, which can be installed with <code>devtools::install_github(&quot;vanAmsterdam/epistats&quot;)</code></p>
+<p>If <code>devtools</code> is not yet installed, first run <code>install.packages(&quot;devtools&quot;)</code></p>
+</div>
 
 <hr>
 <p>

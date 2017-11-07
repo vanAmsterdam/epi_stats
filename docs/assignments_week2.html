@@ -313,10 +313,10 @@ div.tocify {
 shared across the workflowr files. -->
 <!-- Update knitr chunk options -->
 <!-- Insert the date the file was last updated -->
-<p><strong>Last updated:</strong> 2017-11-03</p>
+<p><strong>Last updated:</strong> 2017-11-07</p>
 <!-- Insert the code version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
-<p><strong>Code version:</strong> 35a4a09</p>
+<p><strong>Code version:</strong> a78ee25</p>
 <!-- Add your analysis here -->
 <div id="day-5-anova-and-non-parametric-methods" class="section level2">
 <h2>Day 5: ANOVA and non-parametric methods</h2>
@@ -424,7 +424,7 @@ Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&
 <blockquote>
 <p>The aim of a certain survey in a hospital was to compare the waiting times of patients in two clinics. The waiting times (in minutes) were as follows:</p>
 </blockquote>
-<pre class="r"><code>load(amstR::fromParentDir(&quot;data/clinic.RData&quot;))
+<pre class="r"><code>load(epistats::fromParentDir(&quot;data/clinic.RData&quot;))
 summary(clinic)</code></pre>
 <pre><code>      TIME            CLINIC  
  Min.   : 4.00   clinic 1:61  
@@ -478,7 +478,7 @@ plot(fit, which = 2)</code></pre>
 <p>Answer the research questions from exercise #1, but now in R (use dataset wheat.RData). a. Make sure to perform a complete analysis, including checking the model assumptions.</p>
 </blockquote>
 <p>Perform ANOVA</p>
-<pre class="r"><code>load(amstR::fromParentDir(&quot;data/wheat.RData&quot;))
+<pre class="r"><code>load(epistats::fromParentDir(&quot;data/wheat.RData&quot;))
 fit &lt;- aov(YIELD~FERTILIZ, data = wheat)
 summary(fit)</code></pre>
 <pre><code>            Df Sum Sq Mean Sq F value Pr(&gt;F)  
@@ -527,7 +527,7 @@ plot(fit, which = c(1,2))</code></pre>
 <li>Perform an independent samples t-test to test whether the mean metabole differs between the two locations and comment on the result.</li>
 </ol>
 </blockquote>
-<pre class="r"><code>load(amstR::fromParentDir(&quot;data/starfish.RData&quot;))
+<pre class="r"><code>load(epistats::fromParentDir(&quot;data/starfish.RData&quot;))
 t.test(metabole~location, data = starfish, var.equal = F, paired = F)</code></pre>
 <pre><code>
     Welch Two Sample t-test
@@ -626,7 +626,7 @@ alternative hypothesis: true location shift is not equal to 0</code></pre>
 <li>Make a boxplot in which the hardness of the water in northern and southern regions is compared.</li>
 </ol>
 </blockquote>
-<pre class="r"><code>load(amstR::fromParentDir(&quot;data/water.RData&quot;))
+<pre class="r"><code>load(epistats::fromParentDir(&quot;data/water.RData&quot;))
 str(water)</code></pre>
 <pre><code>&#39;data.frame&#39;:   61 obs. of  4 variables:
  $ location : Factor w/ 2 levels &quot;North&quot;,&quot;South&quot;: 2 1 2 1 1 1 1 2 1 2 ...
@@ -668,7 +668,7 @@ mean in group North mean in group South
 <blockquote>
 <p>This is a repeat of exercise #8, but now in R. In the dataset incomes.RData the column income represents a (would-be) sample of incomes for 100 randomly chosen students in Utrecht. The aim of this exercise is to make you aware of the risks involved when using transformation techniques in parametric statistics. a. Compute the mean income in this sample.</p>
 </blockquote>
-<pre class="r"><code>load(amstR::fromParentDir(&quot;data/incomes.RData&quot;))
+<pre class="r"><code>load(epistats::fromParentDir(&quot;data/incomes.RData&quot;))
 str(incomes)</code></pre>
 <pre><code>&#39;data.frame&#39;:   100 obs. of  1 variable:
  $ income: num  486 1235 233 462 723 ...</code></pre>
@@ -869,7 +869,7 @@ attr(,&quot;conf.level&quot;)
 <blockquote>
 <p>In a sample of 10 animals of a certain species the lengths of the foreleg and the hind leg have been measured. The data are also given in the dataset <code>legs.RData</code>. Study the association between the length of the foreleg and the hind leg.</p>
 </blockquote>
-<pre class="r"><code>load(amstR::fromParentDir(&quot;data/legs.RData&quot;))
+<pre class="r"><code>load(epistats::fromParentDir(&quot;data/legs.RData&quot;))
 plot(y1, y2)</code></pre>
 <p><img src="figure/assignments_week2.Rmd/unnamed-chunk-34-1.png" width="672" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>cor.test(y1, y2)</code></pre>
@@ -895,7 +895,7 @@ sample estimates:
 <blockquote>
 <p>Get the data in the file infantmortality.txt in R. The dataset is about infant mortality in the USA. The first column in the dataset presents the state of the USA to which the data applies; name it therefore state. The second column presents the teenage birth rate per 1000 births and could be named teen. The third column presents the infant mortality rate per 1000 live births; name this column mort. In the USA there is a conjecture that infant mortality is in many cases caused by teenage mothers who do not receive proper prenatal care. a. Perform a linear regression with teen as explanatory variable and mort as the response variable.</p>
 </blockquote>
-<pre class="r"><code>infants &lt;- read.table(amstR::fromParentDir(&quot;data/infantmortality.txt&quot;), header = F)
+<pre class="r"><code>infants &lt;- read.table(epistats::fromParentDir(&quot;data/infantmortality.txt&quot;), header = F)
 colnames(infants) &lt;- c(&quot;state&quot;, &quot;teen&quot;, &quot;mort&quot;)
 head(infants)</code></pre>
 <pre><code>  state teen mort
@@ -974,7 +974,7 @@ y0 + c(1,-1) * qt(df = n-1, p = .025, lower.tail = T)  * se * sqrt(1+1/n)</code>
 <blockquote>
 <p>In the file <code>heparin.RData</code> the clotting times of blood samples are registered for different doses of heparin. Research is directed towards the relationship between these quantities. a. Perform a regression analysis and check whether the assumptions of normality, linearity and homoscedasticity are fulfilled.</p>
 </blockquote>
-<pre class="r"><code>load(amstR::fromParentDir(&quot;data/heparin.RData&quot;))
+<pre class="r"><code>load(epistats::fromParentDir(&quot;data/heparin.RData&quot;))
 plot(TIME~DOSE, data = heparine)</code></pre>
 <p><img src="figure/assignments_week2.Rmd/unnamed-chunk-38-1.png" width="672" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>fit &lt;- lm(TIME~DOSE, data = heparine)
@@ -1071,7 +1071,7 @@ F-statistic: 150.4 on 1 and 98 DF,  p-value: &lt; 2.2e-16</code></pre>
 <blockquote>
 <p>The question arises how body mass index (BMI) is related to the process of gastric emptying, measured by the percentage of retention after 120 minutes (ret120). The data of 55 patients of a certain hospital can be found in the file diabetes.sav or diabetes.RData. a. Make a scatter plot of BMI and ret120 and give an interpretation of the correlation coefficient and its significance.</p>
 </blockquote>
-<pre class="r"><code>load(amstR::fromParentDir(&quot;data/diabetes.RData&quot;))
+<pre class="r"><code>load(epistats::fromParentDir(&quot;data/diabetes.RData&quot;))
 plot(ret120~bmi, data = diabetes.df)</code></pre>
 <p><img src="figure/assignments_week2.Rmd/unnamed-chunk-43-1.png" width="672" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>cor.test(~ret120+bmi, data = diabetes.df)</code></pre>
@@ -1537,7 +1537,7 @@ McNemar&#39;s chi-squared = 0.57143, df = 1, p-value = 0.4497</code></pre>
 <blockquote>
 <p>The following table compiles data from six studies designed to investigate the accuracy of death certificates. The results of 5,373 autopsies were compared to the causes of death listed on the certificates. Of those considered, 3,726 certificates were confirmed to be accurate, 783 either lacked information or contained inaccuracies but did not require recoding of the underlying cause of death, and 864 were incorrect and required recoding. The data is stored in autopsie.RData.</p>
 </blockquote>
-<pre class="r"><code>load(amstR::fromParentDir(&quot;data/autopsie.RData&quot;))
+<pre class="r"><code>load(epistats::fromParentDir(&quot;data/autopsie.RData&quot;))
 str(autopsie)</code></pre>
 <pre><code>List of 3
  $ DATE  : num [1:18] 1 1 1 2 2 2 3 3 3 4 ...
@@ -1588,7 +1588,7 @@ X-squared = 209.09, df = 10, p-value &lt; 2.2e-16</code></pre>
 <blockquote>
 <p>In a study concerning the influence of acid rain on Pinus sylvestris one thousand trees were randomly selected and age and extent of damage of each tree were determined. The results are given in the following summary (see below). The data is also given in the dataset damage.RData. Test whether there is an association between age and influence of acid rain. Does this mean that there is a direct causal relationship?</p>
 </blockquote>
-<pre class="r"><code>load(amstR::fromParentDir(&quot;data/damage.RData&quot;))
+<pre class="r"><code>load(epistats::fromParentDir(&quot;data/damage.RData&quot;))
 damage_table &lt;- xtabs(~AGE+DAMAGE, data = damage)
 damage_table</code></pre>
 <pre><code>             DAMAGE
@@ -1946,7 +1946,7 @@ lines(c(0,51),c(.5,.5), lty = 2
 <li>Read in the data:</li>
 </ol>
 </blockquote>
-<pre class="r"><code>Fr &lt;- read.table(amstR::fromParentDir(&quot;data/Anderson.txt&quot;), header = T)</code></pre>
+<pre class="r"><code>Fr &lt;- read.table(epistats::fromParentDir(&quot;data/Anderson.txt&quot;), header = T)</code></pre>
 <blockquote>
 <p>Make a â€survival objectâ€ of the data, examine the object, and make a Kaplan-Meier plot:</p>
 </blockquote>
@@ -2169,21 +2169,17 @@ other attached packages:
 [4] ggplot2_2.2.1.9000
 
 loaded via a namespace (and not attached):
- [1] Rcpp_0.12.12        survcomp_1.27.0     compiler_3.4.1     
- [4] RColorBrewer_1.1-2  git2r_0.19.0        plyr_1.8.4         
- [7] MESS_0.4-15         tools_3.4.1         digest_0.6.12      
-[10] evaluate_0.10.1     tibble_1.3.4        gtable_0.2.0       
-[13] lattice_0.20-35     rlang_0.1.2         Matrix_1.2-10      
-[16] yaml_2.1.14         geeM_0.10.0         prodlim_1.6.1      
-[19] bootstrap_2017.2    amstR_0.1.3         stringr_1.2.0      
-[22] knitr_1.17          SuppDists_1.1-9.4   rprojroot_1.2      
-[25] grid_3.4.1          data.table_1.10.4-2 geepack_1.2-1      
-[28] binom_1.1-1         rmarkdown_1.6       lava_1.5.1         
-[31] rmeta_2.16          magrittr_1.5        backports_1.1.0    
-[34] scales_0.5.0.9000   htmltools_0.3.6     survivalROC_1.0.3  
-[37] splines_3.4.1       colorspace_1.3-2    labeling_0.3       
-[40] KernSmooth_2.23-15  stringi_1.1.5       lazyeval_0.2.0     
-[43] munsell_0.4.3      </code></pre>
+ [1] Rcpp_0.12.12      knitr_1.17        magrittr_1.5     
+ [4] splines_3.4.1     munsell_0.4.3     lattice_0.20-35  
+ [7] colorspace_1.3-2  rlang_0.1.2       stringr_1.2.0    
+[10] plyr_1.8.4        tools_3.4.1       epistats_0.1.0   
+[13] grid_3.4.1        binom_1.1-1       gtable_0.2.0     
+[16] git2r_0.19.0      htmltools_0.3.6   yaml_2.1.14      
+[19] lazyeval_0.2.0    rprojroot_1.2     digest_0.6.12    
+[22] tibble_1.3.4      Matrix_1.2-10     MESS_0.4-15      
+[25] evaluate_0.10.1   rmarkdown_1.6     labeling_0.3     
+[28] stringi_1.1.5     compiler_3.4.1    geepack_1.2-1    
+[31] scales_0.5.0.9000 backports_1.1.0   geeM_0.10.0      </code></pre>
 </div>
 
 <hr>

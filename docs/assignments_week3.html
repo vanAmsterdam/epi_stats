@@ -316,11 +316,8 @@ shared across the workflowr files. -->
 <p><strong>Last updated:</strong> 2017-11-07</p>
 <!-- Insert the code version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
-<p><strong>Code version:</strong> a3022fe</p>
+<p><strong>Code version:</strong> a78ee25</p>
 <!-- Add your analysis here -->
-<div id="this-is-a-test-line" class="section level2">
-<h2>This is a test line</h2>
-</div>
 <div id="day-9-multiple-regression" class="section level2">
 <h2>Day 9 Multiple regression</h2>
 <div id="exercises-with-r" class="section level3">
@@ -414,8 +411,9 @@ Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&
 <p>The column “Deviance” contains the residual sums of squares for different models. The first line gives the residual sums of squares if none of the terms is dropped so for the model with both group and dose in it. The second line gives the residual sum of squares for the model without group so for the model with only dose in it. The difference in these residual sums of squares gives the sum of squares for the group: 29.310-12.976 = 16.334. In the same way the sum of squares for dose can be obtained (14.583-12.976 = 1.607). For dose and group the F-values and the p-values are shown. With this information an ANOVA table could be constructed.</p>
 </blockquote>
 <p>This somewhat elaborate method is simplified by using the Anova function in the library car:</p>
-<pre class="r"><code>library(car) #Note: you might have to install this library first, using Packages, Install packages 
-Anova(model.anc, test.statistic = &quot;F&quot;)</code></pre>
+<pre class="r"><code>library(car) #Note: you might have to install this library first, using Packages, Install packages </code></pre>
+<pre><code>Warning: package &#39;car&#39; was built under R version 3.4.2</code></pre>
+<pre class="r"><code>Anova(model.anc, test.statistic = &quot;F&quot;)</code></pre>
 <pre><code>Analysis of Deviance Table (Type II tests)
 
 Response: y
@@ -479,7 +477,7 @@ Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&
 <blockquote>
 <p>This is a repeat of exercise #1, but now in R. Compare the results with those obtained in SPSS. The dataset with SO2 data from the lecture is available in the dataset so2.RData. Try to repeat the findings from the lecture notes using R. How will you do the variable selection in R?</p>
 </blockquote>
-<pre class="r"><code>load(amstR::fromParentDir(&quot;data/so2.RData&quot;))
+<pre class="r"><code>load(epistats::fromParentDir(&quot;data/so2.RData&quot;))
 str(so2)</code></pre>
 <pre><code>&#39;data.frame&#39;:   41 obs. of  9 variables:
  $ city      : Factor w/ 41 levels &quot;Albany                        &quot;,..: 7 33 30 9 32 15 38 4 1 41 ...
@@ -782,12 +780,12 @@ F-statistic: 16.53 on 6 and 34 DF,  p-value: 8.184e-09</code></pre>
 <p>This is a repeat of exercise #2, but now in R. Compare the results with those obtained in SPSS. The workspace cigarette.RData contains a dataset cigarettte with data on carbon monoxide, tar and nicotine contents and weight of 25 brands of cigarettes. We want to predict the carbon monoxide contents using the other 3 variables. a. Make a scatter plot matrix of the 4 variables, and formulate which variables you expect to predict (part of) carbon monoxide content.</p>
 </blockquote>
 <p>NB the <code>RData</code> file did not seem to contain any data, so we imported the SPSS file with package <code>foreign</code></p>
-<pre class="r"><code>amstR::fromParentDir(&quot;data/cigarette.RData&quot;)
-cigarette &lt;- foreign::read.spss(amstR::fromParentDir(&quot;data/cigarette.sav&quot;))</code></pre>
+<pre class="r"><code>epistats::fromParentDir(&quot;data/cigarette.RData&quot;)
+cigarette &lt;- foreign::read.spss(epistats::fromParentDir(&quot;data/cigarette.sav&quot;))</code></pre>
 <pre><code>re-encoding from CP1252</code></pre>
 <pre class="r"><code>cigarette &lt;- as.data.frame(cigarette)
 # save file:
-# save(cigarette, file = amstR::fromParentDir(&quot;data/cigarette2.RData&quot;))
+# save(cigarette, file = epistats::fromParentDir(&quot;data/cigarette2.RData&quot;))
 pairs(cigarette)</code></pre>
 <p><img src="figure/assignments_week3.Rmd/unnamed-chunk-15-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>Nicotine looks highly correlated with tar and carbonmonoxide. Carbonmonoxide looks highly correlated with tar too.</p>
@@ -916,7 +914,7 @@ predict(fit_2, newdata=new, interval=&quot;prediction&quot;, level=0.95)</code><
 <blockquote>
 <p>Which of the chemical variables can predict the maximum elevation of the stream? Lovett et al. have used the log of the variables DOC, CL and H in their analyses. Can you imagine why they did it and is it necessary?</p>
 </blockquote>
-<pre class="r"><code>load(amstR::fromParentDir(&quot;data/stream.RData&quot;))
+<pre class="r"><code>load(epistats::fromParentDir(&quot;data/stream.RData&quot;))
 str(stream)</code></pre>
 <pre><code>&#39;data.frame&#39;:   38 obs. of  15 variables:
  $ STREAM  : Factor w/ 38 levels &quot;Batavia Hill&quot;,..: 28 10 14 1 37 29 20 16 35 22 ...
@@ -1236,42 +1234,704 @@ F-statistic: 16.95 on 5 and 32 DF,  p-value: 3.501e-08</code></pre>
 </div>
 </div>
 </div>
+<div id="day-10-model-building-issues" class="section level2">
+<h2>Day 10 model building issues</h2>
+<div id="exercises-with-r-1" class="section level3">
+<h3>Exercises with R</h3>
+<blockquote>
+<p>See the notes at the beginning of Exercises with R on day 9, especially how to check for multicollinearity.</p>
+</blockquote>
+<div id="section-2" class="section level4">
+<h4>7.</h4>
+<blockquote>
+<p>This is a repeat of exercise #1, but now in R. (Note that where SPSS calculates the â€œtoleranceâ€ for the excluded variables, R calculates it for the variables in the model.) a. Build a regression model with all 3 predictors. What is the tolerance for weight in this model? (Use the command 1/vif(), see previous day.)</p>
+</blockquote>
+<pre class="r"><code>fit &lt;- lm(carbonmonoxide~., data = cigarette)
+1/vif(fit)</code></pre>
+<pre><code>       tar   nicotine     weight 
+0.04623058 0.04566227 0.74970451 </code></pre>
+<blockquote>
+<ol start="2" style="list-style-type: lower-alpha">
+<li>Now do a multiple regression with weight as dependent variable and tar and nicotine as predictors. What is the R2 of this model? How does it relate to the Tolerance?</li>
+</ol>
+</blockquote>
+<pre class="r"><code>fit_weight &lt;- lm(weight~tar+nicotine, data = cigarette)
+summary(fit_weight)</code></pre>
+<pre><code>
+Call:
+lm(formula = weight ~ tar + nicotine, data = cigarette)
+
+Residuals:
+      Min        1Q    Median        3Q       Max 
+-0.102616 -0.056166 -0.002679  0.043905  0.165134 
+
+Coefficients:
+             Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept) 0.8628078  0.0473886  18.207  9.4e-15 ***
+tar         0.0007645  0.0132917   0.058    0.955    
+nicotine    0.1119774  0.2127000   0.526    0.604    
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+Residual standard error: 0.07933 on 22 degrees of freedom
+Multiple R-squared:  0.2503,    Adjusted R-squared:  0.1821 
+F-statistic: 3.672 on 2 and 22 DF,  p-value: 0.04205</code></pre>
+<p>The <span class="math inline">\(R^2\)</span> from this fit is the same as the tolerance from <code>tar</code> from above.</p>
+<blockquote>
+<ol start="3" style="list-style-type: lower-alpha">
+<li>Now what is the tolerance of nicotine in the model with only tar and nicotine? Check this, analogously to what you did in b.</li>
+</ol>
+</blockquote>
+<pre class="r"><code>fit2 &lt;- lm(carbonmonoxide~tar+nicotine, data = cigarette)
+1/vif(fit2)</code></pre>
+<pre><code>       tar   nicotine 
+0.04623753 0.04623753 </code></pre>
+<p>The tolerance is hardly changed, so it looks like <code>nicotine</code> was pretty independent of <code>weight</code> in our sample.</p>
+</div>
+<div id="section-3" class="section level4">
+<h4>8.</h4>
+<blockquote>
+<p>This is a repeat of exercise #2, but now in R. An indicator of a treeâ€™s production capacity is the canopy. We want to examine whether there is a relation between the canopy and the production for fruit trees, and whether fertilizer has an influence on the relation. To answer this question, data on the canopy and production were collected from 14 available trees (6 fertilized and 8 unfertilized). The data are stored in crownarea.RData . a. Test whether the coefficient for the slope in the two groups (fertilized &amp; unfertilized) is the same; i.e. are the lines for the two groups parallel or not?</p>
+</blockquote>
+<pre class="r"><code>load(epistats::fromParentDir(&quot;data/crownarea.RData&quot;))
+str(crownarea)</code></pre>
+<pre><code>&#39;data.frame&#39;:   14 obs. of  3 variables:
+ $ FERTILIZ:Class &#39;labelled&#39;  atomic [1:14] 0 0 0 0 0 0 1 1 1 1 ...
+  .. ..- attr(*, &quot;label&quot;)= Named chr &quot; &quot;
+  .. .. ..- attr(*, &quot;names&quot;)= chr &quot;FERTILIZ&quot;
+ $ PRODUCTI:Class &#39;labelled&#39;  atomic [1:14] 5 4 6 5 9 11 10 8 12 10 ...
+  .. ..- attr(*, &quot;label&quot;)= Named chr &quot; &quot;
+  .. .. ..- attr(*, &quot;names&quot;)= chr &quot;PRODUCTI&quot;
+ $ CROWNARE:Class &#39;labelled&#39;  atomic [1:14] 4 6 6 8 16 16 2 4 4 6 ...
+  .. ..- attr(*, &quot;label&quot;)= Named chr &quot; &quot;
+  .. .. ..- attr(*, &quot;names&quot;)= chr &quot;CROWNARE&quot;</code></pre>
+<p>The variable classes are pretty uncommon for R. Probably due to transferring data from SPSS to R. Let’s polish them up.</p>
+<pre class="r"><code>crownarea$FERTILIZ &lt;- factor(crownarea$FERTILIZ)
+crownarea$PRODUCTI &lt;- as.numeric(crownarea$PRODUCTI)
+crownarea$CROWNARE &lt;- as.numeric(crownarea$CROWNARE)</code></pre>
+<pre class="r"><code>fit &lt;- lm(PRODUCTI~CROWNARE*FERTILIZ, data = crownarea)
+summary(fit)</code></pre>
+<pre><code>
+Call:
+lm(formula = PRODUCTI ~ CROWNARE * FERTILIZ, data = crownarea)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-2.2222 -0.9811  0.0000  1.0597  1.7778 
+
+Coefficients:
+                   Estimate Std. Error t value Pr(&gt;|t|)   
+(Intercept)         2.26415    1.23384   1.835  0.09638 . 
+CROWNARE            0.47170    0.11729   4.022  0.00243 **
+FERTILIZ1           6.18029    1.62158   3.811  0.00342 **
+CROWNARE:FERTILIZ1 -0.02725    0.16510  -0.165  0.87218   
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+Residual standard error: 1.394 on 10 degrees of freedom
+Multiple R-squared:  0.8901,    Adjusted R-squared:  0.8571 
+F-statistic: 26.99 on 3 and 10 DF,  p-value: 4.142e-05</code></pre>
+<p>There does not seem to be a statistically significant interaction between <code>FERTILIZ</code> and <code>CROWNARE</code>. Let’s check in a plot:</p>
+<pre class="r"><code>require(ggplot2)</code></pre>
+<pre><code>Loading required package: ggplot2</code></pre>
+<pre class="r"><code>ggplot(crownarea, aes(x = CROWNARE, y = PRODUCTI, col = FERTILIZ)) + 
+  geom_point() + 
+  geom_smooth(method = &quot;lm&quot;)</code></pre>
+<p><img src="figure/assignments_week3.Rmd/unnamed-chunk-37-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>The intercepts look different, but the slopes look the same (so no interaction)</p>
+<blockquote>
+<ol start="2" style="list-style-type: lower-alpha">
+<li>Can the relation between canopy and production be described by one and the same line for both groups (fertilized &amp; unfertilized)?</li>
+</ol>
+</blockquote>
+<pre class="r"><code>fit2 &lt;- lm(PRODUCTI~CROWNARE + FERTILIZ, data = crownarea)
+summary(fit2)</code></pre>
+<pre><code>
+Call:
+lm(formula = PRODUCTI ~ CROWNARE + FERTILIZ, data = crownarea)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-2.16822 -1.00000  0.01402  1.02804  1.83178 
+
+Coefficients:
+            Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept)  2.39252    0.91458   2.616 0.024000 *  
+CROWNARE     0.45794    0.07881   5.811 0.000117 ***
+FERTILIZ1    5.94393    0.72661   8.180 5.28e-06 ***
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+Residual standard error: 1.331 on 11 degrees of freedom
+Multiple R-squared:  0.8898,    Adjusted R-squared:  0.8697 
+F-statistic: 44.39 on 2 and 11 DF,  p-value: 5.404e-06</code></pre>
+<p>Although there seems to be no significant interaction, the intercept for both groups is pretty different, and significant in the model fit.</p>
+<blockquote>
+<ol start="3" style="list-style-type: lower-alpha">
+<li>Interpret the results.</li>
+</ol>
+</blockquote>
+<p>Fertilization type seems to have an additive effect to canopy. For every level of canopy, fertilization status adds (or substracts, based on the reference category) the same amount of production.</p>
+<blockquote>
+<ol start="9" style="list-style-type: decimal">
+<li>This is a repeat of exercise #3, but now in R. Read in the data file lowbirth.dat using the command</li>
+</ol>
+</blockquote>
+<pre class="r"><code>lb &lt;- read.table(epistats::fromParentDir(&quot;data/lowbirth.dat&quot;), header = T)
+str(lb)</code></pre>
+<pre><code>&#39;data.frame&#39;:   189 obs. of  11 variables:
+ $ id   : int  85 86 87 88 89 91 92 93 94 95 ...
+ $ low  : int  0 0 0 0 0 0 0 0 0 0 ...
+ $ age  : int  19 33 20 21 18 21 22 17 29 26 ...
+ $ lwt  : int  182 155 105 108 107 124 118 103 123 113 ...
+ $ race : int  2 3 1 1 1 3 1 3 1 1 ...
+ $ smoke: int  0 0 1 1 1 0 0 0 1 1 ...
+ $ ptl  : int  0 0 0 0 0 0 0 0 0 0 ...
+ $ ht   : int  0 0 0 0 0 0 0 0 0 0 ...
+ $ ui   : int  1 0 0 1 1 0 0 0 0 0 ...
+ $ ftv  : int  0 3 1 2 0 0 1 1 1 0 ...
+ $ bwt  : int  2523 2551 2557 2594 2600 2622 2637 2637 2663 2665 ...</code></pre>
+<blockquote>
+<p>We are only going to use the following variables: age age of the mother in years, ht history of hypertension (1 = yes, 0 = no) and bwt birth weight in grams</p>
+</blockquote>
+<blockquote>
+<ol style="list-style-type: lower-alpha">
+<li>Fit a model with bwt as dependent and with ht and age as independent variables. Also include the interaction between age and ht in the model.</li>
+</ol>
+</blockquote>
+<p>First off, lets recode <code>ht</code> as a factor variable.</p>
+<pre class="r"><code>lb$ht &lt;- factor(lb$ht)
+fit &lt;- lm(bwt ~ age*ht, data = lb)
+summary(fit)</code></pre>
+<pre><code>
+Call:
+lm(formula = bwt ~ age * ht, data = lb)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-2345.9  -540.4    42.8   528.2  1638.8 
+
+Coefficients:
+            Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept) 2566.895    238.466  10.764  &lt; 2e-16 ***
+age           17.430      9.992   1.744  0.08274 .  
+ht1         2570.179   1149.784   2.235  0.02659 *  
+age:ht1     -130.899     49.281  -2.656  0.00859 ** 
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+Residual standard error: 710.7 on 185 degrees of freedom
+Multiple R-squared:  0.06467,   Adjusted R-squared:  0.04951 
+F-statistic: 4.264 on 3 and 185 DF,  p-value: 0.006124</code></pre>
+<pre class="r"><code>plot(fit, which = c(1,2))</code></pre>
+<p><img src="figure/assignments_week3.Rmd/unnamed-chunk-40-1.png" width="672" style="display: block; margin: auto;" /><img src="figure/assignments_week3.Rmd/unnamed-chunk-40-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Assumptions of homoscedasticity and normality of residuals seem ok.</p>
+<p>Plot the data:</p>
+<pre class="r"><code>require(ggplot2)
+ggplot(lb, aes(x = age, y = bwt, col = ht)) + 
+  geom_point() + 
+  geom_smooth(method = &quot;lm&quot;)</code></pre>
+<p><img src="figure/assignments_week3.Rmd/unnamed-chunk-41-1.png" width="672" style="display: block; margin: auto;" /></p>
+<blockquote>
+<ol start="2" style="list-style-type: lower-alpha">
+<li>Give an interpretation of the interaction term.</li>
+</ol>
+</blockquote>
+<p>It looks like age itself is not a significant predictor, while hypertension is. However, in the group with hypertension, age seems to be an important factor. For participants with hypertension, increasing age is associated with a lower birthweight.</p>
+<blockquote>
+<ol start="3" style="list-style-type: lower-alpha">
+<li>Check whether you need the interaction term in the model.</li>
+</ol>
+</blockquote>
+<pre class="r"><code>summary(fit)</code></pre>
+<pre><code>
+Call:
+lm(formula = bwt ~ age * ht, data = lb)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-2345.9  -540.4    42.8   528.2  1638.8 
+
+Coefficients:
+            Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept) 2566.895    238.466  10.764  &lt; 2e-16 ***
+age           17.430      9.992   1.744  0.08274 .  
+ht1         2570.179   1149.784   2.235  0.02659 *  
+age:ht1     -130.899     49.281  -2.656  0.00859 ** 
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+Residual standard error: 710.7 on 185 degrees of freedom
+Multiple R-squared:  0.06467,   Adjusted R-squared:  0.04951 
+F-statistic: 4.264 on 3 and 185 DF,  p-value: 0.006124</code></pre>
+<p>From the summary we see that the interaction term is significant. Let’s also compare <span class="math inline">\(R_adj^2\)</span> between this model and a model without the interaction.</p>
+<pre class="r"><code>summary(lm(bwt~age+ht, data = lb))</code></pre>
+<pre><code>
+Call:
+lm(formula = bwt ~ age + ht, data = lb)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-2320.42  -539.33     9.12   510.97  1755.74 
+
+Coefficients:
+            Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept) 2692.051    237.539  11.333   &lt;2e-16 ***
+age           12.049      9.942   1.212   0.2271    
+ht1         -431.425    215.467  -2.002   0.0467 *  
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+Residual standard error: 722.2 on 186 degrees of freedom
+Multiple R-squared:  0.02901,   Adjusted R-squared:  0.01856 
+F-statistic: 2.778 on 2 and 186 DF,  p-value: 0.06474</code></pre>
+<p>The model with interaction term looks better</p>
+<blockquote>
+<ol start="4" style="list-style-type: lower-alpha">
+<li>Can the model be reduced further? Give the final model, the one that cannot be reduced further, and interpret this model.</li>
+</ol>
+</blockquote>
+<p>We cannot reduce further. The interaction needs to be included, so also the intercepts for hypertension groups and the <span class="math inline">\(\beta\)</span> for age.</p>
+</div>
+<div id="section-4" class="section level4">
+<h4>10.</h4>
+<blockquote>
+<p>FEV (forced expiratory volume) is an index of pulmonary function that measures the volume of air expelled after one second of constant effort. The dataset fev.txt contains FEV measurements on 654 children, aged 6-22, who were seen in the Childhood Respiratory Disease Study in 1980 in East Boston, Massachusetts. The question of interest is whether a childâ€™s smoking status has an effect on his FEV.</p>
+</blockquote>
+<blockquote>
+<ol style="list-style-type: lower-alpha">
+<li>Read the text file into R, using fev &lt;- read.table(choose.files()). Results of earlier analyses indicate that logfev is a better measure to use in linear regression. Make a new variable fev<span class="math inline">\(logFEV &lt;- log(fev\)</span>FEV).</li>
+</ol>
+</blockquote>
+<pre class="r"><code>fev &lt;- read.table(epistats::fromParentDir(&quot;data/fev.txt&quot;), header = T)
+fev$logFEV &lt;- log(fev$FEV)
+str(fev)</code></pre>
+<pre><code>&#39;data.frame&#39;:   654 obs. of  7 variables:
+ $ ID    : int  301 451 501 642 901 1701 1752 1753 1901 1951 ...
+ $ Age   : int  9 8 7 9 9 8 6 6 8 9 ...
+ $ FEV   : num  1.71 1.72 1.72 1.56 1.9 ...
+ $ Height: num  57 67.5 54.5 53 57 61 58 56 58.5 60 ...
+ $ Sex   : Factor w/ 2 levels &quot;Female&quot;,&quot;Male&quot;: 1 1 1 2 2 1 1 1 1 1 ...
+ $ Smoker: Factor w/ 2 levels &quot;Current&quot;,&quot;Non&quot;: 2 2 2 2 2 2 2 2 2 2 ...
+ $ logFEV: num  0.535 0.545 0.542 0.443 0.639 ...</code></pre>
+<blockquote>
+<ol start="2" style="list-style-type: lower-alpha">
+<li>Make a box plot of logfev by smoking status. What do you notice? What might be an explanation for this unexpected result? Test the difference in mean logfev between smokers and non-smokers using a t-test.</li>
+</ol>
+</blockquote>
+<pre class="r"><code>boxplot(logFEV~Smoker, data = fev)</code></pre>
+<p><img src="figure/assignments_week3.Rmd/unnamed-chunk-45-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>FEV looks higher in current smokers. Maybe this is mediated by age? Older children tend to smoke more often.</p>
+<pre class="r"><code>t.test(logFEV~Smoker, data = fev)</code></pre>
+<pre><code>
+    Welch Two Sample t-test
+
+data:  logFEV by Smoker
+t = 8.4751, df = 94.957, p-value = 2.983e-13
+alternative hypothesis: true difference in means is not equal to 0
+95 percent confidence interval:
+ 0.2083467 0.3358146
+sample estimates:
+mean in group Current     mean in group Non 
+            1.1604760             0.8883953 </code></pre>
+<blockquote>
+<ol start="3" style="list-style-type: lower-alpha">
+<li>Use linear regression to model logfev as a function of smoking status (note that the variable smoker cannot be used in regression; make a new variable smoke that takes the value 1 if the child is a current smoker and 0 if not); compare the result with part b).</li>
+</ol>
+</blockquote>
+<pre class="r"><code>fit &lt;- lm(logFEV~Smoker, data = fev)
+summary(fit)</code></pre>
+<pre><code>
+Call:
+lm(formula = logFEV ~ Smoker, data = fev)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-1.12285 -0.22803  0.01238  0.21777  0.86825 
+
+Coefficients:
+            Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept)  1.16048    0.04011  28.930  &lt; 2e-16 ***
+SmokerNon   -0.27208    0.04227  -6.437 2.36e-10 ***
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+Residual standard error: 0.3234 on 652 degrees of freedom
+Multiple R-squared:  0.05975,   Adjusted R-squared:  0.05831 
+F-statistic: 41.43 on 1 and 652 DF,  p-value: 2.364e-10</code></pre>
+<blockquote>
+<ol start="4" style="list-style-type: lower-alpha">
+<li>We suspect that age and height are distorting the relation between smoking and FEV. Look at some graphs of logfev, age, height and smoking. Are age and height related to FEV? To smoking?</li>
+</ol>
+</blockquote>
+<pre class="r"><code>suppressWarnings(
+  car::scatterplotMatrix(fev[, c(&quot;logFEV&quot;, &quot;Age&quot;, &quot;Height&quot;)], diagonal = &quot;histogram&quot;)
+)</code></pre>
+<p><img src="figure/assignments_week3.Rmd/unnamed-chunk-48-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>par(mfrow = c(1,3))
+boxplot(logFEV~Smoker, data = fev)
+boxplot(Age~Smoker, data = fev)
+boxplot(Height~Smoker, data = fev)</code></pre>
+<p><img src="figure/assignments_week3.Rmd/unnamed-chunk-48-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>par(mfrow = c(1,1))</code></pre>
+<p>Or in a single call to <code>ggpairs</code> from the <code>GGally</code> package:</p>
+<pre class="r"><code>GGally::ggpairs(fev[, c(&quot;logFEV&quot;, &quot;Age&quot;, &quot;Height&quot;, &quot;Smoker&quot;)])</code></pre>
+<pre><code>`stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
+`stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
+`stat_bin()` using `bins = 30`. Pick better value with `binwidth`.</code></pre>
+<p><img src="figure/assignments_week3.Rmd/unnamed-chunk-49-1.png" width="672" style="display: block; margin: auto;" /></p>
+<blockquote>
+<ol start="5" style="list-style-type: lower-alpha">
+<li>Fit the following models: i logfev ~ smoke ii logfev ~ smoke + age iii logfev smoke + age + height What is the interpretation of the coefficients in the third model? What happens to the coefficient for smoke and its standard error when age and height are added to the model?</li>
+</ol>
+</blockquote>
+<pre class="r"><code>fit0 &lt;- lm(logFEV~Smoker, data = fev)
+fit1 &lt;- lm(logFEV~Smoker + Age, data = fev)
+fit2 &lt;- lm(logFEV~Smoker + Age + Height, data = fev)
+summary(fit0)</code></pre>
+<pre><code>
+Call:
+lm(formula = logFEV ~ Smoker, data = fev)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-1.12285 -0.22803  0.01238  0.21777  0.86825 
+
+Coefficients:
+            Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept)  1.16048    0.04011  28.930  &lt; 2e-16 ***
+SmokerNon   -0.27208    0.04227  -6.437 2.36e-10 ***
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+Residual standard error: 0.3234 on 652 degrees of freedom
+Multiple R-squared:  0.05975,   Adjusted R-squared:  0.05831 
+F-statistic: 41.43 on 1 and 652 DF,  p-value: 2.364e-10</code></pre>
+<pre class="r"><code>summary(fit1)</code></pre>
+<pre><code>
+Call:
+lm(formula = logFEV ~ Smoker + Age, data = fev)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-0.71124 -0.13458  0.00104  0.14909  0.60261 
+
+Coefficients:
+             Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept) -0.066988   0.048864  -1.371  0.17088    
+SmokerNon    0.089927   0.030118   2.986  0.00293 ** 
+Age          0.090768   0.003053  29.733  &lt; 2e-16 ***
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+Residual standard error: 0.2108 on 651 degrees of freedom
+Multiple R-squared:  0.6012,    Adjusted R-squared:    0.6 
+F-statistic: 490.8 on 2 and 651 DF,  p-value: &lt; 2.2e-16</code></pre>
+<pre class="r"><code>summary(fit2)</code></pre>
+<pre><code>
+Call:
+lm(formula = logFEV ~ Smoker + Age + Height, data = fev)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-0.64522 -0.08431  0.00957  0.09414  0.42571 
+
+Coefficients:
+             Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept) -2.024035   0.081080 -24.963  &lt; 2e-16 ***
+SmokerNon    0.050357   0.020924   2.407   0.0164 *  
+Age          0.022311   0.003334   6.692 4.77e-11 ***
+Height       0.043709   0.001645  26.565  &lt; 2e-16 ***
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+Residual standard error: 0.1461 on 650 degrees of freedom
+Multiple R-squared:  0.8088,    Adjusted R-squared:  0.8079 
+F-statistic: 916.6 on 3 and 650 DF,  p-value: &lt; 2.2e-16</code></pre>
+<p>The interpretation of the coefficients:</p>
+<ul>
+<li>For equal Age and Height, non-smokers have 0.05 more ml FEV</li>
+<li>For equal smoking status and height, FEV increases with 0.02 ml for every year in age</li>
+<li>For equal smoking status and age, FEV increase with 0.04ml for each unit increase in height (probably inches, since it’s the USA)</li>
+</ul>
+<blockquote>
+<ol start="6" style="list-style-type: lower-alpha">
+<li>Since we saw an indication of non-parallel lines for smokers and non-smokers in the relation between logfev and age, fit a fourth model, including the interaction of age and smoking: iv logfev = smoke, age, height, agesmoke What happens now to the coefficient for smoke and its standard error?</li>
+</ol>
+</blockquote>
+<pre class="r"><code>fit3 &lt;- lm(logFEV~Smoker + Age + Height + Age*Smoker, data = fev)
+summary(fit3)</code></pre>
+<pre><code>
+Call:
+lm(formula = logFEV ~ Smoker + Age + Height + Age * Smoker, data = fev)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-0.64288 -0.08542  0.01064  0.09593  0.42693 
+
+Coefficients:
+               Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept)   -1.879574   0.151657 -12.394   &lt;2e-16 ***
+SmokerNon     -0.075350   0.113479  -0.664   0.5069    
+Age            0.014344   0.007815   1.835   0.0669 .  
+Height         0.043153   0.001718  25.123   &lt;2e-16 ***
+SmokerNon:Age  0.009540   0.008464   1.127   0.2601    
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+Residual standard error: 0.146 on 649 degrees of freedom
+Multiple R-squared:  0.8092,    Adjusted R-squared:  0.808 
+F-statistic: 688.1 on 4 and 649 DF,  p-value: &lt; 2.2e-16</code></pre>
+<p>The coefficient for smoke goes from positive to negative, but the standard error increases and it is no longer significant.</p>
+<blockquote>
+<ol start="7" style="list-style-type: lower-alpha">
+<li>Now letâ€™s try a backward regression. Make one block with all the variables in model iv, plus sex. Choose Method=Backward to allow SPSS to drop non-significant variables. What do you get? Is this a logical model?</li>
+</ol>
+</blockquote>
+<pre class="r"><code>fit_full &lt;- lm(logFEV~Age*Smoker + Height + Sex, data = fev)
+drop1(fit_full, test = &quot;F&quot;)</code></pre>
+<pre><code>Single term deletions
+
+Model:
+logFEV ~ Age * Smoker + Height + Sex
+           Df Sum of Sq    RSS     AIC  F value    Pr(&gt;F)    
+&lt;none&gt;                  13.693 -2516.5                       
+Height      1   12.0819 25.775 -2104.8 571.7414 &lt; 2.2e-16 ***
+Sex         1    0.1455 13.839 -2511.6   6.8859  0.008892 ** 
+Age:Smoker  1    0.0401 13.734 -2516.6   1.8993  0.168633    
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<p>It looks like the interaction term can be disregarded</p>
+<pre class="r"><code>fit_a &lt;- lm(logFEV~Age + Smoker + Height + Sex, data = fev)
+drop1(fit_a, test = &quot;F&quot;)</code></pre>
+<pre><code>Single term deletions
+
+Model:
+logFEV ~ Age + Smoker + Height + Sex
+       Df Sum of Sq    RSS     AIC  F value    Pr(&gt;F)    
+&lt;none&gt;              13.734 -2516.6                       
+Age     1    1.0323 14.766 -2471.2  48.7831 7.096e-12 ***
+Smoker  1    0.1027 13.836 -2513.7   4.8537   0.02794 *  
+Height  1   13.7485 27.482 -2064.9 649.7062 &lt; 2.2e-16 ***
+Sex     1    0.1325 13.866 -2512.3   6.2598   0.01260 *  
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<p>Now we would keep all variables. So FEV increases with age, ‘not smoking’, height and male sex. Seems like a reasonable model. Let’s check assumptions:</p>
+<pre class="r"><code>plot(fit_a, which = c(1,2))</code></pre>
+<p><img src="figure/assignments_week3.Rmd/unnamed-chunk-54-1.png" width="672" style="display: block; margin: auto;" /><img src="figure/assignments_week3.Rmd/unnamed-chunk-54-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Nice homoscedasticity, residuals maybe a little skewed</p>
+<pre class="r"><code>hist(fit_a$residuals)</code></pre>
+<p><img src="figure/assignments_week3.Rmd/unnamed-chunk-55-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="section-5" class="section level4">
+<h4>11.</h4>
+<blockquote>
+<p>Data from a study of the effect of three different methods of instruction on reading comprehension in children are stored in the file readingtestscores.dat. 66 participants (22 in each group) were given a reading comprehension test before and after receiving the instruction. The following variables were collected:</p>
+</blockquote>
+<blockquote>
+<p>Subject: Subject number Group: Type of instruction that student received (Basal, DRTA, or Strat) PRE1: Pretest score on first reading comprehension measure PRE2: Pretest score on second reading comprehension measure POST1: Posttest score on first reading comprehension measure POST2: Posttest score on second reading comprehension measure POST3: Posttest score on third reading comprehension measure</p>
+</blockquote>
+<blockquote>
+<ol style="list-style-type: lower-alpha">
+<li>The dataset is a flat text file with fixed widths. You can read it into R by using the read.table() function.</li>
+</ol>
+</blockquote>
+<p>It looks like the values are actually separated by a tab. Which can be read by using <code>sep = &quot;\t&quot;</code>.</p>
+<pre class="r"><code>comp &lt;- read.table(epistats::fromParentDir(&quot;data/readingtestscores.dat&quot;), header = T, sep = &quot;\t&quot;)
+
+str(comp)</code></pre>
+<pre><code>&#39;data.frame&#39;:   66 obs. of  7 variables:
+ $ Subject: int  1 2 3 4 5 6 7 8 9 10 ...
+ $ Group  : Factor w/ 3 levels &quot;Basal&quot;,&quot;DRTA&quot;,..: 1 1 1 1 1 1 1 1 1 1 ...
+ $ PRE1   : int  4 6 9 12 16 15 14 12 12 8 ...
+ $ PRE2   : int  3 5 4 6 5 13 8 7 3 8 ...
+ $ POST1  : int  5 9 5 8 10 9 12 5 8 7 ...
+ $ POST2  : int  4 5 3 5 9 8 5 5 7 7 ...
+ $ POST3  : int  41 41 43 46 46 45 45 32 33 39 ...</code></pre>
+<blockquote>
+<ol start="2" style="list-style-type: lower-alpha">
+<li>Make a boxplot of the posttest score on the second reading comprehension measure for the three types of instruction. Do you think there are statistically significant differences between the groups?</li>
+</ol>
+</blockquote>
+<pre class="r"><code>boxplot(POST2~Group, data = comp)</code></pre>
+<p><img src="figure/assignments_week3.Rmd/unnamed-chunk-57-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>It looks like a pretty big difference, I would expect statistical significance.</p>
+<blockquote>
+<ol start="3" style="list-style-type: lower-alpha">
+<li>Fit a model to examine whether there are differences in the mean posttest score on the second reading comprehension measure for the three types of instruction.</li>
+</ol>
+</blockquote>
+<pre class="r"><code>fit &lt;- lm(POST2~Group, data = comp)
+summary(fit)</code></pre>
+<pre><code>
+Call:
+lm(formula = POST2 ~ Group, data = comp)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-7.3636 -1.3295 -0.2273  1.5909  4.7727 
+
+Coefficients:
+            Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept)   5.5455     0.5071  10.936  3.4e-16 ***
+GroupDRTA     0.6818     0.7171   0.951 0.345371    
+GroupStrat    2.8182     0.7171   3.930 0.000214 ***
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+Residual standard error: 2.379 on 63 degrees of freedom
+Multiple R-squared:  0.2107,    Adjusted R-squared:  0.1856 
+F-statistic: 8.407 on 2 and 63 DF,  p-value: 0.0005804</code></pre>
+<p>This summary containts the F-test, equivalent to performing an ANOVA. It also comes up with a post-hoc test for testing difference between a baseline group and the other groups.</p>
+<blockquote>
+<ol start="4" style="list-style-type: lower-alpha">
+<li>Test whether or not there are differences between the groups. Which hypothesis are you testing?</li>
+</ol>
+</blockquote>
+<p>Since we have no prior hypothesis on which group should score better or worse, it is best to do an ANOVA with proper post-hoc tests that incorporate adjustment for multiple comparisons among all groups. <span class="math inline">\(H_0\)</span>: all groups equal, <span class="math inline">\(H_1\)</span>: not all groups are equal.</p>
+<pre class="r"><code>TukeyHSD(aov(POST2~Group, data = comp))</code></pre>
+<pre><code>  Tukey multiple comparisons of means
+    95% family-wise confidence level
+
+Fit: aov(formula = POST2 ~ Group, data = comp)
+
+$Group
+                 diff        lwr      upr     p adj
+DRTA-Basal  0.6818182 -1.0395665 2.403203 0.6104823
+Strat-Basal 2.8181818  1.0967971 4.539567 0.0006194
+Strat-DRTA  2.1363636  0.4149789 3.857748 0.0112851</code></pre>
+<p>So DRTA and Basal are equavalent. Strat is better than both of these</p>
+<blockquote>
+<ol start="5" style="list-style-type: lower-alpha">
+<li>This study is an example of a randomized, pre-post design. There are several ways to analyze such a design (analyzing only the post measurement, as we did above; analyzing the difference between pre and post; or using analysis of covariance), but â€œANCOVA analysisâ€ (a linear regression model with post scores at the outcome, and group and pre-intervention score as explanatory variables) has a number of advantages* over other analyses. Fit a model to examine whether there are differences in the mean posttest score on the second reading comprehension measure for the three types of instruction, controlling for the posttest score on the same test. Use the drop1() function to get p-values for the two variables in the model.</li>
+</ol>
+</blockquote>
+<p>Probably what is meant in the question is ‘controlling for the pre-test score’</p>
+<pre class="r"><code>fit2 &lt;- lm(POST2 ~ Group + PRE2, data = comp)
+summary(fit2)</code></pre>
+<pre><code>
+Call:
+lm(formula = POST2 ~ Group + PRE2, data = comp)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-8.2052 -1.0291 -0.2892  1.3475  5.1765 
+
+Coefficients:
+            Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept)   4.0884     0.8445   4.841 8.95e-06 ***
+GroupDRTA     0.7321     0.6983   1.048 0.298558    
+GroupStrat    2.9061     0.6991   4.157 0.000101 ***
+PRE2          0.2763     0.1300   2.126 0.037493 *  
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+Residual standard error: 2.315 on 62 degrees of freedom
+Multiple R-squared:  0.2643,    Adjusted R-squared:  0.2287 
+F-statistic: 7.424 on 3 and 62 DF,  p-value: 0.0002512</code></pre>
+<blockquote>
+<ol start="6" style="list-style-type: lower-alpha">
+<li>Get the model coefficients from the model in (e) and interpret them.</li>
+</ol>
+</blockquote>
+<pre class="r"><code>coef(fit)</code></pre>
+<pre><code>(Intercept)   GroupDRTA  GroupStrat 
+  5.5454545   0.6818182   2.8181818 </code></pre>
+<p>For equal <code>PRE2</code> score, the group with Strat instruction had 2.90 higher score on the second post-test evaluation.</p>
+<blockquote>
+<ol start="7" style="list-style-type: lower-alpha">
+<li>Get a summary of the model frm (c), and compare the mean squared error (called the â€œResidual standard errorâ€ in the R output) to that of the model in (e). What do you notice?</li>
+</ol>
+</blockquote>
+<pre class="r"><code>summary(fit)</code></pre>
+<pre><code>
+Call:
+lm(formula = POST2 ~ Group, data = comp)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-7.3636 -1.3295 -0.2273  1.5909  4.7727 
+
+Coefficients:
+            Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept)   5.5455     0.5071  10.936  3.4e-16 ***
+GroupDRTA     0.6818     0.7171   0.951 0.345371    
+GroupStrat    2.8182     0.7171   3.930 0.000214 ***
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+Residual standard error: 2.379 on 63 degrees of freedom
+Multiple R-squared:  0.2107,    Adjusted R-squared:  0.1856 
+F-statistic: 8.407 on 2 and 63 DF,  p-value: 0.0005804</code></pre>
+<pre class="r"><code>summary(fit2)</code></pre>
+<pre><code>
+Call:
+lm(formula = POST2 ~ Group + PRE2, data = comp)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-8.2052 -1.0291 -0.2892  1.3475  5.1765 
+
+Coefficients:
+            Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept)   4.0884     0.8445   4.841 8.95e-06 ***
+GroupDRTA     0.7321     0.6983   1.048 0.298558    
+GroupStrat    2.9061     0.6991   4.157 0.000101 ***
+PRE2          0.2763     0.1300   2.126 0.037493 *  
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+Residual standard error: 2.315 on 62 degrees of freedom
+Multiple R-squared:  0.2643,    Adjusted R-squared:  0.2287 
+F-statistic: 7.424 on 3 and 62 DF,  p-value: 0.0002512</code></pre>
+<p>It looks like the the second model, including pre-test scores, fits the data better (since the residual standard error is lower).</p>
+<blockquote>
+<p>*The interested reader can take a look at Vickers AJ and Altman DG. Analysing controlled trials with baseline and follow up measurements. British Medical Journal 2001;323:1123 <a href="http://www.bmj.com/content/323/7321/1123.full.pdf+html" class="uri">http://www.bmj.com/content/323/7321/1123.full.pdf+html</a></p>
+</blockquote>
+</div>
+</div>
+</div>
 <div id="session-information" class="section level2">
 <h2>Session information</h2>
 <!-- Insert the session information into the document -->
 <pre class="r"><code>sessionInfo()</code></pre>
-<pre><code>R version 3.3.2 (2016-10-31)
-Platform: x86_64-apple-darwin13.4.0 (64-bit)
-Running under: macOS Sierra 10.12.6
+<pre><code>R version 3.4.1 (2017-06-30)
+Platform: x86_64-w64-mingw32/x64 (64-bit)
+Running under: Windows 7 x64 (build 7601) Service Pack 1
+
+Matrix products: default
 
 locale:
-[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+[1] LC_COLLATE=Dutch_Netherlands.1252  LC_CTYPE=Dutch_Netherlands.1252   
+[3] LC_MONETARY=Dutch_Netherlands.1252 LC_NUMERIC=C                      
+[5] LC_TIME=Dutch_Netherlands.1252    
 
 attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
 other attached packages:
-[1] bindrcpp_0.2 dplyr_0.7.1  car_2.1-5   
+[1] ggplot2_2.2.1.9000 bindrcpp_0.2       dplyr_0.7.3       
+[4] car_2.1-5         
 
 loaded via a namespace (and not attached):
- [1] Rcpp_0.12.11       survcomp_1.22.0    bindr_0.1         
- [4] plyr_1.8.4         nloptr_1.0.4       RColorBrewer_1.1-2
- [7] git2r_0.19.0       tools_3.3.2        corrplot_0.77     
-[10] digest_0.6.12      lme4_1.1-13        tibble_1.3.3      
-[13] evaluate_0.10.1    nlme_3.1-131       lattice_0.20-35   
-[16] mgcv_1.8-17        pkgconfig_2.0.1    rlang_0.1.1       
-[19] Matrix_1.2-10      yaml_2.1.14        parallel_3.3.2    
-[22] SparseM_1.77       prodlim_1.6.1      bootstrap_2017.2  
-[25] amstR_0.1.3        stringr_1.2.0      knitr_1.17        
-[28] SuppDists_1.1-9.4  MatrixModels_0.4-1 rprojroot_1.2     
-[31] grid_3.3.2         nnet_7.3-12        glue_1.1.1        
-[34] data.table_1.10.4  R6_2.2.2           survival_2.41-3   
-[37] foreign_0.8-69     rmarkdown_1.6      lava_1.5          
-[40] rmeta_2.16         minqa_1.2.4        reshape2_1.4.2    
-[43] magrittr_1.5       survivalROC_1.0.3  backports_1.1.0   
-[46] htmltools_0.3.6    MASS_7.3-47        splines_3.3.2     
-[49] assertthat_0.2.0   pbkrtest_0.4-7     quantreg_5.33     
-[52] KernSmooth_2.23-15 stringi_1.1.5     </code></pre>
+ [1] Rcpp_0.12.12        RColorBrewer_1.1-2  bindr_0.1          
+ [4] compiler_3.4.1      nloptr_1.0.4        git2r_0.19.0       
+ [7] plyr_1.8.4          tools_3.4.1         epistats_0.1.0     
+[10] digest_0.6.12       lme4_1.1-14         corrplot_0.84      
+[13] gtable_0.2.0        tibble_1.3.4        evaluate_0.10.1    
+[16] nlme_3.1-131        lattice_0.20-35     mgcv_1.8-17        
+[19] pkgconfig_2.0.1     rlang_0.1.2         Matrix_1.2-10      
+[22] GGally_1.3.2        yaml_2.1.14         parallel_3.4.1     
+[25] SparseM_1.77        stringr_1.2.0       knitr_1.17         
+[28] MatrixModels_0.4-1  rprojroot_1.2       grid_3.4.1         
+[31] nnet_7.3-12         reshape_0.8.7       glue_1.1.1         
+[34] data.table_1.10.4-2 R6_2.2.2            foreign_0.8-69     
+[37] rmarkdown_1.6       minqa_1.2.4         reshape2_1.4.2     
+[40] magrittr_1.5        scales_0.5.0.9000   backports_1.1.0    
+[43] htmltools_0.3.6     MASS_7.3-47         splines_3.4.1      
+[46] assertthat_0.2.0    pbkrtest_0.4-7      colorspace_1.3-2   
+[49] labeling_0.3        quantreg_5.34       stringi_1.1.5      
+[52] lazyeval_0.2.0      munsell_0.4.3      </code></pre>
 </div>
 
 <hr>
