@@ -113,7 +113,7 @@ summary(aov(yield~group, data = yields_melted))
 > The aim of a certain survey in a hospital was to compare the waiting times of patients in two clinics. The waiting times (in minutes) were as follows: 
 
 ```{r}
-load(amstR::fromParentDir("data/clinic.RData"))
+load(epistats::fromParentDir("data/clinic.RData"))
 summary(clinic)
 ```
 
@@ -158,7 +158,7 @@ The residuals are higher than expected on the upper side of the distribution, wh
 
 Perform ANOVA
 ```{r}
-load(amstR::fromParentDir("data/wheat.RData"))
+load(epistats::fromParentDir("data/wheat.RData"))
 fit <- aov(YIELD~FERTILIZ, data = wheat)
 summary(fit)
 pairwise.t.test(wheat$YIELD, wheat$FERTILIZ, p.adj = "none")
@@ -191,7 +191,7 @@ Answer the research questions from exercise #3, but now in R (use dataset starfi
 > a.	Perform an independent samples t-test to test whether the mean metabole differs between the two locations and comment on the result.
 
 ```{r}
-load(amstR::fromParentDir("data/starfish.RData"))
+load(epistats::fromParentDir("data/starfish.RData"))
 t.test(metabole~location, data = starfish, var.equal = F, paired = F)
 t.test(metabole~location, data = starfish, var.equal = T, paired = F)
 ```
@@ -246,7 +246,7 @@ wilcox.test(extra~group, data = sleep)
 a.	Make a boxplot in which the hardness of the water in northern and southern regions is compared.
 
 ```{r}
-load(amstR::fromParentDir("data/water.RData"))
+load(epistats::fromParentDir("data/water.RData"))
 str(water)
 boxplot(hardness~location, data = water)
 ```
@@ -274,7 +274,7 @@ The variance in the South region is much higher than in the North region, this v
 a.	Compute the mean income in this sample.
 
 ```{r}
-load(amstR::fromParentDir("data/incomes.RData"))
+load(epistats::fromParentDir("data/incomes.RData"))
 str(incomes)
 mean(incomes$income)
 ```
@@ -420,7 +420,7 @@ cor.test(y1, y2)$conf.int
 > In a sample of 10 animals of a certain species the lengths of the foreleg and the hind leg have been measured. The data are also given in the dataset `legs.RData`. Study the association between the length of the foreleg and the hind leg. 
 
 ```{r}
-load(amstR::fromParentDir("data/legs.RData"))
+load(epistats::fromParentDir("data/legs.RData"))
 plot(y1, y2)
 cor.test(y1, y2)
 
@@ -435,7 +435,7 @@ There is a statistically significant association between the foreleg and the hin
 a.	Perform a linear regression with teen as explanatory variable and mort as the response variable. 
 
 ```{r}
-infants <- read.table(amstR::fromParentDir("data/infantmortality.txt"), header = F)
+infants <- read.table(epistats::fromParentDir("data/infantmortality.txt"), header = F)
 colnames(infants) <- c("state", "teen", "mort")
 head(infants)
 plot(mort~teen, data = infants)
@@ -494,7 +494,7 @@ Note that the hand-calculated confidence intervals differ slightly from the conf
 > a.	Perform a regression analysis and check whether the assumptions of normality, linearity and homoscedasticity are fulfilled.
 
 ```{r}
-load(amstR::fromParentDir("data/heparin.RData"))
+load(epistats::fromParentDir("data/heparin.RData"))
 plot(TIME~DOSE, data = heparine)
 fit <- lm(TIME~DOSE, data = heparine)
 plot(fit, which = c(1,2))
@@ -559,7 +559,7 @@ Now we see heteroscedasticity: increasing variance with values of y.
 a.	Make a scatter plot of BMI and ret120 and give an interpretation of the correlation coefficient and its significance.
 
 ```{r}
-load(amstR::fromParentDir("data/diabetes.RData"))
+load(epistats::fromParentDir("data/diabetes.RData"))
 plot(ret120~bmi, data = diabetes.df)
 cor.test(~ret120+bmi, data = diabetes.df)
 ```
@@ -848,7 +848,7 @@ No statistically significant effect of the symptom on the chance of being cured.
 > The following table compiles data from six studies designed to investigate the accuracy of death certificates. The results of 5,373 autopsies were compared to the causes of death listed on the certificates. Of those considered, 3,726 certificates were confirmed to be accurate, 783 either lacked information or contained inaccuracies but did  not require recoding of the underlying cause of death, and 864 were incorrect and required recoding. The data is stored in autopsie.RData.
 
 ```{r}
-load(amstR::fromParentDir("data/autopsie.RData"))
+load(epistats::fromParentDir("data/autopsie.RData"))
 str(autopsie)
 ```
 
@@ -878,7 +878,7 @@ of the incorrectly recorded cause of death.
 > In a study concerning the influence of acid rain on Pinus sylvestris one thousand trees were randomly selected and age and extent of damage of each tree were determined. The results are given in the following summary (see below). The data is also given in the dataset damage.RData. Test whether there is an association between age and influence of acid rain. Does this mean that there is a direct causal relationship?
 
 ```{r}
-load(amstR::fromParentDir("data/damage.RData"))
+load(epistats::fromParentDir("data/damage.RData"))
 damage_table <- xtabs(~AGE+DAMAGE, data = damage)
 damage_table
 
@@ -1154,7 +1154,7 @@ lines(c(0,51),c(.5,.5), lty = 2
 a.	Read in the data:
 
 ```{r}
-Fr <- read.table(amstR::fromParentDir("data/Anderson.txt"), header = T)
+Fr <- read.table(epistats::fromParentDir("data/Anderson.txt"), header = T)
 
 ```
 

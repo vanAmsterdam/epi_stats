@@ -371,7 +371,7 @@ pop <- 1:8
 From this population of size 8, samples of size 5 are drawn with replacement. There are 85 = 32768 such samples possible. A complete list of all these samples can be retrieved by loading the dataset samples.RData. (Use File, Load workspace…)
 
 ```{r}
-load(amstR::fromParentDir("data/samples.RData"))
+load(epistats::fromParentDir("data/samples.RData"))
 ```
 
 
