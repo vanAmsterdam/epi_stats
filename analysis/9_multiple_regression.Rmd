@@ -265,9 +265,161 @@ Assumptions
 
 NB: no conditions for the distribution of the explenatory assumptions
 
-## CHECK
+## Lecture part 2: model building issues
+
+```{r}
+lm(SO2~factories, data = so2) %>% summary()
+lm(SO2~population, data = so2) %>% summary()
+lm(SO2~factories+population, data = so2) %>% summary()
+
+```
+
+
+### Multicollinearity
+
+Added effect of another predictor is limited, because it information was already 
+used in the earlier included predictors.
+
+Perfectly independent explenatory variables: adding the second does not alter the first.
+Perfectly correlated explenatory variables: there are multiple solutions.
+
+```{r}
+set.seed(2)
+n = 10
+x1 <- runif(n)
+x2 <- 2*x1
+y  <- 3*x1 + rnorm(n, sd = .1)
+
+lm(y~x1+x2) %>% summary()
+
+```
+
+
+With high correlation:
+
+* Good fit is possible
+* Coefficients will have a large variability
+* Hard to interpret the coefficients directly
+* Estimates strongly depend on the other variables
+
+
+Indicators:
+
+* detect high correlations between explenatory variables
+* some independents are kicked out
+* high $R^2$ (or significant overall F-test), without significant explanatory variables
+* large changes in coefficients when another is added
+* unrealistic estimated coefficients or confidence intervals
+* unstable estimated coefficients (high SE's)
+* unrealist p-values
+
+
+### Tolerance van variance inflation factor
+Tolerance is $1-R^2$ in a model with one of the explanatory variables is 
+taken as the dependent variable and (some of) the other explanatory variables 
+are taken as the independents.
+
+Rule of thumb: tolerance of 0.4 is acceptable (0.1 or 0.2 is sometimes stated)
+
+
+Variance inflation factor (VIF): $VIF = \frac{1}{tolerance}$
+
+The variance of the estimates of the coefficients is inflated with the VIF.
+
+### Solutions to multicollinearity
+Pick the more logical factor
+Mean-centering may help (correlation between x1 and x2 may be more than between 
+x1-(mean(x1) and x2)).
+
+
+## Choice of explanatory variables
+
+* continuous variables
+* functions of continuous variables ($y = \beta_0 + \beta_{1}x_1 + \beta_{2}x_1^2 + \epsilon$)
+* NB linear regression is linear **in the coeficients**
+* categorical variables: create dummy variables
+
+### Categorical variables
+
+Create dummy variables
+
+```{r}
+boxplot(SO2~region, data = so2)
+lm(SO2~region, data = so2) %>% summary()
+```
+
+This makes sure that the degrees of freedom still equals that of an ANOVA.
+
+So 1 variable in linear regression takes up 1 degree of freedom.
+1 categorical variable in ANOVA with j levels takes up j-1 degrees of freedom.
+When creating dummy variables, j-1 dummy variables will be created.
+
+The p-values of the dummy categories are usually not corrected for multiple testing,
+ while in ANOVA they would be, as part of the post-hoc testing.
+
+
+NB the dummy variables need to be entered 'en block'. This messes up stepwise selection, 
+because p-values are calculated for each dummy variable separately.
+
+
+### Sample size
+Large to do exact sample size calculation, it takes many assumptions.
+
+Rule of thumb: 10-15 cases for each parameter (except the constant, but including dummy variables, interactions etc).
+
+For precision: only the final model matters
+For over-fitting: all considered models matter.
+
+
+### Make sure to include some variables
+In R: do not add them to the `scope` of `drop1`, `add1` or `step`.
+
+
+## Missing values
+
+Default in R and SPSS is doing a complete cases on all **potentially** included 
+variables.
+
+Both R and SPSS have functions for "missing values analysis". Detection and 
+detection of patterns.
+
+Problems with complete cases:
+* selection bias (systematic missings)
+* loss of power
+
+Solutions
+
+* <5-10% cases excluded: ignore
+* >5-10%
+** remove variable (sub-optimal)
+** multiple imputation
+
+## Interaction
+
+Practical: take the product of 2 variables as a new variable
+
+```{r}
+lm(SO2 ~ factories*population, data = so2) %>% summary()
+lm(SO2 ~ factories+population, data = so2) %>% summary()
+
+```
+
+$$y_i = \beta_0 + \beta_{1}x_1 + \sum_{j}{\beta_{0j}x_{dummy,j}} + \sum_{j}{\beta_{1j}x_1}$$
+
+Where $x_{dummy,j} \in (0,1)$.
+
+
+
+
+
+
+
+
+## TO CHECK
 
 df from anova(fit12), compare with ANOVA result from slides
+
+
 
 
 ## Session information

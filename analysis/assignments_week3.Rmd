@@ -26,6 +26,8 @@ knitr::read_chunk("chunks.R")
 
 <!-- Add your analysis here -->
 
+## This is a test line
+
 ## Day 9 Multiple regression
 ### Exercises with R
 > *Introduction*
@@ -39,7 +41,7 @@ dose <- c(5,6,7,8,9,10,5,6,7,8,9,10)
 group <- c(0,0,0,0,0,0,1,1,1,1,1,1)
 ```
 
-Let’s take a look at a plot of the data: 
+Let???s take a look at a plot of the data: 
 
 ```{r}
 interaction.plot(dose, group, y , mean, ylab = "Bloodpressure")
@@ -55,13 +57,13 @@ model.an <- lm(y~group)
 model.an <- glm(y~group, family = gaussian)
 ```
 
-> In the second statement, the `family=gaussian` part may be left out since the gaussian (normal) is the default (“GLM” stands for generalized linear model, of which ANOVA, linear regression, and logistic regression models are special cases). The result of the ANOVA model will be stored in model.an. In the second case, this will be an object of glm-type because you used glm to create it. To see what is in it use `names(model.an)` and if you want to see something specific use for instance `model.an$coefficients`. To get the table with the estimates: 
+> In the second statement, the `family=gaussian` part may be left out since the gaussian (normal) is the default (???GLM??? stands for generalized linear model, of which ANOVA, linear regression, and logistic regression models are special cases). The result of the ANOVA model will be stored in model.an. In the second case, this will be an object of glm-type because you used glm to create it. To see what is in it use `names(model.an)` and if you want to see something specific use for instance `model.an$coefficients`. To get the table with the estimates: 
 
 ```{r}
 summary(model.an)
 ```
 
-> The function `drop1(fit, test = "F")` looks at the variables in the model ‘fit’, then leaves out the terms one by one and calculates the F-test for every term if it were to be left out. Of course, in `model.an` there is only one variable so you just get one test. Note that the p-value of the F-test is exactly the same as the p-value of the t-test in the model summary.
+> The function `drop1(fit, test = "F")` looks at the variables in the model ???fit???, then leaves out the terms one by one and calculates the F-test for every term if it were to be left out. Of course, in `model.an` there is only one variable so you just get one test. Note that the p-value of the F-test is exactly the same as the p-value of the t-test in the model summary.
 To fit the model without the interaction: 
 
 ```{r}
@@ -109,7 +111,7 @@ The variance inflation factor can be obtained using the vif() function in the ca
 > 1/vif(full)
 
 #### A note on automatic variable selection in R
-> R does not have the same type of forward, backward and stepwise selection procedures as SPSS. The add1 and drop1 can be used to examine variables and decide which variable should be added/dropped next. The actual adding and dropping is not done automatically and needs to be done by the analyst, so a new model is fitted and again checked for variables that can be added/dropped. Note that the add1 and drop1 functions both give Akaike’s Information Criterion (AIC, to be treated during Modern Methods in Data Analysis) by default; an F-test can be obtained by using the option test="F" in the command. 
+> R does not have the same type of forward, backward and stepwise selection procedures as SPSS. The add1 and drop1 can be used to examine variables and decide which variable should be added/dropped next. The actual adding and dropping is not done automatically and needs to be done by the analyst, so a new model is fitted and again checked for variables that can be added/dropped. Note that the add1 and drop1 functions both give Akaike???s Information Criterion (AIC, to be treated during Modern Methods in Data Analysis) by default; an F-test can be obtained by using the option test="F" in the command. 
 
 #### 5.
 > This is a repeat of exercise #1, but now in R. Compare the results with those obtained in SPSS. 
@@ -254,7 +256,7 @@ predict(fit_2, newdata=new, interval="prediction", level=0.95)
 
 #### 7.
 > This is a repeat of exercise #4, but now in R. Compare the results with those obtained in SPSS. 
-The variables in the study of 38 stream sites in New York state by Lovett et al. (2000) fell into two groups measured at different spatial sites – watershed variables (elevation, stream length and area) and chemical variables for a site averaged across sampling dates (averaged over 3 years). We use only the chemical variables. The data are given in the data file stream.RData
+The variables in the study of 38 stream sites in New York state by Lovett et al. (2000) fell into two groups measured at different spatial sites ??? watershed variables (elevation, stream length and area) and chemical variables for a site averaged across sampling dates (averaged over 3 years). We use only the chemical variables. The data are given in the data file stream.RData
 
 > STREAM 	name of the stream (site) from which observations were collected
 MAXELEV 	maximum elevation of stream (m above sea level)
