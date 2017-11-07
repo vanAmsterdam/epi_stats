@@ -313,11 +313,14 @@ div.tocify {
 shared across the workflowr files. -->
 <!-- Update knitr chunk options -->
 <!-- Insert the date the file was last updated -->
-<p><strong>Last updated:</strong> 2017-11-06</p>
+<p><strong>Last updated:</strong> 2017-11-07</p>
 <!-- Insert the code version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
-<p><strong>Code version:</strong> 34e4b73</p>
+<p><strong>Code version:</strong> a3022fe</p>
 <!-- Add your analysis here -->
+<div id="this-is-a-test-line" class="section level2">
+<h2>This is a test line</h2>
+</div>
 <div id="day-9-multiple-regression" class="section level2">
 <h2>Day 9 Multiple regression</h2>
 <div id="exercises-with-r" class="section level3">
@@ -331,7 +334,7 @@ shared across the workflowr files. -->
 <pre class="r"><code>y &lt;- c(87,86.5,89,88.5,87.5,88,86.5,87,85,86,85,83)
 dose &lt;- c(5,6,7,8,9,10,5,6,7,8,9,10)
 group &lt;- c(0,0,0,0,0,0,1,1,1,1,1,1)</code></pre>
-<p>Letâ€™s take a look at a plot of the data:</p>
+<p>Let???s take a look at a plot of the data:</p>
 <pre class="r"><code>interaction.plot(dose, group, y , mean, ylab = &quot;Bloodpressure&quot;)</code></pre>
 <p><img src="figure/assignments_week3.Rmd/unnamed-chunk-2-1.png" width="672" style="display: block; margin: auto;" /></p>
 <blockquote>
@@ -343,7 +346,7 @@ group &lt;- c(0,0,0,0,0,0,1,1,1,1,1,1)</code></pre>
 <pre class="r"><code>model.an &lt;- lm(y~group) 
 model.an &lt;- glm(y~group, family = gaussian)</code></pre>
 <blockquote>
-<p>In the second statement, the <code>family=gaussian</code> part may be left out since the gaussian (normal) is the default (â€œGLMâ€ stands for generalized linear model, of which ANOVA, linear regression, and logistic regression models are special cases). The result of the ANOVA model will be stored in model.an. In the second case, this will be an object of glm-type because you used glm to create it. To see what is in it use <code>names(model.an)</code> and if you want to see something specific use for instance <code>model.an$coefficients</code>. To get the table with the estimates:</p>
+<p>In the second statement, the <code>family=gaussian</code> part may be left out since the gaussian (normal) is the default (???GLM??? stands for generalized linear model, of which ANOVA, linear regression, and logistic regression models are special cases). The result of the ANOVA model will be stored in model.an. In the second case, this will be an object of glm-type because you used glm to create it. To see what is in it use <code>names(model.an)</code> and if you want to see something specific use for instance <code>model.an$coefficients</code>. To get the table with the estimates:</p>
 </blockquote>
 <pre class="r"><code>summary(model.an)</code></pre>
 <pre><code>
@@ -369,7 +372,7 @@ AIC: 42.394
 
 Number of Fisher Scoring iterations: 2</code></pre>
 <blockquote>
-<p>The function <code>drop1(fit, test = &quot;F&quot;)</code> looks at the variables in the model â€˜fitâ€™, then leaves out the terms one by one and calculates the F-test for every term if it were to be left out. Of course, in <code>model.an</code> there is only one variable so you just get one test. Note that the p-value of the F-test is exactly the same as the p-value of the t-test in the model summary. To fit the model without the interaction:</p>
+<p>The function <code>drop1(fit, test = &quot;F&quot;)</code> looks at the variables in the model ???fit???, then leaves out the terms one by one and calculates the F-test for every term if it were to be left out. Of course, in <code>model.an</code> there is only one variable so you just get one test. Note that the p-value of the F-test is exactly the same as the p-value of the t-test in the model summary. To fit the model without the interaction:</p>
 </blockquote>
 <pre class="r"><code>model.anc &lt;- glm(y~group + dose, family = gaussian)
 summary(model.anc) </code></pre>
@@ -411,9 +414,8 @@ Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&
 <p>The column “Deviance” contains the residual sums of squares for different models. The first line gives the residual sums of squares if none of the terms is dropped so for the model with both group and dose in it. The second line gives the residual sum of squares for the model without group so for the model with only dose in it. The difference in these residual sums of squares gives the sum of squares for the group: 29.310-12.976 = 16.334. In the same way the sum of squares for dose can be obtained (14.583-12.976 = 1.607). For dose and group the F-values and the p-values are shown. With this information an ANOVA table could be constructed.</p>
 </blockquote>
 <p>This somewhat elaborate method is simplified by using the Anova function in the library car:</p>
-<pre class="r"><code>library(car) #Note: you might have to install this library first, using Packages, Install packages </code></pre>
-<pre><code>Warning: package &#39;car&#39; was built under R version 3.4.2</code></pre>
-<pre class="r"><code>Anova(model.anc, test.statistic = &quot;F&quot;)</code></pre>
+<pre class="r"><code>library(car) #Note: you might have to install this library first, using Packages, Install packages 
+Anova(model.anc, test.statistic = &quot;F&quot;)</code></pre>
 <pre><code>Analysis of Deviance Table (Type II tests)
 
 Response: y
@@ -469,7 +471,7 @@ Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&
 <div id="a-note-on-automatic-variable-selection-in-r" class="section level4">
 <h4>A note on automatic variable selection in R</h4>
 <blockquote>
-<p>R does not have the same type of forward, backward and stepwise selection procedures as SPSS. The add1 and drop1 can be used to examine variables and decide which variable should be added/dropped next. The actual adding and dropping is not done automatically and needs to be done by the analyst, so a new model is fitted and again checked for variables that can be added/dropped. Note that the add1 and drop1 functions both give Akaikeâ€™s Information Criterion (AIC, to be treated during Modern Methods in Data Analysis) by default; an F-test can be obtained by using the option test=“F” in the command.</p>
+<p>R does not have the same type of forward, backward and stepwise selection procedures as SPSS. The add1 and drop1 can be used to examine variables and decide which variable should be added/dropped next. The actual adding and dropping is not done automatically and needs to be done by the analyst, so a new model is fitted and again checked for variables that can be added/dropped. Note that the add1 and drop1 functions both give Akaike???s Information Criterion (AIC, to be treated during Modern Methods in Data Analysis) by default; an F-test can be obtained by using the option test=“F” in the command.</p>
 </blockquote>
 </div>
 <div id="section" class="section level4">
@@ -906,7 +908,7 @@ predict(fit_2, newdata=new, interval=&quot;prediction&quot;, level=0.95)</code><
 <div id="section-1" class="section level4">
 <h4>7.</h4>
 <blockquote>
-<p>This is a repeat of exercise #4, but now in R. Compare the results with those obtained in SPSS. The variables in the study of 38 stream sites in New York state by Lovett et al. (2000) fell into two groups measured at different spatial sites â€“ watershed variables (elevation, stream length and area) and chemical variables for a site averaged across sampling dates (averaged over 3 years). We use only the chemical variables. The data are given in the data file stream.RData</p>
+<p>This is a repeat of exercise #4, but now in R. Compare the results with those obtained in SPSS. The variables in the study of 38 stream sites in New York state by Lovett et al. (2000) fell into two groups measured at different spatial sites ??? watershed variables (elevation, stream length and area) and chemical variables for a site averaged across sampling dates (averaged over 3 years). We use only the chemical variables. The data are given in the data file stream.RData</p>
 </blockquote>
 <blockquote>
 <p>STREAM name of the stream (site) from which observations were collected MAXELEV maximum elevation of stream (m above sea level) SAMPELEV site elevation (m above sea level) LENGTH length of stream AREA area of watershed NO3 concentration (mmol/L) of nitrogen oxide ions TON concentration (mmol/L) of total organic nitrogen TN concentration (mmol/L) of total nitrogen NH4 concentration (mmol/L) of ammonia ions DOC concentration (mmol/L) of dissolved oxygen SO4 concentration (mmol/L) of sulphur dioxide ions CL concentration (mmol/L) of chloride ions CA concentration (mmol/L) of calcium ions MG concentration (mmol/L) of magnesium ions H concentration (mmol/L) of hydrogen ions</p>
@@ -1238,42 +1240,38 @@ F-statistic: 16.95 on 5 and 32 DF,  p-value: 3.501e-08</code></pre>
 <h2>Session information</h2>
 <!-- Insert the session information into the document -->
 <pre class="r"><code>sessionInfo()</code></pre>
-<pre><code>R version 3.4.1 (2017-06-30)
-Platform: x86_64-w64-mingw32/x64 (64-bit)
-Running under: Windows 7 x64 (build 7601) Service Pack 1
-
-Matrix products: default
+<pre><code>R version 3.3.2 (2016-10-31)
+Platform: x86_64-apple-darwin13.4.0 (64-bit)
+Running under: macOS Sierra 10.12.6
 
 locale:
-[1] LC_COLLATE=Dutch_Netherlands.1252  LC_CTYPE=Dutch_Netherlands.1252   
-[3] LC_MONETARY=Dutch_Netherlands.1252 LC_NUMERIC=C                      
-[5] LC_TIME=Dutch_Netherlands.1252    
+[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
 
 attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
 other attached packages:
-[1] bindrcpp_0.2 dplyr_0.7.3  car_2.1-5   
+[1] bindrcpp_0.2 dplyr_0.7.1  car_2.1-5   
 
 loaded via a namespace (and not attached):
- [1] Rcpp_0.12.12        survcomp_1.27.0     bindr_0.1          
- [4] plyr_1.8.4          compiler_3.4.1      nloptr_1.0.4       
- [7] RColorBrewer_1.1-2  git2r_0.19.0        tools_3.4.1        
-[10] corrplot_0.84       digest_0.6.12       lme4_1.1-14        
-[13] tibble_1.3.4        evaluate_0.10.1     nlme_3.1-131       
-[16] lattice_0.20-35     mgcv_1.8-17         pkgconfig_2.0.1    
-[19] rlang_0.1.2         Matrix_1.2-10       yaml_2.1.14        
-[22] parallel_3.4.1      SparseM_1.77        prodlim_1.6.1      
-[25] bootstrap_2017.2    amstR_0.1.3         stringr_1.2.0      
-[28] knitr_1.17          SuppDists_1.1-9.4   MatrixModels_0.4-1 
-[31] rprojroot_1.2       grid_3.4.1          nnet_7.3-12        
-[34] glue_1.1.1          data.table_1.10.4-2 R6_2.2.2           
-[37] survival_2.41-3     foreign_0.8-69      rmarkdown_1.6      
-[40] rmeta_2.16          lava_1.5.1          minqa_1.2.4        
-[43] reshape2_1.4.2      magrittr_1.5        survivalROC_1.0.3  
-[46] backports_1.1.0     htmltools_0.3.6     MASS_7.3-47        
-[49] splines_3.4.1       assertthat_0.2.0    pbkrtest_0.4-7     
-[52] quantreg_5.34       KernSmooth_2.23-15  stringi_1.1.5      </code></pre>
+ [1] Rcpp_0.12.11       survcomp_1.22.0    bindr_0.1         
+ [4] plyr_1.8.4         nloptr_1.0.4       RColorBrewer_1.1-2
+ [7] git2r_0.19.0       tools_3.3.2        corrplot_0.77     
+[10] digest_0.6.12      lme4_1.1-13        tibble_1.3.3      
+[13] evaluate_0.10.1    nlme_3.1-131       lattice_0.20-35   
+[16] mgcv_1.8-17        pkgconfig_2.0.1    rlang_0.1.1       
+[19] Matrix_1.2-10      yaml_2.1.14        parallel_3.3.2    
+[22] SparseM_1.77       prodlim_1.6.1      bootstrap_2017.2  
+[25] amstR_0.1.3        stringr_1.2.0      knitr_1.17        
+[28] SuppDists_1.1-9.4  MatrixModels_0.4-1 rprojroot_1.2     
+[31] grid_3.3.2         nnet_7.3-12        glue_1.1.1        
+[34] data.table_1.10.4  R6_2.2.2           survival_2.41-3   
+[37] foreign_0.8-69     rmarkdown_1.6      lava_1.5          
+[40] rmeta_2.16         minqa_1.2.4        reshape2_1.4.2    
+[43] magrittr_1.5       survivalROC_1.0.3  backports_1.1.0   
+[46] htmltools_0.3.6    MASS_7.3-47        splines_3.3.2     
+[49] assertthat_0.2.0   pbkrtest_0.4-7     quantreg_5.33     
+[52] KernSmooth_2.23-15 stringi_1.1.5     </code></pre>
 </div>
 
 <hr>
