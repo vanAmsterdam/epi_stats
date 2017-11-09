@@ -1,0 +1,202 @@
+---
+title: "Day 11 Logistic Regression"
+author: "Wouter van Amsterdam"
+date: 2017-11-09
+output: html_document
+---
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+```
+
+<!-- Update knitr chunk options -->
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+<!-- Insert the date the file was last updated -->
+```{r last-updated, echo=FALSE, results='asis'}
+```
+
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+```{r code-version, echo=FALSE, results='asis'}
+```
+
+<!-- Add your analysis here -->
+## Intro
+Tutor: 
+
+```{r}
+lb <- read.table(epistats::fromParentDir("data/lowbirth.dat"), header = T)
+str(lb)
+```
+
+* lwt = weight at last menstrual period
+
+```{r}
+require(dplyr)
+lb %>%
+  group_by(age) %>%
+  summarize(mean(low))
+```
+
+```{r, message=F,warning=F}
+require(data.table)
+require(ggplot2)
+setDT(lb)
+
+lb[, list(prob = mean(low)), by=  "age"] %>%
+  ggplot(aes(x = age, y = prob)) + geom_point()
+```
+
+
+### Chi-square test
+```{r}
+lb %>%
+  group_by(age) %>%
+  summarize(n_low = sum(low==1), 
+            n_births = n(),
+            prob = n_low/n_births) %>%
+  chisq.test()
+```
+
+Problems with Chi-square: no effect size
+Problems with linear model when modeling percentage: variance is higher around 0.5
+
+### Logistic regression
+Create link function. Transforming probability.
+Maps any value from $-\infty$ to $\infty$ to a value between 0 and 1.
+Not the only possible link function.
+
+$$w = \text{logit}(\pi) = ln(\frac{\pi}{1-\pi}) = \beta_0 + \beta_1X$$
+
+So equivalently:
+
+$$\pi(X) = \frac{1}{1+e^{-w}} = \frac{1}{1+e^{-(\beta_0+\beta_1X)}}$$
+
+In general
+
+$$\pi(X) = \frac{1}{1+e^{-(\beta_0+\sum_i{\beta_ix_i})}}$$
+
+#### Estimate parameters
+$$w_1 = ln(\frac{\pi(X=1)}{1-\pi(X=1)}) = \beta_0+\beta_1X = \beta_0+\beta_1$$
+$$w_0 = ln(\frac{\pi(X=0)}{1-\pi(X=0)}) = \beta_0+\beta_1X = \beta_0$$
+$$ln(OR) = \frac{ln(\pi(X=1)/(1-\pi(X=1)))}{ln(\pi(X=0)/(1-\pi(X=0)))} = w_1 - w_0 = \beta_1$$
+
+Simulate a continous variable
+
+```{r}
+set.seed(2)
+n = 100
+x = rnorm(n)
+x_quant = rank(x)/length(x)
+y = sapply(x_quant, function(x) sample(c(0,1), size = 1, prob = c(x, 1-x)))
+
+table(x>0.5, y)
+
+plot(x, y)
+
+fit <- glm(y~x, family = binomial(link = "logit"))
+summary(fit)
+plot(fit)
+
+predicted_probs <- predict(fit, newdata = data.frame(x), type = "response")
+gbm::calibrate.plot(y = y, p = predicted_probs)
+```
+
+
+#### Model summary
+There are measures for $R^2$: Nagelkerke, Cox & Snell (Nagelkerke always higher).
+However, $R^2$ is hard to interpret for binary outcomes, and it's use is disputed.
+
+### Likelihood of logistic regression
+
+Problems with leas squares
+* least squares criterion assumes that error variance is the case for each case (homoscodasticity)
+* for binomial distribution, error variance depends on $\pi$.
+* binomial distribution is skewed for values close to 0 and 1
+
+Likelihood
+
+* positive case, say predicted probability is 0.85, likelihood = 0.85
+* negative case, say predicted probability is 0.85, likelihood = 0.15 = 1-0.85
+
+Likelihood is product of all likelihoods
+
+$$L(\pi) = P(Y_1 = y_1) * P(Y_2 = y_2) * ... * P(Y_n = y_n) = \prod_i{\pi^{Y_i}(1-\pi)^{1-Y_i}}$$
+
+With $\pi$ the predicted probability
+
+Properties of likelihood
+* the higher the likelihood, the better the model fits
+* a perfect fit = 1, min = 0
+* decreases quickly with increasing sample size
+
+In practice: use log-likelihood axample
+
+Maximum likelihood: get $\pi(\beta_0, \beta_1)$ that maximizes the likelihood.
+
+You could have local maxima, so you sometimes need to use multiple starting points.
+
+So estimations of $\beta_0$ and $\beta_1$ that optimize the likelihood-ratio, are called the maximum likelihood estimates (MLE). Take first derivates, set to 0. Second derivatise give the values for standard errors of MLE.
+
+$$SE(MLE) = \frac{1}{\sqrt{-\frac{d^2 L}{dx^2}(x_{optimum})}}$$
+
+So very peaked likelihood functions lead to low standard errors.
+
+#### Likelihood testing
+
+Calculate $L$ for each model. If $L_1 > L_0$, than model 1 fits the data better.
+
+##### Likelihood ratio test
+Test statistic $T = -2*(L_1-L_0)$ is chi-squared distributed with df = difference in number of parameters between the models.
+
+##### Wald-test
+Test statistic $T = b/se(b)$, the $T^2$ is approximately chi-squared distributed 
+with one degree of freedom
+
+##### Score test
+The test statistic is a ratio between the first and second derivatives of the likelihood at $\beta_1 = 0$. It is also approximately chi-squared distributed.
+SPSS uses this test to decide whether variables should be included in a (stepwise) forward selection procedure 
+
+Likelihood and Score are better than Wald. All tests can be expanded, but only 
+for nested models.
+
+#### Model building
+Model is compromise between good fit and minimum number of variables (for prediction! not necessary for causal research)
+More explanatory variables will give higher likelihood
+
+To take number of variables in accound, use Akaike's information criterion (AIC):
+
+$$AIC = -2*ln(L) + 2*p$$ where $p$ is the number of parameters in the model.
+
+AIC is not a measure of how well a model fits the data, but can be used to compare models (lower AIC is better).
+
+When AICs are very close, take the simpler model.
+
+
+```{r}
+fit0 <- glm(low~1, family = binomial(link = "logit"), data = lb)
+fit_all <- glm(low~., family = binomial(link = "logit"), data = lb[, -c("id", "bwt")])
+# add1(object = fit0, scope = list(lower = fit0, upper = fit_all), test = "LRT", data = lb)
+step(object = fit0, scope = list(lower = fit0, upper = fit_all), test = "LRT", data = lb)
+
+```
+
+In SPSS, entering variables is determined by score test, removing is with LR test.
+In each step, 'step' compares it with the previous model, 'model' compares it with null-model.
+
+Note that likelihood-ratio may increase, even when accuracy goes down.
+
+
+
+
+
+
+## Session information
+
+<!-- Insert the session information into the document -->
+```{r session-info}
+```
