@@ -313,10 +313,10 @@ div.tocify {
 shared across the workflowr files. -->
 <!-- Update knitr chunk options -->
 <!-- Insert the date the file was last updated -->
-<p><strong>Last updated:</strong> 2017-11-07</p>
+<p><strong>Last updated:</strong> 2017-11-09</p>
 <!-- Insert the code version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
-<p><strong>Code version:</strong> a78ee25</p>
+<p><strong>Code version:</strong> 85e9ba3</p>
 <!-- Add your analysis here -->
 <div id="day-9-multiple-regression" class="section level2">
 <h2>Day 9 Multiple regression</h2>
@@ -1244,7 +1244,7 @@ F-statistic: 16.95 on 5 and 32 DF,  p-value: 3.501e-08</code></pre>
 <div id="section-2" class="section level4">
 <h4>7.</h4>
 <blockquote>
-<p>This is a repeat of exercise #1, but now in R. (Note that where SPSS calculates the â€œtoleranceâ€ for the excluded variables, R calculates it for the variables in the model.) a. Build a regression model with all 3 predictors. What is the tolerance for weight in this model? (Use the command 1/vif(), see previous day.)</p>
+<p>This is a repeat of exercise #1, but now in R. (Note that where SPSS calculates the “tolerance” for the excluded variables, R calculates it for the variables in the model.) a. Build a regression model with all 3 predictors. What is the tolerance for weight in this model? (Use the command 1/vif(), see previous day.)</p>
 </blockquote>
 <pre class="r"><code>fit &lt;- lm(carbonmonoxide~., data = cigarette)
 1/vif(fit)</code></pre>
@@ -1291,7 +1291,7 @@ F-statistic: 3.672 on 2 and 22 DF,  p-value: 0.04205</code></pre>
 <div id="section-3" class="section level4">
 <h4>8.</h4>
 <blockquote>
-<p>This is a repeat of exercise #2, but now in R. An indicator of a treeâ€™s production capacity is the canopy. We want to examine whether there is a relation between the canopy and the production for fruit trees, and whether fertilizer has an influence on the relation. To answer this question, data on the canopy and production were collected from 14 available trees (6 fertilized and 8 unfertilized). The data are stored in crownarea.RData . a. Test whether the coefficient for the slope in the two groups (fertilized &amp; unfertilized) is the same; i.e. are the lines for the two groups parallel or not?</p>
+<p>This is a repeat of exercise #2, but now in R. An indicator of a tree’s production capacity is the canopy. We want to examine whether there is a relation between the canopy and the production for fruit trees, and whether fertilizer has an influence on the relation. To answer this question, data on the canopy and production were collected from 14 available trees (6 fertilized and 8 unfertilized). The data are stored in crownarea.RData . a. Test whether the coefficient for the slope in the two groups (fertilized &amp; unfertilized) is the same; i.e. are the lines for the two groups parallel or not?</p>
 </blockquote>
 <pre class="r"><code>load(epistats::fromParentDir(&quot;data/crownarea.RData&quot;))
 str(crownarea)</code></pre>
@@ -1496,7 +1496,7 @@ F-statistic: 2.778 on 2 and 186 DF,  p-value: 0.06474</code></pre>
 <div id="section-4" class="section level4">
 <h4>10.</h4>
 <blockquote>
-<p>FEV (forced expiratory volume) is an index of pulmonary function that measures the volume of air expelled after one second of constant effort. The dataset fev.txt contains FEV measurements on 654 children, aged 6-22, who were seen in the Childhood Respiratory Disease Study in 1980 in East Boston, Massachusetts. The question of interest is whether a childâ€™s smoking status has an effect on his FEV.</p>
+<p>FEV (forced expiratory volume) is an index of pulmonary function that measures the volume of air expelled after one second of constant effort. The dataset fev.txt contains FEV measurements on 654 children, aged 6-22, who were seen in the Childhood Respiratory Disease Study in 1980 in East Boston, Massachusetts. The question of interest is whether a child’s smoking status has an effect on his FEV.</p>
 </blockquote>
 <blockquote>
 <ol style="list-style-type: lower-alpha">
@@ -1685,7 +1685,7 @@ F-statistic: 688.1 on 4 and 649 DF,  p-value: &lt; 2.2e-16</code></pre>
 <p>The coefficient for smoke goes from positive to negative, but the standard error increases and it is no longer significant.</p>
 <blockquote>
 <ol start="7" style="list-style-type: lower-alpha">
-<li>Now letâ€™s try a backward regression. Make one block with all the variables in model iv, plus sex. Choose Method=Backward to allow SPSS to drop non-significant variables. What do you get? Is this a logical model?</li>
+<li>Now let’s try a backward regression. Make one block with all the variables in model iv, plus sex. Choose Method=Backward to allow SPSS to drop non-significant variables. What do you get? Is this a logical model?</li>
 </ol>
 </blockquote>
 <pre class="r"><code>fit_full &lt;- lm(logFEV~Age*Smoker + Height + Sex, data = fev)
@@ -1803,7 +1803,7 @@ Strat-DRTA  2.1363636  0.4149789 3.857748 0.0112851</code></pre>
 <p>So DRTA and Basal are equavalent. Strat is better than both of these</p>
 <blockquote>
 <ol start="5" style="list-style-type: lower-alpha">
-<li>This study is an example of a randomized, pre-post design. There are several ways to analyze such a design (analyzing only the post measurement, as we did above; analyzing the difference between pre and post; or using analysis of covariance), but â€œANCOVA analysisâ€ (a linear regression model with post scores at the outcome, and group and pre-intervention score as explanatory variables) has a number of advantages* over other analyses. Fit a model to examine whether there are differences in the mean posttest score on the second reading comprehension measure for the three types of instruction, controlling for the posttest score on the same test. Use the drop1() function to get p-values for the two variables in the model.</li>
+<li>This study is an example of a randomized, pre-post design. There are several ways to analyze such a design (analyzing only the post measurement, as we did above; analyzing the difference between pre and post; or using analysis of covariance), but “ANCOVA analysis” (a linear regression model with post scores at the outcome, and group and pre-intervention score as explanatory variables) has a number of advantages* over other analyses. Fit a model to examine whether there are differences in the mean posttest score on the second reading comprehension measure for the three types of instruction, controlling for the posttest score on the same test. Use the drop1() function to get p-values for the two variables in the model.</li>
 </ol>
 </blockquote>
 <p>Probably what is meant in the question is ‘controlling for the pre-test score’</p>
@@ -1840,7 +1840,7 @@ F-statistic: 7.424 on 3 and 62 DF,  p-value: 0.0002512</code></pre>
 <p>For equal <code>PRE2</code> score, the group with Strat instruction had 2.90 higher score on the second post-test evaluation.</p>
 <blockquote>
 <ol start="7" style="list-style-type: lower-alpha">
-<li>Get a summary of the model frm (c), and compare the mean squared error (called the â€œResidual standard errorâ€ in the R output) to that of the model in (e). What do you notice?</li>
+<li>Get a summary of the model frm (c), and compare the mean squared error (called the “Residual standard error” in the R output) to that of the model in (e). What do you notice?</li>
 </ol>
 </blockquote>
 <pre class="r"><code>summary(fit)</code></pre>
@@ -1891,6 +1891,1241 @@ F-statistic: 7.424 on 3 and 62 DF,  p-value: 0.0002512</code></pre>
 </div>
 </div>
 </div>
+<div id="day-11-logistic-regression" class="section level2">
+<h2>Day 11 logistic regression</h2>
+<div id="exercises-with-r-2" class="section level3">
+<h3>Exercises with R</h3>
+<div id="introduction" class="section level4">
+<h4>Introduction</h4>
+<blockquote>
+<p>If there is an exposure (explanatory variable) in the data file that is a categorical variable where the categories are denoted by numbers, other than a 0-1, then you should tell this to R by using the function factor(). So factor(group) tells R that group is not a numeric variable but that it numbers should be used as group labels. To fit the logistic regression model use: <code>model &lt;- lm(data~y+x,family=binomial)</code>. model will store the result. To see what is in it use names(model) and if you want to see something specific use for instance model$coefficients. To get the tables from the test summary(model). The deviance residuals can be obtained by residuals(model) and the fitted values by fitted.values(model). Now you can leave out 1 variable from the model and look at the differences in AIC’s. One can do this by fitting all the different models and then comparing them. One can also use the function drop1(fit). This function looks at the terms in fit, then leaves the terms out one by one and calculates for every term left out the AIC of the model. The command drop1(fit,test=“Chisq”) calculates the likelihood ratio test for every term left out. Then you can fit a model by leaving out the variable with the least influence and then start the procedure all over again using this last model as a starting point. etc. For the AIC this can also be done at once: step(model).</p>
+</blockquote>
+</div>
+<div id="a-note-on-model-building-in-r" class="section level4">
+<h4>A note on model-building in R</h4>
+<blockquote>
+<p>R does not have the same type of forward, backward and stepwise selection procedures as SPSS. The add1 and drop1 can be used to examine variables and decide which variable should be added/dropped next. The actual adding and dropping needs to be done by the analyst, so a new model is fitted and again checked for variables that can be added/dropped. Note that the add1 and drop1 functions both give the AIC by default; an F-test (for linear models) or a chi-square test of the deviance can be obtained by using an extra option in the command. The step function was developed for automatic selection of variables using the drop1 and add1 functions repeatedly. However, please note that the AIC is used for model selection and not the deviance criterion (LR selection in SPSS). Using the scope command a “lower” and “upper” model are given and R uses a stepwise procedure (based on the AIC) to find the best model. In order to ‘trick’ R into using the chi-square test for deviance, we can give a criterion of 3.84 (instead of the default 2); note that this is equivalent to a chi-square test with 1 degree of freedom. The step function will then choose models that improve a model “significantly” based on the deviance test. Note that the critical value 3.84 is only appropriate for continuous and dichotomous explanatory variables, but not for explanatory variables with more than 2 categories (because then the degrees of freedom of the chi-square test is greater than 1 and the critical value of the chi-square test will be higher).</p>
+</blockquote>
+</div>
+<div id="section-6" class="section level4">
+<h4>6.</h4>
+<blockquote>
+<p>This is a repeat of exercise #1, but now in R. The aim of this exercise is to redo the steps from this morning’s lecture, but for a different data, namely <code>perulung.RData</code>, containing lung function data of 636 Peruvian children. We wish to know whether the probability of having respiratory problems is different for boys and girls. a. <code>load(“perulung.RData”)</code></p>
+</blockquote>
+<pre class="r"><code>load(epistats::fromParentDir(&quot;data/perulung.RData&quot;))</code></pre>
+<blockquote>
+<p>The data frame d (containing data on FEV, age, height, gender and lung problems of Peruvian children) is now added to your workspace. Type names(d) to see the contents of the data frame.</p>
+</blockquote>
+<p>Even better: <code>str()</code> will give you the names and classes (= data type) and first few observations</p>
+<pre class="r"><code>str(d)</code></pre>
+<pre><code>&#39;data.frame&#39;:   636 obs. of  5 variables:
+ $ fev     : num  1.56 1.18 1.87 1.49 1.62 2.11 1.73 1.47 1.83 1.41 ...
+ $ age     : num  9.59 7.49 9.86 8.59 8.97 9.29 9.57 8.49 8.47 9.03 ...
+ $ height  : num  125 111 136 119 121 ...
+ $ gender  : num  0 1 0 0 1 0 1 0 1 0 ...
+ $ problems: num  0 0 0 0 0 1 0 1 0 0 ...</code></pre>
+<blockquote>
+<ol start="2" style="list-style-type: lower-alpha">
+<li>Make a contingency table for problems vs. gender.</li>
+</ol>
+</blockquote>
+<pre class="r"><code>table(d$problems, d$gender)</code></pre>
+<pre><code>   
+      0   1
+  0 254 237
+  1  81  64</code></pre>
+<blockquote>
+<ol start="3" style="list-style-type: lower-alpha">
+<li>Use prop.table on the result to get the proportion of babies with low birth weight for both smoke categories.</li>
+</ol>
+</blockquote>
+<pre class="r"><code>lb &lt;- read.table(epistats::fromParentDir(&quot;data/lowbirth.dat&quot;), header = T)
+table(lb$low, lb$smoke)</code></pre>
+<pre><code>   
+     0  1
+  0 86 44
+  1 29 30</code></pre>
+<pre class="r"><code>prop.table(table(lb$low, lb$smoke))</code></pre>
+<pre><code>   
+            0         1
+  0 0.4550265 0.2328042
+  1 0.1534392 0.1587302</code></pre>
+<blockquote>
+<ol start="4" style="list-style-type: lower-alpha">
+<li>To calculate odds ratios and relative risks you can use package epicalc. Install the package and load it (using library). (Should this not work here, you could try this at home or calculate OR and RR directly by typing in the appropriate numbers.)</li>
+<li>Using chisq.test and prop.test on the contingency table you can test whether OR=1.</li>
+</ol>
+</blockquote>
+<pre class="r"><code>chisq.test(table(lb$low, lb$smoke))</code></pre>
+<pre><code>
+    Pearson&#39;s Chi-squared test with Yates&#39; continuity correction
+
+data:  table(lb$low, lb$smoke)
+X-squared = 4.2359, df = 1, p-value = 0.03958</code></pre>
+<pre class="r"><code>epiR::epi.2by2(table(lb$low, lb$smoke), method = &quot;case.control&quot;)</code></pre>
+<pre><code>             Outcome +    Outcome -      Total        Prevalence *
+Exposed +           86           44        130                66.2
+Exposed -           29           30         59                49.2
+Total              115           74        189                60.8
+                 Odds
+Exposed +       1.955
+Exposed -       0.967
+Total           1.554
+
+Point estimates and 95 % CIs:
+-------------------------------------------------------------------
+Odds ratio (W)                               2.02 (1.08, 3.78)
+Attrib prevalence *                          17.00 (1.87, 32.13)
+Attrib prevalence in population *            11.69 (-2.84, 26.22)
+Attrib fraction (est) in exposed  (%)        50.35 (2.80, 74.78)
+Attrib fraction (est) in population (%)      37.80 (5.47, 59.07)
+-------------------------------------------------------------------
+ X2 test statistic: 4.924 p-value: 0.026
+ Wald confidence limits
+ * Outcomes per 100 population units </code></pre>
+<blockquote>
+<ol start="6" style="list-style-type: lower-alpha">
+<li>Do a logistic regression in R using the commands</li>
+</ol>
+</blockquote>
+<pre class="r"><code>low.glm &lt;- glm(problems ~ fev, family = binomial, data = d)
+summary(low.glm)</code></pre>
+<pre><code>
+Call:
+glm(formula = problems ~ fev, family = binomial, data = d)
+
+Deviance Residuals: 
+    Min       1Q   Median       3Q      Max  
+-1.2041  -0.7490  -0.6377  -0.4151   2.3366  
+
+Coefficients:
+            Estimate Std. Error z value Pr(&gt;|z|)    
+(Intercept)   1.4595     0.5234   2.788   0.0053 ** 
+fev          -1.7247     0.3393  -5.084  3.7e-07 ***
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+(Dispersion parameter for binomial family taken to be 1)
+
+    Null deviance: 682.85  on 635  degrees of freedom
+Residual deviance: 654.82  on 634  degrees of freedom
+AIC: 658.82
+
+Number of Fisher Scoring iterations: 4</code></pre>
+<pre class="r"><code>coefficients(low.glm)</code></pre>
+<pre><code>(Intercept)         fev 
+   1.459514   -1.724680 </code></pre>
+<p>What is the logistic regression equation?</p>
+<p><span class="math display">\[Ln(\frac{p}{1-p}) = \beta_0 + \beta_1X_1 = 1.4595 - 1.7247*fev\]</span></p>
+<blockquote>
+<p><code>exp(coefficients(low.glm))</code> will give you odds and OR. What is the odds ratio for FEV?</p>
+</blockquote>
+<pre class="r"><code>exp(coefficients(low.glm))</code></pre>
+<pre><code>(Intercept)         fev 
+  4.3038658   0.1782301 </code></pre>
+<blockquote>
+<ol start="7" style="list-style-type: lower-alpha">
+<li>Calculate yourself the estimated probability of suffering from lung problems for children with an fev value of 1.5.</li>
+</ol>
+</blockquote>
+<pre class="r"><code>log_odds = 1.4595 - 1.7247 * 1.5
+odds = exp(log_odds)
+prob = 1/(1+odds)
+prob</code></pre>
+<pre><code>[1] 0.7553865</code></pre>
+<blockquote>
+<ol start="8" style="list-style-type: lower-alpha">
+<li>Now have R do this for you using the predict command (See: How to in R and help(predict.glm)). Note: in logistic regression by default you will get predictions on the log odds scale. If you want predictions for probabilities use type=”response” in the predict command.</li>
+</ol>
+</blockquote>
+<p>Compare with using the <code>predict</code> function</p>
+<pre class="r"><code>predict(low.glm, newdata = data.frame(fev = 1.5), type = &quot;response&quot;)</code></pre>
+<pre><code>        1 
+0.2446217 </code></pre>
+<p>This is 1-prob. It is not clear to me why it would give me this.</p>
+<blockquote>
+<ol style="list-style-type: lower-roman">
+<li>Run a multiple logistic regression with explanatory variables fev, age, height and gender. Assign the outcome to the object full.logreg</li>
+</ol>
+</blockquote>
+<pre class="r"><code>full.logreg &lt;- glm(problems~fev+age+height+gender, data = d, family = binomial)</code></pre>
+<blockquote>
+<ol start="10" style="list-style-type: lower-alpha">
+<li>Give an estimate of the log odds of having lung problems for a child with fev=1.5, age=7, height=130 and gender=0. What if this child has age 8, 9 or 10?</li>
+</ol>
+</blockquote>
+<pre class="r"><code>predict(full.logreg, 
+        newdata = data.frame(
+          fev = rep(1.5,4), 
+          age = 7:10, 
+          height = rep(130, 4), 
+          gender = rep(0,4)),
+        type = &quot;response&quot;)</code></pre>
+<pre><code>        1         2         3         4 
+0.4980892 0.3869328 0.2864265 0.2033667 </code></pre>
+<blockquote>
+<ol start="11" style="list-style-type: lower-alpha">
+<li>Repeat part l), but now estimate the probability of having lung problems.</li>
+</ol>
+</blockquote>
+<p>This is probably 1 minus the answer of j.</p>
+<blockquote>
+<ol start="7" style="list-style-type: decimal">
+<li>This is a repeat of exercise #2, but now in R. The ICU dataset consists of a sample of 200 subjects who were part of a much larger study on survival of patients following admission to an adult intensive care unit (ICU). The major goal of this study was to develop a logistic regression model to predict the probability of survival to hospital discharge of these patients and to study the risk factors associated with ICU mortality. A number of publications have appeared which have focused on various facets of the problem. The reader wishing to learn more about the clinical aspects of this study should start with Lemeshow, Teres, Avrunin, and Pastides (1988). Data were collected at Baystate Medical Center in Springfield, Massachusetts. The data are given in the dataset icu.RData. To keep the exercise simple only the most important risk factors will be considered. Identification Code id number Id Vital Status 0 = lived; 1 = died sta Age Years age Service at ICU Admission 0 = medical; 1 = surgical ser Cancer Part of Present Problem 0 = no; 1 = yes can History of Chronic Renal Failure 0 = no; 1 = yes crn Infection Probable at ICU Admission 0 = no; 1 = yes inf CPR Prior to ICU Admission 0 = no; 1 = yes cpr Systolic Blood Pressure at ICU Admission mm Hg sys Type of Admission 0 = elective; 1 = emergency typ PO2 from Initial Blood Gases 0 = &gt; 60; 1 = &lt; 60 po2 Bicarbonate from Initial Blood Gases 0 = &gt; 18; 1 = &lt; 18 bic Creatinine from Initial Blood Gases 0 = &lt; 2.0; 1 = &gt; 2.0 cre Level of Consciousness at ICU Admission 0 = no coma or stupor; 1 = deep stupor; 2 = coma loc</li>
+</ol>
+</blockquote>
+<blockquote>
+<ol style="list-style-type: lower-alpha">
+<li>Fit two models, one with risk factor age and one with risk factor sys.</li>
+</ol>
+</blockquote>
+<pre class="r"><code>load(epistats::fromParentDir(&quot;data/icu.RData&quot;))
+str(ICU)</code></pre>
+<pre><code>&#39;data.frame&#39;:   200 obs. of  22 variables:
+ $ ID    : num  8 12 14 28 32 38 40 41 42 50 ...
+ $ STA   : Factor w/ 2 levels &quot;Alive&quot;,&quot;Dead&quot;: 1 1 1 1 1 1 1 1 1 1 ...
+ $ AGE   : num  27 59 77 54 87 69 63 30 35 70 ...
+ $ AGECAT: num  30 60 80 50 90 70 60 30 40 70 ...
+ $ SEX   : Factor w/ 2 levels &quot;Male&quot;,&quot;Female&quot;: 2 1 1 1 2 1 1 2 1 2 ...
+ $ RACE  : Factor w/ 3 levels &quot;White&quot;,&quot;Black&quot;,..: 1 1 1 1 1 1 1 1 2 1 ...
+ $ SER   : Factor w/ 2 levels &quot;Medical&quot;,&quot;Surgical&quot;: 1 1 2 1 2 1 2 1 1 2 ...
+ $ CAN   : Factor w/ 2 levels &quot;No&quot;,&quot;Yes&quot;: 1 1 1 1 1 1 1 1 1 2 ...
+ $ CRN   : Factor w/ 2 levels &quot;No&quot;,&quot;Yes&quot;: 1 1 1 1 1 1 1 1 1 1 ...
+ $ INF   : Factor w/ 2 levels &quot;No&quot;,&quot;Yes&quot;: 2 1 1 2 2 2 1 1 1 1 ...
+ $ CPR   : Factor w/ 2 levels &quot;No&quot;,&quot;Yes&quot;: 1 1 1 1 1 1 1 1 1 1 ...
+ $ SYS   : num  142 112 100 142 110 110 104 144 108 138 ...
+ $ HRA   : num  88 80 70 103 154 132 66 110 60 103 ...
+ $ PRE   : Factor w/ 2 levels &quot;No&quot;,&quot;Yes&quot;: 1 2 1 1 2 1 1 1 1 1 ...
+ $ TYP   : Factor w/ 2 levels &quot;Elective&quot;,&quot;Emergency&quot;: 2 2 1 2 2 2 1 2 2 1 ...
+ $ FRA   : Factor w/ 2 levels &quot;No&quot;,&quot;Yes&quot;: 1 1 1 2 1 1 1 1 1 1 ...
+ $ PO2   : Factor w/ 2 levels &quot;&gt; 60&quot;,&quot;&lt;= 60&quot;: 1 1 1 1 1 2 1 1 1 1 ...
+ $ PH    : Factor w/ 2 levels &quot;&gt;= 7.25&quot;,&quot;&lt; 7.25&quot;: 1 1 1 1 1 1 1 1 1 1 ...
+ $ PCO   : Factor w/ 2 levels &quot;&lt;= 45&quot;,&quot;&gt; 45&quot;: 1 1 1 1 1 1 1 1 1 1 ...
+ $ BIC   : Factor w/ 2 levels &quot;&gt;= 18&quot;,&quot;&lt; 18&quot;: 1 1 1 1 1 2 1 1 1 1 ...
+ $ CRE   : Factor w/ 2 levels &quot;&lt;= 2.0&quot;,&quot;&gt; 2.0&quot;: 1 1 1 1 1 1 1 1 1 1 ...
+ $ LOC   : Factor w/ 3 levels &quot;No Coma or Stupor&quot;,..: 1 1 1 1 1 1 1 1 1 1 ...
+ - attr(*, &quot;variable.labels&quot;)= Named chr  &quot;Identification Code&quot; &quot;Status&quot; &quot;Age in Years&quot; &quot;Age Class&quot; ...
+  ..- attr(*, &quot;names&quot;)= chr  &quot;ID&quot; &quot;STA&quot; &quot;AGE&quot; &quot;AGECAT&quot; ...
+ - attr(*, &quot;codepage&quot;)= int 1252</code></pre>
+<pre class="r"><code>fit1 &lt;- glm(STA~AGE, data = ICU, family = binomial)
+fit2 &lt;- glm(STA~SYS, data = ICU, family = binomial)</code></pre>
+<blockquote>
+<ol start="2" style="list-style-type: lower-alpha">
+<li>Give for both models an interpretation of the estimate of the OR with its 95% CI for the specific risk factor at hand.</li>
+</ol>
+</blockquote>
+<pre class="r"><code>summary(fit1)</code></pre>
+<pre><code>
+Call:
+glm(formula = STA ~ AGE, family = binomial, data = ICU)
+
+Deviance Residuals: 
+    Min       1Q   Median       3Q      Max  
+-0.9536  -0.7391  -0.6145  -0.3905   2.2854  
+
+Coefficients:
+            Estimate Std. Error z value Pr(&gt;|z|)    
+(Intercept) -3.05851    0.69608  -4.394 1.11e-05 ***
+AGE          0.02754    0.01056   2.607  0.00913 ** 
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+(Dispersion parameter for binomial family taken to be 1)
+
+    Null deviance: 200.16  on 199  degrees of freedom
+Residual deviance: 192.31  on 198  degrees of freedom
+AIC: 196.31
+
+Number of Fisher Scoring iterations: 4</code></pre>
+<pre class="r"><code>summary(fit2)</code></pre>
+<pre><code>
+Call:
+glm(formula = STA ~ SYS, family = binomial, data = ICU)
+
+Deviance Residuals: 
+    Min       1Q   Median       3Q      Max  
+-1.1606  -0.7051  -0.5956  -0.4056   2.6860  
+
+Coefficients:
+             Estimate Std. Error z value Pr(&gt;|z|)   
+(Intercept)  0.777195   0.757375   1.026  0.30481   
+SYS         -0.017019   0.006001  -2.836  0.00456 **
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+(Dispersion parameter for binomial family taken to be 1)
+
+    Null deviance: 200.16  on 199  degrees of freedom
+Residual deviance: 191.34  on 198  degrees of freedom
+AIC: 195.34
+
+Number of Fisher Scoring iterations: 4</code></pre>
+<pre class="r"><code>exp(MASS:::confint.glm(fit1))</code></pre>
+<pre><code>Waiting for profiling to be done...</code></pre>
+<pre><code>                 2.5 %    97.5 %
+(Intercept) 0.01060992 0.1657402
+AGE         1.00794194 1.0508611</code></pre>
+<pre class="r"><code>exp(MASS:::confint.glm(fit2))</code></pre>
+<pre><code>Waiting for profiling to be done...</code></pre>
+<pre><code>                2.5 %    97.5 %
+(Intercept) 0.4999454 9.9225414
+SYS         0.9711451 0.9943778</code></pre>
+<p>The 95% confidence interval for the variable <code>AGE</code> is strictly greater than 1, so with increasing age, the risk of death is greater. For <code>SYS</code> it is the other way around.</p>
+<blockquote>
+<ol start="3" style="list-style-type: lower-alpha">
+<li>Which model fits the data best, and why?</li>
+</ol>
+</blockquote>
+<p>The model with <code>SYS</code> is best, as it has the lowest AIC.</p>
+<blockquote>
+<ol start="4" style="list-style-type: lower-alpha">
+<li>Fit a model with each of the other risk factors separately. Notice that all these risk factors are categorical so you need the ‘factor’ option.</li>
+</ol>
+</blockquote>
+<p>Lets do this in an R-programming way that repeats the same steps for each of the values in <code>independent_vars</code></p>
+<pre class="r"><code>independent_vars &lt;- c(&quot;AGE&quot;, &quot;SER&quot;, &quot;CAN&quot;, &quot;CRN&quot;, &quot;INF&quot;, &quot;CPR&quot;, 
+                      &quot;SYS&quot;, &quot;TYP&quot;, &quot;PO2&quot;, &quot;BIC&quot;, &quot;CRE&quot;, &quot;LOC&quot;)
+fits &lt;- lapply(independent_vars, function(var) {
+  form &lt;- reformulate(termlabels = var, response = &quot;STA&quot;)
+  fit  &lt;- glm(form, family = binomial, data = ICU)
+  return(fit)
+  })</code></pre>
+<p>Now <code>fits</code> is a list with 12 glm-fits, each item of this list contains 1 fit. The fit can be extracted with <code>fits[[i]]</code>, where i is between 1 and 12.</p>
+<blockquote>
+<ol start="5" style="list-style-type: lower-alpha">
+<li>Which risk factors can explain the vital status? Which one is the most important one?</li>
+</ol>
+</blockquote>
+<p>Lets get the AIC for each of the fits</p>
+<pre class="r"><code>aics &lt;- sapply(fits, function(fit) {
+  result &lt;- summary(fit)
+  result$aic
+})
+data.frame(independent_vars, aics)</code></pre>
+<pre><code>   independent_vars     aics
+1               AGE 196.3064
+2               SER 197.2419
+3               CAN 204.1610
+4               CRN 198.7367
+5               INF 197.5853
+6               CPR 196.2285
+7               SYS 195.3351
+8               TYP 188.5246
+9               PO2 202.9208
+10              BIC 202.5621
+11              CRE 199.3959
+12              LOC 169.7845</code></pre>
+<p>Now we see that <code>CPR</code> has the lowest AIC</p>
+<blockquote>
+<ol start="6" style="list-style-type: lower-alpha">
+<li>So far every risk factor has been examined separately. Can vital status also explained by 2 or more risk factors? Build a model using the ‘step’ procedure. Discuss the final model.</li>
+</ol>
+</blockquote>
+<pre class="r"><code>fit0    &lt;- glm(STA~1, family = binomial, data = ICU)
+fit_all &lt;- glm(reformulate(termlabels = independent_vars, response = &quot;STA&quot;),
+               family = binomial, data = ICU)
+fit_step_aic &lt;- step(fit0, scope = list(upper = fit_all), data = ICU, 
+                 direction = &quot;both&quot;)</code></pre>
+<pre><code>Start:  AIC=202.16
+STA ~ 1
+
+       Df Deviance    AIC
++ LOC   2   163.78 169.78
++ TYP   1   184.53 188.53
++ SYS   1   191.34 195.34
++ CPR   1   192.23 196.23
++ AGE   1   192.31 196.31
++ SER   1   193.24 197.24
++ INF   1   193.59 197.59
++ CRN   1   194.74 198.74
++ CRE   1   195.40 199.40
+&lt;none&gt;      200.16 202.16
++ BIC   1   198.56 202.56
++ PO2   1   198.92 202.92
++ CAN   1   200.16 204.16
+
+Step:  AIC=169.78
+STA ~ LOC
+
+       Df Deviance    AIC
++ TYP   1   150.92 158.92
++ SYS   1   155.97 163.97
++ SER   1   157.55 165.55
++ AGE   1   157.55 165.55
++ INF   1   159.23 167.23
++ CRE   1   160.39 168.39
++ CRN   1   161.32 169.32
++ BIC   1   161.53 169.53
++ CPR   1   161.66 169.66
+&lt;none&gt;      163.78 169.78
++ PO2   1   163.09 171.09
++ CAN   1   163.30 171.30
+- LOC   2   200.16 202.16
+
+Step:  AIC=158.92
+STA ~ LOC + TYP
+
+       Df Deviance    AIC
++ AGE   1   141.75 151.75
++ CAN   1   144.85 154.85
++ SYS   1   145.41 155.41
++ INF   1   148.02 158.02
++ CRE   1   148.87 158.87
+&lt;none&gt;      150.92 158.92
++ CRN   1   149.28 159.28
++ CPR   1   149.76 159.76
++ BIC   1   150.01 160.01
++ SER   1   150.11 160.11
++ PO2   1   150.74 160.74
+- TYP   1   163.78 169.78
+- LOC   2   184.53 188.53
+
+Step:  AIC=151.75
+STA ~ LOC + TYP + AGE
+
+       Df Deviance    AIC
++ CAN   1   134.50 146.50
++ SYS   1   136.19 148.19
+&lt;none&gt;      141.75 151.75
++ CPR   1   140.38 152.38
++ CRE   1   140.62 152.62
++ INF   1   140.76 152.76
++ SER   1   141.18 153.18
++ CRN   1   141.21 153.21
++ BIC   1   141.33 153.33
++ PO2   1   141.75 153.75
+- AGE   1   150.92 158.92
+- TYP   1   157.55 165.55
+- LOC   2   172.91 178.91
+
+Step:  AIC=146.5
+STA ~ LOC + TYP + AGE + CAN
+
+       Df Deviance    AIC
++ SYS   1   128.37 142.37
+&lt;none&gt;      134.50 146.50
++ INF   1   133.33 147.33
++ CPR   1   133.53 147.53
++ SER   1   133.79 147.79
++ BIC   1   133.80 147.80
++ CRE   1   133.88 147.88
++ CRN   1   134.08 148.08
++ PO2   1   134.44 148.44
+- CAN   1   141.75 151.75
+- AGE   1   144.85 154.85
+- TYP   1   156.91 166.91
+- LOC   2   168.97 176.97
+
+Step:  AIC=142.37
+STA ~ LOC + TYP + AGE + CAN + SYS
+
+       Df Deviance    AIC
+&lt;none&gt;      128.37 142.37
++ CRN   1   127.16 143.16
++ CPR   1   127.24 143.24
++ SER   1   127.84 143.84
++ PO2   1   127.89 143.89
++ CRE   1   127.94 143.94
++ INF   1   128.09 144.09
++ BIC   1   128.16 144.16
+- SYS   1   134.50 146.50
+- CAN   1   136.19 148.19
+- AGE   1   138.91 150.91
+- TYP   1   148.31 160.31
+- LOC   2   163.43 173.43</code></pre>
+<pre class="r"><code>fit_step_chi &lt;- step(fit0, scope = list(upper = fit_all), data = ICU, 
+                 direction = &quot;both&quot;, test = &quot;Chisq&quot;)</code></pre>
+<pre><code>Start:  AIC=202.16
+STA ~ 1
+
+       Df Deviance    AIC    LRT  Pr(&gt;Chi)    
++ LOC   2   163.78 169.78 36.376 1.262e-08 ***
++ TYP   1   184.53 188.53 15.636 7.676e-05 ***
++ SYS   1   191.34 195.34  8.826  0.002970 ** 
++ CPR   1   192.23 196.23  7.932  0.004856 ** 
++ AGE   1   192.31 196.31  7.855  0.005069 ** 
++ SER   1   193.24 197.24  6.919  0.008528 ** 
++ INF   1   193.59 197.59  6.576  0.010338 *  
++ CRN   1   194.74 198.74  5.424  0.019859 *  
++ CRE   1   195.40 199.40  4.765  0.029044 *  
+&lt;none&gt;      200.16 202.16                     
++ BIC   1   198.56 202.56  1.599  0.206067    
++ PO2   1   198.92 202.92  1.240  0.265431    
++ CAN   1   200.16 204.16  0.000  1.000000    
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+Step:  AIC=169.78
+STA ~ LOC
+
+       Df Deviance    AIC    LRT  Pr(&gt;Chi)    
++ TYP   1   150.92 158.92 12.865 0.0003347 ***
++ SYS   1   155.97 163.97  7.810 0.0051971 ** 
++ SER   1   157.55 165.55  6.237 0.0125089 *  
++ AGE   1   157.55 165.55  6.236 0.0125214 *  
++ INF   1   159.23 167.23  4.556 0.0327954 *  
++ CRE   1   160.39 168.39  3.399 0.0652399 .  
++ CRN   1   161.32 169.32  2.463 0.1165812    
++ BIC   1   161.53 169.53  2.256 0.1331049    
++ CPR   1   161.66 169.66  2.125 0.1449209    
+&lt;none&gt;      163.78 169.78                     
++ PO2   1   163.09 171.09  0.692 0.4056016    
++ CAN   1   163.30 171.30  0.486 0.4857399    
+- LOC   2   200.16 202.16 36.376 1.262e-08 ***
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+Step:  AIC=158.92
+STA ~ LOC + TYP
+
+       Df Deviance    AIC    LRT  Pr(&gt;Chi)    
++ AGE   1   141.75 151.75  9.169 0.0024618 ** 
++ CAN   1   144.85 154.85  6.071 0.0137454 *  
++ SYS   1   145.41 155.41  5.514 0.0188684 *  
++ INF   1   148.02 158.02  2.899 0.0886130 .  
++ CRE   1   148.87 158.87  2.048 0.1524527    
+&lt;none&gt;      150.92 158.92                     
++ CRN   1   149.28 159.28  1.642 0.2000466    
++ CPR   1   149.76 159.76  1.162 0.2810979    
++ BIC   1   150.01 160.01  0.906 0.3411915    
++ SER   1   150.11 160.11  0.806 0.3691795    
++ PO2   1   150.74 160.74  0.184 0.6683444    
+- TYP   1   163.78 169.78 12.865 0.0003347 ***
+- LOC   2   184.53 188.53 33.605 5.043e-08 ***
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+Step:  AIC=151.75
+STA ~ LOC + TYP + AGE
+
+       Df Deviance    AIC     LRT  Pr(&gt;Chi)    
++ CAN   1   134.50 146.50  7.2520  0.007082 ** 
++ SYS   1   136.19 148.19  5.5655  0.018317 *  
+&lt;none&gt;      141.75 151.75                      
++ CPR   1   140.38 152.38  1.3704  0.241736    
++ CRE   1   140.62 152.62  1.1301  0.287752    
++ INF   1   140.76 152.76  0.9870  0.320468    
++ SER   1   141.18 153.18  0.5712  0.449791    
++ CRN   1   141.21 153.21  0.5364  0.463932    
++ BIC   1   141.33 153.33  0.4202  0.516848    
++ PO2   1   141.75 153.75  0.0027  0.958930    
+- AGE   1   150.92 158.92  9.1687  0.002462 ** 
+- TYP   1   157.55 165.55 15.7985 7.046e-05 ***
+- LOC   2   172.91 178.91 31.1563 1.716e-07 ***
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+Step:  AIC=146.5
+STA ~ LOC + TYP + AGE + CAN
+
+       Df Deviance    AIC    LRT  Pr(&gt;Chi)    
++ SYS   1   128.37 142.37  6.129  0.013299 *  
+&lt;none&gt;      134.50 146.50                     
++ INF   1   133.33 147.33  1.166  0.280262    
++ CPR   1   133.53 147.53  0.968  0.325077    
++ SER   1   133.79 147.79  0.708  0.400223    
++ BIC   1   133.80 147.80  0.702  0.402155    
++ CRE   1   133.88 147.88  0.620  0.431225    
++ CRN   1   134.08 148.08  0.414  0.519906    
++ PO2   1   134.44 148.44  0.055  0.813999    
+- CAN   1   141.75 151.75  7.252  0.007082 ** 
+- AGE   1   144.85 154.85 10.350  0.001295 ** 
+- TYP   1   156.91 166.91 22.407 2.206e-06 ***
+- LOC   2   168.97 176.97 34.477 3.262e-08 ***
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+Step:  AIC=142.37
+STA ~ LOC + TYP + AGE + CAN + SYS
+
+       Df Deviance    AIC    LRT  Pr(&gt;Chi)    
+&lt;none&gt;      128.37 142.37                     
++ CRN   1   127.16 143.16  1.209  0.271544    
++ CPR   1   127.24 143.24  1.127  0.288461    
++ SER   1   127.84 143.84  0.531  0.466296    
++ PO2   1   127.89 143.89  0.484  0.486839    
++ CRE   1   127.94 143.94  0.426  0.513722    
++ INF   1   128.09 144.09  0.282  0.595079    
++ BIC   1   128.16 144.16  0.215  0.642891    
+- SYS   1   134.50 146.50  6.129  0.013299 *  
+- CAN   1   136.19 148.19  7.815  0.005180 ** 
+- AGE   1   138.91 150.91 10.544  0.001165 ** 
+- TYP   1   148.31 160.31 19.935 8.011e-06 ***
+- LOC   2   163.43 173.43 35.059 2.438e-08 ***
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<pre class="r"><code>summary(fit_step_aic)</code></pre>
+<pre><code>
+Call:
+glm(formula = STA ~ LOC + TYP + AGE + CAN + SYS, family = binomial, 
+    data = ICU)
+
+Deviance Residuals: 
+    Min       1Q   Median       3Q      Max  
+-2.1625  -0.5415  -0.3204  -0.0783   2.6344  
+
+Coefficients:
+                 Estimate Std. Error z value Pr(&gt;|z|)   
+(Intercept)    -5.419e+00  1.791e+00  -3.025  0.00248 **
+LOCDeep Stupor  2.154e+01  1.458e+03   0.015  0.98821   
+LOCComa         2.415e+00  8.739e-01   2.764  0.00572 **
+TYPEmergency    3.847e+00  1.269e+00   3.032  0.00243 **
+AGE             3.807e-02  1.297e-02   2.935  0.00334 **
+CANYes          2.592e+00  9.621e-01   2.694  0.00705 **
+SYS            -1.775e-02  7.469e-03  -2.377  0.01746 * 
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+(Dispersion parameter for binomial family taken to be 1)
+
+    Null deviance: 200.16  on 199  degrees of freedom
+Residual deviance: 128.37  on 193  degrees of freedom
+AIC: 142.37
+
+Number of Fisher Scoring iterations: 16</code></pre>
+<p>Both the AIC and the chi-squared method converged to the same model.</p>
+<p>The final model includes 4 variables:</p>
+<ul>
+<li>Level of consciousness</li>
+<li>Type of admission</li>
+<li>Age</li>
+<li>Cancer part of the problem</li>
+<li>Systolic blood pressure</li>
+</ul>
+<p>The directions of all these variables make sense: risk is increased for higher levels, except for systolic blood pressure, as having a lower blood pressure (in an ICU setting) is worse.</p>
+<p>Even though variables could be added and dropped, they only got added.</p>
+<blockquote>
+<ol start="7" style="list-style-type: lower-alpha">
+<li>In the final model there is one risk factor that was not significant in the separate analyses. Can you explain this?</li>
+</ol>
+</blockquote>
+<p>First check which one this was. In each fit object, when calling <code>summary</code>, the p-value for the coefficients is in the 4th column of row 2 of the coefficients table</p>
+<pre class="r"><code>summary(fits[[1]])$coefficients</code></pre>
+<pre><code>               Estimate Std. Error   z value     Pr(&gt;|z|)
+(Intercept) -3.05851323 0.69608124 -4.393903 1.113337e-05
+AGE          0.02754261 0.01056416  2.607174 9.129303e-03</code></pre>
+<pre class="r"><code>pvals &lt;- sapply(fits, function(fit) summary(fit)$coefficients[2,4])
+data.frame(independent_vars, pvals)</code></pre>
+<pre><code>   independent_vars       pvals
+1               AGE 0.009129303
+2               SER 0.010115450
+3               CAN 1.000000000
+4               CRN 0.015484454
+5               INF 0.011301735
+6               CPR 0.003982224
+7               SYS 0.004564731
+8               TYP 0.002949129
+9               PO2 0.247743943
+10              BIC 0.188070017
+11              CRE 0.024060809
+12              LOC 0.986369728</code></pre>
+<p>Here, <code>CAN</code> has a p-value of 1. It must have collinearity with at least 1 of the other included variables, which can act as confounders. We can do a quick scan for colleniarity with a pairwise distribution plot</p>
+<pre class="r"><code>included_terms &lt;- attr(fit_step_aic$terms, &quot;term.labels&quot;)
+included_terms</code></pre>
+<pre><code>[1] &quot;LOC&quot; &quot;TYP&quot; &quot;AGE&quot; &quot;CAN&quot; &quot;SYS&quot;</code></pre>
+<pre class="r"><code>require(GGally)</code></pre>
+<pre><code>Loading required package: GGally</code></pre>
+<pre><code>
+Attaching package: &#39;GGally&#39;</code></pre>
+<pre><code>The following object is masked from &#39;package:dplyr&#39;:
+
+    nasa</code></pre>
+<pre class="r"><code>GGally::ggpairs(ICU[, included_terms])</code></pre>
+<pre><code>`stat_bin()` using `bins = 30`. Pick better value with `binwidth`.</code></pre>
+<pre><code>`stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
+`stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
+`stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
+`stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
+`stat_bin()` using `bins = 30`. Pick better value with `binwidth`.</code></pre>
+<p><img src="figure/assignments_week3.Rmd/unnamed-chunk-81-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>From a quick look at this graph, it looks like <code>CAN</code> and <code>TYP</code> are related.</p>
+<blockquote>
+<p>Now we will try to fit the best logistic curve by eye to the ICU data with categorized age (agecat) as only explanatory variable.</p>
+</blockquote>
+<blockquote>
+<ol start="8" style="list-style-type: lower-alpha">
+<li>Make a table of sta against agecat (with sta as column variable), and put the result in an object called tab.</li>
+</ol>
+</blockquote>
+<pre class="r"><code>tab &lt;- table(factor(ICU$STA), factor(ICU$AGECAT))
+tab</code></pre>
+<pre><code>       
+        20 30 40 50 60 70 80 90
+  Alive 25  7 11 18 33 39 21  6
+  Dead   2  0  2  5 10  7 10  4</code></pre>
+<blockquote>
+<ol style="list-style-type: lower-roman">
+<li>Have R calculate the proportion of people dying in the ICU for each age category, using the object tab.</li>
+</ol>
+</blockquote>
+<pre class="r"><code>prop_tab &lt;- prop.table(tab, margin = 2)</code></pre>
+<blockquote>
+<ol start="10" style="list-style-type: lower-alpha">
+<li>Plot these proportions against the age category.</li>
+</ol>
+</blockquote>
+<pre class="r"><code>y = prop_tab[2,]
+x = colnames(prop_tab)
+plot(x, y, ylim = c(0,1))</code></pre>
+<p><img src="figure/assignments_week3.Rmd/unnamed-chunk-84-1.png" width="672" style="display: block; margin: auto;" /></p>
+<blockquote>
+<ol start="11" style="list-style-type: lower-alpha">
+<li>Try to fit the best logistic curve to these points (see previous exercise, part e, with different values for b0 and b1).</li>
+</ol>
+</blockquote>
+<p>The reference to ‘previous excercise, part e’ is unclear, but we will try to solve it. A logistic line follows the equation:</p>
+<p><span class="math display">\[p(x) = \frac{1}{1+e^{-(\beta_0 + \beta_1*x)}}\]</span></p>
+<p>The probability of death for age category 20 is low, so lets choose a low intercept, say <span class="math inline">\(\beta_0 = -4\)</span>. At the top of our distribution, the probability approaches 50%. Lets set <span class="math inline">\(\beta_1\)</span> such that at age 100, <span class="math inline">\(\beta_0 + \beta_1 * 100 = 0\)</span>. So <span class="math inline">\(\beta_1 = 0.04\)</span></p>
+<pre class="r"><code>x_levels &lt;- 20:90
+y_levels &lt;- 1/(1+exp(-1*(-4 + 0.04*x_levels)))
+plot(x,y)
+lines(x_levels, y_levels)</code></pre>
+<p><img src="figure/assignments_week3.Rmd/unnamed-chunk-85-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Not too bad</p>
+<blockquote>
+<ol start="12" style="list-style-type: lower-alpha">
+<li>Do a logistic regression on these data to get the best parameter estimates.</li>
+</ol>
+</blockquote>
+<p>There is some ambituity here, we could use AGECAT as a (sort-of) continous variable, with very discrete values. But since the researchers wanted to discretize age into categories, we might wan’t to treat <code>AGECAT</code> as a factor variable. Based on the provided answers, treat AGECAT as ‘continous’, at least such that 90-80 = 50-40.</p>
+<pre class="r"><code>fit_age &lt;- glm(STA~AGECAT, family = binomial, data = ICU)
+coefs &lt;- (coef(fit_age))
+exp(coefs)</code></pre>
+<pre><code>(Intercept)      AGECAT 
+ 0.05055254  1.02650429 </code></pre>
+<ol start="13" style="list-style-type: lower-alpha">
+<li>Plot the points again, and add the logistic curve with the parameters from e).</li>
+</ol>
+<pre class="r"><code>x_vals &lt;- 20:90
+y_vals &lt;- 1/(1+exp(-1*(coefs[1] + coefs[2] * x_vals)))
+plot(x,y)
+lines(x_vals, y_vals)</code></pre>
+<p><img src="figure/assignments_week3.Rmd/unnamed-chunk-87-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="section-7" class="section level4">
+<h4>8.</h4>
+<blockquote>
+<p>This is a repeat of exercise #3, but now in R. In the years 1995 through 1998 a research was done among 1243 Dalmatian puppies. It was determined whether or not they were deaf in at least one ear. The research question was if deafness was related to pigmentation. In order to answer this it was measured whether or not there were many spots on the skin, whether or not they had a spot on the head and whether or not the dog had blue eyes. In addition one wants to determine if there was heredity involved. In order to look at this the family history score was determined. This is a method to cope with litter effects (heredity): for every puppy it was determined how many brothers or sisters were deaf. Call this number m. Then from the whole dataset the fraction of dogs that are deaf can be determined. This fraction is multiplied by litter size - 1. This is then the expected number of deaf brothers or sisters when there are no differences between litters. The family history score is now defined as fhs = m - fraction * (litter size - 1) Whether or not the puppy is deaf (0=no, 1=yes) deaf The number of spots on the skin (1=light, 2=moderate, 3=heavy) spot Whether or not the dog had blue eyes (0=no, 1=yes) blueeye Whether or not the dog had an spot on the head (0=no, 1=yes) headspot Gender (0=male, 1=female) gender Family history score fhs</p>
+</blockquote>
+<blockquote>
+<ol style="list-style-type: lower-alpha">
+<li>Read in the data file dalmatian.csv.</li>
+</ol>
+</blockquote>
+<pre class="r"><code>dal &lt;- read.csv(epistats::fromParentDir(&quot;data/dalmatian.csv&quot;))</code></pre>
+<blockquote>
+<ol start="2" style="list-style-type: lower-alpha">
+<li>Explain how the variable fhs deals with the heredity.</li>
+</ol>
+</blockquote>
+<pre class="r"><code>hist(dal$fhs)</code></pre>
+<p><img src="figure/assignments_week3.Rmd/unnamed-chunk-88-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><code>fhs</code> is the difference between the observed number of deaf puppies in a litter, and the expected number of deaf puppies in the litter, given that all litters are equal, so there is no effect of heredity. A puppy with <code>fhs</code> smaller than 0 was born in a litter with fewer deaf siblings than expected, so in a ‘protected’ litter.</p>
+<blockquote>
+<ol start="3" style="list-style-type: lower-alpha">
+<li>Fit the logistic regression model for deaf with fhs as an exposure variable.</li>
+</ol>
+</blockquote>
+<pre class="r"><code>fit &lt;- glm(deaf~fhs, data = dal, family = binomial)</code></pre>
+<ol start="4" style="list-style-type: lower-alpha">
+<li>Compare the AIC of the previous model with the model that only contains a constant. Also calculate the likelihood ratio and interpret the results.</li>
+</ol>
+<pre class="r"><code>fit0 &lt;- glm(deaf~1, data = dal, family = binomial)
+summary(fit)</code></pre>
+<pre><code>
+Call:
+glm(formula = deaf ~ fhs, family = binomial, data = dal)
+
+Deviance Residuals: 
+    Min       1Q   Median       3Q      Max  
+-1.4296  -0.6062  -0.5012  -0.4382   2.2741  
+
+Coefficients:
+            Estimate Std. Error z value Pr(&gt;|z|)    
+(Intercept) -1.58544    0.07853 -20.190  &lt; 2e-16 ***
+fhs          0.41004    0.05144   7.971 1.57e-15 ***
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+(Dispersion parameter for binomial family taken to be 1)
+
+    Null deviance: 1145.0  on 1242  degrees of freedom
+Residual deviance: 1081.2  on 1241  degrees of freedom
+AIC: 1085.2
+
+Number of Fisher Scoring iterations: 4</code></pre>
+<pre class="r"><code>summary(fit0)</code></pre>
+<pre><code>
+Call:
+glm(formula = deaf ~ 1, family = binomial, data = dal)
+
+Deviance Residuals: 
+    Min       1Q   Median       3Q      Max  
+-0.6163  -0.6163  -0.6163  -0.6163   1.8733  
+
+Coefficients:
+            Estimate Std. Error z value Pr(&gt;|z|)    
+(Intercept) -1.56473    0.07499  -20.87   &lt;2e-16 ***
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+(Dispersion parameter for binomial family taken to be 1)
+
+    Null deviance: 1145  on 1242  degrees of freedom
+Residual deviance: 1145  on 1242  degrees of freedom
+AIC: 1147
+
+Number of Fisher Scoring iterations: 3</code></pre>
+<p>The model with <code>fhs</code> has a lower AIC, so fits the data better.</p>
+<pre class="r"><code>lmtest::lrtest(fit0)</code></pre>
+<pre><code>Likelihood ratio test
+
+Model 1: deaf ~ 1
+Model 2: deaf ~ 1
+  #Df  LogLik Df Chisq Pr(&gt;Chisq)
+1   1 -572.48                    
+2   1 -572.48  0     0          1</code></pre>
+<pre class="r"><code>lmtest::lrtest(fit)</code></pre>
+<pre><code>Likelihood ratio test
+
+Model 1: deaf ~ fhs
+Model 2: deaf ~ 1
+  #Df  LogLik Df  Chisq Pr(&gt;Chisq)    
+1   2 -540.59                         
+2   1 -572.48 -1 63.775  1.395e-15 ***
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<pre class="r"><code>lmtest::lrtest(fit0, fit)</code></pre>
+<pre><code>Likelihood ratio test
+
+Model 1: deaf ~ 1
+Model 2: deaf ~ fhs
+  #Df  LogLik Df  Chisq Pr(&gt;Chisq)    
+1   1 -572.48                         
+2   2 -540.59  1 63.775  1.395e-15 ***
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<blockquote>
+<ol start="5" style="list-style-type: lower-alpha">
+<li>Which model fits the data best, and why?</li>
+</ol>
+</blockquote>
+<p>The model with the explanatory variable, since this one has a higher log-likelihood</p>
+</div>
+<div id="section-8" class="section level4">
+<h4>9.</h4>
+<blockquote>
+<p>This is a repeat of exercise #4, but now in R. Low birth weight is an outcome that has been of concern to physicians for years. This is due to the fact that infant mortality rates and birth defect rates are very high for low birth weight babies. A woman’s behavior during pregnancy (including diet, smoking habits, and receiving prenatal care) can greatly alter the chances of carrying the baby to term and, consequently, of delivering a baby of normal birth weight. The variables, listed below, have been shown to be associated with low birth weight in the obstetrical literature. The goal of the current study was to ascertain if these variables were important in the population being served by the medical center where the data were collected. So one wants to identify risk factors associated with giving birth to a low birth weight baby (weighing less than 2500 grams). Data were collected on 189 women, 59 of which had low birth weight babies and 130 of which had normal birth weight babies. The four variables, that are thought to be of importance, are age, weight of the subject at her last menstrual period, race, and the number of physician visits during the first trimester of pregnancy. Source: Hosmer and Lemeshow, Applied Logistic Regression, Wiley, (1989). Identification Code id Birth Weight in Grams bwt Low Birth Weight (0 = bwt  2500g; 1 = bwt &lt; 2500g), lowb Age of the Mother in Years age Weight in Pounds at the Last Menstrual Period lwt Race (1 = White, 2 = Black, 3 = Other) race Smoking Status During Pregnancy (1 = Yes, 0 = No) smoke History of Premature Labor (0 = None 1 = One, etc.) ptl History of Hypertension (1 = Yes, 0 = No) ht Presence of Uterine Irritability (1 = Yes, 0 = No) ui Number of Physician Visits During the First Trimester (0,1, 2, …) ftv a. Read in the dataset lowbirth.dat</p>
+</blockquote>
+<pre class="r"><code>lb &lt;- read.table(epistats::fromParentDir(&quot;data/lowbirth.dat&quot;), header = T)
+str(lb)</code></pre>
+<pre><code>&#39;data.frame&#39;:   189 obs. of  11 variables:
+ $ id   : int  85 86 87 88 89 91 92 93 94 95 ...
+ $ low  : int  0 0 0 0 0 0 0 0 0 0 ...
+ $ age  : int  19 33 20 21 18 21 22 17 29 26 ...
+ $ lwt  : int  182 155 105 108 107 124 118 103 123 113 ...
+ $ race : int  2 3 1 1 1 3 1 3 1 1 ...
+ $ smoke: int  0 0 1 1 1 0 0 0 1 1 ...
+ $ ptl  : int  0 0 0 0 0 0 0 0 0 0 ...
+ $ ht   : int  0 0 0 0 0 0 0 0 0 0 ...
+ $ ui   : int  1 0 0 1 1 0 0 0 0 0 ...
+ $ ftv  : int  0 3 1 2 0 0 1 1 1 0 ...
+ $ bwt  : int  2523 2551 2557 2594 2600 2622 2637 2637 2663 2665 ...</code></pre>
+<blockquote>
+<ol start="2" style="list-style-type: lower-alpha">
+<li>Fit three models, one with exposure age, one with exposure smoke and one with the exposure ht.</li>
+</ol>
+</blockquote>
+<pre class="r"><code>fit_0     &lt;- glm(low~1  ,   data = lb, family = binomial)
+fit_age   &lt;- glm(low~age,   data = lb, family = binomial)
+fit_smoke &lt;- glm(low~smoke, data = lb, family = binomial)
+fit_ht    &lt;- glm(low~ht,    data = lb, family = binomial)</code></pre>
+<blockquote>
+<ol start="3" style="list-style-type: lower-alpha">
+<li>Give for all 3 models an interpretation of the estimate of  for the specific exposure at hand.</li>
+</ol>
+</blockquote>
+<pre class="r"><code>exp(coef(fit_age))</code></pre>
+<pre><code>(Intercept)         age 
+  1.4690000   0.9501333 </code></pre>
+<pre class="r"><code>exp(coef(fit_smoke))</code></pre>
+<pre><code>(Intercept)       smoke 
+  0.3372093   2.0219436 </code></pre>
+<pre class="r"><code>exp(coef(fit_ht))</code></pre>
+<pre><code>(Intercept)          ht 
+   0.416000    3.365385 </code></pre>
+<p>Higher age reduces the risk of low birth weight, smoking increases the risk, hypertension also increases the risk. The exponents of the coefficients are the odds-ratios comparing those with the exposure against those without.</p>
+<blockquote>
+<ol start="4" style="list-style-type: lower-alpha">
+<li>Compare all 3 models to the model with only an intercept in it using AIC. Calculate for each the likelihood ratio and give an interpretation.</li>
+</ol>
+</blockquote>
+<p>Compare AICs</p>
+<pre class="r"><code>summary(fit_0)$aic</code></pre>
+<pre><code>[1] 236.672</code></pre>
+<pre class="r"><code>summary(fit_age)$aic</code></pre>
+<pre><code>[1] 235.912</code></pre>
+<pre class="r"><code>summary(fit_smoke)$aic</code></pre>
+<pre><code>[1] 233.8046</code></pre>
+<pre class="r"><code>summary(fit_ht)$aic</code></pre>
+<pre><code>[1] 234.6499</code></pre>
+<p>Each model is a little better than the null model (i.e. has lower AIC)</p>
+<p>LR tests:</p>
+<pre class="r"><code>lmtest::lrtest(fit_0, fit_age)</code></pre>
+<pre><code>Likelihood ratio test
+
+Model 1: low ~ 1
+Model 2: low ~ age
+  #Df  LogLik Df Chisq Pr(&gt;Chisq)  
+1   1 -117.34                      
+2   2 -115.96  1  2.76    0.09665 .
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<pre class="r"><code>lmtest::lrtest(fit_0, fit_smoke)</code></pre>
+<pre><code>Likelihood ratio test
+
+Model 1: low ~ 1
+Model 2: low ~ smoke
+  #Df  LogLik Df  Chisq Pr(&gt;Chisq)  
+1   1 -117.34                       
+2   2 -114.90  1 4.8674    0.02737 *
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<pre class="r"><code>lmtest::lrtest(fit_0, fit_ht)</code></pre>
+<pre><code>Likelihood ratio test
+
+Model 1: low ~ 1
+Model 2: low ~ ht
+  #Df  LogLik Df  Chisq Pr(&gt;Chisq)  
+1   1 -117.34                       
+2   2 -115.33  1 4.0221    0.04491 *
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<p>Ony the smoke and ht models are significantly better than the null-model, according to the LR-test</p>
+<blockquote>
+<ol start="5" style="list-style-type: lower-alpha">
+<li>Compare the 3 models with each other by comparing AIC. Also calculate likelihood ratios.</li>
+</ol>
+</blockquote>
+<pre class="r"><code>lmtest::lrtest(fit_age, fit_smoke)</code></pre>
+<pre><code>Likelihood ratio test
+
+Model 1: low ~ age
+Model 2: low ~ smoke
+  #Df  LogLik Df  Chisq Pr(&gt;Chisq)    
+1   2 -115.96                         
+2   2 -114.90  0 2.1074  &lt; 2.2e-16 ***
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<pre class="r"><code>lmtest::lrtest(fit_age, fit_ht)</code></pre>
+<pre><code>Likelihood ratio test
+
+Model 1: low ~ age
+Model 2: low ~ ht
+  #Df  LogLik Df  Chisq Pr(&gt;Chisq)    
+1   2 -115.96                         
+2   2 -115.33  0 1.2621  &lt; 2.2e-16 ***
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<pre class="r"><code>lmtest::lrtest(fit_smoke, fit_ht)</code></pre>
+<pre><code>Likelihood ratio test
+
+Model 1: low ~ smoke
+Model 2: low ~ ht
+  #Df  LogLik Df  Chisq Pr(&gt;Chisq)    
+1   2 -114.90                         
+2   2 -115.33  0 0.8453  &lt; 2.2e-16 ***
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<blockquote>
+<ol start="6" style="list-style-type: lower-alpha">
+<li>Which model fits the data best, and why?</li>
+</ol>
+</blockquote>
+<p>The model with smoke has the lowest Log-likelihood, which is significantly different from th eother models</p>
+<blockquote>
+<ol start="7" style="list-style-type: lower-alpha">
+<li>Fit the logistic regression model with exposures age, lwt, race, smoke, ptl, ht, ui and ftv.</li>
+</ol>
+</blockquote>
+<pre class="r"><code>fit_full &lt;- glm(low~age+lwt+race+smoke+ptl+ht+ui+ftv, data = lb, family = binomial)
+summary(fit_full)</code></pre>
+<pre><code>
+Call:
+glm(formula = low ~ age + lwt + race + smoke + ptl + ht + ui + 
+    ftv, family = binomial, data = lb)
+
+Deviance Residuals: 
+    Min       1Q   Median       3Q      Max  
+-1.8832  -0.8178  -0.5574   1.0288   2.1451  
+
+Coefficients:
+             Estimate Std. Error z value Pr(&gt;|z|)   
+(Intercept) -0.078975   1.276254  -0.062  0.95066   
+age         -0.035845   0.036472  -0.983  0.32569   
+lwt         -0.012387   0.006614  -1.873  0.06111 . 
+race         0.453424   0.215294   2.106  0.03520 * 
+smoke        0.937275   0.398458   2.352  0.01866 * 
+ptl          0.542087   0.346168   1.566  0.11736   
+ht           1.830720   0.694135   2.637  0.00835 **
+ui           0.721965   0.463174   1.559  0.11906   
+ftv          0.063461   0.169765   0.374  0.70854   
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+(Dispersion parameter for binomial family taken to be 1)
+
+    Null deviance: 234.67  on 188  degrees of freedom
+Residual deviance: 204.19  on 180  degrees of freedom
+AIC: 222.19
+
+Number of Fisher Scoring iterations: 4</code></pre>
+<blockquote>
+<ol start="8" style="list-style-type: lower-alpha">
+<li>Find out which exposures can be left out using AIC.</li>
+</ol>
+</blockquote>
+<pre class="r"><code>drop1(fit_full)</code></pre>
+<pre><code>Single term deletions
+
+Model:
+low ~ age + lwt + race + smoke + ptl + ht + ui + ftv
+       Df Deviance    AIC
+&lt;none&gt;      204.19 222.19
+age     1   205.18 221.18
+lwt     1   208.03 224.03
+race    1   208.75 224.75
+smoke   1   209.89 225.89
+ptl     1   206.72 222.72
+ht      1   211.52 227.52
+ui      1   206.58 222.58
+ftv     1   204.33 220.33</code></pre>
+<p>Dropping age and ftv would lower AIC, so they can be left out.</p>
+<blockquote>
+<ol style="list-style-type: lower-roman">
+<li>Discuss the final model.</li>
+</ol>
+</blockquote>
+<pre class="r"><code>fit_final &lt;- glm(low~lwt+race+smoke+ptl+ht+ui, data = lb, family = binomial)
+summary(fit_final)</code></pre>
+<pre><code>
+Call:
+glm(formula = low ~ lwt + race + smoke + ptl + ht + ui, family = binomial, 
+    data = lb)
+
+Deviance Residuals: 
+    Min       1Q   Median       3Q      Max  
+-1.8915  -0.8121  -0.5471   1.0389   2.1140  
+
+Coefficients:
+             Estimate Std. Error z value Pr(&gt;|z|)   
+(Intercept) -0.803644   1.041394  -0.772  0.44029   
+lwt         -0.012947   0.006555  -1.975  0.04823 * 
+race         0.469131   0.211799   2.215  0.02676 * 
+smoke        0.948172   0.395139   2.400  0.01641 * 
+ptl          0.491451   0.341378   1.440  0.14998   
+ht           1.833160   0.690234   2.656  0.00791 **
+ui           0.747935   0.459942   1.626  0.10392   
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+(Dispersion parameter for binomial family taken to be 1)
+
+    Null deviance: 234.67  on 188  degrees of freedom
+Residual deviance: 205.21  on 182  degrees of freedom
+AIC: 219.21
+
+Number of Fisher Scoring iterations: 4</code></pre>
+<pre class="r"><code>drop1(fit_final)</code></pre>
+<pre><code>Single term deletions
+
+Model:
+low ~ lwt + race + smoke + ptl + ht + ui
+       Df Deviance    AIC
+&lt;none&gt;      205.21 219.21
+lwt     1   209.58 221.58
+race    1   210.31 222.31
+smoke   1   211.17 223.17
+ptl     1   207.34 219.34
+ht      1   212.61 224.61
+ui      1   207.81 219.81</code></pre>
+<p>Is this the same as using the step function?</p>
+<pre class="r"><code>fit_step &lt;- step(fit_0, scope = list(upper = fit_full), data = lb, direction = &quot;both&quot;)</code></pre>
+<pre><code>Start:  AIC=236.67
+low ~ 1
+
+        Df Deviance    AIC
++ ptl    1   227.89 231.89
++ lwt    1   228.69 232.69
++ ui     1   229.60 233.60
++ smoke  1   229.81 233.81
++ ht     1   230.65 234.65
++ race   1   231.10 235.10
++ age    1   231.91 235.91
+&lt;none&gt;       234.67 236.67
++ ftv    1   233.90 237.90
+
+Step:  AIC=231.89
+low ~ ptl
+
+        Df Deviance    AIC
++ lwt    1   223.41 229.41
++ ht     1   223.58 229.58
++ age    1   224.27 230.27
++ race   1   224.27 230.27
++ smoke  1   224.78 230.78
++ ui     1   224.89 230.89
+&lt;none&gt;       227.89 231.89
++ ftv    1   227.30 233.30
+- ptl    1   234.67 236.67
+
+Step:  AIC=229.41
+low ~ ptl + lwt
+
+        Df Deviance    AIC
++ ht     1   215.96 223.96
++ smoke  1   220.54 228.54
++ race   1   220.98 228.98
++ age    1   221.05 229.05
++ ui     1   221.23 229.23
+&lt;none&gt;       223.41 229.41
++ ftv    1   223.12 231.12
+- lwt    1   227.89 231.89
+- ptl    1   228.69 232.69
+
+Step:  AIC=223.96
+low ~ ptl + lwt + ht
+
+        Df Deviance    AIC
++ ui     1   213.01 223.01
++ smoke  1   213.15 223.15
+&lt;none&gt;       215.96 223.96
++ race   1   214.00 224.00
++ age    1   214.01 224.01
++ ftv    1   215.84 225.84
+- ptl    1   221.14 227.14
+- ht     1   223.41 229.41
+- lwt    1   223.58 229.58
+
+Step:  AIC=223.01
+low ~ ptl + lwt + ht + ui
+
+        Df Deviance    AIC
++ smoke  1   210.31 222.31
+&lt;none&gt;       213.01 223.01
++ race   1   211.17 223.17
++ age    1   211.33 223.33
+- ui     1   215.96 223.96
+- ptl    1   216.61 224.61
++ ftv    1   212.95 224.95
+- lwt    1   219.61 227.61
+- ht     1   221.23 229.23
+
+Step:  AIC=222.31
+low ~ ptl + lwt + ht + ui + smoke
+
+        Df Deviance    AIC
++ race   1   205.21 219.21
+&lt;none&gt;       210.31 222.31
++ age    1   208.77 222.77
+- ptl    1   212.83 222.83
+- smoke  1   213.01 223.01
+- ui     1   213.15 223.15
++ ftv    1   210.29 224.29
+- lwt    1   216.63 226.63
+- ht     1   218.45 228.45
+
+Step:  AIC=219.21
+low ~ ptl + lwt + ht + ui + smoke + race
+
+        Df Deviance    AIC
+&lt;none&gt;       205.21 219.21
+- ptl    1   207.34 219.34
+- ui     1   207.81 219.81
++ age    1   204.33 220.33
++ ftv    1   205.18 221.18
+- lwt    1   209.58 221.58
+- race   1   210.31 222.31
+- smoke  1   211.17 223.17
+- ht     1   212.61 224.61</code></pre>
+<pre class="r"><code>sort(attr(fit_final$terms, &quot;term.labels&quot;))</code></pre>
+<pre><code>[1] &quot;ht&quot;    &quot;lwt&quot;   &quot;ptl&quot;   &quot;race&quot;  &quot;smoke&quot; &quot;ui&quot;   </code></pre>
+<pre class="r"><code>sort(attr(fit_step$terms, &quot;term.labels&quot;))</code></pre>
+<pre><code>[1] &quot;ht&quot;    &quot;lwt&quot;   &quot;ptl&quot;   &quot;race&quot;  &quot;smoke&quot; &quot;ui&quot;   </code></pre>
+<p>Yes it is the same as using stepwise selection, which considers some extra models.</p>
+<blockquote>
+<ol start="10" style="list-style-type: lower-alpha">
+<li>Write a short report about your findings. Include the statistical model you used, the method you used to reduce this model and the final results (estimate and standard errors).</li>
+</ol>
+</blockquote>
+<p>Left for now</p>
+</div>
+<div id="optional-this-is-a-repeat-of-exercise-5-but-now-in-r.-the-aim-of-this-exercise-is-to-familiarize-you-with-the-logistic-functions." class="section level4">
+<h4>10. Optional This is a repeat of exercise #5, but now in R. The aim of this exercise is to familiarize you with the logistic functions.</h4>
+<blockquote>
+<ol style="list-style-type: lower-alpha">
+<li>Make a sequence of values for x by giving the commands</li>
+</ol>
+</blockquote>
+<pre class="r"><code>x &lt;- seq(-2.5,2.5,by=0.1)
+x   # The content of x is now printed to your screen.</code></pre>
+<pre><code> [1] -2.5 -2.4 -2.3 -2.2 -2.1 -2.0 -1.9 -1.8 -1.7 -1.6 -1.5 -1.4 -1.3 -1.2
+[15] -1.1 -1.0 -0.9 -0.8 -0.7 -0.6 -0.5 -0.4 -0.3 -0.2 -0.1  0.0  0.1  0.2
+[29]  0.3  0.4  0.5  0.6  0.7  0.8  0.9  1.0  1.1  1.2  1.3  1.4  1.5  1.6
+[43]  1.7  1.8  1.9  2.0  2.1  2.2  2.3  2.4  2.5</code></pre>
+<blockquote>
+<ol start="2" style="list-style-type: lower-alpha">
+<li>Define y1 as</li>
+</ol>
+</blockquote>
+<pre class="r"><code>y1 &lt;- exp(1+3*x)/(1+exp(1+3*x))</code></pre>
+<blockquote>
+<ol start="3" style="list-style-type: lower-alpha">
+<li>Then run the command</li>
+</ol>
+</blockquote>
+<pre class="r"><code>plot(x,y1,type=&quot;l&quot;) </code></pre>
+<p><img src="figure/assignments_week3.Rmd/unnamed-chunk-105-1.png" width="672" style="display: block; margin: auto;" /></p>
+<blockquote>
+<p>(The subcommand type “l” connects the points with a line.) This results in the graph of the logistic function with coefficients b0 = 1 and b1 = 3.</p>
+</blockquote>
+<blockquote>
+<ol start="4" style="list-style-type: lower-alpha">
+<li>Define y2 using b0 = 1 and b1 = 2, and y3 using b0 = 1 and b1 = -2</li>
+</ol>
+</blockquote>
+<pre class="r"><code>y2 &lt;- exp(1+2*x)/(1+exp(1+2*x))
+y3 &lt;- exp(1-2*x)/(1+exp(1-2*x))</code></pre>
+<ol start="5" style="list-style-type: lower-alpha">
+<li>Add these to the existing plot using lines(x, y2, lty=2) and similar for y3.</li>
+</ol>
+<pre class="r"><code>plot(x,y1,type=&quot;l&quot;) 
+lines(x,y2,lty = 2) 
+lines(x,y3,lty = 2) </code></pre>
+<p><img src="figure/assignments_week3.Rmd/unnamed-chunk-107-1.png" width="672" style="display: block; margin: auto;" /></p>
+<blockquote>
+<ol start="6" style="list-style-type: lower-alpha">
+<li>Draw a horizontal line at y=0.5 using the command abline(h=0.5)</li>
+</ol>
+</blockquote>
+<pre class="r"><code>plot(x,y1,type=&quot;l&quot;) 
+lines(x,y2,lty = 2) 
+lines(x,y3,lty = 2)
+abline(h = 0.5)</code></pre>
+<p><img src="figure/assignments_week3.Rmd/unnamed-chunk-108-1.png" width="672" style="display: block; margin: auto;" /></p>
+<blockquote>
+<p>Do you understand how this abline command works?.</p>
+</blockquote>
+<p>It takes a slope and intercept (or vertical / horizontal value) and draws a line. <code>h = 0.5</code> means a horizontal line at y = 0.5</p>
+<blockquote>
+<ol start="7" style="list-style-type: lower-alpha">
+<li>Read off from the graphs at which x-values the horizontal line from f) intersects each of the curves. How does the answer connect to the values of b0 and b1? What would be the interpretation of those x-values in a logistic regression?</li>
+</ol>
+</blockquote>
+<p>From the formula one can read that <span class="math inline">\(p = 0.5\)</span> when <span class="math inline">\(\beta_0 + \beta_1x = 0\)</span>. So for y1, x = -1/3, for y2, x = -1/2, for y3, x = 1/2. This matches the plot</p>
+</div>
+</div>
+</div>
 <div id="session-information" class="section level2">
 <h2>Session information</h2>
 <!-- Insert the session information into the document -->
@@ -1910,28 +3145,29 @@ attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
 other attached packages:
-[1] ggplot2_2.2.1.9000 bindrcpp_0.2       dplyr_0.7.3       
-[4] car_2.1-5         
+[1] GGally_1.3.2       ggplot2_2.2.1.9000 bindrcpp_0.2      
+[4] dplyr_0.7.3        car_2.1-5         
 
 loaded via a namespace (and not attached):
- [1] Rcpp_0.12.12        RColorBrewer_1.1-2  bindr_0.1          
- [4] compiler_3.4.1      nloptr_1.0.4        git2r_0.19.0       
- [7] plyr_1.8.4          tools_3.4.1         epistats_0.1.0     
-[10] digest_0.6.12       lme4_1.1-14         corrplot_0.84      
-[13] gtable_0.2.0        tibble_1.3.4        evaluate_0.10.1    
-[16] nlme_3.1-131        lattice_0.20-35     mgcv_1.8-17        
-[19] pkgconfig_2.0.1     rlang_0.1.2         Matrix_1.2-10      
-[22] GGally_1.3.2        yaml_2.1.14         parallel_3.4.1     
-[25] SparseM_1.77        stringr_1.2.0       knitr_1.17         
-[28] MatrixModels_0.4-1  rprojroot_1.2       grid_3.4.1         
-[31] nnet_7.3-12         reshape_0.8.7       glue_1.1.1         
-[34] data.table_1.10.4-2 R6_2.2.2            foreign_0.8-69     
-[37] rmarkdown_1.6       minqa_1.2.4         reshape2_1.4.2     
-[40] magrittr_1.5        scales_0.5.0.9000   backports_1.1.0    
-[43] htmltools_0.3.6     MASS_7.3-47         splines_3.4.1      
-[46] assertthat_0.2.0    pbkrtest_0.4-7      colorspace_1.3-2   
-[49] labeling_0.3        quantreg_5.34       stringi_1.1.5      
-[52] lazyeval_0.2.0      munsell_0.4.3      </code></pre>
+ [1] zoo_1.8-0           reshape2_1.4.2      corrplot_0.84      
+ [4] splines_3.4.1       lattice_0.20-35     colorspace_1.3-2   
+ [7] htmltools_0.3.6     yaml_2.1.14         mgcv_1.8-17        
+[10] survival_2.41-3     rlang_0.1.2         nloptr_1.0.4       
+[13] foreign_0.8-69      glue_1.1.1          RColorBrewer_1.1-2 
+[16] BiasedUrn_1.07      plyr_1.8.4          bindr_0.1          
+[19] stringr_1.2.0       MatrixModels_0.4-1  munsell_0.4.3      
+[22] gtable_0.2.0        evaluate_0.10.1     labeling_0.3       
+[25] knitr_1.17          SparseM_1.77        lmtest_0.9-35      
+[28] quantreg_5.34       pbkrtest_0.4-7      parallel_3.4.1     
+[31] Rcpp_0.12.12        backports_1.1.0     scales_0.5.0.9000  
+[34] lme4_1.1-14         digest_0.6.12       stringi_1.1.5      
+[37] epiR_0.9-87         grid_3.4.1          rprojroot_1.2      
+[40] tools_3.4.1         magrittr_1.5        lazyeval_0.2.0     
+[43] tibble_1.3.4        pkgconfig_2.0.1     MASS_7.3-47        
+[46] Matrix_1.2-10       data.table_1.10.4-2 epistats_0.1.0     
+[49] assertthat_0.2.0    minqa_1.2.4         rmarkdown_1.6      
+[52] reshape_0.8.7       R6_2.2.2            nnet_7.3-12        
+[55] nlme_3.1-131        git2r_0.19.0        compiler_3.4.1     </code></pre>
 </div>
 
 <hr>

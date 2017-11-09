@@ -732,9 +732,549 @@ better (since the residual standard error is lower).
 
 > *The interested reader can take a look at Vickers AJ and Altman DG. Analysing controlled trials with baseline and follow up measurements. British Medical Journal 2001;323:1123 http://www.bmj.com/content/323/7321/1123.full.pdf+html 
 
+## Day 11 logistic regression
+### Exercises with R
+#### Introduction
+> If there is an exposure (explanatory variable) in the data file that is a categorical variable where the categories are denoted by numbers, other than a 0-1, then you should tell this to R by using the function factor(). So factor(group) tells R that group is not a numeric variable but that it numbers should be used as group labels.
+To fit the logistic regression model use:
+`model <- lm(data~y+x,family=binomial)`. 
+> model will store the result. To see what is in it use names(model) and if you want to see something specific use for instance model$coefficients. To get the tables from the test  summary(model). The deviance residuals can be obtained by residuals(model) and the fitted values by fitted.values(model).
+Now you can leave out 1 variable from the model and look at the differences in AIC's. One can do this by fitting all the different models and then comparing them. One can also use the function drop1(fit). This function looks at the terms in fit, then leaves the terms out one by one and calculates for every term left out the AIC of the model. The command drop1(fit,test="Chisq") calculates the likelihood ratio test for every term left out. Then you can fit a model by leaving out the variable with the least influence and then start the procedure all over again using this last model as a starting point. etc. For the AIC this can also be done at once: step(model).
+
+#### A note on model-building in R
+> R does not have the same type of forward, backward and stepwise selection procedures as SPSS. The add1 and drop1 can be used to examine variables and decide which variable should be added/dropped next. The actual adding and dropping needs to be done by the analyst, so a new model is fitted and again checked for variables that can be added/dropped. Note that the add1 and drop1 functions both give the AIC by default; an F-test (for linear models) or a chi-square test of the deviance can be obtained by using an extra option in the command.
+The step function was developed for automatic selection of variables using the drop1 and add1 functions repeatedly. However, please note that the AIC is used for model selection and not the deviance criterion (LR selection in SPSS). Using the scope command a “lower” and “upper” model are given and R uses a stepwise procedure (based on the AIC) to find the best model. In order to ‘trick’ R into using the chi-square test for deviance, we can give a criterion of 3.84 (instead of the default 2); note that this is equivalent to a chi-square test with 1 degree of freedom. The step function will then choose models that improve a model “significantly” based on the deviance test. Note that the critical value 3.84 is only appropriate for continuous and dichotomous explanatory variables, but not for explanatory variables with more than 2 categories (because then the degrees of freedom of the chi-square test is greater than 1 and the critical value of the chi-square test will be higher).
+
+#### 6.
+> This is a repeat of exercise #1, but now in R. The aim of this exercise is to redo the steps from this morning’s lecture, but for a different data, namely `perulung.RData`, containing lung function data of 636 Peruvian children. We wish to know whether the probability of having respiratory problems is different for boys and girls. 
+a. `load(“perulung.RData”)`
+```{r}
+load(epistats::fromParentDir("data/perulung.RData"))
+```
+
+> The data frame d (containing data on FEV, age, height, gender and lung problems of Peruvian children) is now added to your workspace. Type names(d) to see the contents of the data frame. 
+
+Even better: `str()` will give you the names and classes (= data type) and first few observations
+```{r}
+str(d)
+```
+
+> b.	Make a contingency table for problems vs. gender.
+
+```{r}
+table(d$problems, d$gender)
+```
+
+> c.	Use prop.table on the result to get the proportion of babies with low birth weight for both smoke categories.
+
+```{r}
+lb <- read.table(epistats::fromParentDir("data/lowbirth.dat"), header = T)
+table(lb$low, lb$smoke)
+prop.table(table(lb$low, lb$smoke))
+```
+
+> d.	To calculate odds ratios and relative risks you can use package epicalc. Install the package and load it (using library). (Should this not work here, you could try this at home or calculate OR and RR directly by typing in the appropriate numbers.)
+e.	Using chisq.test and prop.test on the contingency table you can test whether OR=1.
+
+```{r}
+chisq.test(table(lb$low, lb$smoke))
+epiR::epi.2by2(table(lb$low, lb$smoke), method = "case.control")
+```
+
+> f.	Do a logistic regression in R using the commands
+
+```{r}
+low.glm <- glm(problems ~ fev, family = binomial, data = d)
+summary(low.glm)
+coefficients(low.glm)
+```
+
+What is the logistic regression equation?
+
+$$Ln(\frac{p}{1-p}) = \beta_0 + \beta_1X_1 = 1.4595 - 1.7247*fev$$
+
+> `exp(coefficients(low.glm))` will give you odds and OR. What is the odds ratio for FEV?
+
+```{r}
+exp(coefficients(low.glm))
+```
+
+> g. Calculate yourself the estimated probability of suffering from lung problems for children with an fev value of 1.5.
+
+```{r}
+log_odds = 1.4595 - 1.7247 * 1.5
+odds = exp(log_odds)
+prob = 1/(1+odds)
+prob
+```
 
 
+> h.	Now have R do this for you using the predict command (See: How to in R and help(predict.glm)). Note: in logistic regression by default you will get predictions on the log odds scale. If you want predictions for probabilities use type=”response” in the predict command.
 
+Compare with using the `predict` function
+
+```{r}
+predict(low.glm, newdata = data.frame(fev = 1.5), type = "response")
+```
+
+This is 1-prob. It is not clear to me why it would give me this. 
+
+> i.	Run a multiple logistic regression with explanatory variables fev, age, height and gender. Assign the outcome to the object full.logreg
+
+```{r}
+full.logreg <- glm(problems~fev+age+height+gender, data = d, family = binomial)
+```
+
+> j.	Give an estimate of the log odds of having lung problems for a child with fev=1.5, age=7, height=130 and gender=0. What if this child has age 8, 9 or 10?
+
+```{r}
+predict(full.logreg, 
+        newdata = data.frame(
+          fev = rep(1.5,4), 
+          age = 7:10, 
+          height = rep(130, 4), 
+          gender = rep(0,4)),
+        type = "response")
+```
+
+> k.	Repeat part l), but now estimate the probability of having lung problems.
+
+This is probably 1 minus the answer of j.
+
+> 7.	This is a repeat of exercise #2, but now in R. The ICU dataset consists of a sample of 200 subjects who were part of a much larger study on survival of patients following admission to an adult intensive care unit (ICU).  The major goal of this study was to develop a logistic regression model to predict the probability of survival to hospital discharge of these patients and to study the risk factors associated with ICU mortality. A number of publications have appeared which have focused on various facets of the problem. The reader wishing to learn more about the clinical aspects of this study should start with Lemeshow, Teres, Avrunin, and Pastides (1988). 
+Data were collected at Baystate Medical Center in Springfield, Massachusetts. The data are given in the dataset icu.RData.
+To keep the exercise simple only the most important risk factors will be considered.
+Identification Code	id number	Id
+Vital Status	0 = lived; 1 = died	sta
+Age	Years	age
+Service at ICU Admission	0 = medical; 1 = surgical	ser
+Cancer Part of Present Problem	0 = no; 1 = yes	can
+History of Chronic Renal Failure	0 = no; 1 = yes	crn
+Infection Probable at ICU Admission	0 = no; 1 = yes	inf
+CPR Prior to ICU Admission	0 = no; 1 = yes	cpr
+Systolic Blood Pressure at ICU Admission	mm Hg	sys
+Type of Admission	0 = elective; 1 = emergency	typ
+PO2 from Initial Blood Gases	0 = > 60; 1 = < 60	po2
+Bicarbonate from Initial Blood Gases	0 = > 18; 1 = < 18	bic
+Creatinine from Initial Blood Gases	0 = < 2.0; 1 = > 2.0	cre
+Level of Consciousness at ICU Admission	0 = no coma or stupor; 1 = deep stupor; 2 = coma	loc
+
+> a.	Fit two models, one with risk factor age and one with risk factor sys.
+
+```{r}
+load(epistats::fromParentDir("data/icu.RData"))
+str(ICU)
+
+fit1 <- glm(STA~AGE, data = ICU, family = binomial)
+fit2 <- glm(STA~SYS, data = ICU, family = binomial)
+```
+
+> b.	Give for both models an interpretation of the estimate of the OR with its 95% CI for the specific risk factor at hand.
+
+```{r}
+summary(fit1)
+summary(fit2)
+
+exp(MASS:::confint.glm(fit1))
+exp(MASS:::confint.glm(fit2))
+
+```
+
+The 95% confidence interval for the variable `AGE` is strictly greater than 1, 
+so with increasing age, the risk of death is greater. For `SYS` it is the other 
+way around.
+
+> c.	Which model fits the data best, and why?
+
+The model with `SYS` is best, as it has the lowest AIC.
+
+> d.	Fit a model with each of the other risk factors separately. Notice that all these risk factors are categorical so you need the ‘factor’ option. 
+
+Lets do this in an R-programming way that repeats the same steps for each of 
+the values in `independent_vars`
+
+```{r}
+independent_vars <- c("AGE", "SER", "CAN", "CRN", "INF", "CPR", 
+                      "SYS", "TYP", "PO2", "BIC", "CRE", "LOC")
+fits <- lapply(independent_vars, function(var) {
+  form <- reformulate(termlabels = var, response = "STA")
+  fit  <- glm(form, family = binomial, data = ICU)
+  return(fit)
+  })
+```
+
+Now `fits` is a list with 12 glm-fits, each item of this list contains 1 fit. 
+The fit can be extracted with `fits[[i]]`, where i is between 1 and 12.
+
+> e.	Which risk factors can explain the vital status? Which one is the most important one?
+
+Lets get the AIC for each of the fits
+
+```{r}
+aics <- sapply(fits, function(fit) {
+  result <- summary(fit)
+  result$aic
+})
+data.frame(independent_vars, aics)
+```
+
+Now we see that `CPR` has the lowest AIC
+
+> f.	So far every risk factor has been examined separately. Can vital status also explained by 2 or more risk factors? Build a model using the ‘step’ procedure. Discuss the final model.
+
+```{r}
+fit0    <- glm(STA~1, family = binomial, data = ICU)
+fit_all <- glm(reformulate(termlabels = independent_vars, response = "STA"),
+               family = binomial, data = ICU)
+fit_step_aic <- step(fit0, scope = list(upper = fit_all), data = ICU, 
+                 direction = "both")
+fit_step_chi <- step(fit0, scope = list(upper = fit_all), data = ICU, 
+                 direction = "both", test = "Chisq")
+```
+
+```{r}
+summary(fit_step_aic)
+```
+
+Both the AIC and the chi-squared method converged to the same model.
+
+The final model includes 4 variables:
+
+* Level of consciousness
+* Type of admission
+* Age
+* Cancer part of the problem
+* Systolic blood pressure
+
+The directions of all these variables make sense: risk is increased for higher levels,
+except for systolic blood pressure, as having a lower blood pressure (in an ICU setting) 
+is worse.
+
+Even though variables could be added and dropped, they only got added.
+
+> g.	In the final model there is one risk factor that was not significant in the separate analyses. Can you explain this?
+
+First check which one this was. In each fit object, when calling `summary`,
+the p-value for the coefficients is in the 4th column of row 2 of the coefficients table
+
+```{r}
+summary(fits[[1]])$coefficients
+pvals <- sapply(fits, function(fit) summary(fit)$coefficients[2,4])
+data.frame(independent_vars, pvals)
+```
+
+Here, `CAN` has a p-value of 1. It must have collinearity with at least 1 
+of the other included variables, which can act as confounders. 
+We can do a quick scan for colleniarity with a pairwise distribution plot
+
+```{r, warning = F}
+included_terms <- attr(fit_step_aic$terms, "term.labels")
+included_terms
+
+require(GGally)
+GGally::ggpairs(ICU[, included_terms])
+```
+
+From a quick look at this graph, it looks like `CAN` and `TYP` are related.
+
+> Now we will try to fit the best logistic curve by eye to the ICU data with categorized age (agecat) as only explanatory variable.
+
+> h.	Make a table of sta against agecat (with sta as column variable), and put the result in an object called tab.
+
+```{r}
+tab <- table(factor(ICU$STA), factor(ICU$AGECAT))
+tab
+```
+
+> i.	Have R calculate the proportion of people dying in the ICU for each age category, using the object tab.
+
+```{r}
+prop_tab <- prop.table(tab, margin = 2)
+```
+
+> j.	Plot these proportions against the age category.
+
+```{r}
+y = prop_tab[2,]
+x = colnames(prop_tab)
+plot(x, y, ylim = c(0,1))
+```
+
+> k.	Try to fit the best logistic curve to these points (see previous exercise, part e, with different values for b0 and b1).
+
+The reference to 'previous excercise, part e' is unclear, but we will try to solve it.
+A logistic line follows the equation:
+
+$$p(x) = \frac{1}{1+e^{-(\beta_0 + \beta_1*x)}}$$
+
+The probability of death for age category 20 is low, so lets choose a low intercept,
+ say $\beta_0 = -4$. At the top of our distribution, the probability approaches 50%.
+ Lets set $\beta_1$ such that at age 100, $\beta_0 + \beta_1 * 100 = 0$. So $\beta_1 = 0.04$
+
+```{r}
+x_levels <- 20:90
+y_levels <- 1/(1+exp(-1*(-4 + 0.04*x_levels)))
+plot(x,y)
+lines(x_levels, y_levels)
+```
+
+Not too bad
+
+> l.	Do a logistic regression on these data to get the best parameter estimates.
+
+There is some ambituity here, we could use AGECAT as a (sort-of) continous variable,
+with very discrete values. But since the researchers wanted to discretize age 
+into categories, we might wan't to treat `AGECAT` as a factor variable. 
+Based on the provided answers, treat AGECAT as 'continous', at least such that
+ 90-80 = 50-40.
+
+```{r}
+fit_age <- glm(STA~AGECAT, family = binomial, data = ICU)
+coefs <- (coef(fit_age))
+exp(coefs)
+```
+
+m.	Plot the points again, and add the logistic curve with the parameters from e).
+
+```{r}
+x_vals <- 20:90
+y_vals <- 1/(1+exp(-1*(coefs[1] + coefs[2] * x_vals)))
+plot(x,y)
+lines(x_vals, y_vals)
+```
+
+#### 8.
+> This is a repeat of exercise #3, but now in R. In the years 1995 through 1998 a research was done among 1243 Dalmatian puppies. It was determined whether or not they were deaf in at least one ear. The research question was if deafness was related to pigmentation. In order to answer this it was measured whether or not there were many spots on the skin, whether or not they had a spot on the head and whether or not the dog had blue eyes. In addition one wants to determine if there was heredity involved. In order to look at this the family history score was determined. This is a method to cope with litter  effects (heredity): for every puppy it was determined how many brothers or sisters were deaf. Call this number m. Then from the whole dataset the fraction of dogs that are deaf can be determined. This fraction is multiplied by litter size - 1. This is then the expected number of deaf brothers or sisters when there are no differences between litters. The family history score is now defined as fhs = m - fraction * (litter size - 1)
+Whether or not the puppy is deaf (0=no, 1=yes)	deaf
+The number of spots on the skin (1=light, 2=moderate, 3=heavy)	spot
+Whether or not the dog had blue eyes (0=no, 1=yes)	blueeye
+Whether or not the dog had an spot on the head (0=no, 1=yes)	headspot
+Gender (0=male, 1=female)	gender
+Family history score 	fhs
+
+> a.	Read in the data file dalmatian.csv.
+
+```{r, read_dal}
+dal <- read.csv(epistats::fromParentDir("data/dalmatian.csv"))
+dal <- read.table(epistats::fromParentDir("data/dalmatian.csv"), header = T,
+                  sep = ",")
+str(dal)
+```
+
+> b.	Explain how the variable fhs deals with the heredity.
+
+```{r}
+hist(dal$fhs)
+```
+
+`fhs` is the difference between the observed number of deaf puppies in a litter, 
+and the expected number of deaf puppies in the litter, given that all litters 
+are equal, so there is no effect of heredity. A puppy with `fhs` smaller than 0 was born 
+in a litter with fewer deaf siblings than expected, so in a 'protected' litter.
+
+> c.	Fit the logistic regression model for deaf with fhs as an exposure variable.
+
+```{r}
+fit <- glm(deaf~fhs, data = dal, family = binomial)
+```
+
+d.	Compare the AIC of the previous model with the model that only contains a constant. Also calculate the likelihood ratio and interpret the results.
+
+```{r}
+fit0 <- glm(deaf~1, data = dal, family = binomial)
+summary(fit)
+summary(fit0)
+```
+
+The model with `fhs` has a lower AIC, so fits the data better.
+
+```{r}
+lmtest::lrtest(fit0)
+lmtest::lrtest(fit)
+lmtest::lrtest(fit0, fit)
+```
+
+> e.	Which model fits the data best, and why?
+
+The model with the explanatory variable, since this one has a higher log-likelihood
+
+#### 9.
+> This is a repeat of exercise #4, but now in R. Low birth weight is an outcome that has been of concern to physicians for years. This is due to the fact that infant mortality rates and birth defect rates are very high for low birth weight babies. A woman's behavior during pregnancy (including diet, smoking habits, and receiving prenatal care) can greatly alter the chances of carrying the baby to term and, consequently, of delivering a baby of normal birth weight.
+The variables, listed below, have been shown to be associated with low birth weight in the obstetrical literature. The goal of the current study was to ascertain if these variables were important in the population being served by the medical center where the data were collected. So one wants to identify risk factors associated with giving birth to a low birth weight baby (weighing less than 2500 grams). 
+Data were collected on 189 women, 59 of which had low birth weight babies and 130 of which had normal birth weight babies.
+The four variables, that are thought to be of importance, are age, weight of the subject at her last menstrual period, race, and the number of physician visits during the first trimester of pregnancy.
+Source: Hosmer and Lemeshow, Applied Logistic Regression, Wiley, (1989).
+Identification Code	id
+Birth Weight in Grams 	bwt
+Low Birth Weight (0 = bwt  2500g; 1 = bwt < 2500g), 	lowb
+Age of the Mother in Years 	age
+Weight in Pounds at the Last Menstrual Period 	lwt
+Race (1 = White, 2 = Black, 3 = Other) 	race
+Smoking Status During Pregnancy (1 = Yes, 0 = No) 	smoke
+History of Premature Labor (0 = None 1 = One, etc.) 	ptl
+History of Hypertension (1 = Yes, 0 = No) 	ht
+Presence of Uterine Irritability (1 = Yes, 0 = No) 	ui
+Number of Physician Visits During the First Trimester (0,1, 2, …) 	ftv
+a.	Read in the dataset lowbirth.dat
+
+```{r}
+lb <- read.table(epistats::fromParentDir("data/lowbirth.dat"), header = T)
+str(lb)
+```
+
+> b.	Fit three models, one with exposure age, one with exposure smoke and one with the exposure ht.
+
+```{r}
+fit_0     <- glm(low~1  ,   data = lb, family = binomial)
+fit_age   <- glm(low~age,   data = lb, family = binomial)
+fit_smoke <- glm(low~smoke, data = lb, family = binomial)
+fit_ht    <- glm(low~ht,    data = lb, family = binomial)
+```
+
+> c.	Give for all 3 models an interpretation of the estimate of  for the specific exposure at hand.
+
+```{r}
+exp(coef(fit_age))
+exp(coef(fit_smoke))
+exp(coef(fit_ht))
+```
+
+Higher age reduces the risk of low birth weight, smoking increases the risk, 
+hypertension also increases the risk. The exponents of the coefficients are 
+the odds-ratios comparing those with the exposure against those without.
+
+> d.	Compare all 3 models to the model with only an intercept in it using AIC. Calculate for each the likelihood ratio and give an interpretation.
+
+Compare AICs
+```{r}
+summary(fit_0)$aic
+summary(fit_age)$aic
+summary(fit_smoke)$aic
+summary(fit_ht)$aic
+```
+
+Each model is a little better than the null model (i.e. has lower AIC)
+
+LR tests:
+
+```{r}
+lmtest::lrtest(fit_0, fit_age)
+lmtest::lrtest(fit_0, fit_smoke)
+lmtest::lrtest(fit_0, fit_ht)
+```
+
+Ony the smoke and ht models are significantly better than the null-model, 
+according to the LR-test
+
+> e.	Compare the 3 models with each other by comparing AIC. Also calculate likelihood ratios.
+
+```{r}
+lmtest::lrtest(fit_age, fit_smoke)
+lmtest::lrtest(fit_age, fit_ht)
+lmtest::lrtest(fit_smoke, fit_ht)
+```
+
+> f.	Which model fits the data best, and why?
+
+The model with smoke has the lowest Log-likelihood, which is significantly 
+different from th eother models
+
+> g.	Fit the logistic regression model with exposures age, lwt, race, smoke, ptl, ht, ui and ftv.
+
+```{r}
+fit_full <- glm(low~age+lwt+race+smoke+ptl+ht+ui+ftv, data = lb, family = binomial)
+summary(fit_full)
+```
+
+> h.	Find out which exposures can be left out using AIC.
+
+```{r}
+drop1(fit_full)
+```
+
+Dropping age and ftv would lower AIC, so they can be left out.
+
+> i.	Discuss the final model.
+
+```{r}
+fit_final <- glm(low~lwt+race+smoke+ptl+ht+ui, data = lb, family = binomial)
+summary(fit_final)
+drop1(fit_final)
+```
+
+Is this the same as using the step function?
+
+```{r}
+fit_step <- step(fit_0, scope = list(upper = fit_full), data = lb, direction = "both")
+```
+
+```{r}
+sort(attr(fit_final$terms, "term.labels"))
+sort(attr(fit_step$terms, "term.labels"))
+```
+
+Yes it is the same as using stepwise selection, which considers some extra models.
+
+> j.	Write a short report about your findings. Include the statistical model you used, the method you used to reduce this model and the final results (estimate and standard errors).
+
+Left for now
+
+#### 10. Optional 	This is a repeat of exercise #5, but now in R. The aim of this exercise is to familiarize you with the logistic functions.
+
+> a.	Make a sequence of values for x by giving the commands 
+
+```{r}
+x <- seq(-2.5,2.5,by=0.1)
+x 	# The content of x is now printed to your screen.
+```
+
+> b.	Define y1 as 
+
+```{r}
+y1 <- exp(1+3*x)/(1+exp(1+3*x))
+```
+
+> c.	Then run the command 
+
+```{r}
+plot(x,y1,type="l") 
+```
+
+> (The subcommand type “l” connects the points with a line.) This results in the graph of the logistic function with coefficients b0 = 1 and b1 = 3.
+
+> d.	Define y2 using b0 = 1 and b1 = 2, and y3 using b0 = 1 and b1 = -2
+
+```{r}
+y2 <- exp(1+2*x)/(1+exp(1+2*x))
+y3 <- exp(1-2*x)/(1+exp(1-2*x))
+```
+
+e.	Add these to the existing plot using lines(x, y2, lty=2) and similar for y3.
+
+```{r}
+plot(x,y1,type="l") 
+lines(x,y2,lty = 2) 
+lines(x,y3,lty = 2) 
+```
+
+> f.	Draw a horizontal line at y=0.5 using the command abline(h=0.5)
+
+```{r}
+plot(x,y1,type="l") 
+lines(x,y2,lty = 2) 
+lines(x,y3,lty = 2)
+abline(h = 0.5)
+```
+
+> Do you understand how this abline command works?.
+
+It takes a slope and intercept (or vertical / horizontal value) and draws a line. 
+`h = 0.5` means a horizontal line at y = 0.5
+
+> g.	Read off from the graphs at which x-values the horizontal line from f) intersects each of the curves. How does the answer connect to the values of b0 and b1? What would be the interpretation of those x-values in a logistic regression?
+
+From the formula one can read that $p = 0.5$ when $\beta_0 + \beta_1x = 0$. 
+So for y1, x = -1/3, for y2, x = -1/2, for y3, x = 1/2. This matches the plot
 
 
 
