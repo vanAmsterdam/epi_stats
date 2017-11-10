@@ -192,7 +192,9 @@ Note that likelihood-ratio may increase, even when accuracy goes down.
 
 
 
+### Assumptions
 
+* homoscedasticity is not needed to check (it is dependent on p in binomial distribution)
 
 
 ## Session information

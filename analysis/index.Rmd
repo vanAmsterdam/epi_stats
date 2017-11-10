@@ -14,6 +14,8 @@ This website is made to share the assignments I worked out for "Classical Method
 
 [assignments week 3](assignments_week3.html)
 
+[case studies (not finished!)](case_studies.html)
+
 
 ### Notes
 Due to how this website was made, the R-code 'thinks' it is in the `analysis` 
