@@ -114,7 +114,7 @@ $$t = \frac{\bar{Y_{1}} - \bar{Y_{2}}}{s_{\bar{\Delta}}}$$
 Where
 $$s_{\bar{\Delta}} = \sqrt{\frac{s_{1}^2}{n_{1}} + \frac{s_{2}^2}{n_{2}}}$$
 
-Then, for the T-distribution, the degrees of freedom is estimated by the Welch–Satterthwaite equation
+Then, for the T-distribution, the degrees of freedom is estimated by the Welch-Satterthwaite equation
 $$df = \frac{(\frac{s_{1}^2}{n_{1}} + \frac{s_{2}^2}{n_{2}})^2}{(\frac{s_{1}^2}{n_{1}})^2/(n_{1}-1) + (\frac{s_{2}^2}{n_{2}})^2/(n_{2}-1)}$$
 
 ## Remarks

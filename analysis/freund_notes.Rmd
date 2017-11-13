@@ -1,0 +1,100 @@
+---
+title: "Notes to Mathematical Statistics with Applications by J.E. Freund"
+author: "Wouter van Amsterdam"
+date: 2017-11-13
+output: html_document
+---
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+```
+
+<!-- Update knitr chunk options -->
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+<!-- Insert the date the file was last updated -->
+```{r last-updated, echo=FALSE, results='asis'}
+```
+
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+```{r code-version, echo=FALSE, results='asis'}
+```
+
+<!-- Add your analysis here -->
+## 2. Probability
+### 2.2 Sample spaces
+Sample space is collection of possible outcomes of an experiment.
+For coinflip: $S = \left\{H, T\right\}$.
+
+In general, take sample space that cannot be divided. 
+$S = \left\{1,2,3,4,5,6\right\}$, better than $S = \left\{odd, even\right\}$.
+
+### 2.3 Events
+#### De Morgan Laws
+
+* $(A\cap B)' = A'\cup B'$
+* $(A\cup B)' = A'\cap B'$
+
+### 2.4 Probability of an event
+
+* Postulate 1: The probability of an event is a nonnegative real number;
+that is, $P(A) \geq 0$ for any subset $A$ of $S$.
+* Postulate 2: $P(S) = 1$
+* Postulate 3: If $A_1,A_2,A_3,...$, is a finite or infinite sequence of 
+mutually exclusive events of $S$, then 
+$P(A_1 \cup A_2 \cup A_3 \cup ...)=P(A_1)+P(A_2)+P(A_3)+...$
+
+### 2.5 Some rules of probability
+#### General addition rule
+If $A$ and $B$ are any two events in sample space $S$, then
+$$P(A \cup B) = P(A) + P(B) - P(A \cap B)$$
+
+If $A$, $B$ and $C$ are any three events in sample space $S$, then
+$$P(A \cup B \cup C) = P(A) + P(B) + P(C) - P(A \cap B) - P(B \cap C) 
+- P(B \cap C) + P(A \cap B \cap C)$$
+
+### 2.6 Conditional probability
+#### Conditional probability definition
+If $A$ and $B$ are two events in sample space $S$ and $P(A) \neq 0$, then 
+the **conditional probability** of $B$ given $A$ is:
+$$P(B|A) = \frac{P(A \cap B)}{P(A)}$$
+
+#### Definition of independence
+Two events $A$ and $B$ are **independent** if and only if
+$$P(A \cap B) = P(A)*P(B)$$
+
+Which means that $P(B|A) = P(B)$ and $P(A|B) = P(A)$. 
+These two conditions are equivalent when both $P(A) \neq 0$ and $P(B) \neq 0$.
+
+
+* independent set: any intersection of k-members equals product of probabilities of members
+* set can be pairwise independent, but not independent
+
+### 2.8 Bayes' theorem
+#### Rule of total probability / rule of elmination
+
+If the events $B_1, B_2, ..., B_k$ constitute apartition of the sample space $S$,
+with $P(B_i) \neq 0$ for any $i$, then for any event $A$ in $S$:
+$$P(A) = \sum_{i=1}^k{P(B_i)*P(A|B_i)}$$
+
+$B_i$ is a partition for $S$ when they are mutually exclusive, and their union 
+equals $S$.
+
+#### Bayes' theorem
+Given a partition $B_i \neq 0$, $B_1, B_2, ..., B_k$ of $S$, 
+and an event $A$ with $P(A) \neq 0$ in $S$, 
+that was reached via one of the $k$ branches, 
+then the probability that $A$ was reached through branch $r$ is:
+$$P(B_r|A) = \frac{P(B_r)*P(A|B_r)}{\sum_{i=1}^k{P(B_i)*P(A|B_i)}}$$
+
+$B_i$ are **prior probabilities**.
+
+## Session information
+
+<!-- Insert the session information into the document -->
+```{r session-info}
+```

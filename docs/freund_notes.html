@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+<meta name="author" content="Wouter van Amsterdam" />
+
+<meta name="date" content="2017-11-13" />
+
+<title>Notes to Mathematical Statistics with Applications by J.E. Freund</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-1.1/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-1.1/highlight.js"></script>
+<link href="site_libs/font-awesome-4.5.0/css/font-awesome.min.css" rel="stylesheet" />
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs && document.readyState && document.readyState === "complete") {
+   window.setTimeout(function() {
+      hljs.initHighlighting();
+   }, 0);
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+
+<div class="container-fluid main-container">
+
+<!-- tabsets -->
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+</script>
+
+<!-- code folding -->
+
+
+
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+  padding-left: 25px;
+  text-indent: 0;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">epi_stats</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/jdblischak/workflowr">
+    <span class="fa fa-github"></span>
+     
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">Notes to Mathematical Statistics with Applications by J.E. Freund</h1>
+<h4 class="author"><em>Wouter van Amsterdam</em></h4>
+<h4 class="date"><em>2017-11-13</em></h4>
+
+</div>
+
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+<!-- Update knitr chunk options -->
+<!-- Insert the date the file was last updated -->
+<p><strong>Last updated:</strong> 2017-11-13</p>
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+<p><strong>Code version:</strong> f84e869</p>
+<!-- Add your analysis here -->
+<div id="probability" class="section level2">
+<h2>2. Probability</h2>
+<div id="sample-spaces" class="section level3">
+<h3>2.2 Sample spaces</h3>
+<p>Sample space is collection of possible outcomes of an experiment. For coinflip: <span class="math inline">\(S = \left\{H, T\right\}\)</span>.</p>
+<p>In general, take sample space that cannot be divided. <span class="math inline">\(S = \left\{1,2,3,4,5,6\right\}\)</span>, better than <span class="math inline">\(S = \left\{odd, even\right\}\)</span>.</p>
+</div>
+<div id="events" class="section level3">
+<h3>2.3 Events</h3>
+<div id="de-morgan-laws" class="section level4">
+<h4>De Morgan Laws</h4>
+<ul>
+<li><span class="math inline">\((A\cap B)&#39; = A&#39;\cup B&#39;\)</span></li>
+<li><span class="math inline">\((A\cup B)&#39; = A&#39;\cap B&#39;\)</span></li>
+</ul>
+</div>
+</div>
+<div id="probability-of-an-event" class="section level3">
+<h3>2.4 Probability of an event</h3>
+<ul>
+<li>Postulate 1: The probability of an event is a nonnegative real number; that is, <span class="math inline">\(P(A) \geq 0\)</span> for any subset <span class="math inline">\(A\)</span> of <span class="math inline">\(S\)</span>.</li>
+<li>Postulate 2: <span class="math inline">\(P(S) = 1\)</span></li>
+<li>Postulate 3: If <span class="math inline">\(A_1,A_2,A_3,...\)</span>, is a finite or infinite sequence of mutually exclusive events of <span class="math inline">\(S\)</span>, then <span class="math inline">\(P(A_1 \cup A_2 \cup A_3 \cup ...)=P(A_1)+P(A_2)+P(A_3)+...\)</span></li>
+</ul>
+</div>
+<div id="some-rules-of-probability" class="section level3">
+<h3>2.5 Some rules of probability</h3>
+<div id="general-addition-rule" class="section level4">
+<h4>General addition rule</h4>
+<p>If <span class="math inline">\(A\)</span> and <span class="math inline">\(B\)</span> are any two events in sample space <span class="math inline">\(S\)</span>, then <span class="math display">\[P(A \cup B) = P(A) + P(B) - P(A \cap B)\]</span></p>
+<p>If <span class="math inline">\(A\)</span>, <span class="math inline">\(B\)</span> and <span class="math inline">\(C\)</span> are any three events in sample space <span class="math inline">\(S\)</span>, then <span class="math display">\[P(A \cup B \cup C) = P(A) + P(B) + P(C) - P(A \cap B) - P(B \cap C) 
+- P(B \cap C) + P(A \cap B \cap C)\]</span></p>
+</div>
+</div>
+<div id="conditional-probability" class="section level3">
+<h3>2.6 Conditional probability</h3>
+<div id="conditional-probability-definition" class="section level4">
+<h4>Conditional probability definition</h4>
+<p>If <span class="math inline">\(A\)</span> and <span class="math inline">\(B\)</span> are two events in sample space <span class="math inline">\(S\)</span> and <span class="math inline">\(P(A) \neq 0\)</span>, then the <strong>conditional probability</strong> of <span class="math inline">\(B\)</span> given <span class="math inline">\(A\)</span> is: <span class="math display">\[P(B|A) = \frac{P(A \cap B)}{P(A)}\]</span></p>
+</div>
+<div id="definition-of-independence" class="section level4">
+<h4>Definition of independence</h4>
+<p>Two events <span class="math inline">\(A\)</span> and <span class="math inline">\(B\)</span> are <strong>independent</strong> if and only if <span class="math display">\[P(A \cap B) = P(A)*P(B)\]</span></p>
+<p>Which means that <span class="math inline">\(P(B|A) = P(B)\)</span> and <span class="math inline">\(P(A|B) = P(A)\)</span>. These two conditions are equivalent when both <span class="math inline">\(P(A) \neq 0\)</span> and <span class="math inline">\(P(B) \neq 0\)</span>.</p>
+<ul>
+<li>independent set: any intersection of k-members equals product of probabilities of members</li>
+<li>set can be pairwise independent, but not independent</li>
+</ul>
+</div>
+</div>
+<div id="bayes-theorem" class="section level3">
+<h3>2.8 Bayes’ theorem</h3>
+<div id="rule-of-total-probability-rule-of-elmination" class="section level4">
+<h4>Rule of total probability / rule of elmination</h4>
+<p>If the events <span class="math inline">\(B_1, B_2, ..., B_k\)</span> constitute apartition of the sample space <span class="math inline">\(S\)</span>, with <span class="math inline">\(P(B_i) \neq 0\)</span> for any <span class="math inline">\(i\)</span>, then for any event <span class="math inline">\(A\)</span> in <span class="math inline">\(S\)</span>: <span class="math display">\[P(A) = \sum_{i=1}^k{P(B_i)*P(A|B_i)}\]</span></p>
+<p><span class="math inline">\(B_i\)</span> is a partition for <span class="math inline">\(S\)</span> when they are mutually exclusive, and their union equals <span class="math inline">\(S\)</span>.</p>
+</div>
+<div id="bayes-theorem-1" class="section level4">
+<h4>Bayes’ theorem</h4>
+<p>Given a partition <span class="math inline">\(B_i \neq 0\)</span>, <span class="math inline">\(B_1, B_2, ..., B_k\)</span> of <span class="math inline">\(S\)</span>, and an event <span class="math inline">\(A\)</span> with <span class="math inline">\(P(A) \neq 0\)</span> in <span class="math inline">\(S\)</span>, that was reached via one of the <span class="math inline">\(k\)</span> branches, then the probability that <span class="math inline">\(A\)</span> was reached through branch <span class="math inline">\(r\)</span> is: <span class="math display">\[P(B_r|A) = \frac{P(B_R)*P(A|B_r)}{\sum_{i=1}^k{P(B_i)*P(A|B_i)}}\]</span></p>
+</div>
+</div>
+</div>
+<div id="session-information" class="section level2">
+<h2>Session information</h2>
+<!-- Insert the session information into the document -->
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 3.4.1 (2017-06-30)
+Platform: x86_64-w64-mingw32/x64 (64-bit)
+Running under: Windows 7 x64 (build 7601) Service Pack 1
+
+Matrix products: default
+
+locale:
+[1] LC_COLLATE=Dutch_Netherlands.1252  LC_CTYPE=Dutch_Netherlands.1252   
+[3] LC_MONETARY=Dutch_Netherlands.1252 LC_NUMERIC=C                      
+[5] LC_TIME=Dutch_Netherlands.1252    
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+loaded via a namespace (and not attached):
+ [1] compiler_3.4.1  backports_1.1.0 magrittr_1.5    rprojroot_1.2  
+ [5] tools_3.4.1     htmltools_0.3.6 yaml_2.1.14     Rcpp_0.12.12   
+ [9] stringi_1.1.5   rmarkdown_1.6   knitr_1.17      git2r_0.19.0   
+[13] stringr_1.2.0   digest_0.6.12   evaluate_0.10.1</code></pre>
+</div>
+
+<hr>
+<p>
+    This <a href="http://rmarkdown.rstudio.com">R Markdown</a> site was created with <a href="https://github.com/jdblischak/workflowr">workflowr</a>
+</p>
+<hr>
+
+<!-- To enable disqus, uncomment the section below and provide your disqus_shortname -->
+
+<!-- disqus
+  <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+        var disqus_shortname = 'rmarkdown'; // required: replace example with your forum shortname
+
+        /* * * DON'T EDIT BELOW THIS LINE * * */
+        (function() {
+            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+-->
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
