@@ -313,10 +313,10 @@ div.tocify {
 shared across the workflowr files. -->
 <!-- Update knitr chunk options -->
 <!-- Insert the date the file was last updated -->
-<p><strong>Last updated:</strong> 2017-11-09</p>
+<p><strong>Last updated:</strong> 2017-11-15</p>
 <!-- Insert the code version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
-<p><strong>Code version:</strong> 85e9ba3</p>
+<p><strong>Code version:</strong> 78f7cb7</p>
 <!-- Add your analysis here -->
 <div id="day-9-multiple-regression" class="section level2">
 <h2>Day 9 Multiple regression</h2>
@@ -2042,7 +2042,7 @@ prob</code></pre>
 <pre class="r"><code>predict(low.glm, newdata = data.frame(fev = 1.5), type = &quot;response&quot;)</code></pre>
 <pre><code>        1 
 0.2446217 </code></pre>
-<p>This is 1-prob. It is not clear to me why it would give me this.</p>
+<p>This is 1-prob. It is not clear to me why it would give me this, but probably it has something to do with the 0-1 coding of the outcome (which one is predicted by the model.)</p>
 <blockquote>
 <ol style="list-style-type: lower-roman">
 <li>Run a multiple logistic regression with explanatory variables fev, age, height and gender. Assign the outcome to the object full.logreg</li>
@@ -2612,7 +2612,17 @@ lines(x_vals, y_vals)</code></pre>
 <li>Read in the data file dalmatian.csv.</li>
 </ol>
 </blockquote>
-<pre class="r"><code>dal &lt;- read.csv(epistats::fromParentDir(&quot;data/dalmatian.csv&quot;))</code></pre>
+<pre class="r"><code>dal &lt;- read.csv(epistats::fromParentDir(&quot;data/dalmatian.csv&quot;))
+dal &lt;- read.table(epistats::fromParentDir(&quot;data/dalmatian.csv&quot;), header = T,
+                  sep = &quot;,&quot;)
+str(dal)</code></pre>
+<pre><code>&#39;data.frame&#39;:   1243 obs. of  6 variables:
+ $ deaf    : int  0 0 0 0 0 0 0 0 0 0 ...
+ $ spot    : int  2 2 2 2 2 2 2 2 2 2 ...
+ $ blueeye : int  0 0 0 0 0 0 0 0 0 0 ...
+ $ headspot: int  0 0 1 0 0 1 1 1 0 0 ...
+ $ gender  : int  0 1 1 1 0 0 0 1 1 1 ...
+ $ fhs     : num  -0.173 -1.038 -1.038 -1.038 -1.038 ...</code></pre>
 <blockquote>
 <ol start="2" style="list-style-type: lower-alpha">
 <li>Explain how the variable fhs deals with the heredity.</li>

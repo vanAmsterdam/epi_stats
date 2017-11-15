@@ -313,10 +313,10 @@ div.tocify {
 shared across the workflowr files. -->
 <!-- Update knitr chunk options -->
 <!-- Insert the date the file was last updated -->
-<p><strong>Last updated:</strong> 2017-11-13</p>
+<p><strong>Last updated:</strong> 2017-11-15</p>
 <!-- Insert the code version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
-<p><strong>Code version:</strong> f84e869</p>
+<p><strong>Code version:</strong> 78f7cb7</p>
 <!-- Add your analysis here -->
 <div id="probability" class="section level2">
 <h2>2. Probability</h2>
@@ -377,8 +377,19 @@ shared across the workflowr files. -->
 </div>
 <div id="bayes-theorem-1" class="section level4">
 <h4>Bayes’ theorem</h4>
-<p>Given a partition <span class="math inline">\(B_i \neq 0\)</span>, <span class="math inline">\(B_1, B_2, ..., B_k\)</span> of <span class="math inline">\(S\)</span>, and an event <span class="math inline">\(A\)</span> with <span class="math inline">\(P(A) \neq 0\)</span> in <span class="math inline">\(S\)</span>, that was reached via one of the <span class="math inline">\(k\)</span> branches, then the probability that <span class="math inline">\(A\)</span> was reached through branch <span class="math inline">\(r\)</span> is: <span class="math display">\[P(B_r|A) = \frac{P(B_R)*P(A|B_r)}{\sum_{i=1}^k{P(B_i)*P(A|B_i)}}\]</span></p>
+<p>Given a partition <span class="math inline">\(B_i \neq 0\)</span>, <span class="math inline">\(B_1, B_2, ..., B_k\)</span> of <span class="math inline">\(S\)</span>, and an event <span class="math inline">\(A\)</span> with <span class="math inline">\(P(A) \neq 0\)</span> in <span class="math inline">\(S\)</span>, that was reached via one of the <span class="math inline">\(k\)</span> branches, then the probability that <span class="math inline">\(A\)</span> was reached through branch <span class="math inline">\(r\)</span> is: <span class="math display">\[P(B_r|A) = \frac{P(B_r)*P(A|B_r)}{\sum_{i=1}^k{P(B_i)*P(A|B_i)}}\]</span></p>
+<p><span class="math inline">\(B_i\)</span> are <strong>prior probabilities</strong>.</p>
 </div>
+</div>
+</div>
+<div id="probability-distributiosn-and-probability-densities" class="section level2">
+<h2>3 Probability Distributiosn and Probability Densities</h2>
+<div id="conditional-distributions" class="section level3">
+<h3>3.7 Conditional Distributions</h3>
+<p>Conditional distribution (or density for continuous variable) <span class="math display">\[f(x|y) = \frac{f(x,y)}{h(y)}\]</span> Where <span class="math inline">\(h(y) \neq 0\)</span> the marginal distribution / density at <span class="math inline">\(Y = y\)</span></p>
+<p>Variables are independent if and only if</p>
+<p><span class="math display">\[f(x_1,x_2,...,x_n) = f(x_1)*f(x_2)*...*f(x_n)\]</span></p>
+<p>Within their range.</p>
 </div>
 </div>
 <div id="session-information" class="section level2">
