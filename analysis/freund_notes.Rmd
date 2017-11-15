@@ -93,6 +93,18 @@ $$P(B_r|A) = \frac{P(B_r)*P(A|B_r)}{\sum_{i=1}^k{P(B_i)*P(A|B_i)}}$$
 
 $B_i$ are **prior probabilities**.
 
+## 3 Probability Distributiosn and Probability Densities
+### 3.7 Conditional Distributions
+Conditional distribution (or density for continuous variable)
+$$f(x|y) = \frac{f(x,y)}{h(y)}$$
+Where $h(y) \neq 0$ the marginal distribution / density at $Y = y$
+
+Variables are independent if and only if
+
+$$f(x_1,x_2,...,x_n) = f(x_1)*f(x_2)*...*f(x_n)$$
+
+Within their range.
+
 ## Session information
 
 <!-- Insert the session information into the document -->
