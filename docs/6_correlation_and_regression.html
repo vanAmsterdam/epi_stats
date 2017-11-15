@@ -11,9 +11,9 @@
 
 <meta name="author" content="Wouter van Amsterdam" />
 
-<meta name="date" content="2017-11-13" />
+<meta name="date" content="2017-11-15" />
 
-<title>Summary of statistical tests and distributions</title>
+<title>Correlation and Regression</title>
 
 <script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -302,9 +302,9 @@ div.tocify {
 
 
 
-<h1 class="title toc-ignore">Summary of statistical tests and distributions</h1>
+<h1 class="title toc-ignore">Correlation and Regression</h1>
 <h4 class="author"><em>Wouter van Amsterdam</em></h4>
-<h4 class="date"><em>2017-11-13</em></h4>
+<h4 class="date"><em>2017-11-15</em></h4>
 
 </div>
 
@@ -318,115 +318,143 @@ shared across the workflowr files. -->
  package git2r is installed -->
 <p><strong>Code version:</strong> d35db9f</p>
 <!-- Add your analysis here -->
-<div id="statistical-tests" class="section level2">
-<h2>Statistical tests</h2>
-<div id="single-sample-t-test" class="section level3">
-<h3>Single Sample T-test</h3>
+<div id="pearson-vs-spearman" class="section level3">
+<h3>Pearson vs Spearman</h3>
+<p>Spearman = Pearson on ranks</p>
+<pre class="r"><code>set.seed(3)
+n = 20
+noise = .4
+x = runif(n)
+y = x + rnorm(n, sd = noise)
+plot(x,y)</code></pre>
+<p><img src="figure/6_correlation_and_regression.Rmd/unnamed-chunk-1-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>cor.test(~x+y, method = &quot;p&quot;)</code></pre>
+<pre><code>
+    Pearson&#39;s product-moment correlation
+
+data:  x and y
+t = 3.3407, df = 18, p-value = 0.003639
+alternative hypothesis: true correlation is not equal to 0
+95 percent confidence interval:
+ 0.2425222 0.8330969
+sample estimates:
+      cor 
+0.6186489 </code></pre>
+<pre class="r"><code>cor.test(~x+y, method = &quot;s&quot;)</code></pre>
+<pre><code>
+    Spearman&#39;s rank correlation rho
+
+data:  x and y
+S = 422, p-value = 0.001239
+alternative hypothesis: true rho is not equal to 0
+sample estimates:
+      rho 
+0.6827068 </code></pre>
+<pre class="r"><code>cor.test(~rank(x)+rank(y), method = &quot;p&quot;)</code></pre>
+<pre><code>
+    Pearson&#39;s product-moment correlation
+
+data:  rank(x) and rank(y)
+t = 3.964, df = 18, p-value = 0.0009099
+alternative hypothesis: true correlation is not equal to 0
+95 percent confidence interval:
+ 0.3441612 0.8641558
+sample estimates:
+      cor 
+0.6827068 </code></pre>
+<p>Note that the estimate is equal for spearman vs pearson of rank, however, the p-value for pearson on the ranks is lower.</p>
+<p>Is this always the case?</p>
+<pre class="r"><code>set.seed(2)
+nsim = 100
+n = 20
+noise = .4
+
+sim &lt;- data.frame(
+  rp  = numeric(nsim),
+  rs  = numeric(nsim),
+  rpr = numeric(nsim),
+  blm = numeric(nsim),
+  sqr_rsq = numeric(nsim),
+  pp  = numeric(nsim),
+  ps  = numeric(nsim),
+  ppr = numeric(nsim),
+  plm = numeric(nsim)
+)
+
+for (i in 1:nsim) {
+  x = runif(min = -1, max = 1, n = n)
+  y = x + rnorm(n, sd = noise)
+  cor_p  &lt;- cor.test(~x+y, method = &quot;p&quot;)
+  cor_s  &lt;- cor.test(~x+y, method = &quot;s&quot;)
+  cor_pr &lt;- cor.test(~rank(x)+rank(y), method = &quot;p&quot;)
+  lm_fit &lt;- lm(y~x)
+  sum_fit&lt;- summary(lm_fit)
+  sim[i, ] &lt;- c(cor_p$estimate, cor_s$estimate, cor_pr$estimate, 
+                lm_fit$coefficients[2],
+                sqrt(sum_fit$r.squared),
+                cor_p$p.value, cor_s$p.value, cor_pr$p.value,
+                sum_fit$coefficients[2,4])
+}
+
+plot(rs~rpr, data = sim)</code></pre>
+<p><img src="figure/6_correlation_and_regression.Rmd/unnamed-chunk-2-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>plot(ps~ppr, data = sim)</code></pre>
+<p><img src="figure/6_correlation_and_regression.Rmd/unnamed-chunk-2-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>plot(rp~sqr_rsq, data = sim)</code></pre>
+<p><img src="figure/6_correlation_and_regression.Rmd/unnamed-chunk-2-3.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>plot(sim$ps-sim$ppr)</code></pre>
+<p><img src="figure/6_correlation_and_regression.Rmd/unnamed-chunk-2-4.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>plot(sim$pp-sim$plm)</code></pre>
+<p><img src="figure/6_correlation_and_regression.Rmd/unnamed-chunk-2-5.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Conclusions</p>
+<ul>
+<li>Pearson correlation = <span class="math inline">\(R^2\)</span> from simple linear regression with intercept, and p-values are equal</li>
+<li>Spearman correlation = Pearson on the ranks of the data, p-values differ in that the spearman p-values are sometimes higher.</li>
+</ul>
 </div>
-<div id="two-paired-samples-t-test" class="section level3">
-<h3>Two paired samples T-test</h3>
-<p>See single sample T-test for <span class="math inline">\(d = X_1 - X_2\)</span></p>
-</div>
-<div id="two-unpaired-samples-t-test-equal-variance" class="section level3">
-<h3>Two unpaired samples T-test, equal variance</h3>
-<div id="other-names" class="section level4">
-<h4>Other names</h4>
-</div>
-<div id="definition" class="section level4">
-<h4>Definition</h4>
-<div id="test-statistic" class="section level5">
-<h5>Test-statistic</h5>
-<p>t, follows Student’s T-distribution with n1+n2-2 degrees of freedom</p>
-</div>
-</div>
-<div id="variables" class="section level4">
-<h4>Variables</h4>
-<div id="types" class="section level6">
-<h6>Types</h6>
-<p>interval, continous</p>
-</div>
-<div id="distributions" class="section level6">
-<h6>Distributions</h6>
-<p>normal</p>
-</div>
-</div>
-<div id="relevant-equations" class="section level4">
-<h4>Relevant equations</h4>
-<div id="test-statistic-1" class="section level5">
-<h5>Test-statistic</h5>
-<p><span class="math display">\[t = \frac{\bar{Y_{1}} - \bar{Y_{2}}}{\bar{{SE}}_{difference}}\]</span></p>
-</div>
-<div id="standard-error" class="section level5">
-<h5>Standard error</h5>
-<p><span class="math display">\[{SE}_{difference} = s_{pooled}*\sqrt{\frac{1}{n_{1}}+\frac{1}{n_{2}}}\]</span></p>
-</div>
-<div id="pooled-variance" class="section level5">
-<h5>Pooled variance</h5>
-<p><span class="math display">\[s_{pooled} = \frac{(n_{1}-1)*s_{1}^2 + (n_{2}-1)*s_{2}^2}{n_{1}+n_{2}-2}\]</span></p>
-</div>
-</div>
-<div id="assumptions" class="section level4">
-<h4>Assumptions</h4>
-<p><span class="math inline">\(X_1\)</span>, <span class="math inline">\(X_2\)</span> normally distributed, or CTL holds. Equal variance or non-equal variance.</p>
-</div>
-</div>
-<div id="two-unpaired-samples-t-test-unequal-variance" class="section level3">
-<h3>Two unpaired samples T-test, unequal variance</h3>
-<div id="other-names-1" class="section level4">
-<h4>Other names</h4>
-</div>
-<div id="definition-1" class="section level4">
-<h4>Definition</h4>
-<div id="test-statistic-2" class="section level5">
-<h5>Test-statistic</h5>
-<p>t, follows Student’s T-distribution with df degrees of freedom</p>
-</div>
-</div>
-<div id="variables-1" class="section level4">
-<h4>Variables</h4>
-<div id="dependent" class="section level5">
-<h5>Dependent</h5>
-<div id="types-1" class="section level6">
-<h6>Types</h6>
-<p>interval, continous</p>
-</div>
-<div id="distributions-1" class="section level6">
-<h6>Distributions</h6>
-<p>normal</p>
-</div>
-</div>
-<div id="independent" class="section level5">
-<h5>Independent</h5>
-<div id="types-2" class="section level6">
-<h6>Types</h6>
-<p>interval, continous</p>
-</div>
-<div id="distributions-2" class="section level6">
-<h6>Distributions</h6>
-<p>normal</p>
-</div>
-</div>
-</div>
-<div id="relevant-equations-1" class="section level4">
-<h4>Relevant equations</h4>
-<div id="test-statistic-3" class="section level5">
-<h5>Test-statistic</h5>
-<p><span class="math display">\[t = \frac{\bar{Y_{1}} - \bar{Y_{2}}}{\bar{{SE}}_{difference}}\]</span></p>
-</div>
-<div id="standard-error-1" class="section level5">
-<h5>Standard error</h5>
-<p><span class="math display">\[{SE}_{difference} = \sqrt{\frac{s_1^2}{n_{1}}+\frac{s_2^2}{n_{2}}}\]</span></p>
-</div>
-<div id="degrees-of-freedom-welch-satterthwaite" class="section level5">
-<h5>Degrees of freedom, Welch-Satterthwaite</h5>
-<p><span class="math display">\[{df} = \frac{(\frac{s_{1}^2}{n_{1}} + \frac{s_{2}^2}{n_{2}})^2}{({s_{1}^2}/{n_{1}})^2/(n_{1}-1) + ({s_{2}^2}/{n_{2}})^2/(n_{2}-1)}\]</span></p>
-</div>
-</div>
-<div id="assumptions-1" class="section level4">
-<h4>Assumptions</h4>
-<p><span class="math inline">\(X_1\)</span>, <span class="math inline">\(X_2\)</span> normally distributed, or CTL holds. Equal variance or non-equal variance.</p>
-</div>
-</div>
+<div id="lm-predictions" class="section level3">
+<h3>LM predictions</h3>
+<pre class="r"><code>set.seed(3)
+n = 10
+noise = .4
+x = runif(min = -2, max = 2, n)
+x = rnorm(n)
+y = x + rnorm(n, sd = noise)
+
+fit &lt;- lm(y~x) 
+summary(fit)</code></pre>
+<pre><code>
+Call:
+lm(formula = y ~ x)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-0.46551 -0.17179  0.00419  0.05663  0.57650 
+
+Coefficients:
+            Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept)  -0.1815     0.1015  -1.789    0.111    
+x             0.9223     0.1232   7.486 7.02e-05 ***
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+Residual standard error: 0.3189 on 8 degrees of freedom
+Multiple R-squared:  0.8751,    Adjusted R-squared:  0.8595 
+F-statistic: 56.04 on 1 and 8 DF,  p-value: 7.018e-05</code></pre>
+<pre class="r"><code>plot(x,y)
+abline(fit, lty = 2)
+
+x_preds  &lt;- seq(from = floor(min(x)), to = ceiling(max(x)), length.out = 50)
+yhat_pred &lt;- predict(fit, newdata = data.frame(x = x_preds),
+                     what = &quot;terms&quot;, interval = &quot;confidence&quot;)
+y_pred    &lt;- predict(fit, newdata = data.frame(x = x_preds),
+                     what = &quot;response&quot;, interval = &quot;prediction&quot;)
+
+points(x_preds, yhat_pred[,2], pch = 3, col = &quot;blue&quot;)
+points(x_preds, yhat_pred[,3], pch = 3, col = &quot;blue&quot;)
+points(x_preds, y_pred[,2], pch = 3, col = &quot;red&quot;)
+points(x_preds, y_pred[,3], pch = 3, col = &quot;red&quot;)</code></pre>
+<p><img src="figure/6_correlation_and_regression.Rmd/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /></p>
 </div>
 <div id="session-information" class="section level2">
 <h2>Session information</h2>

@@ -316,7 +316,7 @@ shared across the workflowr files. -->
 <p><strong>Last updated:</strong> 2017-11-15</p>
 <!-- Insert the code version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
-<p><strong>Code version:</strong> 86fa403</p>
+<p><strong>Code version:</strong> d35db9f</p>
 <!-- Add your analysis here -->
 <p>Teacher: Maria Schipper</p>
 <ul>
@@ -662,17 +662,8 @@ W = 0.96941, p-value = 0.6524</code></pre>
 <div id="kruskal-wallis" class="section level3">
 <h3>Kruskal-Wallis</h3>
 <p>Let’s compare Kruskal-Wallice and ANOVA</p>
-<pre class="r"><code>require(dplyr)</code></pre>
-<pre><code>Loading required package: dplyr</code></pre>
-<pre><code>
-Attaching package: &#39;dplyr&#39;</code></pre>
-<pre><code>The following objects are masked from &#39;package:stats&#39;:
-
-    filter, lag</code></pre>
-<pre><code>The following objects are masked from &#39;package:base&#39;:
-
-    intersect, setdiff, setequal, union</code></pre>
-<pre class="r"><code>set.seed(2)
+<pre class="r"><code>require(dplyr)
+set.seed(2)
 ngroups &lt;- 4
 ntotal  &lt;- 80
 group_size &lt;- ntotal/ngroups
@@ -703,6 +694,7 @@ factor(groups)  3   6757  2252.4   4.768 0.00424 **
 Residuals      76  35903   472.4                   
 ---
 Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<p>Not exactly the same</p>
 <div id="wilcoxon-signed-rank-test" class="section level4">
 <h4>Wilcoxon signed rank test</h4>
 <ul>
