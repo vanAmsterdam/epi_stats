@@ -266,6 +266,37 @@ Pearson correlation | Spearman rank correlation
 * measurements scale is at least ordinal
 * population distribution functions are identical for groups except for a possible difference in location (not spread)
 
+
+### Kruskal-Wallis
+Let's compare Kruskal-Wallice and ANOVA
+
+```{r, message=F, warning = F}
+require(dplyr)
+set.seed(2)
+ngroups <- 4
+ntotal  <- 80
+group_size <- ntotal/ngroups
+groups  <- rep(letters[1:ngroups], each = group_size)
+means   <- runif(min = 0, max = 2, n = ngroups)
+group_means <- rep(means, each = group_size)
+y <- as.vector(sapply(means, function(x) rnorm(mean = x, sd = 1, n = group_size)))
+```
+
+View data, perform ANOVA and Kruskal-Wallice
+```{r}
+boxplot(y~groups)
+summary(aov(y~groups))
+kruskal.test(y~factor(groups))
+```
+
+Do manual Kruskal-Wallice (ANOVA on ranks)
+```{r}
+ranks <- rank(y)
+summary(aov(ranks~factor(groups)))
+```
+
+Not exactly the same
+
 #### Wilcoxon signed rank test
 * Differences are mutually independent (random sample)
 * measurement scale of the differences is at least interval

@@ -313,10 +313,10 @@ div.tocify {
 shared across the workflowr files. -->
 <!-- Update knitr chunk options -->
 <!-- Insert the date the file was last updated -->
-<p><strong>Last updated:</strong> 2017-10-31</p>
+<p><strong>Last updated:</strong> 2017-11-15</p>
 <!-- Insert the code version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
-<p><strong>Code version:</strong> 52f415c</p>
+<p><strong>Code version:</strong> 86fa403</p>
 <!-- Add your analysis here -->
 <p>Teacher: Maria Schipper</p>
 <ul>
@@ -659,6 +659,50 @@ W = 0.96941, p-value = 0.6524</code></pre>
 <li>population distribution functions are identical for groups except for a possible difference in location (not spread)</li>
 </ul>
 </div>
+<div id="kruskal-wallis" class="section level3">
+<h3>Kruskal-Wallis</h3>
+<p>Let’s compare Kruskal-Wallice and ANOVA</p>
+<pre class="r"><code>require(dplyr)</code></pre>
+<pre><code>Loading required package: dplyr</code></pre>
+<pre><code>
+Attaching package: &#39;dplyr&#39;</code></pre>
+<pre><code>The following objects are masked from &#39;package:stats&#39;:
+
+    filter, lag</code></pre>
+<pre><code>The following objects are masked from &#39;package:base&#39;:
+
+    intersect, setdiff, setequal, union</code></pre>
+<pre class="r"><code>set.seed(2)
+ngroups &lt;- 4
+ntotal  &lt;- 80
+group_size &lt;- ntotal/ngroups
+groups  &lt;- rep(letters[1:ngroups], each = group_size)
+means   &lt;- runif(min = 0, max = 2, n = ngroups)
+group_means &lt;- rep(means, each = group_size)
+y &lt;- as.vector(sapply(means, function(x) rnorm(mean = x, sd = 1, n = group_size)))</code></pre>
+<p>View data, perform ANOVA and Kruskal-Wallice</p>
+<pre class="r"><code>boxplot(y~groups)</code></pre>
+<p><img src="figure/5_anova_non_parametric.Rmd/unnamed-chunk-8-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>summary(aov(y~groups))</code></pre>
+<pre><code>            Df Sum Sq Mean Sq F value  Pr(&gt;F)   
+groups       3  20.11   6.703   5.098 0.00287 **
+Residuals   76  99.93   1.315                   
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<pre class="r"><code>kruskal.test(y~factor(groups))</code></pre>
+<pre><code>
+    Kruskal-Wallis rank sum test
+
+data:  y by factor(groups)
+Kruskal-Wallis chi-squared = 12.514, df = 3, p-value = 0.005816</code></pre>
+<p>Do manual Kruskal-Wallice (ANOVA on ranks)</p>
+<pre class="r"><code>ranks &lt;- rank(y)
+summary(aov(ranks~factor(groups)))</code></pre>
+<pre><code>               Df Sum Sq Mean Sq F value  Pr(&gt;F)   
+factor(groups)  3   6757  2252.4   4.768 0.00424 **
+Residuals      76  35903   472.4                   
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
 <div id="wilcoxon-signed-rank-test" class="section level4">
 <h4>Wilcoxon signed rank test</h4>
 <ul>
@@ -666,6 +710,7 @@ W = 0.96941, p-value = 0.6524</code></pre>
 <li>measurement scale of the differences is at least interval</li>
 <li>the distribution of the differences is symmetric</li>
 </ul>
+</div>
 </div>
 </div>
 <div id="session-information" class="section level2">
@@ -683,19 +728,22 @@ attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
 other attached packages:
-[1] amstR_0.1.3
+[1] dplyr_0.7.1 amstR_0.1.3
 
 loaded via a namespace (and not attached):
  [1] bootstrap_2017.2   survcomp_1.22.0    Rcpp_0.12.11      
- [4] knitr_1.17         magrittr_1.5       splines_3.3.2     
- [7] prodlim_1.6.1      lattice_0.20-35    stringr_1.2.0     
-[10] survivalROC_1.0.3  tools_3.3.2        grid_3.3.2        
-[13] data.table_1.10.4  KernSmooth_2.23-15 rmeta_2.16        
-[16] git2r_0.19.0       htmltools_0.3.6    yaml_2.1.14       
-[19] survival_2.41-3    rprojroot_1.2      digest_0.6.12     
-[22] Matrix_1.2-10      lava_1.5           RColorBrewer_1.1-2
-[25] SuppDists_1.1-9.4  evaluate_0.10.1    rmarkdown_1.6     
-[28] stringi_1.1.5      backports_1.1.0   </code></pre>
+ [4] bindr_0.1          knitr_1.17         magrittr_1.5      
+ [7] splines_3.3.2      prodlim_1.6.1      lattice_0.20-35   
+[10] R6_2.2.2           rlang_0.1.1        stringr_1.2.0     
+[13] survivalROC_1.0.3  tools_3.3.2        grid_3.3.2        
+[16] data.table_1.10.4  KernSmooth_2.23-15 rmeta_2.16        
+[19] git2r_0.19.0       htmltools_0.3.6    assertthat_0.2.0  
+[22] yaml_2.1.14        survival_2.41-3    rprojroot_1.2     
+[25] digest_0.6.12      tibble_1.3.3       bindrcpp_0.2      
+[28] Matrix_1.2-10      lava_1.5           RColorBrewer_1.1-2
+[31] SuppDists_1.1-9.4  glue_1.1.1         evaluate_0.10.1   
+[34] rmarkdown_1.6      stringi_1.1.5      backports_1.1.0   
+[37] pkgconfig_2.0.1   </code></pre>
 </div>
 
 <hr>
