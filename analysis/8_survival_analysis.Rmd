@@ -115,12 +115,108 @@ Number at risk at beginning of interval $n_j$
 Number of deaths within the interval $d_j$
 Proportion surviving interval j $p_j = \frac{n_j-d_j}{n_j}$
 
-$$S(t_j) = \prod_j{p_j} = \prod_j{\frac{n_j-d_j}{j}}$$
+$$S(t_j) = \prod_j{p_j} = \prod_j{\frac{n_j-d_j}{n_j}}$$
 
-$$S(t_j) = P(T>t_j) = P(Event | t = t_{1-j})*P(T = t_{1-j}) = (1-P(t_{j-1} < t < t_j | T > t_{j-1}))*P(T>t_{j-1}$$
+$$S(t_j) = P(T>t_j) = P(Event | t = t_{1-j})*P(T = t_{1-j}) = (1-P(t_{j-1} < t < t_j | T > t_{j-1}))*P(T>t_{j-1})$$
 
 A sensored participant is included up until and including the last preceding 
 event.
+
+
+With data
+Status = 1 means an event has taken place (death), status = 0 means censoring.
+```{r}
+require(survival)
+data("veteran")
+
+times  <- veteran$time
+status <- veteran$status
+n_total<- length(times)
+
+# order by survival time
+surv_order <- order(times)
+times  <- times[surv_order]
+status <- status[surv_order]
+
+intervals <- unique(c(0, times))
+n_intervals <- length(intervals)
+
+
+# vectors for interval survival probability, cumulative survival and hazard function
+interval_survival_probability <- numeric(n_total)
+cumulative_survival <- numeric(1+n_total)
+cumulative_survival[1] <- 1
+se_cumulative_survival <- numeric(1+n_total)
+se_cumulative_survival[1] <- 0
+se_factor <- numeric(1+n_intervals)
+se_factor[1] <- 0
+
+interval_hazard   <- numeric(n_intervals)
+cumulative_hazard <- numeric(1+n_total)
+cumulative_hazard[1] <- 0
+
+# create a counter for the n-th observation
+n_at_risk <- n_total
+
+for (i in 1:(n_intervals-1)) {
+# for (i in 1:5) {
+  t_start  <- intervals[i]
+  t_end    <- intervals[i+1]
+  
+  # select the observations that match the time interval
+  k_obs   <- times > t_start & times <= t_end
+  k_min   <- min(which(k_obs))
+  k_max   <- max(which(k_obs))
+  n_obs   <- sum(k_obs)
+  
+  n_events <- sum(status[k_obs])
+  n_censor <- n_obs - n_events
+  
+  # proportion surviving this interval
+  prop_interval_survival <- (n_at_risk - n_events)/n_at_risk
+  interval_survival_probability[k_min:k_max] <- prop_interval_survival
+  
+  # update cumulative survival function
+  previous_survival <- cumulative_survival[k_min]
+  cumulative_survival[1+k_min:k_max] <- previous_survival*prop_interval_survival
+  
+  
+  ## 
+  ## 
+  ## These calculations need updating
+  ## 
+  ## 
+  se_interval <- n_events / (n_at_risk*(n_at_risk - n_events))
+  se_factor[i+1] <- sum(se_interval)
+  
+  se_cum_surv <- previous_survival*prop_interval_survival*sqrt(se_factor[i+1])
+  se_cumulative_survival[1+k_min:k_max]<-se_cum_surv
+  
+  # update hazard function
+  d_cumulative_survival   <- previous_survival*(1-prop_interval_survival)
+  ddt_cumulative_survival <- d_cumulative_survival / (t_end-t_start)
+  interval_hazard[i] <- ddt_cumulative_survival / previous_survival
+  
+  n_at_risk <- n_at_risk - (n_events + n_censor)
+}
+
+surv_data <- data.frame(status, times, 
+                        interval_survival_probability, 
+                        survival_function = tail(cumulative_survival, -1))
+
+# kaplan-meier based on own calculation
+plot(c(0, times), cumulative_survival, type = "s")
+points(x = times[status == 0], y = cumulative_survival[c(F,status == 0)], pch = 3)
+
+# plot own survival function over kaplan-meier based on survival package
+surv_fit <- survival::survfit(Surv(time = times, event = status)~1)
+plot(surv_fit,conf.int = F)
+lines(c(0, times), cumulative_survival, col = "red", type = "s", lty = 2)
+
+# plot cumulative hazard function
+plot(intervals, cumsum(interval_hazard), type = "s")
+```
+
 
 
 ### Kaplan-Meier
@@ -129,7 +225,7 @@ Average survival time can be done in several way:
 2. Take the mean (or median) of those who died
 3. Use the Kaplan-Meier curve to estimate the median survival time a which 
 the curve drops below 0.5 
-$$min(t_j|S(t_j) \leq 0.5)$$
+$$\min(t_j|S(t_j) \leq 0.5)$$
 
 Since survival time is usually right-skewed, median is usually best.
 
@@ -194,7 +290,7 @@ Options
 #### Step 1: effect
 Treatment effect:
 
-$$\delta_0 = \frac{log(p_1)}{log{p_0}} = HR$$
+$$\delta_0 = \frac{ln(p_1)}{ln(p_0)} = HR$$
 
 With $p_1$ and $p_0$ the estimated survival probability after a certain follow-up time t.
 
@@ -213,7 +309,7 @@ $$n \geq \frac{2d}{2-p_0-p_1}$$
 Assuming
 * constant hazard ratio
 * inclusion time
-* folow-up time
+* follow-up time
 
 ### Recurrent events
 There are several ways, all in framework of Cox models with some specific assumptions.

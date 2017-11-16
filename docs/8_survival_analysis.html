@@ -313,10 +313,10 @@ div.tocify {
 shared across the workflowr files. -->
 <!-- Update knitr chunk options -->
 <!-- Insert the date the file was last updated -->
-<p><strong>Last updated:</strong> 2017-11-03</p>
+<p><strong>Last updated:</strong> 2017-11-16</p>
 <!-- Insert the code version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
-<p><strong>Code version:</strong> 35a4a09</p>
+<p><strong>Code version:</strong> 6fa0125</p>
 <!-- Add your analysis here -->
 <div id="intro" class="section level2">
 <h2>Intro</h2>
@@ -547,12 +547,87 @@ Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&
 <p>Divide survival time in intervals j</p>
 <p>Number at risk at beginning of interval <span class="math inline">\(n_j\)</span> Number of deaths within the interval <span class="math inline">\(d_j\)</span> Proportion surviving interval j <span class="math inline">\(p_j = \frac{n_j-d_j}{n_j}\)</span></p>
 <p><span class="math display">\[S(t_j) = \prod_j{p_j} = \prod_j{\frac{n_j-d_j}{j}}\]</span></p>
-<p><span class="math display">\[S(t_j) = P(T&gt;t_j) = P(Event | t = t_{1-j})*P(T = t_{1-j}) = (1-P(t_{j-1} &lt; t &lt; t_j | T &gt; t_{j-1}))*P(T&gt;t_{j-1}\]</span></p>
+<p><span class="math display">\[S(t_j) = P(T&gt;t_j) = P(Event | t = t_{1-j})*P(T = t_{1-j}) = (1-P(t_{j-1} &lt; t &lt; t_j | T &gt; t_{j-1}))*P(T&gt;t_{j-1})\]</span></p>
 <p>A sensored participant is included up until and including the last preceding event.</p>
+<p>With data Status = 1 means an event has taken place (death), status = 0 means censoring.</p>
+<pre class="r"><code>require(survival)
+data(&quot;veteran&quot;)
+
+times  &lt;- veteran$time
+status &lt;- veteran$status
+n_total&lt;- length(times)
+
+# order by survival time
+surv_order &lt;- order(times)
+times  &lt;- times[surv_order]
+status &lt;- status[surv_order]
+
+intervals &lt;- unique(c(0, times))
+n_intervals &lt;- length(intervals)
+
+
+# vectors for interval survival probability, cumulative survival and hazard function
+interval_survival_probability &lt;- numeric(n_total)
+cumulative_survival &lt;- numeric(1+n_total)
+cumulative_survival[1] &lt;- 1
+
+interval_hazard   &lt;- numeric(n_intervals)
+cumulative_hazard &lt;- numeric(1+n_total)
+cumulative_hazard[1] &lt;- 0
+
+# create a counter for the n-th observation
+n_at_risk &lt;- n_total
+
+for (i in 1:(n_intervals-1)) {
+# for (i in 1:5) {
+  t_start  &lt;- intervals[i]
+  t_end    &lt;- intervals[i+1]
+  
+  # select the observations that match the time interval
+  k_obs   &lt;- times &gt; t_start &amp; times &lt;= t_end
+  k_min   &lt;- min(which(k_obs))
+  k_max   &lt;- max(which(k_obs))
+  n_obs   &lt;- sum(k_obs)
+  
+  n_events &lt;- sum(status[k_obs])
+  n_censor &lt;- n_obs - n_events
+  
+  # proportion surviving this interval
+  prop_interval_survival &lt;- (n_at_risk - n_events)/n_at_risk
+  interval_survival_probability[k_min:k_max] &lt;- prop_interval_survival
+  
+  # update cumulative survival function
+  previous_survival &lt;- cumulative_survival[k_min]
+  cumulative_survival[1+k_min:k_max] &lt;- previous_survival*prop_interval_survival
+  
+  # update hazard function
+  d_cumulative_survival   &lt;- previous_survival*(1-prop_interval_survival)
+  ddt_cumulative_survival &lt;- d_cumulative_survival / (t_end-t_start)
+  interval_hazard[i] &lt;- ddt_cumulative_survival / previous_survival
+  
+  n_at_risk &lt;- n_at_risk - (n_events + n_censor)
+}
+
+surv_data &lt;- data.frame(status, times, 
+                        interval_survival_probability, 
+                        survival_function = tail(cumulative_survival, -1))
+
+# kaplan-meier based on own calculation
+plot(c(0, times), cumulative_survival, type = &quot;s&quot;)
+points(x = times[status == 0], y = cumulative_survival[c(F,status == 0)], pch = 3)</code></pre>
+<p><img src="figure/8_survival_analysis.Rmd/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code># plot own survival function over kaplan-meier based on survival package
+surv_fit &lt;- survival::survfit(Surv(time = times, event = status)~1)
+plot(surv_fit,conf.int = F)
+lines(c(0, times), cumulative_survival, col = &quot;red&quot;, type = &quot;s&quot;, lty = 2)</code></pre>
+<p><img src="figure/8_survival_analysis.Rmd/unnamed-chunk-6-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code># plot cumulative hazard function
+plot(intervals, cumsum(interval_hazard), type = &quot;s&quot;)</code></pre>
+<p><img src="figure/8_survival_analysis.Rmd/unnamed-chunk-6-3.png" width="672" style="display: block; margin: auto;" /></p>
 </div>
 <div id="kaplan-meier" class="section level3">
 <h3>Kaplan-Meier</h3>
-<p>Average survival time can be done in several way: 1. Take mean (or median) of the survival times of all subjects, disregarding censoring 2. Take the mean (or median) of those who died 3. Use the Kaplan-Meier curve to estimate the median survival time a which the curve drops below 0.5 <span class="math display">\[min(t_j|S(t_j) \leq 0.5)\]</span></p>
+<p>Average survival time can be done in several way: 1. Take mean (or median) of the survival times of all subjects, disregarding censoring 2. Take the mean (or median) of those who died 3. Use the Kaplan-Meier curve to estimate the median survival time a which the curve drops below 0.5 <span class="math display">\[\min(t_j|S(t_j) \leq 0.5)\]</span></p>
 <p>Since survival time is usually right-skewed, median is usually best.</p>
 <p>NB it only works when the survival cure dips beplow 0.5</p>
 <pre class="r"><code>mean(veteran$time)</code></pre>
@@ -581,7 +656,7 @@ summary(km_fit, times = c(1,30,60,90*(1:10)))</code></pre>
 <pre><code>[1] 73</code></pre>
 <pre class="r"><code># ggplot2::autoplot(km_fit)
 plot(km_fit)</code></pre>
-<p><img src="figure/8_survival_analysis.Rmd/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/8_survival_analysis.Rmd/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>Confidence interval:</p>
 <p><span class="math display">\[SE[S(t)] = S(t)\sqrt{\sum_{j=1}^k{\frac{d_j}{n_j(n_j-d_j)}}}\]</span> <span class="math inline">\(t_{k-1} &lt; t &lt; t_k\)</span></p>
 <p>confidence interval:</p>

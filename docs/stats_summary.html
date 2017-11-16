@@ -313,10 +313,10 @@ div.tocify {
 shared across the workflowr files. -->
 <!-- Update knitr chunk options -->
 <!-- Insert the date the file was last updated -->
-<p><strong>Last updated:</strong> 2017-11-15</p>
+<p><strong>Last updated:</strong> 2017-11-16</p>
 <!-- Insert the code version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
-<p><strong>Code version:</strong> d35db9f</p>
+<p><strong>Code version:</strong> 6fa0125</p>
 <!-- Add your analysis here -->
 <div id="statistical-tests" class="section level2">
 <h2>Statistical tests</h2>
@@ -427,26 +427,206 @@ shared across the workflowr files. -->
 <p><span class="math inline">\(X_1\)</span>, <span class="math inline">\(X_2\)</span> normally distributed, or CTL holds. Equal variance or non-equal variance.</p>
 </div>
 </div>
+<div id="binomial-test" class="section level3">
+<h3>Binomial test</h3>
+<div id="relevant-equations-2" class="section level4">
+<h4>Relevant equations</h4>
+<div id="p-value-calculation" class="section level5">
+<h5>p-value calculation</h5>
+<p>Calculate one-sided directly from binomial distribution for some <span class="math inline">\(H_0\)</span> value of <span class="math inline">\(\pi =\pi_0\)</span>. <span class="math display">\[P(R \geq r | \pi_0) = \sum_{k = r}^n{{n\choose{k}}\pi_0^k(1-\pi_0)^{n-k}}\]</span> Where <span class="math inline">\(n\)</span> the sample size.</p>
+</div>
+<div id="wald-confidence-interval" class="section level5">
+<h5>Wald confidence interval</h5>
+<p><span class="math display">\[\hat{\pi} \pm Z_{\alpha(2)}\sqrt{\frac{\hat{\pi}(1-\hat{\pi})}{n}}\]</span></p>
+</div>
+<div id="agresti-coull-confidence-interval-adjusted-wald" class="section level5">
+<h5>Agresti-Coull confidence interval (adjusted Wald)</h5>
+<p>Add 2 successess and 2 failures (for 95%-confidence interval)</p>
+<p><span class="math inline">\(r&#39; = r + \frac{Z_{\alpha(2)}^2}{2}\)</span>; <span class="math inline">\(n&#39; = n + Z_{\alpha(2)}^2\)</span>; <span class="math inline">\(\hat{\pi}&#39; = r&#39;/n&#39;\)</span></p>
+<p>Plug <span class="math inline">\(\pi\)</span> in Wald formula This moves the estimate a little closer to 0.5. Most useful for extreme p-values.</p>
+<p>Has better coverage. Report <span class="math inline">\(\pi\)</span> and the confidence interval based on <span class="math inline">\(r&#39;\)</span> and <span class="math inline">\(n&#39;\)</span>.</p>
+</div>
+</div>
+</div>
+<div id="mcnemar-test" class="section level3">
+<h3>McNemar test</h3>
+<p>For paired data. Take discordant pairs only. <span class="math inline">\(H_0:\ \pi_0-\pi_1 = 0 \equiv H_0:\ \pi_0=0.5\)</span></p>
+<div id="relevant-equations-3" class="section level4">
+<h4>Relevant equations</h4>
+<div id="p-value" class="section level5">
+<h5>p-value</h5>
+<p><span class="math display">\[p_{value} = 2*min \{ P(R \leq r|\pi_0=0.5),P(R \geq r|\pi_0=0.5)\}\]</span></p>
+</div>
+</div>
+</div>
+<div id="pearson-chi-squared-test" class="section level3">
+<h3>Pearson Chi-squared test</h3>
+<p>Proportions in unpaired design</p>
+<div id="relevant-equations-4" class="section level4">
+<h4>Relevant equations</h4>
+<div id="wald-confidence-interval-for-difference-in-proportions" class="section level5">
+<h5>Wald confidence interval for difference in proportions</h5>
+<p><span class="math display">\[\hat{\pi_1}-\hat{\pi_2} \pm Z_{\alpha(2)}\sqrt{\frac{\hat{\pi_1}(1-\hat{\pi_1})}{n_1} + \frac{\hat{\pi_2}(1-\hat{\pi_2})}{n_2}}\]</span></p>
+</div>
+</div>
+<div id="agresti-coull-confidence-interval-for-difference-in-proportions" class="section level4">
+<h4>Agresti-Coull confidence interval for difference in proportions</h4>
+<p>Add 1 success and failure in each group for 95% confidence interval. <span class="math inline">\(r_i&#39; = r_i + \frac{Z_\alpha(2)^2}{4}\)</span>; <span class="math inline">\(n_i&#39; = n_i + \frac{Z_{\alpha(2)}^2}{2}\)</span></p>
+<p>Use Wald formula with adjusted values for <span class="math inline">\(\pi_1\)</span> and <span class="math inline">\(\pi_2\)</span>.</p>
+</div>
+</div>
+<div id="newcombewilson-method" class="section level3">
+<h3>Newcombe/Wilson method</h3>
+<p>Is best way for determining confidence intervals for proportions. Single proportion: <code>binom::binom.confint(..., method = &quot;wilson&quot;)</code> Difference between proportions: <code>Epi::ci.pd(..., method = &quot;Nc&quot;)</code></p>
+</div>
+<div id="chi-squared-test" class="section level3">
+<h3>Chi-squared test</h3>
+<div id="relevant-equations-5" class="section level4">
+<h4>Relevant equations</h4>
+<div id="null-hypothesis" class="section level5">
+<h5>Null-hypothesis</h5>
+<p>Independence of categorical dimensions <span class="math inline">\(A\)</span> and <span class="math inline">\(B\)</span> <span class="math display">\[H_0:\ P(A=A_i,B=B_j) = P(A=A_i)*P(B=B_j)\]</span></p>
+</div>
+<div id="test-statistic-4" class="section level5">
+<h5>Test-statistic</h5>
+<p><span class="math display">\[T = \sum_{i=1}^I\sum_{j=1}^J{\frac{(O_{ij}-E_{ij})^2}{E_{ij}}}\]</span></p>
+<p>Where</p>
+<p><span class="math display">\[E_{ij} = \sum^I_{k=1}{O_{ik}}*\sum_{l=1}^J{O_{lj}} = P(A=A_i)*P(B=B_i)\]</span></p>
+<p><span class="math inline">\(T\)</span> is asymptotically chi-squared distributed with <span class="math inline">\((I-1)(J-1)\)</span> degrees of freedom, where <span class="math inline">\(I\)</span> and <span class="math inline">\(J\)</span> are the numbers of discrete values that <span class="math inline">\(A\)</span> and <span class="math inline">\(B\)</span> can take.</p>
+</div>
+</div>
+<div id="assumptions-2" class="section level4">
+<h4>Assumptions</h4>
+<ul>
+<li>All expected values <span class="math inline">\(E_{ij} \geq 5\)</span></li>
+<li>In practice: &gt;75% of expected values <span class="math inline">\(\geq 5\)</span> Otherwise: Fisher’s exact test</li>
+</ul>
+</div>
+</div>
+</div>
+<div id="survival-analysis" class="section level2">
+<h2>Survival analysis</h2>
+<div id="model-basics" class="section level3">
+<h3>Model basics</h3>
+<div id="relevant-equations-6" class="section level4">
+<h4>Relevant equations</h4>
+<div id="survival-function" class="section level5">
+<h5>Survival function</h5>
+<p><span class="math display">\[S(t) = 1 - F(t)\]</span></p>
+<p>Where <span class="math inline">\(F(t)\)</span> the cumulative distribution function of survival times</p>
+</div>
+<div id="hazard-function" class="section level5">
+<h5>Hazard function</h5>
+<p><span class="math display">\[h(t) = -S&#39;(t)/S(t)\]</span></p>
+<p>Defined as the instantanious death rate, the probability of dying at time <span class="math inline">\(t\)</span>, given that you have survived this far.</p>
+</div>
+</div>
+</div>
+<div id="kaplan-meier-survival-function" class="section level3">
+<h3>Kaplan-Meier survival function</h3>
+<div id="relevant-equations-7" class="section level4">
+<h4>Relevant equations</h4>
+<div id="kaplan-meier-estimation-of-survival-function" class="section level5">
+<h5>Kaplan-Meier estimation of survival function</h5>
+<p>Divide survival time in intervals j</p>
+<p>Number at risk at beginning of interval <span class="math inline">\(n_j\)</span> Number of events within the interval <span class="math inline">\(d_j\)</span> Proportion surviving interval j <span class="math inline">\(p_j = \frac{n_j-d_j}{n_j}\)</span> A sensored participant is included up until and including the last preceding event.</p>
+<p><span class="math display">\[S(t_j) = \prod_j{p_j} = \prod_j{\frac{n_j-d_j}{n_j}}\]</span></p>
+<p>Or differently</p>
+<p><span class="math display">\[S(t_j) = P(T&gt;t_j) = P(Event | t = t_{1-j})*P(T = t_{1-j}) = (1-P(t_{j-1} &lt; t &lt; t_j | T &gt; t_{j-1}))*P(T&gt;t_{j-1})\]</span></p>
+</div>
+<div id="standard-error-of-survival-functions" class="section level5">
+<h5>Standard error of survival functions</h5>
+<p><span class="math display">\[SE[S(t)] = S(t)\sqrt{\sum_{j=1}^k{\frac{d_j}{n_j(n_j-d_j)}}}\]</span></p>
+<p>Where <span class="math inline">\(t_k \leq t &lt; t_{k+1}\)</span> all intervals up to <span class="math inline">\(T=t\)</span></p>
+</div>
+</div>
+<div id="assumptions-3" class="section level4">
+<h4>Assumptions</h4>
+<ul>
+<li>non-parametric (no assumption on distribution of event times)</li>
+<li>prognosis of patient independent of the time at which the patient was included (i.e. the time in his/her disease path)</li>
+<li>censoring independent of prognosis of the patients</li>
+<li>times of the events are known exactly</li>
+<li>patients are monitored throughout the whole study period (any event would have been recorded)</li>
+</ul>
+</div>
+</div>
+<div id="log-rank-test-mantel-cox" class="section level3">
+<h3>Log-rank test (Mantel-Cox)</h3>
+<div id="relevant-equations-8" class="section level4">
+<h4>Relevant equations</h4>
+<div id="statistic" class="section level5">
+<h5>Statistic</h5>
+<p><span class="math inline">\(H_0:\)</span> expected number of events in group <span class="math inline">\(i\)</span> at <span class="math inline">\(t_j\)</span> is given by: <span class="math display">\[e_{ij} = n_{ij}*(d_j/n_j)\]</span></p>
+<p>So the number of persons in the group, multiplied with the overall number of events during <span class="math inline">\(t_j\)</span></p>
+<p>Let <span class="math inline">\(e_i = \sum_j{e_{ij}}\)</span> and <span class="math inline">\(d_i = \sum_j{d_{ij}}\)</span> for <span class="math inline">\(i = 1,2\)</span> the groups. Then</p>
+<p><span class="math display">\[T = \sum_{i=1,2}{\frac{(d_i-e_i)^2}{e_i}}\]</span></p>
+<p>Is approximately chi-square distritubed with 1 degree of freedom.</p>
+</div>
+<div id="power" class="section level5">
+<h5>Power</h5>
+<p>Step 1: Estimate effect size.</p>
+<p><span class="math display">\[\delta_0 = \frac{ln(p_1)}{ln(p_0)} = HR\]</span> Where <span class="math inline">\(p_1\)</span> and <span class="math inline">\(p_0\)</span> the expected survival probabilities for two groups after some relevent follow-up time <span class="math inline">\(T\)</span></p>
+<p>Hazard Ratio is the instatanious risk of dying for group 1, compared to the risk of dying for group 2, at some time-point t.</p>
+<p>Step 2: number of events Estimate number of events <span class="math display">\[d = (\frac{1+\delta_0}{1-\delta_0})^2(Z_{\alpha} + Z_{\beta})^2\]</span></p>
+<p>Step 3: estimate total number of patients <span class="math display">\[n \geq \frac{2d}{2-p_0-p_1}\]</span></p>
+<p>Assuming * constant hazard ratio * inclusion time * follow-up time (no loss-to-follow up)</p>
+</div>
+</div>
+</div>
+</div>
+<div id="regression" class="section level2">
+<h2>Regression</h2>
+<div id="multiple-linear-regression" class="section level3">
+<h3>Multiple linear regression</h3>
+<div id="relevant-equations-9" class="section level4">
+<h4>Relevant equations</h4>
+<div id="adjusted-r-squared" class="section level5">
+<h5>Adjusted R-squared</h5>
+<p><span class="math display">\[R_{adj}^2 = 1-(1-R^2)(\frac{n-1}{n-k-1})\]</span></p>
+</div>
+</div>
+</div>
+<div id="logistic-regression" class="section level3">
+<h3>Logistic regression</h3>
+<div id="relevant-equations-10" class="section level4">
+<h4>Relevant equations</h4>
+<div id="link-function" class="section level5">
+<h5>Link function</h5>
+<p><span class="math display">\[w = logit(\pi) = ln(\frac{\pi}{1-\pi}) = \beta_0 + \sum_{i}{\beta_iX_i}\]</span></p>
+<p>Or equivalently:</p>
+<p><span class="math display">\[\pi(X) = \frac{1}{1+e^{-(\beta_0+\sum_i{\beta_iX_i})}}\]</span></p>
+</div>
+<div id="likelihood" class="section level5">
+<h5>Likelihood</h5>
+<p><span class="math display">\[L(\pi) = \prod_{i=1}^n[\pi^{Y_i}(1-\pi)^{1-Y_i}]\]</span></p>
+</div>
+</div>
+</div>
 </div>
 <div id="session-information" class="section level2">
 <h2>Session information</h2>
 <!-- Insert the session information into the document -->
 <pre class="r"><code>sessionInfo()</code></pre>
-<pre><code>R version 3.3.2 (2016-10-31)
-Platform: x86_64-apple-darwin13.4.0 (64-bit)
-Running under: macOS Sierra 10.12.6
+<pre><code>R version 3.4.1 (2017-06-30)
+Platform: x86_64-w64-mingw32/x64 (64-bit)
+Running under: Windows 7 x64 (build 7601) Service Pack 1
+
+Matrix products: default
 
 locale:
-[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+[1] LC_COLLATE=Dutch_Netherlands.1252  LC_CTYPE=Dutch_Netherlands.1252   
+[3] LC_MONETARY=Dutch_Netherlands.1252 LC_NUMERIC=C                      
+[5] LC_TIME=Dutch_Netherlands.1252    
 
 attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
 loaded via a namespace (and not attached):
- [1] backports_1.1.0 magrittr_1.5    rprojroot_1.2   tools_3.3.2    
- [5] htmltools_0.3.6 yaml_2.1.14     Rcpp_0.12.11    stringi_1.1.5  
- [9] rmarkdown_1.6   knitr_1.17      git2r_0.19.0    stringr_1.2.0  
-[13] digest_0.6.12   evaluate_0.10.1</code></pre>
+ [1] compiler_3.4.1  backports_1.1.0 magrittr_1.5    rprojroot_1.2  
+ [5] tools_3.4.1     htmltools_0.3.6 yaml_2.1.14     Rcpp_0.12.12   
+ [9] stringi_1.1.5   rmarkdown_1.6   knitr_1.17      git2r_0.19.0   
+[13] stringr_1.2.0   digest_0.6.12   evaluate_0.10.1</code></pre>
 </div>
 
 <hr>

@@ -91,8 +91,210 @@ $${df} = \frac{(\frac{s_{1}^2}{n_{1}} + \frac{s_{2}^2}{n_{2}})^2}{({s_{1}^2}/{n_
 #### Assumptions
 $X_1$, $X_2$ normally distributed, or CTL holds. Equal variance or non-equal variance.
 
+### Binomial test
+#### Relevant equations
+##### p-value calculation
+Calculate one-sided directly from binomial distribution for some $H_0$ value of 
+$\pi =\pi_0$.
+$$P(R \geq r | \pi_0) = \sum_{k = r}^n{{n\choose{k}}\pi_0^k(1-\pi_0)^{n-k}}$$
+Where $n$ the sample size.
+
+##### Wald confidence interval
+$$\hat{\pi} \pm Z_{\alpha(2)}\sqrt{\frac{\hat{\pi}(1-\hat{\pi})}{n}}$$
+
+##### Agresti-Coull confidence interval (adjusted Wald)
+Add 2 successess and 2 failures (for 95%-confidence interval)
+
+$r' = r + \frac{Z_{\alpha(2)}^2}{2}$;  $n' = n + Z_{\alpha(2)}^2$;  $\hat{\pi}' = r'/n'$
+
+Plug $\pi$ in Wald formula
+This moves the estimate a little closer to 0.5. Most useful for extreme p-values.
+
+Has better coverage. Report $\pi$ and the confidence interval based on $r'$ and $n'$.
+
+### McNemar test
+For paired data. Take discordant pairs only. 
+$H_0:\ \pi_0-\pi_1 = 0 \equiv H_0:\ \pi_0=0.5$
+
+#### Relevant equations
+##### p-value
+$$p_{value} = 2*min \{ P(R \leq r|\pi_0=0.5),P(R \geq r|\pi_0=0.5)\}$$
+
+### Pearson Chi-squared test
+Proportions in unpaired design
+
+#### Relevant equations
+##### Wald confidence interval for difference in proportions
+$$\hat{\pi_1}-\hat{\pi_2} \pm Z_{\alpha(2)}\sqrt{\frac{\hat{\pi_1}(1-\hat{\pi_1})}{n_1} + \frac{\hat{\pi_2}(1-\hat{\pi_2})}{n_2}}$$
 
 
+#### Agresti-Coull confidence interval for difference in proportions
+Add 1 success and failure in each group for 95% confidence interval.
+$r_i' = r_i + \frac{Z_\alpha(2)^2}{4}$;  $n_i' = n_i + \frac{Z_{\alpha(2)}^2}{2}$
+
+Use Wald formula with adjusted values for $\pi_1$ and $\pi_2$.
+
+### Newcombe/Wilson method
+Is best way for determining confidence intervals for proportions.
+Single proportion: `binom::binom.confint(..., method = "wilson")`
+Difference between proportions: `Epi::ci.pd(..., method = "Nc")`
+
+### Chi-squared test
+#### Relevant equations
+##### Null-hypothesis
+Independence of categorical dimensions $A$ and $B$
+$$H_0:\ P(A=A_i,B=B_j) = P(A=A_i)*P(B=B_j)$$
+
+##### Test-statistic
+$$T = \sum_{i=1}^I\sum_{j=1}^J{\frac{(O_{ij}-E_{ij})^2}{E_{ij}}}$$
+
+Where 
+
+$$E_{ij} = \sum^I_{k=1}{O_{ik}}*\sum_{l=1}^J{O_{lj}} = P(A=A_i)*P(B=B_i)$$
+
+$T$ is asymptotically chi-squared distributed with $(I-1)(J-1)$ degrees of 
+freedom, where $I$ and $J$ are the numbers of discrete values that $A$ and 
+$B$ can take.
+
+#### Assumptions
+
+* All expected values $E_{ij} \geq 5$
+* In practice: >75% of expected values $\geq 5$
+Otherwise: Fisher's exact test
+
+## Survival analysis
+### Model basics
+#### Relevant equations
+##### Survival function
+$$S(t) = 1 - F(t)$$
+
+Where $F(t)$ the cumulative distribution function of survival times
+
+##### Hazard function
+$$h(t) = -S'(t)/S(t)$$
+
+Defined as the instantanious death rate, the probability of dying at time $t$,
+ given that you have survived this far.
+
+### Kaplan-Meier survival function
+#### Relevant equations
+##### Kaplan-Meier estimation of survival function
+Divide survival time in intervals j
+
+Number at risk at beginning of interval $n_j$
+Number of events within the interval $d_j$
+Proportion surviving interval j $p_j = \frac{n_j-d_j}{n_j}$
+A sensored participant is included up until and including the last preceding 
+event.
+
+$$S(t_j) = \prod_j{p_j} = \prod_j{\frac{n_j-d_j}{n_j}}$$
+
+Or differently
+
+
+$$S(t_j) = P(T>t_j) = P(Event | t = t_{1-j})*P(T = t_{1-j}) = (1-P(t_{j-1} < t < t_j | T > t_{j-1}))*P(T>t_{j-1})$$
+
+##### Standard error of survival functions
+$$SE[S(t)] = S(t)\sqrt{\sum_{j=1}^k{\frac{d_j}{n_j(n_j-d_j)}}}$$
+
+Where $t_k \leq t < t_{k+1}$ all intervals up to $T=t$
+
+#### Assumptions
+
+* non-parametric (no assumption on distribution of event times)
+* prognosis of patient independent of the time at which the patient was included
+(i.e. the time in his/her disease path)
+* censoring independent of prognosis of the patients
+* times of the events are known exactly
+* patients are monitored throughout the whole study period 
+(any event would have been recorded)
+
+### Log-rank test (Mantel-Cox)
+#### Relevant equations
+##### Statistic
+$H_0:$ expected number of events in group $i$ at $t_j$ is given by:
+$$e_{ij} = n_{ij}*(d_j/n_j)$$
+
+So the number of persons in the group, multiplied with the overall number of 
+events during $t_j$
+
+Let $e_i = \sum_j{e_{ij}}$ and $d_i = \sum_j{d_{ij}}$ for $i = 1,2$ the groups.
+Then
+
+$$T = \sum_{i=1,2}{\frac{(d_i-e_i)^2}{e_i}}$$
+
+Is approximately chi-square distritubed with 1 degree of freedom. 
+
+##### Power
+Step 1: Estimate effect size.
+
+$$\delta_0 = \frac{ln(p_1)}{ln(p_0)} = HR$$
+Where $p_1$ and $p_0$ the expected survival probabilities for two groups after 
+some relevent follow-up time $T$
+
+Hazard Ratio is the instatanious risk of dying for group 1, compared to the 
+risk of dying for group 2, at some time-point t.
+
+Step 2: number of events
+Estimate number of events
+$$d = (\frac{1+\delta_0}{1-\delta_0})^2(Z_{\alpha} + Z_{\beta})^2$$
+
+Step 3: estimate total number of patients
+$$n \geq \frac{2d}{2-p_0-p_1}$$
+
+Assuming
+* constant hazard ratio
+* inclusion time
+* follow-up time (no loss-to-follow up)
+
+## Regression
+### Multiple linear regression
+#### Relevant equations
+##### Adjusted R-squared
+$$R_{adj}^2 = 1-(1-R^2)(\frac{n-1}{n-k-1})$$
+
+### Logistic regression
+#### Relevant equations
+##### Link function
+$$w = logit(\pi) = ln(\frac{\pi}{1-\pi}) = \beta_0 + \sum_{i}{\beta_iX_i}$$
+
+Or equivalently:
+
+$$\pi(X) = \frac{1}{1+e^{-(\beta_0+\sum_i{\beta_iX_i})}}$$
+
+##### Likelihood
+$$L(\pi) = \prod_{i=1}^n[\pi^{Y_i}(1-\pi)^{1-Y_i}]$$
+
+$$l(\pi) = ln(L(\pi)) = \sum_{i = 1}^n{[y_i*ln(\pi) + (1-y_i)*ln(1-\pi)]}$$
+
+### Likelihood ratio test (LRT)
+#### Relevant equations
+##### Test statistic
+$$T = -2(l_1-l_0)$$ 
+
+T is chi-square distributed with the difference in number of parameters 
+between the model as degrees of freedom.
+
+#### Assumptions
+
+* only works for nested models
+
+
+### Wald test
+#### Relevant equations
+##### Test statistic
+$$T = \frac{\beta}{se(\beta)}$$
+Is approximately standard normally distributed, $T^2$ is approximately 
+chi-square distributed with 1 degree of freedom
+
+### Score test
+#### Description
+Ratio bewteen the first and second derivatives of the likelihood at $\beta_1 = 0$.
+Oppriximately chi-square distributed.
+
+#### Assumptions
+
+* only works for nested models
 
 
 ## Session information

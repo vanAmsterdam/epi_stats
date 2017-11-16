@@ -80,7 +80,7 @@ Add 2 successess and 2 failures (for 95%-confidence interval)
 
 $r' = r + \frac{Z_{\alpha(2)}^2}{2}$;  $n' = n + Z_{\alpha(2)}^2$;  $\hat{p}' = r'/n'$
 
-This moves the estimate a little closer to 0.5. Most usefull for extreme p-values.
+This moves the estimate a little closer to 0.5. Most useful for extreme p-values.
 
 Has better coverage. Report $p$ and the confidence interval based on $r'$ and $n'$.
 
@@ -118,7 +118,7 @@ no use|84|173
 Difference in proportions: $71/(208+71)$, $84/(173+84)$
 
 #### Wald
-$$\hat{p_1-p_2} \pm Z_{\alpha(2)}\sqrt{\frac{\hat{p_1}(1-\hat{p_1})}{n_1} + \frac{\hat{p_2}(1-\hat{p_2})}{n_2}}$$
+$$\hat{p_1}-\hat{p_2} \pm Z_{\alpha(2)}\sqrt{\frac{\hat{p_1}(1-\hat{p_1})}{n_1} + \frac{\hat{p_2}(1-\hat{p_2})}{n_2}}$$
 
 #### Agresti-Coull
 Add 1 success and failure in each group.
