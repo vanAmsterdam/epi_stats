@@ -316,7 +316,7 @@ shared across the workflowr files. -->
 <p><strong>Last updated:</strong> 2017-11-16</p>
 <!-- Insert the code version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
-<p><strong>Code version:</strong> 6fa0125</p>
+<p><strong>Code version:</strong> 1833a09</p>
 <!-- Add your analysis here -->
 <div id="intro" class="section level2">
 <h2>Intro</h2>
@@ -546,7 +546,7 @@ Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&
 70   999      1</code></pre>
 <p>Divide survival time in intervals j</p>
 <p>Number at risk at beginning of interval <span class="math inline">\(n_j\)</span> Number of deaths within the interval <span class="math inline">\(d_j\)</span> Proportion surviving interval j <span class="math inline">\(p_j = \frac{n_j-d_j}{n_j}\)</span></p>
-<p><span class="math display">\[S(t_j) = \prod_j{p_j} = \prod_j{\frac{n_j-d_j}{j}}\]</span></p>
+<p><span class="math display">\[S(t_j) = \prod_j{p_j} = \prod_j{\frac{n_j-d_j}{n_j}}\]</span></p>
 <p><span class="math display">\[S(t_j) = P(T&gt;t_j) = P(Event | t = t_{1-j})*P(T = t_{1-j}) = (1-P(t_{j-1} &lt; t &lt; t_j | T &gt; t_{j-1}))*P(T&gt;t_{j-1})\]</span></p>
 <p>A sensored participant is included up until and including the last preceding event.</p>
 <p>With data Status = 1 means an event has taken place (death), status = 0 means censoring.</p>
@@ -570,6 +570,10 @@ n_intervals &lt;- length(intervals)
 interval_survival_probability &lt;- numeric(n_total)
 cumulative_survival &lt;- numeric(1+n_total)
 cumulative_survival[1] &lt;- 1
+se_cumulative_survival &lt;- numeric(1+n_total)
+se_cumulative_survival[1] &lt;- 0
+se_factor &lt;- numeric(1+n_intervals)
+se_factor[1] &lt;- 0
 
 interval_hazard   &lt;- numeric(n_intervals)
 cumulative_hazard &lt;- numeric(1+n_total)
@@ -599,6 +603,18 @@ for (i in 1:(n_intervals-1)) {
   # update cumulative survival function
   previous_survival &lt;- cumulative_survival[k_min]
   cumulative_survival[1+k_min:k_max] &lt;- previous_survival*prop_interval_survival
+  
+  
+  ## 
+  ## 
+  ## These calculations need updating
+  ## 
+  ## 
+  se_interval &lt;- n_events / (n_at_risk*(n_at_risk - n_events))
+  se_factor[i+1] &lt;- sum(se_interval)
+  
+  se_cum_surv &lt;- previous_survival*prop_interval_survival*sqrt(se_factor[i+1])
+  se_cumulative_survival[1+k_min:k_max]&lt;-se_cum_surv
   
   # update hazard function
   d_cumulative_survival   &lt;- previous_survival*(1-prop_interval_survival)
@@ -684,7 +700,7 @@ plot(km_fit)</code></pre>
 <div id="step-1-effect" class="section level4">
 <h4>Step 1: effect</h4>
 <p>Treatment effect:</p>
-<p><span class="math display">\[\delta_0 = \frac{log(p_1)}{log{p_0}} = HR\]</span></p>
+<p><span class="math display">\[\delta_0 = \frac{ln(p_1)}{ln(p_0)} = HR\]</span></p>
 <p>With <span class="math inline">\(p_1\)</span> and <span class="math inline">\(p_0\)</span> the estimated survival probability after a certain follow-up time t.</p>
 <p>So the power is dependent on the number of events.</p>
 <p>Hazard Ratio is the instatanious risk of dying for group 1, compared to the risk of dying for group 2, at some time-point t.</p>
@@ -696,7 +712,7 @@ plot(km_fit)</code></pre>
 <div id="step-3-estimate-total-number-of-patients" class="section level4">
 <h4>Step 3: estimate total number of patients</h4>
 <p><span class="math display">\[n \geq \frac{2d}{2-p_0-p_1}\]</span></p>
-<p>Assuming * constant hazard ratio * inclusion time * folow-up time</p>
+<p>Assuming * constant hazard ratio * inclusion time * follow-up time</p>
 </div>
 </div>
 <div id="recurrent-events" class="section level3">

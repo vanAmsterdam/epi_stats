@@ -316,7 +316,7 @@ shared across the workflowr files. -->
 <p><strong>Last updated:</strong> 2017-11-16</p>
 <!-- Insert the code version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
-<p><strong>Code version:</strong> 6fa0125</p>
+<p><strong>Code version:</strong> 1833a09</p>
 <!-- Add your analysis here -->
 <div id="statistical-tests" class="section level2">
 <h2>Statistical tests</h2>
@@ -600,7 +600,48 @@ shared across the workflowr files. -->
 <div id="likelihood" class="section level5">
 <h5>Likelihood</h5>
 <p><span class="math display">\[L(\pi) = \prod_{i=1}^n[\pi^{Y_i}(1-\pi)^{1-Y_i}]\]</span></p>
+<p><span class="math display">\[l(\pi) = ln(L(\pi)) = \sum_{i = 1}^n{[y_i*ln(\pi) + (1-y_i)*ln(1-\pi)]}\]</span></p>
 </div>
+</div>
+</div>
+<div id="likelihood-ratio-test-lrt" class="section level3">
+<h3>Likelihood ratio test (LRT)</h3>
+<div id="relevant-equations-11" class="section level4">
+<h4>Relevant equations</h4>
+<div id="test-statistic-5" class="section level5">
+<h5>Test statistic</h5>
+<p><span class="math display">\[T = -2(l_1-l_0)\]</span></p>
+<p>T is chi-square distributed with the difference in number of parameters between the model as degrees of freedom.</p>
+</div>
+</div>
+<div id="assumptions-4" class="section level4">
+<h4>Assumptions</h4>
+<ul>
+<li>only works for nested models</li>
+</ul>
+</div>
+</div>
+<div id="wald-test" class="section level3">
+<h3>Wald test</h3>
+<div id="relevant-equations-12" class="section level4">
+<h4>Relevant equations</h4>
+<div id="test-statistic-6" class="section level5">
+<h5>Test statistic</h5>
+<p><span class="math display">\[T = \frac{\beta}{se(\beta)}\]</span> Is approximately standard normally distributed, <span class="math inline">\(T^2\)</span> is approximately chi-square distributed with 1 degree of freedom</p>
+</div>
+</div>
+</div>
+<div id="score-test" class="section level3">
+<h3>Score test</h3>
+<div id="description" class="section level4">
+<h4>Description</h4>
+<p>Ratio bewteen the first and second derivatives of the likelihood at <span class="math inline">\(\beta_1 = 0\)</span>. Oppriximately chi-square distributed.</p>
+</div>
+<div id="assumptions-5" class="section level4">
+<h4>Assumptions</h4>
+<ul>
+<li>only works for nested models</li>
+</ul>
 </div>
 </div>
 </div>
