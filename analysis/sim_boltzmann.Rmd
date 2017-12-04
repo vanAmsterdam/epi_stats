@@ -1,0 +1,173 @@
+---
+title: "Simulation of the Boltzmann distribution"
+author: "Wouter van Amsterdam"
+date: 2017-12-04
+output: html_document
+---
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+```
+
+<!-- Update knitr chunk options -->
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+<!-- Insert the date the file was last updated -->
+```{r last-updated, echo=FALSE, results='asis'}
+```
+
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+```{r code-version, echo=FALSE, results='asis'}
+```
+
+<!-- Add your analysis here -->
+## Introduction
+This simulation is inspired by the proposed simulation from the book 
+'Concepts in Thermal Physics' by Blundell and Blundell
+
+
+The Boltzmann distribution is given by 
+
+$$P(microstate\ r) = \frac{e^{-E_r/k_{b}T}}{\sum_i{e^{-E_i/k_{b}T}}}$$
+
+Where $k_b$ the Boltzmann constant: $k_b = 1.3807*10^{-23}JK^{-1}$
+
+Here the denominator is known as the partition function $Z$.
+
+This distrubtion describes the probability of finding a system 
+that is in thermal equilibrium with a large resevoir in a certain microstate,
+with an associated energy, which is assumed to be unique for a certain state.
+
+So $E_{r_1} = E_{r_2}$ means that $r_1 = r_2$.
+
+## Simulations
+Think of a particular system with particles that each can have discrete energy 
+states. The system in is thermal isolation, so no energy can be added or 
+withdrawn. Each particle can exchange energy with another particle. 
+
+For visualization, view the particles are laid out on a 2x2 grid.
+
+```{r}
+npart = 400
+dims  = rep(sqrt(npart), 2)
+
+init_energy = 1
+
+particles_init <- rep(init_energy, npart)
+particles <- particles_init
+
+image(matrix(particles_init, nrow = dims[1]))
+```
+
+Visualize distribution of initial energy
+
+```{r}
+barplot(table(particles))
+```
+
+Now randomly pick a particle that gives away an energy quantum to another particle.
+
+```{r}
+set.seed(2)
+giving_particle <- sample(1:npart, size = 1)
+receiving_particle <- sample(1:npart, size = 1)
+
+particles[giving_particle] <- particles[giving_particle]-1
+particles[receiving_particle] <- particles[receiving_particle]+1
+
+image(matrix(particles, nrow = dims[1]))
+
+barplot(table(particles))
+```
+
+Now repeat this process 10 times, making sure that no particles get negative energy 
+(which is physically unacceptable).
+
+
+```{r}
+ntimes = 10
+
+for (i in 1:ntimes) {
+  giving_particle <- sample(which(particles > 0), size = 1)
+  receiving_particle <- sample(1:npart, size = 1)
+  
+  particles[giving_particle] <- particles[giving_particle]-1
+  particles[receiving_particle] <- particles[receiving_particle]+1
+}
+
+image(matrix(particles, nrow = dims[1]))
+  
+barplot(table(particles))
+
+```
+
+
+And 100 times
+
+```{r}
+ntimes = 100
+
+for (i in 1:ntimes) {
+  giving_particle <- sample(which(particles > 0), size = 1)
+  receiving_particle <- sample(1:npart, size = 1)
+  
+  particles[giving_particle] <- particles[giving_particle]-1
+  particles[receiving_particle] <- particles[receiving_particle]+1
+}
+
+image(matrix(particles, nrow = dims[1]))
+  
+barplot(table(particles))
+
+```
+
+
+And 1000 times
+
+```{r}
+ntimes = 1000
+
+for (i in 1:ntimes) {
+  giving_particle <- sample(which(particles > 0), size = 1)
+  receiving_particle <- sample(1:npart, size = 1)
+  
+  particles[giving_particle] <- particles[giving_particle]-1
+  particles[receiving_particle] <- particles[receiving_particle]+1
+}
+
+image(matrix(particles, nrow = dims[1]))
+  
+barplot(table(particles))
+
+```
+
+And a million times (this takes some time to compute)
+
+```{r}
+ntimes = 1e6
+
+for (i in 1:ntimes) {
+  giving_particle <- sample(which(particles > 0), size = 1)
+  receiving_particle <- sample(1:npart, size = 1)
+  
+  particles[giving_particle] <- particles[giving_particle]-1
+  particles[receiving_particle] <- particles[receiving_particle]+1
+}
+
+image(matrix(particles, nrow = dims[1]))
+  
+barplot(table(particles))
+
+```
+
+The distribution now very closely resembles the Boltzmann distribution
+
+## Session information
+
+<!-- Insert the session information into the document -->
+```{r session-info}
+```
