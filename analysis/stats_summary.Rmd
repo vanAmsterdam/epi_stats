@@ -1,7 +1,7 @@
 ---
 title: "Summary of statistical tests and distributions"
 author: "Wouter van Amsterdam"
-date: 2017-11-13
+date: '2017-11-13'
 output: html_document
 ---
 
@@ -33,9 +33,6 @@ See single sample T-test for $d = X_1 - X_2$
 ### Two unpaired samples T-test, equal variance
 #### Other names
 #### Definition
-##### Test-statistic
-t, follows Student's T-distribution with n1+n2-2 degrees of freedom
-
 #### Variables
 ###### Types
 interval, continous
@@ -47,6 +44,8 @@ normal
 ##### Test-statistic
 $$t = \frac{\bar{Y_{1}} - \bar{Y_{2}}}{\bar{{SE}}_{difference}}$$
 
+$t$ follows Student's T-distribution with n1+n2-2 degrees of freedom
+
 ##### Standard error
 $${SE}_{difference} = s_{pooled}*\sqrt{\frac{1}{n_{1}}+\frac{1}{n_{2}}}$$
 
@@ -54,7 +53,9 @@ $${SE}_{difference} = s_{pooled}*\sqrt{\frac{1}{n_{1}}+\frac{1}{n_{2}}}$$
 $$s_{pooled} = \frac{(n_{1}-1)*s_{1}^2 + (n_{2}-1)*s_{2}^2}{n_{1}+n_{2}-2}$$
 
 #### Assumptions
-$X_1$, $X_2$ normally distributed, or CTL holds. Equal variance or non-equal variance.
+
+* $X_1$, $X_2$ normally distributed, or CTL holds. 
+* Equal variance of groups
 
 ### Two unpaired samples T-test, unequal variance
 #### Other names
@@ -89,7 +90,8 @@ $${df} = \frac{(\frac{s_{1}^2}{n_{1}} + \frac{s_{2}^2}{n_{2}})^2}{({s_{1}^2}/{n_
 
 
 #### Assumptions
-$X_1$, $X_2$ normally distributed, or CTL holds. Equal variance or non-equal variance.
+
+* $X_1$, $X_2$ normally distributed, or CTL holds
 
 ### Binomial test
 #### Relevant equations

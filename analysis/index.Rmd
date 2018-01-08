@@ -5,19 +5,23 @@ output:
     toc: false
 ---
 
-This website is made to share the assignments I worked out for "Classical Methods in Data Analysis" from the Epidemiology Graduate Program of the Julius Center, Utrecht, the Netherlands
+This website is made to share the assignments I worked out for 
+statistic courses in the Epidemiology Graduate Program of the Julius Center, Utrecht, the Netherlands
+
+## Classical Methods in Data Analysis
 
 ### Assignments
-[assignments week 1](assignments_week1.html)
+[assignments week 1](c_assignments_week1.html)
 
-[assignments week 2](assignments_week2.html)
+[assignments week 2](c_assignments_week2.html)
 
-[assignments week 3](assignments_week3.html)
+[assignments week 3](c_assignments_week3.html)
 
-[case studies (not finished!)](case_studies.html)
+[case studies (not finished!)](c_case_studies.html)
 
+## Modern Methods in Data Analysis
 
-### Notes
+## Notes
 Due to how this website was made, the R-code 'thinks' it is in the `analysis` 
 subdirectory, while the data sits in the `data` directory, which is found from 
 the parent directory. To circumvent changing directory all the time, this 
