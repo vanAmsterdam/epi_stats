@@ -1,0 +1,303 @@
+---
+title: "Assignments Modern Methods in Data Analysis"
+author: "Wouter van Amsterdam"
+date: 2018-01-08
+output: html_document
+---
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+```
+
+<!-- Update knitr chunk options -->
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+<!-- Insert the date the file was last updated -->
+```{r last-updated, echo=FALSE, results='asis'}
+```
+
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+```{r code-version, echo=FALSE, results='asis'}
+```
+
+<!-- Add your analysis here -->
+
+## Setup
+
+
+### Load some packages
+
+```{r, message = F}
+library(epistats) # contains 'fromParentDir' and other handy functions
+library(magrittr) # for 'piping'  '%>%'
+library(dplyr) # for data mangling, selecting columns and filtering rows
+library(ggplot2) # awesome plotting library
+library(stringr) # for working with strings
+```
+
+
+
+
+## Day 1 Linear models
+
+> First read in the data:
+
+
+```{r}
+y <- c(87,86.5,89,88.5,87.5,88,86.5,87,85,86,85,83)
+dose <- c(5,6,7,8,9,10,5,6,7,8,9,10)
+group <- c(0,0,0,0,0,0,1,1,1,1,1,1)
+
+
+model.an <- glm(y~factor(group), family = gaussian)
+
+names(model.an)
+model.an$coefficients
+summary(model.an)
+```
+
+Fit without interaction
+
+```{r}
+model.anc <- glm(y~factor(group)+dose, family = gaussian)
+summary(model.anc)
+drop1(model.anc, test = "F")
+```
+
+Get interaction plot
+
+```{r}
+interaction.plot(dose, group, y, mean, ylab = "Blood pressure")
+```
+
+### Excercise 1
+
+```{r}
+load(fromParentDir("data/starfish.RData"))
+str(starfish)
+```
+
+#### a. create boxplot
+```{r}
+boxplot(metabole~location, data = starfish)
+```
+
+#### b. fit ANOVA
+```{r}
+fit <- lm(metabole~location, data = starfish)
+summary(fit)
+```
+
+#### c. create ANOVA table
+(requires some extra work, but this gets you in the direction)
+
+```{r}
+aov(fit)
+```
+
+#### d. test group differences
+
+From the summary it is clear that the mean metabole is 
+not significantly different between the two locations.
+
+We are testing:
+
+$$H_0: mean(metabole_{LocA}) = mean(metabole_{LocB}) = mean(metabole)$$
+
+Versus
+
+$$H_1: mean(metabole_{LocA}) \neq mean(metabole_{LocB})$$
+
+### 2. Hormone treatment and blood calcium
+
+I could not find the data file, so here is it:
+
+```{r}
+df <- data.frame(
+  sex = rep(rep(c("Female", "Male"), each = 5), 2),
+  hormone = rep(c(TRUE, FALSE), each = 10),
+  calcium = c(17, 18.9, 13.2, 14.6, 13.3,
+              16.5, 14.3, 10.9, 15.6, 8.9,
+              18.6, 16.2, 12.5, 15.1, 16.2,
+              17.1, 14.7, 15.3, 14.2, 12.8)
+  )
+
+df
+```
+
+#### a. create boxplot
+
+```{r}
+boxplot(calcium ~ sex + hormone, data = df)
+```
+
+#### b. fit ANOVA
+
+```{r}
+fit <- lm(calcium ~ factor(sex) + factor(hormone), data = df)
+```
+
+#### c. test hypothosis
+
+```{r}
+summary(fit)
+```
+
+For both grouping variables, there is no significant difference between the means of the calcium levels.
+
+#### e. estimate difference between hormone groups
+
+```{r}
+df %>%
+  group_by(hormone) %>%
+  summarize(mean(calcium))
+```
+
+### 3. Alligators
+
+Load data
+
+```{r}
+load(fromParentDir("data/alligator.RData"))
+str(alligator)
+```
+
+#### a. scatterplot
+
+```{r}
+plot(WEIGHT~LENGTH, data = alligator)
+```
+
+#### b. Scatterplot with log-transform
+
+```{r}
+plot(log(WEIGHT)~log(LENGTH), data = alligator)
+```
+
+#### c. compare
+
+The relationship between $ln(weight)$ and $ln(length)$ seems to 
+fit a straight line better.
+
+#### d. linear fit
+
+```{r}
+fit <- lm(log(WEIGHT)~log(LENGTH), data = alligator)
+fit$coefficients
+```
+
+This gives rise to the following equation:
+
+$$ln(Weight_i) = `r myround(fit$coefficients[0], 1)`*ln(Length_i) + `r myround(fit$coefficients[1], 1)`$$
+
+#### e. ANOVA table and conclusion
+
+```{r}
+aov(fit) %>% summary()
+```
+
+There seems to be a significant relationship between length and weight.
+
+Looking at the model fit 
+
+```{r}
+summary(fit)
+```
+
+The $R^2$ is very high, so most of the variation in weight 
+can be explained with length.
+
+### Excercise 4. Blood pressure and treatment
+
+*This excercise was skipped for now*
+It is not completely clear which dataset is referred to.
+
+```{r}
+bp <- data.frame(
+  treatment = rep(c("placebo", "treatment"), each = 6),
+  sbp = c(87,68.5,89,88.5,87.5,88,
+          86.5,87,85,86,85,83))
+```
+
+### 5. Low birth weight
+
+```{r}
+lowb <- read.table(file = fromParentDir("data/lowbirth.dat"),
+                   header = T)
+lowb
+```
+
+#### a. fit model for bwt
+
+```{r}
+fit <- glm(bwt~ht*(smoke+age), family = gaussian, data = lowb)
+summary(fit)
+```
+
+#### b. interaction terms interpretation
+
+There seems to be no interaction between hypertension and 
+smoking. 
+In other words, the effects of both smoking and hypertension on 
+birthweight are independent of each other.
+
+There is a significant interaction between hypertension and age.
+
+The coefficient for hypertension decreases with increasing age 
+(since the sign of the interaction is negative). At first it seems 
+counter-intuitive that birthweight is higher when the mother has hypertension.
+However, upon inspection of the interaction, it is clear that the effect 
+of hypertension decreases with 130 for each year in age. So the hypothetical 
+mother of age 0 will have babies that are 2568 heavier than average when they 
+have hypertension. From 20 years onward, the effect of hypertension on 
+birtweight will be negative, as expected. Then, for increasing age, the
+ effect of hypertension on birth weight will keep on getting more negative.
+
+#### c. check dropping of interaction
+
+```{r}
+drop1(fit, test = "F")
+```
+
+The interaction between hypertension and smoking can be dropped.
+
+```{r}
+fit2 <- glm(bwt ~ ht * age + smoke, 
+            data = lowb, family = gaussian)
+summary(fit2)
+drop1(fit2, test = "F")
+```
+
+```{r}
+fit3 <- glm(bwt ~ ht + ht:age + smoke, 
+            data = lowb, family = gaussian)
+summary(fit3)
+drop1(fit3, test = "F")
+
+fit4 <- glm(bwt ~ ht:age + smoke, 
+            data = lowb, family = gaussian)
+summary(fit4)
+drop1(fit4, test = "F")
+
+```
+
+
+Now removing the group effect of smoke will significantly reduce 
+the F value of the model, 
+and also the interaction between hypertension and age cannot be reduced.
+
+This is the most parsimonious model we can get without losing
+goodness of fit.
+
+Birthweight decreases with smoking as expected, and decreases in the presence 
+of hypertension. For older mothers, the effect of hypertension gets stronger.
+
+## Session information
+
+<!-- Insert the session information into the document -->
+```{r session-info}
+```
