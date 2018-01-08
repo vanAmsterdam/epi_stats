@@ -21,6 +21,9 @@ statistic courses in the Epidemiology Graduate Program of the Julius Center, Utr
 
 ## Modern Methods in Data Analysis
 
+### Assignments
+[assignments week 1](assignments_week1.html)
+
 ## Notes
 Due to how this website was made, the R-code 'thinks' it is in the `analysis` 
 subdirectory, while the data sits in the `data` directory, which is found from 
