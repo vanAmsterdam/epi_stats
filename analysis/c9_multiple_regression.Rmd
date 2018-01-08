@@ -1,0 +1,429 @@
+---
+title: "Day 9 Multiple Regression"
+author: "Wouter van Amsterdam"
+date: 2017-11-06
+output: html_document
+---
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+```
+
+<!-- Update knitr chunk options -->
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+<!-- Insert the date the file was last updated -->
+```{r last-updated, echo=FALSE, results='asis'}
+```
+
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+```{r code-version, echo=FALSE, results='asis'}
+```
+
+<!-- Add your analysis here -->
+## Intro
+Tutor: Cas Kruitwagen
+
+
+First decide goal:
+
+* etiology: single predictor, correct for confounders
+* prediction: get best prediction, weight of individual predictors not too interesting
+
+## Multiple linear regression
+### Model definition
+
+$$y_{ij} = \beta_0+\beta_{1}x_{i1}+\beta_{2}x_{i2}+...+\epsilon_i = \beta_0 + \sum_{j}{\beta_{j}x_j} + \epsilon_i$$
+
+With $\epsilon_i \sim N(0,\sigma^2)$
+
+Assumptions
+
+* Linear association
+* Homoscedasticity (so $\sigma \neq \sigma(x)$ or $\frac{\partial \sigma}{\partial x} = 0$)
+
+Problems arise when the predictors are correlated.
+
+* for etiology: effect is to measure effect of determinant on outcome, while controlling for potential confounders (just put them in model)
+* for prediction: try selecting best variables while controlling for overlapping information
+* in RCT: take pre-specified outcomes into account, despite randomization. Unexplained variance will go down, precision and power will go up.
+
+Intrepretation of $/beta_i$. Given all $x_j, j \neq i$ are constant, a unit increase of
+ $x_i$ will lead to an increase in $y_i$ with $\beta_i$.
+
+Calculated by applying least squares
+
+$$min\ \sum_i{(y_i - \beta_0 + \sum_{j}{\beta_{j}x_j} + \epsilon_i)^2}$$
+
+
+For 2 predictors, the residual variance has $n-3$ degrees of freedom. 
+(3 parameters fitted). This can be put in an ANOVA table.
+
+
+#### Simulated data, unrelated explenatory variables
+```{r}
+set.seed(2)
+n = 20
+s = .2
+mu = 4
+b1 = 1.5
+b2 = -.7
+
+x1 = runif(n)
+x2 = runif(n)
+y = mu + b1*x1 + b2*x2 + rnorm(n, sd = s)
+
+pairs(data.frame(x1, x2, y))
+
+fit <- lm(y ~ x1 + x2)
+summary(fit)
+anova(fit)
+```
+
+
+#### Simulated data, correlated explenatory variables
+```{r}
+set.seed(2)
+n = 20
+s = .05
+mu = 4
+b1 = 1
+b2 = .5
+cor_x1x2 = -.5
+s_x2 = .3
+
+x1 = runif(n)
+x2 = cor_x1x2 * x1 + rnorm(n, sd = s_x2)
+y = mu + b1*x1 + b2*x2 + rnorm(n, sd = s)
+
+pairs(data.frame(x1, x2, y))
+
+
+fit <- lm(y ~ x1 + x2)
+fit2 <- lm(y ~ x2)
+summary(fit)
+# anova(fit)
+summary(fit2)
+# anova(fit2)
+```
+
+$\beta_2$ is only significant in the full model with $x_1$ included.
+
+
+#### Goodness of fit
+Adjusted $R^2$ is explained variation in population. $R^2$ is variance explained in sample.
+
+$$R_{adj}^2 = 1 - (1-R^2)\frac{n-1}{n-k-1}$$
+
+In the case of $k/n$ approaches 1, $R_{adj}^2$ will be very low.
+
+
+#### For prediction purposes
+```{r}
+fit0 <- lm(y~1)
+fit1 <- lm(y~x1)
+fit2 <- lm(y~x2)
+fit12 <- lm(y~x1+x2)
+
+summary(fit0)$adj.r.squared
+summary(fit1)$adj.r.squared
+summary(fit2)$adj.r.squared
+summary(fit12)$adj.r.squared
+
+anova(fit0, fit1, fit2, fit12)
+anova(fit1, fit12)
+anova(fit0, fit2)
+
+```
+
+
+Formal testing:
+$H_0:\ \beta_1=0|\beta_2 \neq 0$, $H_1:\ \beta_1 \neq 0|\beta_2 \neq 0$
+
+
+Test by using t-test for coefficients. Degrees of freedom are lowered by all 
+necessary estimated parameters.
+
+'Expensive models' is using op degrees of freedom.
+
+
+ANOVA table tests whether the effects of all explenatory variables in a model are zero or not.
+
+Acaida information criteria for checking significant difference between non-nested models
+
+## Model building
+With $k$ explenatory variables, there are $2^k$ possible models.
+
+* Etiologic / causal: fit determinant only, and with potential confounders, compair. Usually no interest in testing of potential confounders
+* Fit only model proposed protocol
+* Prediction: model building with possibly automatic variable selection.
+
+### How to check
+* Look at 'best' model (highest $R^2$), stepwise (nested)/forward/backward; stepwise is better (you can add and remove)
+
+LASSO, cross-validation, and shrinkage by bootstrap
+
+### Data simulation
+Noise and predictor variables, without correlation in between predictors
+```{r}
+set.seed(2)
+
+n_patients = 1000
+n_noise_variables = 10
+n_explenatory_variables = 10
+real_coefficients = runif(n_explenatory_variables, min = -1, max = 1)
+s_response = 0.2
+
+predictors <- matrix(runif(n_patients * n_explenatory_variables), nrow = n_patients)
+noise <- matrix(runif(n_patients * n_noise_variables), nrow = n_patients)
+# response is dot-product of each row with the coefficients
+# can be calculated with matrix multiplication
+response = rowSums(predictors %*% real_coefficients) + rnorm(n_patients, sd = s_response)
+
+myData <- data.frame(
+  y = response, cbind(predictors, noise)
+)
+
+fit_all <- lm(y~., data = myData)
+summary(fit_all)
+```
+
+
+US $SO_2$ pollution.
+
+```{r}
+load(amstR::fromParentDir("data/so2.RData"))
+hist(so2$SO2)
+
+```
+
+Skewed predictors is not necessarily a problem. 
+
+```{r}
+require(dplyr); require(ggplot2)
+
+so2 %>%
+  select(-c(SO2, city, region)) %>%
+  data.table::melt() %>%
+  ggplot(aes(x = value)) + 
+    geom_histogram() + 
+    facet_wrap(~variable, scales = "free")
+```
+
+
+```{r}
+pairs(so2)
+```
+
+Full model (without city due to too many levels)
+```{r}
+fit <- lm(SO2~., data = (so2 %>% dplyr::select(-city)))
+summary(fit)
+```
+
+Stepwise selection
+```{r}
+library(MASS)
+fit_step <- stepAIC(fit, direction = "both")
+summary(fit_step)
+anova(fit_step)
+anova(fit, fit_step)
+```
+
+Stepwise:
+
+* pick single predictor with highest pearson correlation with response
+* pick second predictor with highest correlation between y corrected for first predictor and second predictor corrected for first predictors
+* evaluate if some can be leaved out
+
+SPSS: p-value for forward selection is 0.05, for backward selection: 0.1
+
+#### Check all models with leaps package
+```{r}
+fit_leap <- leaps::regsubsets(SO2~., data = (so2 %>% dplyr::select(-city)))
+summary(fit_leap)
+plot(fit_leap)
+```
+
+### Multicollinearity
+
+When $x_1$ and $x_2$ are correlated, the $\beta_1$ may increase by adding 
+$x_2$ to the models, and $SE(\beta_1)$ may increase too. It's T-statistic will 
+remain approximately the same.
+
+
+Assumptions
+
+* homoscedastiscity
+* normally distributed residuals
+* independence of the measurements
+* linearity
+
+NB: no conditions for the distribution of the explenatory assumptions
+
+## Lecture part 2: model building issues
+
+```{r}
+lm(SO2~factories, data = so2) %>% summary()
+lm(SO2~population, data = so2) %>% summary()
+lm(SO2~factories+population, data = so2) %>% summary()
+
+```
+
+
+### Multicollinearity
+
+Added effect of another predictor is limited, because it information was already 
+used in the earlier included predictors.
+
+Perfectly independent explenatory variables: adding the second does not alter the first.
+Perfectly correlated explenatory variables: there are multiple solutions.
+
+```{r}
+set.seed(2)
+n = 10
+x1 <- runif(n)
+x2 <- 2*x1
+y  <- 3*x1 + rnorm(n, sd = .1)
+
+lm(y~x1+x2) %>% summary()
+
+```
+
+
+With high correlation:
+
+* Good fit is possible
+* Coefficients will have a large variability
+* Hard to interpret the coefficients directly
+* Estimates strongly depend on the other variables
+
+
+Indicators:
+
+* detect high correlations between explenatory variables
+* some independents are kicked out
+* high $R^2$ (or significant overall F-test), without significant explanatory variables
+* large changes in coefficients when another is added
+* unrealistic estimated coefficients or confidence intervals
+* unstable estimated coefficients (high SE's)
+* unrealist p-values
+
+
+### Tolerance van variance inflation factor
+Tolerance is $1-R^2$ in a model with one of the explanatory variables is 
+taken as the dependent variable and (some of) the other explanatory variables 
+are taken as the independents.
+
+Rule of thumb: tolerance of 0.4 is acceptable (0.1 or 0.2 is sometimes stated)
+
+
+Variance inflation factor (VIF): $VIF = \frac{1}{tolerance}$
+
+The variance of the estimates of the coefficients is inflated with the VIF.
+
+### Solutions to multicollinearity
+Pick the more logical factor
+Mean-centering may help (correlation between x1 and x2 may be more than between 
+x1-(mean(x1) and x2)).
+
+
+## Choice of explanatory variables
+
+* continuous variables
+* functions of continuous variables ($y = \beta_0 + \beta_{1}x_1 + \beta_{2}x_1^2 + \epsilon$)
+* NB linear regression is linear **in the coeficients**
+* categorical variables: create dummy variables
+
+### Categorical variables
+
+Create dummy variables
+
+```{r}
+boxplot(SO2~region, data = so2)
+lm(SO2~region, data = so2) %>% summary()
+```
+
+This makes sure that the degrees of freedom still equals that of an ANOVA.
+
+So 1 variable in linear regression takes up 1 degree of freedom.
+1 categorical variable in ANOVA with j levels takes up j-1 degrees of freedom.
+When creating dummy variables, j-1 dummy variables will be created.
+
+The p-values of the dummy categories are usually not corrected for multiple testing,
+ while in ANOVA they would be, as part of the post-hoc testing.
+
+
+NB the dummy variables need to be entered 'en block'. This messes up stepwise selection, 
+because p-values are calculated for each dummy variable separately.
+
+
+### Sample size
+Large to do exact sample size calculation, it takes many assumptions.
+
+Rule of thumb: 10-15 cases for each parameter (except the constant, but including dummy variables, interactions etc).
+
+For precision: only the final model matters
+For over-fitting: all considered models matter.
+
+
+### Make sure to include some variables
+In R: do not add them to the `scope` of `drop1`, `add1` or `step`.
+
+
+## Missing values
+
+Default in R and SPSS is doing a complete cases on all **potentially** included 
+variables.
+
+Both R and SPSS have functions for "missing values analysis". Detection and 
+detection of patterns.
+
+Problems with complete cases:
+* selection bias (systematic missings)
+* loss of power
+
+Solutions
+
+* <5-10% cases excluded: ignore
+* >5-10%
+** remove variable (sub-optimal)
+** multiple imputation
+
+## Interaction
+
+Practical: take the product of 2 variables as a new variable
+
+```{r}
+lm(SO2 ~ factories*population, data = so2) %>% summary()
+lm(SO2 ~ factories+population, data = so2) %>% summary()
+
+```
+
+$$y_i = \beta_0 + \beta_{1}x_1 + \sum_{j}{\beta_{0j}x_{dummy,j}} + \sum_{j}{\beta_{1j}x_1}$$
+
+Where $x_{dummy,j} \in (0,1)$.
+
+
+
+
+
+
+
+
+## TO CHECK
+
+df from anova(fit12), compare with ANOVA result from slides
+
+
+
+
+## Session information
+
+<!-- Insert the session information into the document -->
+```{r session-info}
+```

@@ -1,0 +1,128 @@
+---
+title: "Estimating with uncertainty"
+author: "Wouter van Amsterdam"
+date: 2017-10-24
+output: html_document
+---
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+```
+
+<!-- Update knitr chunk options -->
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+<!-- Insert the date the file was last updated -->
+```{r last-updated, echo=FALSE, results='asis'}
+```
+
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+```{r code-version, echo=FALSE, results='asis'}
+```
+
+<!-- Add your analysis here -->
+## Estimating with uncertainty
+Tutor
+
+Standard deviation
+Standard error of the mean
+
+Descriptive statistics
+Inferential statistics
+
+
+```{r, message = F, eval = F}
+require(GGally)
+data("mtcars")
+fit1 <- lm(mpg~., data = mtcars)
+fit2 <- lm(mpg~wt+am, data = mtcars)
+summary(fit1)
+summary(fit2)
+ggcoef(fit1)
+
+str(broom::tidy(fit1, conf.int = T, conf.level = .95))
+
+# rbindlist
+lapply(list(fit1, fit2), function(x)
+{broom::tidy(fit1, conf.int = T, conf.level = .95)}
+  )
+
+
+```
+
+**Estimation therory**
+
+* Unbiasedness: $E(estimator) = parameter$; e.g. sample mean, median
+* Consistency: When sample size goes to infinity, the variance goes to zero $\lim_{n\to\infty} Var(estimate)=0$; sample mean, sample median both consistent
+* Efficiency: smallest variance of all available unbiased estimators; sample mean is most efficient, more efficient than median.
+
+For variance:
+population variance
+
+$$Var_{population} = \frac{1}{n}\sum_{i}^{n}{(x_i-\mu)^2}$$
+
+$$Var_{sample} = \frac{1}{n-1}\sum_{i}^{n}{(x_i-\mu)^2}$$
+
+Sample variance is an unbiased estimator for the population variance.
+
+
+Standard error of an estimator is the stnadard deviation of the estimator's sampling distribution.
+
+**Standard error of estimator**
+$$SE = \frac{\sigma}{\sqrt{n}}$$
+**Estimator of standard error**
+$$SE = \frac{s}{\sqrt{n}}$$
+**Rough approximation of 95% confidence interval**
+$$mean \pm 2*SE$$
+
+#### Central limit theorem
+If $Y_{1}$, $Y_{2}$, ..., $Y_{n}$ are independent, identically distributed random variables, 
+from any distribution, with mean $\mu$ and variance $\sigma^2$ then, if $n$ is large enough,
+ the mean of these varibles $\bar{Y}$, follows approximately a normal distribution with 
+ mean $\mu$ and variance $\frac{\sigma^2}{n}$.
+
+If we standardize $Y$, then $$\frac{Y-\mu}{\frac{\sigma}{\sqrt{n}}}$$ follows a standard normal distribution. 
+* Approximately 2/3 of the *standardized* sample means should be within -1 and 1
+* Approximately 95% of the *standardized* sample means should be within -2 and 2
+
+If $\sigma^2$ is unknown, and the sample variance is estamated with $s^2$, than 
+$$\frac{Y-\mu}{\frac{s}{\sqrt{n}}}$$ follows the Student's t-distribution.
+
+The $100*(1-\alpha)\%$ confidence interval is given by:
+$$\bar{Y} - t_{1-\frac{\alpha}{2}, n-1}*\frac{s}{\sqrt{n}} < \mu < \bar{Y} + t_{1-\frac{\alpha}{2}, n-1}*\frac{s}{\sqrt{n}}$$
+
+#### Combining samples
+##### Equal variance of groups, unpaired measurements
+Difference of mean
+$$SE_{difference} = s_{pooled}*\sqrt{\frac{1}{n_{1}}+\frac{1}{n_{2}}}$$
+
+With
+
+$$s_{pooled} = \frac{(n_{1}-1)*s_{1}^2 + (n_{2}-1)*s_{2}^2}{n_{1}+n_{2}-2}$$
+
+Choose critical value from T distribution with $n_{1} + n_{2} - 2$ degrees of freedom.
+
+95% confidence interval:
+$$\bar{Y_{1}}-\bar{Y_{2}} \pm t_{0.025, n_{1}+n_{2}-2}*SE_{difference}$$
+
+##### Unequal variance, unpaired measurements
+$$t = \frac{\bar{Y_{1}} - \bar{Y_{2}}}{s_{\bar{\Delta}}}$$
+Where
+$$s_{\bar{\Delta}} = \sqrt{\frac{s_{1}^2}{n_{1}} + \frac{s_{2}^2}{n_{2}}}$$
+
+Then, for the T-distribution, the degrees of freedom is estimated by the Welch-Satterthwaite equation
+$$df = \frac{(\frac{s_{1}^2}{n_{1}} + \frac{s_{2}^2}{n_{2}})^2}{(\frac{s_{1}^2}{n_{1}})^2/(n_{1}-1) + (\frac{s_{2}^2}{n_{2}})^2/(n_{2}-1)}$$
+
+## Remarks
+Example of old vs young persons with balance for calculating pooled variance, 
+because it is unlikely that variances are equal between the groups.
+
+## Session information
+
+<!-- Insert the session information into the document -->
+```{r session-info}
+```
