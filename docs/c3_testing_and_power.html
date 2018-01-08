@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+<meta name="author" content="Wouter van Amsterdam" />
+
+<meta name="date" content="2017-10-26" />
+
+<title>Significance testing and Power 1</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/font-awesome-4.5.0/css/font-awesome.min.css" rel="stylesheet" />
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+
+<div class="container-fluid main-container">
+
+<!-- tabsets -->
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+</script>
+
+<!-- code folding -->
+
+
+
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+  padding-left: 25px;
+  text-indent: 0;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">epi_stats</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/jdblischak/workflowr">
+    <span class="fa fa-github"></span>
+     
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">Significance testing and Power 1</h1>
+<h4 class="author"><em>Wouter van Amsterdam</em></h4>
+<h4 class="date"><em>2017-10-26</em></h4>
+
+</div>
+
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+<!-- Update knitr chunk options -->
+<!-- Insert the date the file was last updated -->
+<p><strong>Last updated:</strong> 2018-01-08</p>
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+<p><strong>Code version:</strong> ca6e6f8</p>
+<!-- Add your analysis here -->
+<div id="day-3-intro" class="section level2">
+<h2>Day 3: Intro</h2>
+<p>Tutor: Rebecca Stellato</p>
+<div id="testing-with-t-distributions" class="section level3">
+<h3>Testing with T-distributions</h3>
+<p>T-statistic for single sample t-test:</p>
+<p><span class="math display">\[T = \frac{\bar{Y}-\mu_{0}}{s/\sqrt{n}}\]</span></p>
+<p>There are infinetly many possible <span class="math inline">\(h_1\)</span> hypothesis, we take a single <span class="math inline">\(h_0\)</span> hypothesis.</p>
+<p><strong>Three ways of testing</strong></p>
+<ul>
+<li>Take <span class="math inline">\(H_0\)</span>, sample size <span class="math inline">\(n\)</span>, significance level <span class="math inline">\(\alpha\)</span>. Take critical values of <span class="math inline">\(T\)</span> for given <span class="math inline">\(\alpha\)</span> and <span class="math inline">\(n\)</span>. Check T-statistic of sample and compare with rejection region.</li>
+<li>For a given sample T-statistic, calculate probability of finding a T-statistic or more extreme under <span class="math inline">\(H_0\)</span></li>
+<li>Calculate a <span class="math inline">\(100*(1-\alpha)\)</span>% confidence interval around the sample mean, and check if <span class="math inline">\(H_0\)</span> is included in the interval.</li>
+</ul>
+<p>For continuous data, these three approaches are equivalent. For categorical data, there can be differences.</p>
+</div>
+<div id="two-sample-tests" class="section level3">
+<h3>Two sample tests</h3>
+<p>Model</p>
+<p><span class="math display">\[Y_{ij} = \mu_i + \beta_i + \epsilon_{ij}\]</span></p>
+<p>Measured = group mean + block effect + error <span class="math inline">\(i = 1,2\)</span> (the groups), <span class="math inline">\(j = 1,2,3,...,n\)</span> (the individuals) <span class="math display">\[\epsilon \sim N(0, \sigma_{\epsilon}),\ \beta_i \sim N(0, \sigma_{\beta})\]</span></p>
+<p>Now the T-statistic</p>
+<p><span class="math display">\[T = \frac{\bar{d}-\mu_{0}}{s_{d}/\sqrt{n}}\]</span></p>
+<p>Where <span class="math inline">\(d\)</span> are all differences, <span class="math inline">\(n\)</span> is the number of pairs.</p>
+<pre class="r"><code>load(amstR::fromParentDir(&quot;data/balance.RData&quot;))
+t.test(balance[balance$age == &quot;Elderly&quot;,]$FB,
+       balance[balance$age == &quot;Elderly&quot;,]$SS, paired = T)</code></pre>
+<pre><code>
+    Paired t-test
+
+data:  balance[balance$age == &quot;Elderly&quot;, ]$FB and balance[balance$age == &quot;Elderly&quot;, ]$SS
+t = 1.7044, df = 8, p-value = 0.1267
+alternative hypothesis: true difference in means is not equal to 0
+95 percent confidence interval:
+ -1.451046  9.673268
+sample estimates:
+mean of the differences 
+               4.111111 </code></pre>
+<pre class="r"><code>t.test(balance$FB,
+       balance$SS, paired = T)</code></pre>
+<pre><code>
+    Paired t-test
+
+data:  balance$FB and balance$SS
+t = 2.2494, df = 16, p-value = 0.03892
+alternative hypothesis: true difference in means is not equal to 0
+95 percent confidence interval:
+ 0.2066374 6.9698332
+sample estimates:
+mean of the differences 
+               3.588235 </code></pre>
+<p>QQ-plot: Goes wrong when you see patterns * J-shape = left-skewed</p>
+<p>Most of the time: close to the mean it is normally distributed.</p>
+<p>Catch-22 situation of small samples * You cannot rely on the central limit theory, so you need normality * You cannot really test normality for small samples</p>
+<p>For paired data: spaghetti plots can be very informative</p>
+</div>
+<div id="different-distributions" class="section level3">
+<h3>Different distributions</h3>
+<p>Different test-statistic, but keep the same algorithm: * state <span class="math inline">\(H_0\)</span> and <span class="math inline">\(\alpha\)</span> (one-sided or two-sided) * determine test statistic (decide on the test to use) * calculate test statistic (<span class="math inline">\(T\)</span>, <span class="math inline">\(\chi^2\)</span>) * decide whether to reject <span class="math inline">\(H_0\)</span> (with one of 3 options) * state conclusion</p>
+</div>
+<div id="power" class="section level3">
+<h3>Power</h3>
+<ul>
+<li>Type 1 error = <span class="math inline">\(\alpha\)</span></li>
+<li>Type 2 error = <span class="math inline">\(\beta\)</span></li>
+<li>Power = <span class="math inline">\(1-\beta\)</span></li>
+</ul>
+<p>For educational reasons, firstly stick to one-sided tests</p>
+<pre class="r"><code>norm_function &lt;- function(mu, sd) {
+  f = function(x) (1/(sd*sqrt(2*pi)))*exp(-(x-mu)^2/(2*sd^2))
+  return(f)
+}
+# create distributions for sample means under H0 and H1
+# assuming large sample size, so T-distribution converges to normal distribution
+mu0 = 0; sd0 = 1;
+mu1 = 2; sd1 = 1.2;
+h0_distribution = norm_function(mu = mu0, sd = sd0)
+h1_distribution = norm_function(mu = mu1, sd = sd1)
+alpha = 0.05
+boundary_value = qnorm(p = .95, mean = mu0, sd = sd0)
+xmin = -3
+xmax = 6
+
+## using ggplot
+require(ggplot2)
+ggplot(data.frame(x = c(xmin, xmax)), aes(x)) + 
+  stat_function(fun = h0_distribution) + 
+  stat_function(fun = h0_distribution, 
+                xlim = c(boundary_value,xmax),
+                geom = &quot;area&quot;, alpha = 0.5) + 
+  stat_function(fun = h1_distribution) +
+  stat_function(fun = h1_distribution,
+                xlim = c(xmin, boundary_value),
+                geom = &quot;area&quot;, alpha = 0.25) + 
+  theme_bw()</code></pre>
+<p><img src="figure/c3_testing_and_power.Rmd/unnamed-chunk-2-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>## using base plot
+# curve(h0_distribution, xlim = c(-3, 6))
+# curve(h1_distribution, add = T)
+# lines(x = rep(boundary_value, 2), y = c(0, h1_distribution(boundary_value)), lty = 2)
+# text(x = boundary_value, y = .5*h0_distribution(boundary_value), labels = &quot;a&quot;, pos = 4)
+# abline(v = mu0, lty = 2)
+# abline(v = mu1, lty = 2)</code></pre>
+<p>Get boundary value <span class="math inline">\(b\)</span> from: <span class="math display">\[P(\bar{Y}&gt;b|H_0) = P(Z&gt;\frac{b-\mu_{0}}{\sigma/\sqrt{n}}) = \alpha\]</span> Plug <span class="math inline">\(b\)</span> here to find power: <span class="math display">\[P(\bar{Y}&gt;b|H_1) = P(Z&gt;\frac{b-\mu_{1}}{\sigma/\sqrt{n}}) = 1-\beta\]</span></p>
+<p>So again: * Get decision boundary from <span class="math inline">\(H_{0}\)</span> * Get probability of getting boundary value or more extreme under <span class="math inline">\(H_{1}\)</span></p>
+<p>Power of one-sided test is higher, provided that the direction is correct.</p>
+<p>You can do this using the T-distribution, than the standard deviation does not need to be known.</p>
+<p>Power calculations <em>post-hoc</em> are controversial.</p>
+</div>
+</div>
+<div id="day-4" class="section level2">
+<h2>Day 4</h2>
+<div id="two-independent-sample-t.test" class="section level3">
+<h3>Two independent sample t.test</h3>
+<div id="with-unequal-variances" class="section level4">
+<h4>With unequal variances</h4>
+<p>Measurement = group mean + error <span class="math display">\[Y_{ij} = \mu_i + \epsilon_{ij} \]</span> <span class="math inline">\(i = 1,2\)</span>; <span class="math inline">\(j = 1, ..., n_i\)</span> <span class="math inline">\(\epsilon_{ij} \sim N(0, \sigma_i^2)\)</span> and independent.</p>
+<p><span class="math display">\[H_0:\ \mu_1-\mu_2 = \mu_0 = 0\]</span> <span class="math display">\[H_1:\ \mu_1-\mu_2 \neq \mu_0\]</span></p>
+<p>Welch’s standard error</p>
+<p><span class="math display">\[SE(\bar{Y_1}-\bar{Y_2}) = \sqrt{\frac{s_1^2}{n_1}+\frac{s_2^2}{n_2}}\]</span></p>
+<p>Welch T is t-distributed with a non-integer degrees of freedom.</p>
+</div>
+<div id="with-equal-variance-assumption" class="section level4">
+<h4>With equal variance assumption:</h4>
+<p>** note <span class="math inline">\(\sigma_i\)</span> vs <span class="math inline">\(\sigma\)</span> <span class="math inline">\(\epsilon_{ij} \sim N(0, \sigma^2)\)</span> and independent, homegeneity of variances <span class="math inline">\(\sigma_1^2 = \sigma_2^2 = \sigma^2\)</span></p>
+<p>Or with Levence’s test: problem is that you can never prove <span class="math inline">\(H_0\)</span>, we can only reject it given some data. Furthermore: every test will increase the risk of getting a type-1 error (false-positives).</p>
+<p>Best way of assessing assumptions: qreate QQ-plot with all residuals</p>
+<p>Pooled method <span class="math display">\[SE(\bar{Y_1}-\bar{Y_2}) = s_p*\sqrt{\frac{1}{n_1}+\frac{1}{n_2}}\]</span> With <span class="math display">\[s_{pooled} = \frac{(n_{1}-1)*s_{1}^2 + (n_{2}-1)*s_{2}^2}{n_{1}+n_{2}-2}\]</span></p>
+<p>Due to three problems, always do Welch. * we can never prove <span class="math inline">\(H_0\)</span> * increased risk of type-1 errors</p>
+<p>In the case of actually equal variance, you lose some power.</p>
+<pre class="r"><code>load(amstR::fromParentDir(&quot;data/balance.RData&quot;))
+fit_old &lt;- lm(balance[balance$age == &quot;Elderly&quot;,]$SS~1)
+fit_young &lt;- lm(balance[balance$age == &quot;Young&quot;,]$SS~1)
+resid_old &lt;- resid(fit_old)
+resid_young &lt;- resid(fit_young)
+qqnorm(c(resid_old, resid_young))
+qqline(c(resid_old, resid_young), col = &quot;red&quot;)</code></pre>
+<p><img src="figure/c3_testing_and_power.Rmd/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code># summary(fit_old)
+# t.test(balance$FB~balance$age)
+# plot(fit_old, which = 2)
+# plot(fit_young, which = 2)
+
+fit1 &lt;- lm(SS ~ age, data = balance)
+plot(fit1, which = 2)</code></pre>
+<p><img src="figure/c3_testing_and_power.Rmd/unnamed-chunk-3-2.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+</div>
+<div id="one-sided-t-test" class="section level3">
+<h3>One-sided t-test</h3>
+<p>Do only when research question is one-sided. <em>Are women shorter than men</em></p>
+<p>If you think a new therapy is better, but you are not sure, use two-sided.</p>
+<p>To go from two-sided to one-sided, devide p-value by 2.</p>
+</div>
+<div id="sample-size-estimation" class="section level3">
+<h3>Sample size estimation</h3>
+<p>Remaining question: * Validity of determining minimally detectable effect <em>post-hoc</em></p>
+<div id="for-known-sigma" class="section level4">
+<h4>For known <span class="math inline">\(\sigma\)</span></h4>
+<p><span class="math display">\[n = ((Z_{\alpha}+Z_{1-\beta})*\frac{\sigma}{h_1-h_0})^2\]</span></p>
+<p>With <span class="math inline">\(Z_{\alpha}\)</span> one-sided or two-sided, <span class="math inline">\(Z_{\beta}\)</span> always one-sided</p>
+</div>
+<div id="for-unknown-sigma" class="section level4">
+<h4>For unknown <span class="math inline">\(\sigma\)</span></h4>
+<p>Do iterative t-statistic sample size calculation.</p>
+<p><span class="math display">\[n = ((t_{/alpha, v}+t_{1-/beta, v})*\frac{s}{h_1-h_0})^2\]</span></p>
+<p>Where s is the estimated standard deviation, and <span class="math inline">\(v\)</span> is iteratively determined. * start with infinitely high d.f. (which is equivalent to <span class="math inline">\(Z\)</span>-value from normal distribution) and find optimal sample size * plug rounded up sample size minus 1 as d.f. and redo calculation * iterate until conversion</p>
+<p>Paired t-test is equivalent to single sample t-test with standard deviation of the difference. That can be estimated with</p>
+<p><span class="math display">\[S_d = \sqrt{2*s^2*(1-\rho)}\]</span></p>
+<p>Where <span class="math inline">\(\rho\)</span> is the correlation between measurements of the 2 groups.</p>
+</div>
+<div id="for-unpaired-groups" class="section level4">
+<h4>For unpaired groups</h4>
+<p><span class="math display">\[n = 2*((Z_{\alpha}+Z_{\beta})*\frac{s_p}{h_1-h_0})^2\]</span></p>
+<p>Where <span class="math inline">\(s_p\)</span> is the pooled variance, <span class="math inline">\(n\)</span> is the number of people in each group.</p>
+<p>For unequal variance: use the r-package <code>samplesize</code>.</p>
+</div>
+<div id="cohens-effect-size-for-unknown-difference-and-standard-deviation" class="section level4">
+<h4>Cohen’s effect-size: for unknown difference and standard deviation</h4>
+<p>Effect size in terms of differences in terms of standard deviations.</p>
+<ul>
+<li>small: 0.2</li>
+<li>medium: 0.5</li>
+<li><p>large: 0.8</p></li>
+<li>1 mean: <span class="math inline">\(ES = (\mu_1-\mu_0)/\sigma\)</span></li>
+<li>2 paired means: <span class="math inline">\(ES = (\mu_1-\mu_0)/\sigma_d\)</span> (d = difference)</li>
+<li>2 independent means: <span class="math inline">\(ES = (\mu_1-\mu_0)/\sigma\)</span></li>
+<li><p>etc etc for each test</p></li>
+<li>Two means or proportions small (0.2) medium (0.5) large (0.8)</li>
+<li>Correlation or contingency tables small (0.1) medium (0.3) large (0.5)</li>
+<li>Linear regression small (0.02) medium (0.15) large (0.35)</li>
+<li><p>More than two means (ANOVA) small (0.1) medium (0.25) large (0.4)</p></li>
+</ul>
+<p>If you have no idea, do not choose a large effect size.</p>
+</div>
+</div>
+</div>
+<div id="session-information" class="section level2">
+<h2>Session information</h2>
+<!-- Insert the session information into the document -->
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 3.3.2 (2016-10-31)
+Platform: x86_64-apple-darwin13.4.0 (64-bit)
+Running under: macOS Sierra 10.12.6
+
+locale:
+[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+[1] ggplot2_2.2.1
+
+loaded via a namespace (and not attached):
+ [1] Rcpp_0.12.14       survcomp_1.22.0    RColorBrewer_1.1-2
+ [4] git2r_0.20.0       plyr_1.8.4         tools_3.3.2       
+ [7] digest_0.6.13      evaluate_0.10.1    tibble_1.3.4      
+[10] gtable_0.2.0       lattice_0.20-35    rlang_0.1.6       
+[13] Matrix_1.2-10      yaml_2.1.16        prodlim_1.6.1     
+[16] bootstrap_2017.2   amstR_0.1.3        stringr_1.2.0     
+[19] knitr_1.18         SuppDists_1.1-9.4  rprojroot_1.2     
+[22] grid_3.3.2         data.table_1.10.4  survival_2.41-3   
+[25] rmarkdown_1.8      lava_1.5           rmeta_2.16        
+[28] magrittr_1.5       backports_1.1.0    scales_0.4.1      
+[31] htmltools_0.3.6    survivalROC_1.0.3  splines_3.3.2     
+[34] colorspace_1.3-2   labeling_0.3       KernSmooth_2.23-15
+[37] stringi_1.1.6      lazyeval_0.2.0     munsell_0.4.3     </code></pre>
+</div>
+
+<hr>
+<p>
+    This <a href="http://rmarkdown.rstudio.com">R Markdown</a> site was created with <a href="https://github.com/jdblischak/workflowr">workflowr</a>
+</p>
+<hr>
+
+<!-- To enable disqus, uncomment the section below and provide your disqus_shortname -->
+
+<!-- disqus
+  <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+        var disqus_shortname = 'rmarkdown'; // required: replace example with your forum shortname
+
+        /* * * DON'T EDIT BELOW THIS LINE * * */
+        (function() {
+            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+-->
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

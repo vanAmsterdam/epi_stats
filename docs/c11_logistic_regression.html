@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+<meta name="author" content="Wouter van Amsterdam" />
+
+<meta name="date" content="2017-11-09" />
+
+<title>Day 11 Logistic Regression</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/font-awesome-4.5.0/css/font-awesome.min.css" rel="stylesheet" />
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+
+<div class="container-fluid main-container">
+
+<!-- tabsets -->
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+</script>
+
+<!-- code folding -->
+
+
+
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+  padding-left: 25px;
+  text-indent: 0;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">epi_stats</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/jdblischak/workflowr">
+    <span class="fa fa-github"></span>
+     
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">Day 11 Logistic Regression</h1>
+<h4 class="author"><em>Wouter van Amsterdam</em></h4>
+<h4 class="date"><em>2017-11-09</em></h4>
+
+</div>
+
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+<!-- Update knitr chunk options -->
+<!-- Insert the date the file was last updated -->
+<p><strong>Last updated:</strong> 2018-01-08</p>
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+<p><strong>Code version:</strong> ca6e6f8</p>
+<!-- Add your analysis here -->
+<div id="intro" class="section level2">
+<h2>Intro</h2>
+<p>Tutor:</p>
+<pre class="r"><code>lb &lt;- read.table(epistats::fromParentDir(&quot;data/lowbirth.dat&quot;), header = T)
+str(lb)</code></pre>
+<pre><code>&#39;data.frame&#39;:   189 obs. of  11 variables:
+ $ id   : int  85 86 87 88 89 91 92 93 94 95 ...
+ $ low  : int  0 0 0 0 0 0 0 0 0 0 ...
+ $ age  : int  19 33 20 21 18 21 22 17 29 26 ...
+ $ lwt  : int  182 155 105 108 107 124 118 103 123 113 ...
+ $ race : int  2 3 1 1 1 3 1 3 1 1 ...
+ $ smoke: int  0 0 1 1 1 0 0 0 1 1 ...
+ $ ptl  : int  0 0 0 0 0 0 0 0 0 0 ...
+ $ ht   : int  0 0 0 0 0 0 0 0 0 0 ...
+ $ ui   : int  1 0 0 1 1 0 0 0 0 0 ...
+ $ ftv  : int  0 3 1 2 0 0 1 1 1 0 ...
+ $ bwt  : int  2523 2551 2557 2594 2600 2622 2637 2637 2663 2665 ...</code></pre>
+<ul>
+<li>lwt = weight at last menstrual period</li>
+</ul>
+<pre class="r"><code>require(dplyr)
+lb %&gt;%
+  group_by(age) %&gt;%
+  summarize(mean(low))</code></pre>
+<pre><code># A tibble: 24 x 2
+     age `mean(low)`
+   &lt;int&gt;       &lt;dbl&gt;
+ 1    14   0.6666667
+ 2    15   0.6666667
+ 3    16   0.1428571
+ 4    17   0.4166667
+ 5    18   0.2000000
+ 6    19   0.1875000
+ 7    20   0.4444444
+ 8    21   0.4166667
+ 9    22   0.1538462
+10    23   0.3846154
+# ... with 14 more rows</code></pre>
+<pre class="r"><code>require(data.table)
+require(ggplot2)
+setDT(lb)
+
+lb[, list(prob = mean(low)), by=  &quot;age&quot;] %&gt;%
+  ggplot(aes(x = age, y = prob)) + geom_point()</code></pre>
+<p><img src="figure/c11_logistic_regression.Rmd/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /></p>
+<div id="chi-square-test" class="section level3">
+<h3>Chi-square test</h3>
+<pre class="r"><code>lb %&gt;%
+  group_by(age) %&gt;%
+  summarize(n_low = sum(low==1), 
+            n_births = n(),
+            prob = n_low/n_births) %&gt;%
+  chisq.test()</code></pre>
+<pre><code>Warning in chisq.test(.): Chi-squared approximation may be incorrect</code></pre>
+<pre><code>
+    Pearson&#39;s Chi-squared test
+
+data:  .
+X-squared = 139.23, df = 69, p-value = 1.171e-06</code></pre>
+<p>Problems with Chi-square: no effect size Problems with linear model when modeling percentage: variance is higher around 0.5</p>
+</div>
+<div id="logistic-regression" class="section level3">
+<h3>Logistic regression</h3>
+<p>Create link function. Transforming probability. Maps any value from <span class="math inline">\(-\infty\)</span> to <span class="math inline">\(\infty\)</span> to a value between 0 and 1. Not the only possible link function.</p>
+<p><span class="math display">\[w = \text{logit}(\pi) = ln(\frac{\pi}{1-\pi}) = \beta_0 + \beta_1X\]</span></p>
+<p>So equivalently:</p>
+<p><span class="math display">\[\pi(X) = \frac{1}{1+e^{-w}} = \frac{1}{1+e^{-(\beta_0+\beta_1X)}}\]</span></p>
+<p>In general</p>
+<p><span class="math display">\[\pi(X) = \frac{1}{1+e^{-(\beta_0+\sum_i{\beta_ix_i})}}\]</span></p>
+<div id="estimate-parameters" class="section level4">
+<h4>Estimate parameters</h4>
+<p><span class="math display">\[w_1 = ln(\frac{\pi(X=1)}{1-\pi(X=1)}) = \beta_0+\beta_1X = \beta_0+\beta_1\]</span> <span class="math display">\[w_0 = ln(\frac{\pi(X=0)}{1-\pi(X=0)}) = \beta_0+\beta_1X = \beta_0\]</span> <span class="math display">\[ln(OR) = \frac{ln(\pi(X=1)/(1-\pi(X=1)))}{ln(\pi(X=0)/(1-\pi(X=0)))} = w_1 - w_0 = \beta_1\]</span></p>
+<p>Simulate a continous variable</p>
+<pre class="r"><code>set.seed(2)
+n = 100
+x = rnorm(n)
+x_quant = rank(x)/length(x)
+y = sapply(x_quant, function(x) sample(c(0,1), size = 1, prob = c(x, 1-x)))
+
+table(x&gt;0.5, y)</code></pre>
+<pre><code>       y
+         0  1
+  FALSE 23 46
+  TRUE  25  6</code></pre>
+<pre class="r"><code>plot(x, y)</code></pre>
+<p><img src="figure/c11_logistic_regression.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>fit &lt;- glm(y~x, family = binomial(link = &quot;logit&quot;))
+summary(fit)</code></pre>
+<pre><code>
+Call:
+glm(formula = y ~ x, family = binomial(link = &quot;logit&quot;))
+
+Deviance Residuals: 
+    Min       1Q   Median       3Q      Max  
+-2.0336  -0.8649   0.3866   0.8909   2.0465  
+
+Coefficients:
+            Estimate Std. Error z value Pr(&gt;|z|)    
+(Intercept)  0.05489    0.23255   0.236    0.813    
+x           -1.10727    0.24702  -4.483 7.38e-06 ***
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+(Dispersion parameter for binomial family taken to be 1)
+
+    Null deviance: 138.47  on 99  degrees of freedom
+Residual deviance: 110.02  on 98  degrees of freedom
+AIC: 114.02
+
+Number of Fisher Scoring iterations: 4</code></pre>
+<pre class="r"><code>plot(fit)</code></pre>
+<p><img src="figure/c11_logistic_regression.Rmd/unnamed-chunk-5-2.png" width="672" style="display: block; margin: auto;" /><img src="figure/c11_logistic_regression.Rmd/unnamed-chunk-5-3.png" width="672" style="display: block; margin: auto;" /><img src="figure/c11_logistic_regression.Rmd/unnamed-chunk-5-4.png" width="672" style="display: block; margin: auto;" /><img src="figure/c11_logistic_regression.Rmd/unnamed-chunk-5-5.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>predicted_probs &lt;- predict(fit, newdata = data.frame(x), type = &quot;response&quot;)
+gbm::calibrate.plot(y = y, p = predicted_probs)</code></pre>
+<p><img src="figure/c11_logistic_regression.Rmd/unnamed-chunk-5-6.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="model-summary" class="section level4">
+<h4>Model summary</h4>
+<p>There are measures for <span class="math inline">\(R^2\)</span>: Nagelkerke, Cox &amp; Snell (Nagelkerke always higher). However, <span class="math inline">\(R^2\)</span> is hard to interpret for binary outcomes, and it’s use is disputed.</p>
+</div>
+</div>
+<div id="likelihood-of-logistic-regression" class="section level3">
+<h3>Likelihood of logistic regression</h3>
+<p>Problems with leas squares * least squares criterion assumes that error variance is the case for each case (homoscodasticity) * for binomial distribution, error variance depends on <span class="math inline">\(\pi\)</span>. * binomial distribution is skewed for values close to 0 and 1</p>
+<p>Likelihood</p>
+<ul>
+<li>positive case, say predicted probability is 0.85, likelihood = 0.85</li>
+<li>negative case, say predicted probability is 0.85, likelihood = 0.15 = 1-0.85</li>
+</ul>
+<p>Likelihood is product of all likelihoods</p>
+<p><span class="math display">\[L(\pi) = P(Y_1 = y_1) * P(Y_2 = y_2) * ... * P(Y_n = y_n) = \prod_i{\pi^{Y_i}(1-\pi)^{1-Y_i}}\]</span></p>
+<p>With <span class="math inline">\(\pi\)</span> the predicted probability</p>
+<p>Properties of likelihood * the higher the likelihood, the better the model fits * a perfect fit = 1, min = 0 * decreases quickly with increasing sample size</p>
+<p>In practice: use log-likelihood axample</p>
+<p>Maximum likelihood: get <span class="math inline">\(\pi(\beta_0, \beta_1)\)</span> that maximizes the likelihood.</p>
+<p>You could have local maxima, so you sometimes need to use multiple starting points.</p>
+<p>So estimations of <span class="math inline">\(\beta_0\)</span> and <span class="math inline">\(\beta_1\)</span> that optimize the likelihood-ratio, are called the maximum likelihood estimates (MLE). Take first derivates, set to 0. Second derivatise give the values for standard errors of MLE.</p>
+<p><span class="math display">\[SE(MLE) = \frac{1}{\sqrt{-\frac{d^2 L}{dx^2}(x_{optimum})}}\]</span></p>
+<p>So very peaked likelihood functions lead to low standard errors.</p>
+<div id="likelihood-testing" class="section level4">
+<h4>Likelihood testing</h4>
+<p>Calculate <span class="math inline">\(L\)</span> for each model. If <span class="math inline">\(L_1 &gt; L_0\)</span>, than model 1 fits the data better.</p>
+<div id="likelihood-ratio-test" class="section level5">
+<h5>Likelihood ratio test</h5>
+<p>Test statistic <span class="math inline">\(T = -2*(L_1-L_0)\)</span> is chi-squared distributed with df = difference in number of parameters between the models.</p>
+</div>
+<div id="wald-test" class="section level5">
+<h5>Wald-test</h5>
+<p>Test statistic <span class="math inline">\(T = b/se(b)\)</span>, the <span class="math inline">\(T^2\)</span> is approximately chi-squared distributed with one degree of freedom</p>
+</div>
+<div id="score-test" class="section level5">
+<h5>Score test</h5>
+<p>The test statistic is a ratio between the first and second derivatives of the likelihood at <span class="math inline">\(\beta_1 = 0\)</span>. It is also approximately chi-squared distributed. SPSS uses this test to decide whether variables should be included in a (stepwise) forward selection procedure</p>
+<p>Likelihood and Score are better than Wald. All tests can be expanded, but only for nested models.</p>
+</div>
+</div>
+<div id="model-building" class="section level4">
+<h4>Model building</h4>
+<p>Model is compromise between good fit and minimum number of variables (for prediction! not necessary for causal research) More explanatory variables will give higher likelihood</p>
+<p>To take number of variables in accound, use Akaike’s information criterion (AIC):</p>
+<p><span class="math display">\[AIC = -2*ln(L) + 2*p\]</span> where <span class="math inline">\(p\)</span> is the number of parameters in the model.</p>
+<p>AIC is not a measure of how well a model fits the data, but can be used to compare models (lower AIC is better).</p>
+<p>When AICs are very close, take the simpler model.</p>
+<pre class="r"><code>fit0 &lt;- glm(low~1, family = binomial(link = &quot;logit&quot;), data = lb)
+fit_all &lt;- glm(low~., family = binomial(link = &quot;logit&quot;), data = lb[, -c(&quot;id&quot;, &quot;bwt&quot;)])
+# add1(object = fit0, scope = list(lower = fit0, upper = fit_all), test = &quot;LRT&quot;, data = lb)
+step(object = fit0, scope = list(lower = fit0, upper = fit_all), test = &quot;LRT&quot;, data = lb)</code></pre>
+<pre><code>Start:  AIC=236.67
+low ~ 1
+
+        Df Deviance    AIC    LRT Pr(&gt;Chi)   
++ ptl    1   227.89 231.89 6.7794 0.009222 **
++ lwt    1   228.69 232.69 5.9813 0.014458 * 
++ ui     1   229.60 233.60 5.0761 0.024258 * 
++ smoke  1   229.81 233.81 4.8674 0.027369 * 
++ ht     1   230.65 234.65 4.0221 0.044907 * 
++ race   1   231.10 235.10 3.5684 0.058890 . 
++ age    1   231.91 235.91 2.7600 0.096646 . 
+&lt;none&gt;       234.67 236.67                   
++ ftv    1   233.90 237.90 0.7731 0.379246   
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+Step:  AIC=231.89
+low ~ ptl
+
+        Df Deviance    AIC    LRT Pr(&gt;Chi)   
++ lwt    1   223.41 229.41 4.4857 0.034179 * 
++ ht     1   223.58 229.58 4.3093 0.037905 * 
++ age    1   224.27 230.27 3.6225 0.057004 . 
++ race   1   224.27 230.27 3.6183 0.057146 . 
++ smoke  1   224.78 230.78 3.1157 0.077541 . 
++ ui     1   224.89 230.89 3.0051 0.083005 . 
+&lt;none&gt;       227.89 231.89                   
++ ftv    1   227.30 233.30 0.5925 0.441461   
+- ptl    1   234.67 236.67 6.7794 0.009222 **
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+Step:  AIC=229.41
+low ~ ptl + lwt
+
+        Df Deviance    AIC    LRT Pr(&gt;Chi)   
++ ht     1   215.96 223.96 7.4431 0.006368 **
++ smoke  1   220.54 228.54 2.8688 0.090310 . 
++ race   1   220.98 228.98 2.4244 0.119457   
++ age    1   221.05 229.05 2.3527 0.125069   
++ ui     1   221.23 229.23 2.1803 0.139785   
+&lt;none&gt;       223.41 229.41                   
++ ftv    1   223.12 231.12 0.2923 0.588722   
+- lwt    1   227.89 231.89 4.4857 0.034179 * 
+- ptl    1   228.69 232.69 5.2838 0.021525 * 
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+Step:  AIC=223.96
+low ~ ptl + lwt + ht
+
+        Df Deviance    AIC    LRT Pr(&gt;Chi)   
++ ui     1   213.01 223.01 2.9505 0.085849 . 
++ smoke  1   213.15 223.15 2.8167 0.093289 . 
+&lt;none&gt;       215.96 223.96                   
++ race   1   214.00 224.00 1.9673 0.160730   
++ age    1   214.01 224.01 1.9531 0.162254   
++ ftv    1   215.84 225.84 0.1186 0.730604   
+- ptl    1   221.14 227.14 5.1783 0.022871 * 
+- ht     1   223.41 229.41 7.4431 0.006368 **
+- lwt    1   223.58 229.58 7.6195 0.005774 **
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+Step:  AIC=223.01
+low ~ ptl + lwt + ht + ui
+
+        Df Deviance    AIC    LRT Pr(&gt;Chi)   
++ smoke  1   210.31 222.31 2.7027 0.100176   
+&lt;none&gt;       213.01 223.01                   
++ race   1   211.17 223.17 1.8413 0.174800   
++ age    1   211.33 223.33 1.6836 0.194445   
+- ui     1   215.96 223.96 2.9505 0.085849 . 
+- ptl    1   216.61 224.61 3.5996 0.057794 . 
++ ftv    1   212.95 224.95 0.0659 0.797469   
+- lwt    1   219.61 227.61 6.5996 0.010200 * 
+- ht     1   221.23 229.23 8.2133 0.004158 **
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+Step:  AIC=222.31
+low ~ ptl + lwt + ht + ui + smoke
+
+        Df Deviance    AIC    LRT Pr(&gt;Chi)   
++ race   1   205.21 219.21 5.0997 0.023929 * 
+&lt;none&gt;       210.31 222.31                   
++ age    1   208.77 222.77 1.5395 0.214698   
+- ptl    1   212.83 222.83 2.5152 0.112752   
+- smoke  1   213.01 223.01 2.7027 0.100176   
+- ui     1   213.15 223.15 2.8366 0.092139 . 
++ ftv    1   210.29 224.29 0.0201 0.887332   
+- lwt    1   216.63 226.63 6.3195 0.011942 * 
+- ht     1   218.45 228.45 8.1362 0.004339 **
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+Step:  AIC=219.21
+low ~ ptl + lwt + ht + ui + smoke + race
+
+        Df Deviance    AIC    LRT Pr(&gt;Chi)   
+&lt;none&gt;       205.21 219.21                   
+- ptl    1   207.34 219.34 2.1296 0.144475   
+- ui     1   207.81 219.81 2.6025 0.106694   
++ age    1   204.33 220.33 0.8795 0.348334   
++ ftv    1   205.18 221.18 0.0320 0.857962   
+- lwt    1   209.58 221.58 4.3650 0.036684 * 
+- race   1   210.31 222.31 5.0997 0.023929 * 
+- smoke  1   211.17 223.17 5.9612 0.014624 * 
+- ht     1   212.61 224.61 7.3972 0.006533 **
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<pre><code>
+Call:  glm(formula = low ~ ptl + lwt + ht + ui + smoke + race, family = binomial(link = &quot;logit&quot;), 
+    data = lb)
+
+Coefficients:
+(Intercept)          ptl          lwt           ht           ui  
+   -0.80364      0.49145     -0.01295      1.83316      0.74794  
+      smoke         race  
+    0.94817      0.46913  
+
+Degrees of Freedom: 188 Total (i.e. Null);  182 Residual
+Null Deviance:      234.7 
+Residual Deviance: 205.2    AIC: 219.2</code></pre>
+<p>In SPSS, entering variables is determined by score test, removing is with LR test. In each step, ‘step’ compares it with the previous model, ‘model’ compares it with null-model.</p>
+<p>Note that likelihood-ratio may increase, even when accuracy goes down.</p>
+</div>
+</div>
+<div id="assumptions" class="section level3">
+<h3>Assumptions</h3>
+<ul>
+<li>homoscedasticity is not needed to check (it is dependent on p in binomial distribution)</li>
+</ul>
+</div>
+</div>
+<div id="session-information" class="section level2">
+<h2>Session information</h2>
+<!-- Insert the session information into the document -->
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 3.3.2 (2016-10-31)
+Platform: x86_64-apple-darwin13.4.0 (64-bit)
+Running under: macOS Sierra 10.12.6
+
+locale:
+[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+[1] bindrcpp_0.2      ggplot2_2.2.1     data.table_1.10.4 dplyr_0.7.4      
+
+loaded via a namespace (and not attached):
+ [1] Rcpp_0.12.14     knitr_1.18       bindr_0.1        magrittr_1.5    
+ [5] splines_3.3.2    munsell_0.4.3    lattice_0.20-35  gbm_2.1.3       
+ [9] colorspace_1.3-2 R6_2.2.2         rlang_0.1.6      plyr_1.8.4      
+[13] stringr_1.2.0    tools_3.3.2      epistats_0.1.0   parallel_3.3.2  
+[17] grid_3.3.2       gtable_0.2.0     git2r_0.20.0     htmltools_0.3.6 
+[21] survival_2.41-3  lazyeval_0.2.0   yaml_2.1.16      rprojroot_1.2   
+[25] digest_0.6.13    assertthat_0.2.0 tibble_1.3.4     Matrix_1.2-10   
+[29] glue_1.2.0       evaluate_0.10.1  rmarkdown_1.8    labeling_0.3    
+[33] stringi_1.1.6    scales_0.4.1     backports_1.1.0  pkgconfig_2.0.1 </code></pre>
+</div>
+
+<hr>
+<p>
+    This <a href="http://rmarkdown.rstudio.com">R Markdown</a> site was created with <a href="https://github.com/jdblischak/workflowr">workflowr</a>
+</p>
+<hr>
+
+<!-- To enable disqus, uncomment the section below and provide your disqus_shortname -->
+
+<!-- disqus
+  <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+        var disqus_shortname = 'rmarkdown'; // required: replace example with your forum shortname
+
+        /* * * DON'T EDIT BELOW THIS LINE * * */
+        (function() {
+            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+-->
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

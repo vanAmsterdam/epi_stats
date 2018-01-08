@@ -1,0 +1,1125 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+<meta name="author" content="Wouter van Amsterdam" />
+
+<meta name="date" content="2017-11-06" />
+
+<title>Day 9 Multiple Regression</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/font-awesome-4.5.0/css/font-awesome.min.css" rel="stylesheet" />
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+
+<div class="container-fluid main-container">
+
+<!-- tabsets -->
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+</script>
+
+<!-- code folding -->
+
+
+
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+  padding-left: 25px;
+  text-indent: 0;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">epi_stats</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/jdblischak/workflowr">
+    <span class="fa fa-github"></span>
+     
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">Day 9 Multiple Regression</h1>
+<h4 class="author"><em>Wouter van Amsterdam</em></h4>
+<h4 class="date"><em>2017-11-06</em></h4>
+
+</div>
+
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+<!-- Update knitr chunk options -->
+<!-- Insert the date the file was last updated -->
+<p><strong>Last updated:</strong> 2018-01-08</p>
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+<p><strong>Code version:</strong> ca6e6f8</p>
+<!-- Add your analysis here -->
+<div id="intro" class="section level2">
+<h2>Intro</h2>
+<p>Tutor: Cas Kruitwagen</p>
+<p>First decide goal:</p>
+<ul>
+<li>etiology: single predictor, correct for confounders</li>
+<li>prediction: get best prediction, weight of individual predictors not too interesting</li>
+</ul>
+</div>
+<div id="multiple-linear-regression" class="section level2">
+<h2>Multiple linear regression</h2>
+<div id="model-definition" class="section level3">
+<h3>Model definition</h3>
+<p><span class="math display">\[y_{ij} = \beta_0+\beta_{1}x_{i1}+\beta_{2}x_{i2}+...+\epsilon_i = \beta_0 + \sum_{j}{\beta_{j}x_j} + \epsilon_i\]</span></p>
+<p>With <span class="math inline">\(\epsilon_i \sim N(0,\sigma^2)\)</span></p>
+<p>Assumptions</p>
+<ul>
+<li>Linear association</li>
+<li>Homoscedasticity (so <span class="math inline">\(\sigma \neq \sigma(x)\)</span> or <span class="math inline">\(\frac{\partial \sigma}{\partial x} = 0\)</span>)</li>
+</ul>
+<p>Problems arise when the predictors are correlated.</p>
+<ul>
+<li>for etiology: effect is to measure effect of determinant on outcome, while controlling for potential confounders (just put them in model)</li>
+<li>for prediction: try selecting best variables while controlling for overlapping information</li>
+<li>in RCT: take pre-specified outcomes into account, despite randomization. Unexplained variance will go down, precision and power will go up.</li>
+</ul>
+<p>Intrepretation of <span class="math inline">\(/beta_i\)</span>. Given all <span class="math inline">\(x_j, j \neq i\)</span> are constant, a unit increase of <span class="math inline">\(x_i\)</span> will lead to an increase in <span class="math inline">\(y_i\)</span> with <span class="math inline">\(\beta_i\)</span>.</p>
+<p>Calculated by applying least squares</p>
+<p><span class="math display">\[min\ \sum_i{(y_i - \beta_0 + \sum_{j}{\beta_{j}x_j} + \epsilon_i)^2}\]</span></p>
+<p>For 2 predictors, the residual variance has <span class="math inline">\(n-3\)</span> degrees of freedom. (3 parameters fitted). This can be put in an ANOVA table.</p>
+<div id="simulated-data-unrelated-explenatory-variables" class="section level4">
+<h4>Simulated data, unrelated explenatory variables</h4>
+<pre class="r"><code>set.seed(2)
+n = 20
+s = .2
+mu = 4
+b1 = 1.5
+b2 = -.7
+
+x1 = runif(n)
+x2 = runif(n)
+y = mu + b1*x1 + b2*x2 + rnorm(n, sd = s)
+
+pairs(data.frame(x1, x2, y))</code></pre>
+<p><img src="figure/c9_multiple_regression.Rmd/unnamed-chunk-1-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>fit &lt;- lm(y ~ x1 + x2)
+summary(fit)</code></pre>
+<pre><code>
+Call:
+lm(formula = y ~ x1 + x2)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-0.32659 -0.19103 -0.00767  0.18331  0.31107 
+
+Coefficients:
+            Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept)   4.1550     0.1139  36.466  &lt; 2e-16 ***
+x1            1.1184     0.1726   6.482 5.64e-06 ***
+x2           -0.6156     0.1761  -3.496  0.00277 ** 
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+Residual standard error: 0.2199 on 17 degrees of freedom
+Multiple R-squared:  0.7263,    Adjusted R-squared:  0.6941 
+F-statistic: 22.55 on 2 and 17 DF,  p-value: 1.649e-05</code></pre>
+<pre class="r"><code>anova(fit)</code></pre>
+<pre><code>Analysis of Variance Table
+
+Response: y
+          Df  Sum Sq Mean Sq F value   Pr(&gt;F)    
+x1         1 1.58962 1.58962  32.887 2.43e-05 ***
+x2         1 0.59060 0.59060  12.219 0.002771 ** 
+Residuals 17 0.82171 0.04834                     
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+</div>
+<div id="simulated-data-correlated-explenatory-variables" class="section level4">
+<h4>Simulated data, correlated explenatory variables</h4>
+<pre class="r"><code>set.seed(2)
+n = 20
+s = .05
+mu = 4
+b1 = 1
+b2 = .5
+cor_x1x2 = -.5
+s_x2 = .3
+
+x1 = runif(n)
+x2 = cor_x1x2 * x1 + rnorm(n, sd = s_x2)
+y = mu + b1*x1 + b2*x2 + rnorm(n, sd = s)
+
+pairs(data.frame(x1, x2, y))</code></pre>
+<p><img src="figure/c9_multiple_regression.Rmd/unnamed-chunk-2-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>fit &lt;- lm(y ~ x1 + x2)
+fit2 &lt;- lm(y ~ x2)
+summary(fit)</code></pre>
+<pre><code>
+Call:
+lm(formula = y ~ x1 + x2)
+
+Residuals:
+      Min        1Q    Median        3Q       Max 
+-0.091361 -0.032785 -0.005263  0.028630  0.114091 
+
+Coefficients:
+            Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept)  3.98603    0.02472  161.24  &lt; 2e-16 ***
+x1           1.00628    0.04587   21.94 6.57e-14 ***
+x2           0.48774    0.03278   14.88 3.53e-11 ***
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+Residual standard error: 0.05474 on 17 degrees of freedom
+Multiple R-squared:  0.9681,    Adjusted R-squared:  0.9643 
+F-statistic: 257.9 on 2 and 17 DF,  p-value: 1.919e-13</code></pre>
+<pre class="r"><code># anova(fit)
+summary(fit2)</code></pre>
+<pre><code>
+Call:
+lm(formula = y ~ x2)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-0.45754 -0.23599  0.03463  0.20810  0.48360 
+
+Coefficients:
+            Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept)  4.44190    0.07044  63.063   &lt;2e-16 ***
+x2           0.17340    0.15513   1.118    0.278    
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+Residual standard error: 0.288 on 18 degrees of freedom
+Multiple R-squared:  0.0649,    Adjusted R-squared:  0.01295 
+F-statistic: 1.249 on 1 and 18 DF,  p-value: 0.2784</code></pre>
+<pre class="r"><code># anova(fit2)</code></pre>
+<p><span class="math inline">\(\beta_2\)</span> is only significant in the full model with <span class="math inline">\(x_1\)</span> included.</p>
+</div>
+<div id="goodness-of-fit" class="section level4">
+<h4>Goodness of fit</h4>
+<p>Adjusted <span class="math inline">\(R^2\)</span> is explained variation in population. <span class="math inline">\(R^2\)</span> is variance explained in sample.</p>
+<p><span class="math display">\[R_{adj}^2 = 1 - (1-R^2)\frac{n-1}{n-k-1}\]</span></p>
+<p>In the case of <span class="math inline">\(k/n\)</span> approaches 1, <span class="math inline">\(R_{adj}^2\)</span> will be very low.</p>
+</div>
+<div id="for-prediction-purposes" class="section level4">
+<h4>For prediction purposes</h4>
+<pre class="r"><code>fit0 &lt;- lm(y~1)
+fit1 &lt;- lm(y~x1)
+fit2 &lt;- lm(y~x2)
+fit12 &lt;- lm(y~x1+x2)
+
+summary(fit0)$adj.r.squared</code></pre>
+<pre><code>[1] 0</code></pre>
+<pre class="r"><code>summary(fit1)$adj.r.squared</code></pre>
+<pre><code>[1] 0.527822</code></pre>
+<pre class="r"><code>summary(fit2)$adj.r.squared</code></pre>
+<pre><code>[1] 0.01295315</code></pre>
+<pre class="r"><code>summary(fit12)$adj.r.squared</code></pre>
+<pre><code>[1] 0.9643388</code></pre>
+<pre class="r"><code>anova(fit0, fit1, fit2, fit12)</code></pre>
+<pre><code>Analysis of Variance Table
+
+Model 1: y ~ 1
+Model 2: y ~ x1
+Model 3: y ~ x2
+Model 4: y ~ x1 + x2
+  Res.Df     RSS Df Sum of Sq      F    Pr(&gt;F)    
+1     19 1.59622                                  
+2     18 0.71403  1   0.88219 294.46 3.598e-12 ***
+3     18 1.49262  0  -0.77859                     
+4     17 0.05093  1   1.44168 481.21 6.575e-14 ***
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<pre class="r"><code>anova(fit1, fit12)</code></pre>
+<pre><code>Analysis of Variance Table
+
+Model 1: y ~ x1
+Model 2: y ~ x1 + x2
+  Res.Df     RSS Df Sum of Sq      F    Pr(&gt;F)    
+1     18 0.71403                                  
+2     17 0.05093  1    0.6631 221.33 3.527e-11 ***
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<pre class="r"><code>anova(fit0, fit2)</code></pre>
+<pre><code>Analysis of Variance Table
+
+Model 1: y ~ 1
+Model 2: y ~ x2
+  Res.Df    RSS Df Sum of Sq      F Pr(&gt;F)
+1     19 1.5962                           
+2     18 1.4926  1    0.1036 1.2493 0.2784</code></pre>
+<p>Formal testing: <span class="math inline">\(H_0:\ \beta_1=0|\beta_2 \neq 0\)</span>, <span class="math inline">\(H_1:\ \beta_1 \neq 0|\beta_2 \neq 0\)</span></p>
+<p>Test by using t-test for coefficients. Degrees of freedom are lowered by all necessary estimated parameters.</p>
+<p>‘Expensive models’ is using op degrees of freedom.</p>
+<p>ANOVA table tests whether the effects of all explenatory variables in a model are zero or not.</p>
+<p>Acaida information criteria for checking significant difference between non-nested models</p>
+</div>
+</div>
+</div>
+<div id="model-building" class="section level2">
+<h2>Model building</h2>
+<p>With <span class="math inline">\(k\)</span> explenatory variables, there are <span class="math inline">\(2^k\)</span> possible models.</p>
+<ul>
+<li>Etiologic / causal: fit determinant only, and with potential confounders, compair. Usually no interest in testing of potential confounders</li>
+<li>Fit only model proposed protocol</li>
+<li>Prediction: model building with possibly automatic variable selection.</li>
+</ul>
+<div id="how-to-check" class="section level3">
+<h3>How to check</h3>
+<ul>
+<li>Look at ‘best’ model (highest <span class="math inline">\(R^2\)</span>), stepwise (nested)/forward/backward; stepwise is better (you can add and remove)</li>
+</ul>
+<p>LASSO, cross-validation, and shrinkage by bootstrap</p>
+</div>
+<div id="data-simulation" class="section level3">
+<h3>Data simulation</h3>
+<p>Noise and predictor variables, without correlation in between predictors</p>
+<pre class="r"><code>set.seed(2)
+
+n_patients = 1000
+n_noise_variables = 10
+n_explenatory_variables = 10
+real_coefficients = runif(n_explenatory_variables, min = -1, max = 1)
+s_response = 0.2
+
+predictors &lt;- matrix(runif(n_patients * n_explenatory_variables), nrow = n_patients)
+noise &lt;- matrix(runif(n_patients * n_noise_variables), nrow = n_patients)
+# response is dot-product of each row with the coefficients
+# can be calculated with matrix multiplication
+response = rowSums(predictors %*% real_coefficients) + rnorm(n_patients, sd = s_response)
+
+myData &lt;- data.frame(
+  y = response, cbind(predictors, noise)
+)
+
+fit_all &lt;- lm(y~., data = myData)
+summary(fit_all)</code></pre>
+<pre><code>
+Call:
+lm(formula = y ~ ., data = myData)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-0.78260 -0.13659 -0.00092  0.14053  0.58946 
+
+Coefficients:
+              Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept)  0.0262295  0.0509943   0.514  0.60712    
+X1          -0.6446580  0.0221505 -29.103  &lt; 2e-16 ***
+X2           0.4238112  0.0223328  18.977  &lt; 2e-16 ***
+X3           0.1510867  0.0228293   6.618 5.98e-11 ***
+X4          -0.6470950  0.0228776 -28.285  &lt; 2e-16 ***
+X5           0.8623342  0.0224493  38.413  &lt; 2e-16 ***
+X6           0.8880544  0.0227584  39.021  &lt; 2e-16 ***
+X7          -0.7678504  0.0226384 -33.918  &lt; 2e-16 ***
+X8           0.6791997  0.0228070  29.780  &lt; 2e-16 ***
+X9          -0.0505276  0.0228661  -2.210  0.02736 *  
+X10          0.0972956  0.0228929   4.250 2.34e-05 ***
+X11          0.0098150  0.0228936   0.429  0.66822    
+X12         -0.0217505  0.0228562  -0.952  0.34152    
+X13         -0.0104170  0.0221047  -0.471  0.63756    
+X14          0.0205645  0.0223007   0.922  0.35668    
+X15         -0.0660169  0.0228954  -2.883  0.00402 ** 
+X16          0.0001305  0.0226399   0.006  0.99540    
+X17         -0.0242034  0.0225604  -1.073  0.28361    
+X18          0.0126597  0.0223977   0.565  0.57205    
+X19          0.0212047  0.0221814   0.956  0.33932    
+X20          0.0169994  0.0229204   0.742  0.45846    
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+Residual standard error: 0.2062 on 979 degrees of freedom
+Multiple R-squared:  0.8812,    Adjusted R-squared:  0.8788 
+F-statistic:   363 on 20 and 979 DF,  p-value: &lt; 2.2e-16</code></pre>
+<p>US <span class="math inline">\(SO_2\)</span> pollution.</p>
+<pre class="r"><code>load(amstR::fromParentDir(&quot;data/so2.RData&quot;))
+hist(so2$SO2)</code></pre>
+<p><img src="figure/c9_multiple_regression.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Skewed predictors is not necessarily a problem.</p>
+<pre class="r"><code>require(dplyr); require(ggplot2)
+
+so2 %&gt;%
+  select(-c(SO2, city, region)) %&gt;%
+  data.table::melt() %&gt;%
+  ggplot(aes(x = value)) + 
+    geom_histogram() + 
+    facet_wrap(~variable, scales = &quot;free&quot;)</code></pre>
+<p><img src="figure/c9_multiple_regression.Rmd/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>pairs(so2)</code></pre>
+<p><img src="figure/c9_multiple_regression.Rmd/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Full model (without city due to too many levels)</p>
+<pre class="r"><code>fit &lt;- lm(SO2~., data = (so2 %&gt;% dplyr::select(-city)))
+summary(fit)</code></pre>
+<pre><code>
+Call:
+lm(formula = SO2 ~ ., data = (so2 %&gt;% dplyr::select(-city)))
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-31.138  -8.660  -0.319   5.948  39.116 
+
+Coefficients:
+                   Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept)        95.13637   43.09542   2.208 0.034563 *  
+temp               -0.91163    0.57062  -1.598 0.119955    
+factories           0.06244    0.01430   4.368 0.000123 ***
+population         -0.03533    0.01370  -2.579 0.014723 *  
+wind               -2.65271    1.79926  -1.474 0.150162    
+rainfall            0.24013    0.39457   0.609 0.547102    
+daysrain           -0.04838    0.14669  -0.330 0.743667    
+regionNortheast    14.13675    7.53188   1.877 0.069672 .  
+regionMidwest/West -5.25371    7.83874  -0.670 0.507524    
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+Residual standard error: 13.18 on 32 degrees of freedom
+Multiple R-squared:  0.7478,    Adjusted R-squared:  0.6848 
+F-statistic: 11.86 on 8 and 32 DF,  p-value: 1.152e-07</code></pre>
+<p>Stepwise selection</p>
+<pre class="r"><code>library(MASS)
+fit_step &lt;- stepAIC(fit, direction = &quot;both&quot;)</code></pre>
+<pre><code>Start:  AIC=219.29
+SO2 ~ temp + factories + population + wind + rainfall + daysrain + 
+    region
+
+             Df Sum of Sq    RSS    AIC
+- daysrain    1      18.9 5576.8 217.43
+- rainfall    1      64.3 5622.2 217.76
+&lt;none&gt;                    5557.9 219.29
+- wind        1     377.5 5935.4 219.98
+- temp        1     443.3 6001.2 220.43
+- population  1    1154.9 6712.8 225.03
+- region      2    1725.4 7283.3 226.37
+- factories   1    3313.9 8871.8 236.46
+
+Step:  AIC=217.42
+SO2 ~ temp + factories + population + wind + rainfall + region
+
+             Df Sum of Sq    RSS    AIC
+- rainfall    1      49.2 5626.0 215.78
+&lt;none&gt;                    5576.8 217.43
+- wind        1     358.9 5935.7 217.98
++ daysrain    1      18.9 5557.9 219.29
+- temp        1     662.8 6239.6 220.03
+- population  1    1160.0 6736.8 223.17
+- region      2    1728.6 7305.4 224.50
+- factories   1    3316.6 8893.4 234.56
+
+Step:  AIC=215.78
+SO2 ~ temp + factories + population + wind + region
+
+             Df Sum of Sq    RSS    AIC
+&lt;none&gt;                    5626.0 215.78
+- wind        1     309.8 5935.8 215.98
++ rainfall    1      49.2 5576.8 217.43
++ daysrain    1       3.8 5622.2 217.76
+- temp        1     614.6 6240.6 218.04
+- population  1    1247.5 6873.5 222.00
+- region      2    2464.8 8090.8 226.68
+- factories   1    3589.2 9215.2 234.02</code></pre>
+<pre class="r"><code>summary(fit_step)</code></pre>
+<pre><code>
+Call:
+lm(formula = SO2 ~ temp + factories + population + wind + region, 
+    data = (so2 %&gt;% dplyr::select(-city)))
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-33.912  -7.646   0.102   5.037  39.960 
+
+Coefficients:
+                   Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept)        84.66810   28.26707   2.995  0.00509 ** 
+temp               -0.71117    0.36900  -1.927  0.06234 .  
+factories           0.06387    0.01371   4.657 4.76e-05 ***
+population         -0.03638    0.01325  -2.746  0.00958 ** 
+wind               -2.17945    1.59285  -1.368  0.18020    
+regionNortheast    12.63719    6.92759   1.824  0.07692 .  
+regionMidwest/West -8.35751    5.55350  -1.505  0.14158    
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+Residual standard error: 12.86 on 34 degrees of freedom
+Multiple R-squared:  0.7447,    Adjusted R-squared:  0.6997 
+F-statistic: 16.53 on 6 and 34 DF,  p-value: 8.184e-09</code></pre>
+<pre class="r"><code>anova(fit_step)</code></pre>
+<pre><code>Analysis of Variance Table
+
+Response: SO2
+           Df Sum Sq Mean Sq F value    Pr(&gt;F)    
+temp        1 4143.3  4143.3 25.0397 1.698e-05 ***
+factories   1 7230.8  7230.8 43.6983 1.403e-07 ***
+population  1 2125.2  2125.2 12.8431  0.001048 ** 
+wind        1  447.9   447.9  2.7068  0.109136    
+region      2 2464.8  1232.4  7.4478  0.002078 ** 
+Residuals  34 5626.0   165.5                      
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<pre class="r"><code>anova(fit, fit_step)</code></pre>
+<pre><code>Analysis of Variance Table
+
+Model 1: SO2 ~ temp + factories + population + wind + rainfall + daysrain + 
+    region
+Model 2: SO2 ~ temp + factories + population + wind + region
+  Res.Df    RSS Df Sum of Sq     F Pr(&gt;F)
+1     32 5557.9                          
+2     34 5626.0 -2    -68.08 0.196  0.823</code></pre>
+<p>Stepwise:</p>
+<ul>
+<li>pick single predictor with highest pearson correlation with response</li>
+<li>pick second predictor with highest correlation between y corrected for first predictor and second predictor corrected for first predictors</li>
+<li>evaluate if some can be leaved out</li>
+</ul>
+<p>SPSS: p-value for forward selection is 0.05, for backward selection: 0.1</p>
+<div id="check-all-models-with-leaps-package" class="section level4">
+<h4>Check all models with leaps package</h4>
+<pre class="r"><code>fit_leap &lt;- leaps::regsubsets(SO2~., data = (so2 %&gt;% dplyr::select(-city)))
+summary(fit_leap)</code></pre>
+<pre><code>Subset selection object
+Call: (function (rmd, seed, ...) 
+{
+    if (!(is.character(rmd) &amp;&amp; length(rmd) == 1)) 
+        stop(&quot;rmd must be a one element character vector&quot;)
+    if (!(is.numeric(seed) &amp;&amp; length(seed) == 1)) 
+        stop(&quot;seed must be a one element numeric vector&quot;)
+    if (!file.exists(rmd)) 
+        stop(&quot;rmd must exist&quot;)
+    set.seed(seed)
+    rmarkdown::render_site(rmd, ...)
+})(&quot;c9_multiple_regression.Rmd&quot;, 12345)
+8 Variables  (and intercept)
+                   Forced in Forced out
+temp                   FALSE      FALSE
+factories              FALSE      FALSE
+population             FALSE      FALSE
+wind                   FALSE      FALSE
+rainfall               FALSE      FALSE
+daysrain               FALSE      FALSE
+regionNortheast        FALSE      FALSE
+regionMidwest/West     FALSE      FALSE
+1 subsets of each size up to 8
+Selection Algorithm: exhaustive
+         temp factories population wind rainfall daysrain regionNortheast
+1  ( 1 ) &quot; &quot;  &quot;*&quot;       &quot; &quot;        &quot; &quot;  &quot; &quot;      &quot; &quot;      &quot; &quot;            
+2  ( 1 ) &quot; &quot;  &quot;*&quot;       &quot; &quot;        &quot; &quot;  &quot; &quot;      &quot; &quot;      &quot;*&quot;            
+3  ( 1 ) &quot; &quot;  &quot;*&quot;       &quot;*&quot;        &quot; &quot;  &quot; &quot;      &quot; &quot;      &quot;*&quot;            
+4  ( 1 ) &quot; &quot;  &quot;*&quot;       &quot;*&quot;        &quot;*&quot;  &quot; &quot;      &quot; &quot;      &quot;*&quot;            
+5  ( 1 ) &quot;*&quot;  &quot;*&quot;       &quot;*&quot;        &quot; &quot;  &quot; &quot;      &quot; &quot;      &quot;*&quot;            
+6  ( 1 ) &quot;*&quot;  &quot;*&quot;       &quot;*&quot;        &quot;*&quot;  &quot; &quot;      &quot; &quot;      &quot;*&quot;            
+7  ( 1 ) &quot;*&quot;  &quot;*&quot;       &quot;*&quot;        &quot;*&quot;  &quot;*&quot;      &quot; &quot;      &quot;*&quot;            
+8  ( 1 ) &quot;*&quot;  &quot;*&quot;       &quot;*&quot;        &quot;*&quot;  &quot;*&quot;      &quot;*&quot;      &quot;*&quot;            
+         regionMidwest/West
+1  ( 1 ) &quot; &quot;               
+2  ( 1 ) &quot; &quot;               
+3  ( 1 ) &quot; &quot;               
+4  ( 1 ) &quot; &quot;               
+5  ( 1 ) &quot;*&quot;               
+6  ( 1 ) &quot;*&quot;               
+7  ( 1 ) &quot;*&quot;               
+8  ( 1 ) &quot;*&quot;               </code></pre>
+<pre class="r"><code>plot(fit_leap)</code></pre>
+<p><img src="figure/c9_multiple_regression.Rmd/unnamed-chunk-10-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+</div>
+<div id="multicollinearity" class="section level3">
+<h3>Multicollinearity</h3>
+<p>When <span class="math inline">\(x_1\)</span> and <span class="math inline">\(x_2\)</span> are correlated, the <span class="math inline">\(\beta_1\)</span> may increase by adding <span class="math inline">\(x_2\)</span> to the models, and <span class="math inline">\(SE(\beta_1)\)</span> may increase too. It’s T-statistic will remain approximately the same.</p>
+<p>Assumptions</p>
+<ul>
+<li>homoscedastiscity</li>
+<li>normally distributed residuals</li>
+<li>independence of the measurements</li>
+<li>linearity</li>
+</ul>
+<p>NB: no conditions for the distribution of the explenatory assumptions</p>
+</div>
+</div>
+<div id="lecture-part-2-model-building-issues" class="section level2">
+<h2>Lecture part 2: model building issues</h2>
+<pre class="r"><code>lm(SO2~factories, data = so2) %&gt;% summary()</code></pre>
+<pre><code>
+Call:
+lm(formula = SO2 ~ factories, data = so2)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-26.976 -12.968  -3.495   6.710  67.177 
+
+Coefficients:
+             Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept) 17.610574   3.691587   4.770 2.58e-05 ***
+factories    0.026859   0.005099   5.268 5.36e-06 ***
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+Residual standard error: 18.17 on 39 degrees of freedom
+Multiple R-squared:  0.4157,    Adjusted R-squared:  0.4007 
+F-statistic: 27.75 on 1 and 39 DF,  p-value: 5.363e-06</code></pre>
+<pre class="r"><code>lm(SO2~population, data = so2) %&gt;% summary()</code></pre>
+<pre><code>
+Call:
+lm(formula = SO2 ~ population, data = so2)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-32.545 -14.456  -4.019  11.019  72.549 
+
+Coefficients:
+             Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept) 17.868316   4.713844   3.791 0.000509 ***
+population   0.020014   0.005644   3.546 0.001035 ** 
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+Residual standard error: 20.67 on 39 degrees of freedom
+Multiple R-squared:  0.2438,    Adjusted R-squared:  0.2244 
+F-statistic: 12.57 on 1 and 39 DF,  p-value: 0.001035</code></pre>
+<pre class="r"><code>lm(SO2~factories+population, data = so2) %&gt;% summary()</code></pre>
+<pre><code>
+Call:
+lm(formula = SO2 ~ factories + population, data = so2)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-22.389 -12.831  -1.277   7.609  49.533 
+
+Coefficients:
+            Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept) 26.32508    3.84044   6.855 3.87e-08 ***
+factories    0.08243    0.01470   5.609 1.96e-06 ***
+population  -0.05661    0.01430  -3.959 0.000319 ***
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+Residual standard error: 15.49 on 38 degrees of freedom
+Multiple R-squared:  0.5863,    Adjusted R-squared:  0.5645 
+F-statistic: 26.93 on 2 and 38 DF,  p-value: 5.207e-08</code></pre>
+<div id="multicollinearity-1" class="section level3">
+<h3>Multicollinearity</h3>
+<p>Added effect of another predictor is limited, because it information was already used in the earlier included predictors.</p>
+<p>Perfectly independent explenatory variables: adding the second does not alter the first. Perfectly correlated explenatory variables: there are multiple solutions.</p>
+<pre class="r"><code>set.seed(2)
+n = 10
+x1 &lt;- runif(n)
+x2 &lt;- 2*x1
+y  &lt;- 3*x1 + rnorm(n, sd = .1)
+
+lm(y~x1+x2) %&gt;% summary()</code></pre>
+<pre><code>
+Call:
+lm(formula = y ~ x1 + x2)
+
+Residuals:
+      Min        1Q    Median        3Q       Max 
+-0.155531 -0.059312 -0.001356  0.046648  0.136305 
+
+Coefficients: (1 not defined because of singularities)
+            Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept)  0.10664    0.06284   1.697    0.128    
+x1           2.88231    0.10065  28.636 2.39e-09 ***
+x2                NA         NA      NA       NA    
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+Residual standard error: 0.09426 on 8 degrees of freedom
+Multiple R-squared:  0.9903,    Adjusted R-squared:  0.9891 
+F-statistic:   820 on 1 and 8 DF,  p-value: 2.392e-09</code></pre>
+<p>With high correlation:</p>
+<ul>
+<li>Good fit is possible</li>
+<li>Coefficients will have a large variability</li>
+<li>Hard to interpret the coefficients directly</li>
+<li>Estimates strongly depend on the other variables</li>
+</ul>
+<p>Indicators:</p>
+<ul>
+<li>detect high correlations between explenatory variables</li>
+<li>some independents are kicked out</li>
+<li>high <span class="math inline">\(R^2\)</span> (or significant overall F-test), without significant explanatory variables</li>
+<li>large changes in coefficients when another is added</li>
+<li>unrealistic estimated coefficients or confidence intervals</li>
+<li>unstable estimated coefficients (high SE’s)</li>
+<li>unrealist p-values</li>
+</ul>
+</div>
+<div id="tolerance-van-variance-inflation-factor" class="section level3">
+<h3>Tolerance van variance inflation factor</h3>
+<p>Tolerance is <span class="math inline">\(1-R^2\)</span> in a model with one of the explanatory variables is taken as the dependent variable and (some of) the other explanatory variables are taken as the independents.</p>
+<p>Rule of thumb: tolerance of 0.4 is acceptable (0.1 or 0.2 is sometimes stated)</p>
+<p>Variance inflation factor (VIF): <span class="math inline">\(VIF = \frac{1}{tolerance}\)</span></p>
+<p>The variance of the estimates of the coefficients is inflated with the VIF.</p>
+</div>
+<div id="solutions-to-multicollinearity" class="section level3">
+<h3>Solutions to multicollinearity</h3>
+<p>Pick the more logical factor Mean-centering may help (correlation between x1 and x2 may be more than between x1-(mean(x1) and x2)).</p>
+</div>
+</div>
+<div id="choice-of-explanatory-variables" class="section level2">
+<h2>Choice of explanatory variables</h2>
+<ul>
+<li>continuous variables</li>
+<li>functions of continuous variables (<span class="math inline">\(y = \beta_0 + \beta_{1}x_1 + \beta_{2}x_1^2 + \epsilon\)</span>)</li>
+<li>NB linear regression is linear <strong>in the coeficients</strong></li>
+<li>categorical variables: create dummy variables</li>
+</ul>
+<div id="categorical-variables" class="section level3">
+<h3>Categorical variables</h3>
+<p>Create dummy variables</p>
+<pre class="r"><code>boxplot(SO2~region, data = so2)</code></pre>
+<p><img src="figure/c9_multiple_regression.Rmd/unnamed-chunk-13-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>lm(SO2~region, data = so2) %&gt;% summary()</code></pre>
+<pre><code>
+Call:
+lm(formula = SO2 ~ region, data = so2)
+
+Residuals:
+   Min     1Q Median     3Q    Max 
+-39.25 -13.00  -4.00   8.00  83.00 
+
+Coefficients:
+                   Estimate Std. Error t value Pr(&gt;|t|)   
+(Intercept)          21.917      6.245   3.509  0.00117 **
+regionNortheast      28.333      9.874   2.869  0.00668 **
+regionMidwest/West    5.083      7.829   0.649  0.52003   
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+Residual standard error: 21.63 on 38 degrees of freedom
+Multiple R-squared:  0.193, Adjusted R-squared:  0.1505 
+F-statistic: 4.544 on 2 and 38 DF,  p-value: 0.017</code></pre>
+<p>This makes sure that the degrees of freedom still equals that of an ANOVA.</p>
+<p>So 1 variable in linear regression takes up 1 degree of freedom. 1 categorical variable in ANOVA with j levels takes up j-1 degrees of freedom. When creating dummy variables, j-1 dummy variables will be created.</p>
+<p>The p-values of the dummy categories are usually not corrected for multiple testing, while in ANOVA they would be, as part of the post-hoc testing.</p>
+<p>NB the dummy variables need to be entered ‘en block’. This messes up stepwise selection, because p-values are calculated for each dummy variable separately.</p>
+</div>
+<div id="sample-size" class="section level3">
+<h3>Sample size</h3>
+<p>Large to do exact sample size calculation, it takes many assumptions.</p>
+<p>Rule of thumb: 10-15 cases for each parameter (except the constant, but including dummy variables, interactions etc).</p>
+<p>For precision: only the final model matters For over-fitting: all considered models matter.</p>
+</div>
+<div id="make-sure-to-include-some-variables" class="section level3">
+<h3>Make sure to include some variables</h3>
+<p>In R: do not add them to the <code>scope</code> of <code>drop1</code>, <code>add1</code> or <code>step</code>.</p>
+</div>
+</div>
+<div id="missing-values" class="section level2">
+<h2>Missing values</h2>
+<p>Default in R and SPSS is doing a complete cases on all <strong>potentially</strong> included variables.</p>
+<p>Both R and SPSS have functions for “missing values analysis”. Detection and detection of patterns.</p>
+<p>Problems with complete cases: * selection bias (systematic missings) * loss of power</p>
+<p>Solutions</p>
+<ul>
+<li>&lt;5-10% cases excluded: ignore</li>
+<li><blockquote>
+<p>5-10% ** remove variable (sub-optimal) ** multiple imputation</p>
+</blockquote></li>
+</ul>
+</div>
+<div id="interaction" class="section level2">
+<h2>Interaction</h2>
+<p>Practical: take the product of 2 variables as a new variable</p>
+<pre class="r"><code>lm(SO2 ~ factories*population, data = so2) %&gt;% summary()</code></pre>
+<pre><code>
+Call:
+lm(formula = SO2 ~ factories * population, data = so2)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-21.666 -11.919  -1.223   7.661  49.634 
+
+Coefficients:
+                       Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept)           2.735e+01  5.204e+00   5.256 6.38e-06 ***
+factories             7.909e-02  1.866e-02   4.238 0.000144 ***
+population           -5.692e-02  1.451e-02  -3.922 0.000366 ***
+factories:population  1.215e-06  4.088e-06   0.297 0.767959    
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+Residual standard error: 15.68 on 37 degrees of freedom
+Multiple R-squared:  0.5873,    Adjusted R-squared:  0.5538 
+F-statistic: 17.55 on 3 and 37 DF,  p-value: 2.991e-07</code></pre>
+<pre class="r"><code>lm(SO2 ~ factories+population, data = so2) %&gt;% summary()</code></pre>
+<pre><code>
+Call:
+lm(formula = SO2 ~ factories + population, data = so2)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-22.389 -12.831  -1.277   7.609  49.533 
+
+Coefficients:
+            Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept) 26.32508    3.84044   6.855 3.87e-08 ***
+factories    0.08243    0.01470   5.609 1.96e-06 ***
+population  -0.05661    0.01430  -3.959 0.000319 ***
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+Residual standard error: 15.49 on 38 degrees of freedom
+Multiple R-squared:  0.5863,    Adjusted R-squared:  0.5645 
+F-statistic: 26.93 on 2 and 38 DF,  p-value: 5.207e-08</code></pre>
+<p><span class="math display">\[y_i = \beta_0 + \beta_{1}x_1 + \sum_{j}{\beta_{0j}x_{dummy,j}} + \sum_{j}{\beta_{1j}x_1}\]</span></p>
+<p>Where <span class="math inline">\(x_{dummy,j} \in (0,1)\)</span>.</p>
+</div>
+<div id="to-check" class="section level2">
+<h2>TO CHECK</h2>
+<p>df from anova(fit12), compare with ANOVA result from slides</p>
+</div>
+<div id="session-information" class="section level2">
+<h2>Session information</h2>
+<!-- Insert the session information into the document -->
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 3.3.2 (2016-10-31)
+Platform: x86_64-apple-darwin13.4.0 (64-bit)
+Running under: macOS Sierra 10.12.6
+
+locale:
+[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+[1] MASS_7.3-47   ggplot2_2.2.1 dplyr_0.7.4  
+
+loaded via a namespace (and not attached):
+ [1] Rcpp_0.12.14       survcomp_1.22.0    plyr_1.8.4        
+ [4] RColorBrewer_1.1-2 git2r_0.20.0       bindr_0.1         
+ [7] tools_3.3.2        digest_0.6.13      gtable_0.2.0      
+[10] evaluate_0.10.1    tibble_1.3.4       lattice_0.20-35   
+[13] pkgconfig_2.0.1    rlang_0.1.6        Matrix_1.2-10     
+[16] yaml_2.1.16        prodlim_1.6.1      bindrcpp_0.2      
+[19] bootstrap_2017.2   amstR_0.1.3        stringr_1.2.0     
+[22] knitr_1.18         SuppDists_1.1-9.4  rprojroot_1.2     
+[25] grid_3.3.2         glue_1.2.0         data.table_1.10.4 
+[28] R6_2.2.2           survival_2.41-3    rmarkdown_1.8     
+[31] lava_1.5           rmeta_2.16         reshape2_1.4.2    
+[34] magrittr_1.5       leaps_3.0          scales_0.4.1      
+[37] backports_1.1.0    htmltools_0.3.6    survivalROC_1.0.3 
+[40] splines_3.3.2      assertthat_0.2.0   colorspace_1.3-2  
+[43] labeling_0.3       KernSmooth_2.23-15 stringi_1.1.6     
+[46] lazyeval_0.2.0     munsell_0.4.3     </code></pre>
+</div>
+
+<hr>
+<p>
+    This <a href="http://rmarkdown.rstudio.com">R Markdown</a> site was created with <a href="https://github.com/jdblischak/workflowr">workflowr</a>
+</p>
+<hr>
+
+<!-- To enable disqus, uncomment the section below and provide your disqus_shortname -->
+
+<!-- disqus
+  <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+        var disqus_shortname = 'rmarkdown'; // required: replace example with your forum shortname
+
+        /* * * DON'T EDIT BELOW THIS LINE * * */
+        (function() {
+            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+-->
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
