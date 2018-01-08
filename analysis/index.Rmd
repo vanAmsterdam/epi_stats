@@ -24,8 +24,8 @@ statistic courses in the Epidemiology Graduate Program of the Julius Center, Utr
 ## Notes
 Due to how this website was made, the R-code 'thinks' it is in the `analysis` 
 subdirectory, while the data sits in the `data` directory, which is found from 
-the parent directory. To circumvent changing directory all the time, this 
-packege uses the function `fromParentDir`, which allows you to call files from 
+the parent directory. To circumvent changing directory all the time, these 
+files use the function `fromParentDir`, which allows you to call files from 
 the parent directory. The function can be found in the package `epistats`, 
 which can be installed with `devtools::install_github("vanAmsterdam/epistats")`
 

@@ -1,0 +1,291 @@
+---
+title: "Continous Data - Notes"
+author: "Wouter van Amsterdam"
+date: 2018-01-08
+output: html_document
+---
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+```
+
+<!-- Update knitr chunk options -->
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+<!-- Insert the date the file was last updated -->
+```{r last-updated, echo=FALSE, results='asis'}
+```
+
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+```{r code-version, echo=FALSE, results='asis'}
+```
+
+<!-- Add your analysis here -->
+## General info
+
+### Coordinator
+Cas Kruitwagen
+
+### Tutor
+Jan van den Broek
+j.vandenbroek@uu.nl
+
+### Course info
+Computer lab login
+account: dooMID01 - dooMID32
+passwd: Methdata\$\$
+
+## Continous data
+
+### Model types
+
+independent variable | type of model
+--- | ---
+Grouping | ANOVA
+Continuous | Regression
+Both grouping and continous | Analysis of covariance
+
+All models can be referred to as linear models.
+
+### Notation
+
+* observation $j$ in group $i$: $y_{ij}$
+* group mean: $\bar{y}_i$
+* overall mean: $\bar{y}$
+* group effect: $\mu_i - \mu$
+* residual: $\epsilon_{ij}$
+
+For a good model: the model 'generated' the data
+
+
+### ANOVA model
+
+$$y_{ij} = \mu + (\mu_i - \mu) + \epsilon_{ij}$$
+
+Where $y_{ij}$ are normally distributed with mean $\mu_i$ and variance $\sigma^2$.
+
+Using **estimators**:
+
+$$y_{ij} = \bar{y} + (\bar{y}_i - \bar{y}) + \epsilon_{ij}$$
+
+In terms of **deviations**
+
+$$y_{ij} - \bar{y} = (\bar{y}_i - \bar{y}) + \epsilon_{ij}$$
+
+Total deviation = group deviation + residual
+
+#### Get sums of squares
+
+$$\sum_{i,j}{(y_{ij}-\bar{y})^2} = \sum_{i,j}{(\bar{y}_i-\bar{y})}+\sum_{i,j}\epsilon_{ij}^2$$
+
+In words:
+
+$$SS_{Total} = SS_{Group} + SS_{Residual}$$
+
+The degrees of freedom:
+
+* $df_{Total} = n-1$
+* $df_{Groups} = n_{groups} - 1$
+* $df_{Residual} = df_{Total} - df_{Groups} = n - n_{groups} - 2$
+
+Mean sums of squares = **Variances**:
+
+$$MS_. = SS_./df_.$$
+
+If groups have the same means, than variance between groups is equal to 
+residual variance
+
+$$F = \frac{MS_{Groups}}{MS_{Residual}} \approx 1$$
+
+Looking at summary tables: not just verifying if the group means are different,
+ but if the data fits the model.
+ 
+### Two-way ANOVA
+
+One-way = grouping can only be done 1 way.
+
+(Full)-factorial design: for more than 1 factors, all levels are present in all factors
+
+
+$$y_{ijk} = \bar{y} + (\bar{y_i} - \bar{y}) + (\bar{y}_j - \bar{y}) + \epsilon_{ijk}$$
+
+Now:
+
+$$SS_{total} = SS_{treatment} + SS_{dose} + SS_{residual}$$
+
+Also works when grouping variables are non independent
+
+#### With some simulated data
+
+```{r}
+require(magrittr)
+set.seed(2)
+n = 100
+eff1 = .1
+eff2 = .2
+resSD = 0.1
+treatment = rbinom(n = n, size = 1, prob = .5)
+dose = rbinom(n = n, size = 1, prob = .5)
+
+y = eff1*treatment + eff2*dose + rnorm(n, sd = resSD)
+
+aov(y~treatment+dose) %>% summary()
+
+```
+
+## Regression
+
+Model
+
+$$y_i = \beta_0+\beta_x * x_i + \epsilon_i$$
+
+Assumes:
+
+* linear dependence of $y$ on $x$.
+* overall variance $\sigma^2$ (does not depend on $x$)
+
+### Minimize sum of squares
+
+$$\min_{\beta_0, \beta_x}{(y_i-(\beta_0+\beta_x * x_i))^2}$$
+
+Solution by differentiating with respect to parameters and set to zero.
+
+$$\beta_x = \frac{\sum_{i}(x_i-\bar{x})(y_i-\bar{y})}{\sum_i(x_i-\bar{x})^2}$$
+
+And 
+
+$$\beta_0 = \bar{y} - \beta_x*\bar{x}$$
+
+### Get an ANOVA table:
+
+$$y_i = \beta_0 + \beta_x *x + \epsilon_{i}$$
+
+So 
+
+$$y_i - \bar{y} = \beta_0 -\bar{y}+ \beta_x *x + \epsilon_{i}$$
+
+$$= -\beta_x*\bar{x}+ \beta_x *x + \epsilon_{i}$$
+
+$$= \beta_x*(x-\bar{x}) + \epsilon_{i}$$
+
+
+Regression: 1 DF, no slope is no regression
+
+#### Simulated data
+
+```{r}
+set.seed(1)
+n = 100
+x = runif(n)
+b = 0.15
+rs = 0.3
+y = b*x + rnorm(n, sd=rs)
+
+plot(x,y, xlim = c(0,1), ylim = c(floor(min(y)), ceiling(max(y))))
+
+fit <- lm(y~x)
+summary(fit)
+abline(fit, lty=2)
+
+```
+
+
+## Analysis of co-variance (ANCOVA)
+
+Given both a grouping variable and a regression variable
+
+Assuming:
+
+* equal slopes in the groups
+* only intercepts are different
+* $y_{ij}$ is normally distributed with mean $\alpha_i + \beta_x * x_{ij}$
+* with $\alpha_i = \bar{y} + (\bar{y}_i-\bar{y})$
+
+$$y_{ij} = \bar{y} + (\bar{y}_i-\bar{y}) + \beta_x*x_{ij} + \epsilon_{ij}$$
+
+Continous independent variable is also called the co-variate
+
+#### Simulate data
+
+```{r}
+set.seed(3)
+n = 100
+
+econt  = 0.1
+egroup = 0.2
+rs     = 0.3
+ngroups= 4
+
+xcont  = runif(n)
+xgroup = sample(0:(ngroups-1), replace = T, size = n)
+
+y = econt * xcont + egroup * xgroup + rnorm(n, sd = rs)
+
+fit <- glm(y~xcont+factor(xgroup))
+
+summary(fit)
+aov(fit)
+```
+
+Let's go to python
+
+```{r}
+df = data.frame(xcont, xgroup, y)
+feather::write_feather(df, "df.feather")
+```
+
+```{bash}
+which python
+```
+
+
+```{python, engine.path="/Users/vanAmsterdam/anaconda3/bin/python"}
+import pandas as pd
+import feather
+
+path = 'df.feather'
+df = feather.read_dataframe(path)
+
+print(df[:3])
+```
+
+
+## Interaction
+
+When intercepts are different between groups
+
+Degrees of freedom for interaction: df group * df regression
+
+#### Simulate data
+
+```{r}
+set.seed(3)
+n = 100
+
+econt  = 0.1
+egroup = 0.2
+rs     = 0.3
+ngroups= 4
+
+xcont  = runif(n)
+xgroup = sample(0:(ngroups-1), replace = T, size = n)
+
+y = econt * xcont + egroup * xgroup + rnorm(n, sd = rs)
+
+fit <- glm(y~xcont+factor(xgroup)+xcont:factor(xgroup))
+
+summary(fit)
+aov(fit)
+
+```
+
+
+## Session information
+
+<!-- Insert the session information into the document -->
+```{r session-info}
+```
