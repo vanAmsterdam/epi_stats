@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+<meta name="author" content="Wouter van Amsterdam" />
+
+<meta name="date" content="2018-01-08" />
+
+<title>Continous Data - Notes</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/font-awesome-4.5.0/css/font-awesome.min.css" rel="stylesheet" />
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+
+<div class="container-fluid main-container">
+
+<!-- tabsets -->
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+</script>
+
+<!-- code folding -->
+
+
+
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+  padding-left: 25px;
+  text-indent: 0;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">epi_stats</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/jdblischak/workflowr">
+    <span class="fa fa-github"></span>
+     
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">Continous Data - Notes</h1>
+<h4 class="author"><em>Wouter van Amsterdam</em></h4>
+<h4 class="date"><em>2018-01-08</em></h4>
+
+</div>
+
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+<!-- Update knitr chunk options -->
+<!-- Insert the date the file was last updated -->
+<p><strong>Last updated:</strong> 2018-01-08</p>
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+<p><strong>Code version:</strong> 327e818</p>
+<!-- Add your analysis here -->
+<div id="general-info" class="section level2">
+<h2>General info</h2>
+<div id="coordinator" class="section level3">
+<h3>Coordinator</h3>
+<p>Cas Kruitwagen</p>
+</div>
+<div id="tutor" class="section level3">
+<h3>Tutor</h3>
+<p>Jan van den Broek <a href="mailto:j.vandenbroek@uu.nl">j.vandenbroek@uu.nl</a></p>
+</div>
+<div id="course-info" class="section level3">
+<h3>Course info</h3>
+<p>Computer lab login account: dooMID01 - dooMID32 passwd: Methdata$$</p>
+</div>
+</div>
+<div id="continous-data" class="section level2">
+<h2>Continous data</h2>
+<div id="model-types" class="section level3">
+<h3>Model types</h3>
+<table>
+<thead>
+<tr class="header">
+<th>independent variable</th>
+<th>type of model</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Grouping</td>
+<td>ANOVA</td>
+</tr>
+<tr class="even">
+<td>Continuous</td>
+<td>Regression</td>
+</tr>
+<tr class="odd">
+<td>Both grouping and continous</td>
+<td>Analysis of covariance</td>
+</tr>
+</tbody>
+</table>
+<p>All models can be referred to as linear models.</p>
+</div>
+<div id="notation" class="section level3">
+<h3>Notation</h3>
+<ul>
+<li>observation <span class="math inline">\(j\)</span> in group <span class="math inline">\(i\)</span>: <span class="math inline">\(y_{ij}\)</span></li>
+<li>group mean: <span class="math inline">\(\bar{y}_i\)</span></li>
+<li>overall mean: <span class="math inline">\(\bar{y}\)</span></li>
+<li>group effect: <span class="math inline">\(\mu_i - \mu\)</span></li>
+<li>residual: <span class="math inline">\(\epsilon_{ij}\)</span></li>
+</ul>
+<p>For a good model: the model ‘generated’ the data</p>
+</div>
+<div id="anova-model" class="section level3">
+<h3>ANOVA model</h3>
+<p><span class="math display">\[y_{ij} = \mu + (\mu_i - \mu) + \epsilon_{ij}\]</span></p>
+<p>Where <span class="math inline">\(y_{ij}\)</span> are normally distributed with mean <span class="math inline">\(\mu_i\)</span> and variance <span class="math inline">\(\sigma^2\)</span>.</p>
+<p>Using <strong>estimators</strong>:</p>
+<p><span class="math display">\[y_{ij} = \bar{y} + (\bar{y}_i - \bar{y}) + \epsilon_{ij}\]</span></p>
+<p>In terms of <strong>deviations</strong></p>
+<p><span class="math display">\[y_{ij} - \bar{y} = (\bar{y}_i - \bar{y}) + \epsilon_{ij}\]</span></p>
+<p>Total deviation = group deviation + residual</p>
+<div id="get-sums-of-squares" class="section level4">
+<h4>Get sums of squares</h4>
+<p><span class="math display">\[\sum_{i,j}{(y_{ij}-\bar{y})^2} = \sum_{i,j}{(\bar{y}_i-\bar{y})}+\sum_{i,j}\epsilon_{ij}^2\]</span></p>
+<p>In words:</p>
+<p><span class="math display">\[SS_{Total} = SS_{Group} + SS_{Residual}\]</span></p>
+<p>The degrees of freedom:</p>
+<ul>
+<li><span class="math inline">\(df_{Total} = n-1\)</span></li>
+<li><span class="math inline">\(df_{Groups} = n_{groups} - 1\)</span></li>
+<li><span class="math inline">\(df_{Residual} = df_{Total} - df_{Groups} = n - n_{groups} - 2\)</span></li>
+</ul>
+<p>Mean sums of squares = <strong>Variances</strong>:</p>
+<p><span class="math display">\[MS_. = SS_./df_.\]</span></p>
+<p>If groups have the same means, than variance between groups is equal to residual variance</p>
+<p><span class="math display">\[F = \frac{MS_{Groups}}{MS_{Residual}} \approx 1\]</span></p>
+<p>Looking at summary tables: not just verifying if the group means are different, but if the data fits the model.</p>
+</div>
+</div>
+<div id="two-way-anova" class="section level3">
+<h3>Two-way ANOVA</h3>
+<p>One-way = grouping can only be done 1 way.</p>
+<p>(Full)-factorial design: for more than 1 factors, all levels are present in all factors</p>
+<p><span class="math display">\[y_{ijk} = \bar{y} + (\bar{y_i} - \bar{y}) + (\bar{y}_j - \bar{y}) + \epsilon_{ijk}\]</span></p>
+<p>Now:</p>
+<p><span class="math display">\[SS_{total} = SS_{treatment} + SS_{dose} + SS_{residual}\]</span></p>
+<p>Also works when grouping variables are non independent</p>
+<div id="with-some-simulated-data" class="section level4">
+<h4>With some simulated data</h4>
+<pre class="r"><code>require(magrittr)
+set.seed(2)
+n = 100
+eff1 = .1
+eff2 = .2
+resSD = 0.1
+treatment = rbinom(n = n, size = 1, prob = .5)
+dose = rbinom(n = n, size = 1, prob = .5)
+
+y = eff1*treatment + eff2*dose + rnorm(n, sd = resSD)
+
+aov(y~treatment+dose) %&gt;% summary()</code></pre>
+<pre><code>            Df Sum Sq Mean Sq F value   Pr(&gt;F)    
+treatment    1 0.1846  0.1846   18.67 3.75e-05 ***
+dose         1 1.0902  1.0902  110.30  &lt; 2e-16 ***
+Residuals   97 0.9587  0.0099                     
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+</div>
+</div>
+</div>
+<div id="regression" class="section level2">
+<h2>Regression</h2>
+<p>Model</p>
+<p><span class="math display">\[y_i = \beta_0+\beta_x * x_i + \epsilon_i\]</span></p>
+<p>Assumes:</p>
+<ul>
+<li>linear dependence of <span class="math inline">\(y\)</span> on <span class="math inline">\(x\)</span>.</li>
+<li>overall variance <span class="math inline">\(\sigma^2\)</span> (does not depend on <span class="math inline">\(x\)</span>)</li>
+</ul>
+<div id="minimize-sum-of-squares" class="section level3">
+<h3>Minimize sum of squares</h3>
+<p><span class="math display">\[\min_{\beta_0, \beta_x}{(y_i-(\beta_0+\beta_x * x_i))^2}\]</span></p>
+<p>Solution by differentiating with respect to parameters and set to zero.</p>
+<p><span class="math display">\[\beta_x = \frac{\sum_{i}(x_i-\bar{x})(y_i-\bar{y})}{\sum_i(x_i-\bar{x})^2}\]</span></p>
+<p>And</p>
+<p><span class="math display">\[\beta_0 = \bar{y} - \beta_x*\bar{x}\]</span></p>
+</div>
+<div id="get-an-anova-table" class="section level3">
+<h3>Get an ANOVA table:</h3>
+<p><span class="math display">\[y_i = \beta_0 + \beta_x *x + \epsilon_{i}\]</span></p>
+<p>So</p>
+<p><span class="math display">\[y_i - \bar{y} = \beta_0 -\bar{y}+ \beta_x *x + \epsilon_{i}\]</span></p>
+<p><span class="math display">\[= -\beta_x*\bar{x}+ \beta_x *x + \epsilon_{i}\]</span></p>
+<p><span class="math display">\[= \beta_x*(x-\bar{x}) + \epsilon_{i}\]</span></p>
+<p>Regression: 1 DF, no slope is no regression</p>
+<div id="simulated-data" class="section level4">
+<h4>Simulated data</h4>
+<pre class="r"><code>set.seed(1)
+n = 100
+x = runif(n)
+b = 0.15
+rs = 0.3
+y = b*x + rnorm(n, sd=rs)
+
+plot(x,y, xlim = c(0,1), ylim = c(floor(min(y)), ceiling(max(y))))
+
+fit &lt;- lm(y~x)
+summary(fit)</code></pre>
+<pre><code>
+Call:
+lm(formula = y ~ x)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-0.55493 -0.16867 -0.02612  0.15728  0.75498 
+
+Coefficients:
+            Estimate Std. Error t value Pr(&gt;|t|)  
+(Intercept) -0.05380    0.06174  -0.871   0.3857  
+x            0.24370    0.10604   2.298   0.0237 *
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+Residual standard error: 0.2823 on 98 degrees of freedom
+Multiple R-squared:  0.05114,   Adjusted R-squared:  0.04146 
+F-statistic: 5.282 on 1 and 98 DF,  p-value: 0.02367</code></pre>
+<pre class="r"><code>abline(fit, lty=2)</code></pre>
+<p><img src="figure/1_continous_data.Rmd/unnamed-chunk-2-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+</div>
+</div>
+<div id="analysis-of-co-variance-ancova" class="section level2">
+<h2>Analysis of co-variance (ANCOVA)</h2>
+<p>Given both a grouping variable and a regression variable</p>
+<p>Assuming:</p>
+<ul>
+<li>equal slopes in the groups</li>
+<li>only intercepts are different</li>
+<li><span class="math inline">\(y_{ij}\)</span> is normally distributed with mean <span class="math inline">\(\alpha_i + \beta_x * x_{ij}\)</span></li>
+<li>with <span class="math inline">\(\alpha_i = \bar{y} + (\bar{y}_i-\bar{y})\)</span></li>
+</ul>
+<p><span class="math display">\[y_{ij} = \bar{y} + (\bar{y}_i-\bar{y}) + \beta_x*x_{ij} + \epsilon_{ij}\]</span></p>
+<p>Continous independent variable is also called the co-variate</p>
+<div id="simulate-data" class="section level4">
+<h4>Simulate data</h4>
+<pre class="r"><code>set.seed(3)
+n = 100
+
+econt  = 0.1
+egroup = 0.2
+rs     = 0.3
+ngroups= 4
+
+xcont  = runif(n)
+xgroup = sample(0:(ngroups-1), replace = T, size = n)
+
+y = econt * xcont + egroup * xgroup + rnorm(n, sd = rs)
+
+fit &lt;- glm(y~xcont+factor(xgroup))
+
+summary(fit)</code></pre>
+<pre><code>
+Call:
+glm(formula = y ~ xcont + factor(xgroup))
+
+Deviance Residuals: 
+     Min        1Q    Median        3Q       Max  
+-0.76942  -0.23889   0.00932   0.22645   0.78362  
+
+Coefficients:
+                Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept)     -0.01493    0.08846  -0.169   0.8664    
+xcont            0.20243    0.11889   1.703   0.0919 .  
+factor(xgroup)1  0.10437    0.09212   1.133   0.2600    
+factor(xgroup)2  0.42880    0.09688   4.426 2.56e-05 ***
+factor(xgroup)3  0.56722    0.09626   5.893 5.75e-08 ***
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+(Dispersion parameter for gaussian family taken to be 0.1102306)
+
+    Null deviance: 15.679  on 99  degrees of freedom
+Residual deviance: 10.472  on 95  degrees of freedom
+AIC: 70.14
+
+Number of Fisher Scoring iterations: 2</code></pre>
+<pre class="r"><code>aov(fit)</code></pre>
+<pre><code>Call:
+   aov(formula = fit)
+
+Terms:
+                    xcont factor(xgroup) Residuals
+Sum of Squares   0.066364       5.140944 10.471909
+Deg. of Freedom         1              3        95
+
+Residual standard error: 0.33201
+Estimated effects may be unbalanced</code></pre>
+<p>Let’s go to python</p>
+<pre class="r"><code>df = data.frame(xcont, xgroup, y)
+feather::write_feather(df, &quot;df.feather&quot;)</code></pre>
+<pre class="bash"><code>which python</code></pre>
+<pre><code>/usr/bin/python</code></pre>
+<pre class="python"><code>import pandas as pd
+import feather
+path = &#39;df.feather&#39;
+df = feather.read_dataframe(path)
+print(df[:3])</code></pre>
+<pre><code>      xcont  xgroup         y
+0  0.168042       3  0.802009
+1  0.807516       2  0.359228
+2  0.384942       0  0.354425</code></pre>
+</div>
+</div>
+<div id="interaction" class="section level2">
+<h2>Interaction</h2>
+<p>When intercepts are different between groups</p>
+<p>Degrees of freedom for interaction: df group * df regression</p>
+<div id="simulate-data-1" class="section level4">
+<h4>Simulate data</h4>
+<pre class="r"><code>set.seed(3)
+n = 100
+
+econt  = 0.1
+egroup = 0.2
+rs     = 0.3
+ngroups= 4
+
+xcont  = runif(n)
+xgroup = sample(0:(ngroups-1), replace = T, size = n)
+
+y = econt * xcont + egroup * xgroup + rnorm(n, sd = rs)
+
+fit &lt;- glm(y~xcont+factor(xgroup)+xcont:factor(xgroup))
+
+summary(fit)</code></pre>
+<pre><code>
+Call:
+glm(formula = y ~ xcont + factor(xgroup) + xcont:factor(xgroup))
+
+Deviance Residuals: 
+    Min       1Q   Median       3Q      Max  
+-0.7600  -0.2308  -0.0123   0.2119   0.7276  
+
+Coefficients:
+                       Estimate Std. Error t value Pr(&gt;|t|)  
+(Intercept)            0.086025   0.147529   0.583   0.5613  
+xcont                 -0.008679   0.273273  -0.032   0.9747  
+factor(xgroup)1       -0.069220   0.201473  -0.344   0.7320  
+factor(xgroup)2        0.296641   0.199773   1.485   0.1410  
+factor(xgroup)3        0.489601   0.188891   2.592   0.0111 *
+xcont:factor(xgroup)1  0.341147   0.350117   0.974   0.3324  
+xcont:factor(xgroup)2  0.276029   0.363366   0.760   0.4494  
+xcont:factor(xgroup)3  0.153226   0.362549   0.423   0.6735  
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+(Dispersion parameter for gaussian family taken to be 0.1125016)
+
+    Null deviance: 15.679  on 99  degrees of freedom
+Residual deviance: 10.350  on 92  degrees of freedom
+AIC: 74.971
+
+Number of Fisher Scoring iterations: 2</code></pre>
+<pre class="r"><code>aov(fit)</code></pre>
+<pre><code>Call:
+   aov(formula = fit)
+
+Terms:
+                    xcont factor(xgroup) xcont:factor(xgroup) Residuals
+Sum of Squares   0.066364       5.140944             0.121759 10.350150
+Deg. of Freedom         1              3                    3        92
+
+Residual standard error: 0.3354126
+Estimated effects may be unbalanced</code></pre>
+</div>
+</div>
+<div id="session-information" class="section level2">
+<h2>Session information</h2>
+<!-- Insert the session information into the document -->
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 3.3.2 (2016-10-31)
+Platform: x86_64-apple-darwin13.4.0 (64-bit)
+Running under: macOS Sierra 10.12.6
+
+locale:
+[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+[1] magrittr_1.5
+
+loaded via a namespace (and not attached):
+ [1] Rcpp_0.12.14     digest_0.6.13    rprojroot_1.2    jsonlite_1.5    
+ [5] backports_1.1.0  git2r_0.20.0     evaluate_0.10.1  rlang_0.1.6     
+ [9] stringi_1.1.6    reticulate_1.3.1 rmarkdown_1.8    tools_3.3.2     
+[13] stringr_1.2.0    feather_0.3.1    hms_0.4.0        yaml_2.1.16     
+[17] pkgconfig_2.0.1  htmltools_0.3.6  knitr_1.18       tibble_1.3.4    </code></pre>
+</div>
+
+<hr>
+<p>
+    This <a href="http://rmarkdown.rstudio.com">R Markdown</a> site was created with <a href="https://github.com/jdblischak/workflowr">workflowr</a>
+</p>
+<hr>
+
+<!-- To enable disqus, uncomment the section below and provide your disqus_shortname -->
+
+<!-- disqus
+  <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+        var disqus_shortname = 'rmarkdown'; // required: replace example with your forum shortname
+
+        /* * * DON'T EDIT BELOW THIS LINE * * */
+        (function() {
+            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+-->
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

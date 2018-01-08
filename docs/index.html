@@ -20,8 +20,8 @@
 <script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
 <script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
 <script src="site_libs/navigation-1.1/tabsets.js"></script>
-<link href="site_libs/highlightjs-1.1/textmate.css" rel="stylesheet" />
-<script src="site_libs/highlightjs-1.1/highlight.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
 <link href="site_libs/font-awesome-4.5.0/css/font-awesome.min.css" rel="stylesheet" />
 
 <style type="text/css">code{white-space: pre;}</style>
@@ -31,10 +31,12 @@
   }
 </style>
 <script type="text/javascript">
-if (window.hljs && document.readyState && document.readyState === "complete") {
-   window.setTimeout(function() {
-      hljs.initHighlighting();
-   }, 0);
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
 }
 </script>
 
@@ -207,17 +209,23 @@ $(document).ready(function () {
 </div>
 
 
-<p>This website is made to share the assignments I worked out for “Classical Methods in Data Analysis” from the Epidemiology Graduate Program of the Julius Center, Utrecht, the Netherlands</p>
+<p>This website is made to share the assignments I worked out for statistic courses in the Epidemiology Graduate Program of the Julius Center, Utrecht, the Netherlands</p>
+<div id="classical-methods-in-data-analysis" class="section level2">
+<h2>Classical Methods in Data Analysis</h2>
 <div id="assignments" class="section level3">
 <h3>Assignments</h3>
-<p><a href="assignments_week1.html">assignments week 1</a></p>
-<p><a href="assignments_week2.html">assignments week 2</a></p>
-<p><a href="assignments_week3.html">assignments week 3</a></p>
-<p><a href="case_studies.html">case studies (not finished!)</a></p>
+<p><a href="c_assignments_week1.html">assignments week 1</a></p>
+<p><a href="c_assignments_week2.html">assignments week 2</a></p>
+<p><a href="c_assignments_week3.html">assignments week 3</a></p>
+<p><a href="c_case_studies.html">case studies (not finished!)</a></p>
 </div>
-<div id="notes" class="section level3">
-<h3>Notes</h3>
-<p>Due to how this website was made, the R-code ‘thinks’ it is in the <code>analysis</code> subdirectory, while the data sits in the <code>data</code> directory, which is found from the parent directory. To circumvent changing directory all the time, this packege uses the function <code>fromParentDir</code>, which allows you to call files from the parent directory. The function can be found in the package <code>epistats</code>, which can be installed with <code>devtools::install_github(&quot;vanAmsterdam/epistats&quot;)</code></p>
+</div>
+<div id="modern-methods-in-data-analysis" class="section level2">
+<h2>Modern Methods in Data Analysis</h2>
+</div>
+<div id="notes" class="section level2">
+<h2>Notes</h2>
+<p>Due to how this website was made, the R-code ‘thinks’ it is in the <code>analysis</code> subdirectory, while the data sits in the <code>data</code> directory, which is found from the parent directory. To circumvent changing directory all the time, these files use the function <code>fromParentDir</code>, which allows you to call files from the parent directory. The function can be found in the package <code>epistats</code>, which can be installed with <code>devtools::install_github(&quot;vanAmsterdam/epistats&quot;)</code></p>
 <p>If <code>devtools</code> is not yet installed, first run <code>install.packages(&quot;devtools&quot;)</code></p>
 </div>
 

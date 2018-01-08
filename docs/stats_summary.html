@@ -25,8 +25,8 @@
 <link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
 <script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
 <script src="site_libs/navigation-1.1/tabsets.js"></script>
-<link href="site_libs/highlightjs-1.1/textmate.css" rel="stylesheet" />
-<script src="site_libs/highlightjs-1.1/highlight.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
 <link href="site_libs/font-awesome-4.5.0/css/font-awesome.min.css" rel="stylesheet" />
 
 <style type="text/css">code{white-space: pre;}</style>
@@ -36,10 +36,12 @@
   }
 </style>
 <script type="text/javascript">
-if (window.hljs && document.readyState && document.readyState === "complete") {
-   window.setTimeout(function() {
-      hljs.initHighlighting();
-   }, 0);
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
 }
 </script>
 
@@ -313,10 +315,10 @@ div.tocify {
 shared across the workflowr files. -->
 <!-- Update knitr chunk options -->
 <!-- Insert the date the file was last updated -->
-<p><strong>Last updated:</strong> 2017-11-17</p>
+<p><strong>Last updated:</strong> 2018-01-08</p>
 <!-- Insert the code version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
-<p><strong>Code version:</strong> 4849e5d</p>
+<p><strong>Code version:</strong> 327e818</p>
 <!-- Add your analysis here -->
 <div id="statistical-tests" class="section level2">
 <h2>Statistical tests</h2>
@@ -334,10 +336,6 @@ shared across the workflowr files. -->
 </div>
 <div id="definition" class="section level4">
 <h4>Definition</h4>
-<div id="test-statistic" class="section level5">
-<h5>Test-statistic</h5>
-<p>t, follows Student’s T-distribution with n1+n2-2 degrees of freedom</p>
-</div>
 </div>
 <div id="variables" class="section level4">
 <h4>Variables</h4>
@@ -352,9 +350,10 @@ shared across the workflowr files. -->
 </div>
 <div id="relevant-equations" class="section level4">
 <h4>Relevant equations</h4>
-<div id="test-statistic-1" class="section level5">
+<div id="test-statistic" class="section level5">
 <h5>Test-statistic</h5>
 <p><span class="math display">\[t = \frac{\bar{Y_{1}} - \bar{Y_{2}}}{\bar{{SE}}_{difference}}\]</span></p>
+<p><span class="math inline">\(t\)</span> follows Student’s T-distribution with n1+n2-2 degrees of freedom</p>
 </div>
 <div id="standard-error" class="section level5">
 <h5>Standard error</h5>
@@ -367,7 +366,10 @@ shared across the workflowr files. -->
 </div>
 <div id="assumptions" class="section level4">
 <h4>Assumptions</h4>
-<p><span class="math inline">\(X_1\)</span>, <span class="math inline">\(X_2\)</span> normally distributed, or CTL holds. Equal variance or non-equal variance.</p>
+<ul>
+<li><span class="math inline">\(X_1\)</span>, <span class="math inline">\(X_2\)</span> normally distributed, or CTL holds.</li>
+<li>Equal variance of groups</li>
+</ul>
 </div>
 </div>
 <div id="two-unpaired-samples-t-test-unequal-variance" class="section level3">
@@ -377,7 +379,7 @@ shared across the workflowr files. -->
 </div>
 <div id="definition-1" class="section level4">
 <h4>Definition</h4>
-<div id="test-statistic-2" class="section level5">
+<div id="test-statistic-1" class="section level5">
 <h5>Test-statistic</h5>
 <p>t, follows Student’s T-distribution with df degrees of freedom</p>
 </div>
@@ -409,7 +411,7 @@ shared across the workflowr files. -->
 </div>
 <div id="relevant-equations-1" class="section level4">
 <h4>Relevant equations</h4>
-<div id="test-statistic-3" class="section level5">
+<div id="test-statistic-2" class="section level5">
 <h5>Test-statistic</h5>
 <p><span class="math display">\[t = \frac{\bar{Y_{1}} - \bar{Y_{2}}}{\bar{{SE}}_{difference}}\]</span></p>
 </div>
@@ -424,7 +426,9 @@ shared across the workflowr files. -->
 </div>
 <div id="assumptions-1" class="section level4">
 <h4>Assumptions</h4>
-<p><span class="math inline">\(X_1\)</span>, <span class="math inline">\(X_2\)</span> normally distributed, or CTL holds. Equal variance or non-equal variance.</p>
+<ul>
+<li><span class="math inline">\(X_1\)</span>, <span class="math inline">\(X_2\)</span> normally distributed, or CTL holds</li>
+</ul>
 </div>
 </div>
 <div id="binomial-test" class="section level3">
@@ -487,7 +491,7 @@ shared across the workflowr files. -->
 <h5>Null-hypothesis</h5>
 <p>Independence of categorical dimensions <span class="math inline">\(A\)</span> and <span class="math inline">\(B\)</span> <span class="math display">\[H_0:\ P(A=A_i,B=B_j) = P(A=A_i)*P(B=B_j)\]</span></p>
 </div>
-<div id="test-statistic-4" class="section level5">
+<div id="test-statistic-3" class="section level5">
 <h5>Test-statistic</h5>
 <p><span class="math display">\[T = \sum_{i=1}^I\sum_{j=1}^J{\frac{(O_{ij}-E_{ij})^2}{E_{ij}}}\]</span></p>
 <p>Where</p>
@@ -608,7 +612,7 @@ shared across the workflowr files. -->
 <h3>Likelihood ratio test (LRT)</h3>
 <div id="relevant-equations-11" class="section level4">
 <h4>Relevant equations</h4>
-<div id="test-statistic-5" class="section level5">
+<div id="test-statistic-4" class="section level5">
 <h5>Test statistic</h5>
 <p><span class="math display">\[T = -2(l_1-l_0)\]</span></p>
 <p>T is chi-square distributed with the difference in number of parameters between the model as degrees of freedom.</p>
@@ -625,7 +629,7 @@ shared across the workflowr files. -->
 <h3>Wald test</h3>
 <div id="relevant-equations-12" class="section level4">
 <h4>Relevant equations</h4>
-<div id="test-statistic-6" class="section level5">
+<div id="test-statistic-5" class="section level5">
 <h5>Test statistic</h5>
 <p><span class="math display">\[T = \frac{\beta}{se(\beta)}\]</span> Is approximately standard normally distributed, <span class="math inline">\(T^2\)</span> is approximately chi-square distributed with 1 degree of freedom</p>
 </div>
@@ -661,9 +665,9 @@ attached base packages:
 
 loaded via a namespace (and not attached):
  [1] backports_1.1.0 magrittr_1.5    rprojroot_1.2   tools_3.3.2    
- [5] htmltools_0.3.6 yaml_2.1.14     Rcpp_0.12.11    stringi_1.1.5  
- [9] rmarkdown_1.6   knitr_1.17      git2r_0.19.0    stringr_1.2.0  
-[13] digest_0.6.12   evaluate_0.10.1</code></pre>
+ [5] htmltools_0.3.6 yaml_2.1.16     Rcpp_0.12.14    stringi_1.1.6  
+ [9] rmarkdown_1.8   knitr_1.18      git2r_0.20.0    stringr_1.2.0  
+[13] digest_0.6.13   evaluate_0.10.1</code></pre>
 </div>
 
 <hr>
