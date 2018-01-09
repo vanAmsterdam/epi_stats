@@ -315,10 +315,10 @@ div.tocify {
 shared across the workflowr files. -->
 <!-- Update knitr chunk options -->
 <!-- Insert the date the file was last updated -->
-<p><strong>Last updated:</strong> 2018-01-08</p>
+<p><strong>Last updated:</strong> 2018-01-09</p>
 <!-- Insert the code version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
-<p><strong>Code version:</strong> dd6c530</p>
+<p><strong>Code version:</strong> 8bb1482</p>
 <!-- Add your analysis here -->
 <div id="setup" class="section level2">
 <h2>Setup</h2>
@@ -326,9 +326,14 @@ shared across the workflowr files. -->
 <h3>Load some packages</h3>
 <pre class="r"><code>library(epistats) # contains &#39;fromParentDir&#39; and other handy functions
 library(magrittr) # for &#39;piping&#39;  &#39;%&gt;%&#39;
-library(dplyr) # for data mangling, selecting columns and filtering rows
-library(ggplot2) # awesome plotting library
-library(stringr) # for working with strings</code></pre>
+library(dplyr)    # for data mangling, selecting columns and filtering rows
+library(ggplot2)  # awesome plotting library
+library(stringr)  # for working with strings
+library(purrr)    # for the &#39;map&#39; function, which is an alternative for lapply, sapply, mapply, etc.</code></pre>
+<p>For installing packages, type <code>install.packages(&lt;package_name&gt;)</code>, for instance: <code>install.packages(dplyr)</code></p>
+<p><code>epistats</code> is only available from GitHub, and can be installed as follows:</p>
+<pre class="r"><code>install.packages(devtools) # when not installed already
+devtools::install_github(&quot;vanAmsterdam/epistats&quot;)</code></pre>
 </div>
 </div>
 <div id="day-1-linear-models" class="section level2">
@@ -419,7 +424,7 @@ dose           1   14.583 42.394  1.1147 0.318583
 Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
 <p>Get interaction plot</p>
 <pre class="r"><code>interaction.plot(dose, group, y, mean, ylab = &quot;Blood pressure&quot;)</code></pre>
-<p><img src="figure/assignments_week1.Rmd/unnamed-chunk-4-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/assignments_week1.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
 <div id="excercise-1" class="section level3">
 <h3>Excercise 1</h3>
 <pre class="r"><code>load(fromParentDir(&quot;data/starfish.RData&quot;))
@@ -433,7 +438,7 @@ str(starfish)</code></pre>
 <div id="a.-create-boxplot" class="section level4">
 <h4>a. create boxplot</h4>
 <pre class="r"><code>boxplot(metabole~location, data = starfish)</code></pre>
-<p><img src="figure/assignments_week1.Rmd/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/assignments_week1.Rmd/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;" /></p>
 </div>
 <div id="b.-fit-anova" class="section level4">
 <h4>b. fit ANOVA</h4>
@@ -519,7 +524,7 @@ df</code></pre>
 <div id="a.-create-boxplot-1" class="section level4">
 <h4>a. create boxplot</h4>
 <pre class="r"><code>boxplot(calcium ~ sex + hormone, data = df)</code></pre>
-<p><img src="figure/assignments_week1.Rmd/unnamed-chunk-10-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/assignments_week1.Rmd/unnamed-chunk-11-1.png" width="672" style="display: block; margin: auto;" /></p>
 </div>
 <div id="b.-fit-anova-1" class="section level4">
 <h4>b. fit ANOVA</h4>
@@ -572,12 +577,12 @@ str(alligator)</code></pre>
 <div id="a.-scatterplot" class="section level4">
 <h4>a. scatterplot</h4>
 <pre class="r"><code>plot(WEIGHT~LENGTH, data = alligator)</code></pre>
-<p><img src="figure/assignments_week1.Rmd/unnamed-chunk-15-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/assignments_week1.Rmd/unnamed-chunk-16-1.png" width="672" style="display: block; margin: auto;" /></p>
 </div>
 <div id="b.-scatterplot-with-log-transform" class="section level4">
 <h4>b. Scatterplot with log-transform</h4>
 <pre class="r"><code>plot(log(WEIGHT)~log(LENGTH), data = alligator)</code></pre>
-<p><img src="figure/assignments_week1.Rmd/unnamed-chunk-16-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/assignments_week1.Rmd/unnamed-chunk-17-1.png" width="672" style="display: block; margin: auto;" /></p>
 </div>
 <div id="c.-compare" class="section level4">
 <h4>c. compare</h4>
@@ -636,197 +641,14 @@ F-statistic: 394.7 on 1 and 23 DF,  p-value: 5.588e-16</code></pre>
 <h3>5. Low birth weight</h3>
 <pre class="r"><code>lowb &lt;- read.table(file = fromParentDir(&quot;data/lowbirth.dat&quot;),
                    header = T)
-lowb</code></pre>
-<pre><code>     id low age lwt race smoke ptl ht ui ftv  bwt
-1    85   0  19 182    2     0   0  0  1   0 2523
-2    86   0  33 155    3     0   0  0  0   3 2551
-3    87   0  20 105    1     1   0  0  0   1 2557
-4    88   0  21 108    1     1   0  0  1   2 2594
-5    89   0  18 107    1     1   0  0  1   0 2600
-6    91   0  21 124    3     0   0  0  0   0 2622
-7    92   0  22 118    1     0   0  0  0   1 2637
-8    93   0  17 103    3     0   0  0  0   1 2637
-9    94   0  29 123    1     1   0  0  0   1 2663
-10   95   0  26 113    1     1   0  0  0   0 2665
-11   96   0  19  95    3     0   0  0  0   0 2722
-12   97   0  19 150    3     0   0  0  0   1 2733
-13   98   0  22  95    3     0   0  1  0   0 2750
-14   99   0  30 107    3     0   1  0  1   2 2750
-15  100   0  18 100    1     1   0  0  0   0 2769
-16  101   0  18 100    1     1   0  0  0   0 2769
-17  102   0  15  98    2     0   0  0  0   0 2778
-18  103   0  25 118    1     1   0  0  0   3 2782
-19  104   0  20 120    3     0   0  0  1   0 2807
-20  105   0  28 120    1     1   0  0  0   1 2821
-21  106   0  32 121    3     0   0  0  0   2 2835
-22  107   0  31 100    1     0   0  0  1   3 2835
-23  108   0  36 202    1     0   0  0  0   1 2836
-24  109   0  28 120    3     0   0  0  0   0 2863
-25  111   0  25 120    3     0   0  0  1   2 2877
-26  112   0  28 167    1     0   0  0  0   0 2877
-27  113   0  17 122    1     1   0  0  0   0 2906
-28  114   0  29 150    1     0   0  0  0   2 2920
-29  115   0  26 168    2     1   0  0  0   0 2920
-30  116   0  17 113    2     0   0  0  0   1 2920
-31  117   0  17 113    2     0   0  0  0   1 2920
-32  118   0  24  90    1     1   1  0  0   1 2948
-33  119   0  35 121    2     1   1  0  0   1 2948
-34  120   0  25 155    1     0   0  0  0   1 2977
-35  121   0  25 125    2     0   0  0  0   0 2977
-36  123   0  29 140    1     1   0  0  0   2 2977
-37  124   0  19 138    1     1   0  0  0   2 2977
-38  125   0  27 124    1     1   0  0  0   0 2992
-39  126   0  31 215    1     1   0  0  0   2 3005
-40  127   0  33 109    1     1   0  0  0   1 3033
-41  128   0  21 185    2     1   0  0  0   2 3042
-42  129   0  19 189    1     0   0  0  0   2 3062
-43  130   0  23 130    2     0   0  0  0   1 3062
-44  131   0  21 160    1     0   0  0  0   0 3062
-45  132   0  18  90    1     1   0  0  1   0 3076
-46  133   0  18  90    1     1   0  0  1   0 3076
-47  134   0  32 132    1     0   0  0  0   4 3080
-48  135   0  19 132    3     0   0  0  0   0 3090
-49  136   0  24 115    1     0   0  0  0   2 3090
-50  137   0  22  85    3     1   0  0  0   0 3090
-51  138   0  22 120    1     0   0  1  0   1 3100
-52  139   0  23 128    3     0   0  0  0   0 3104
-53  140   0  22 130    1     1   0  0  0   0 3132
-54  141   0  30  95    1     1   0  0  0   2 3147
-55  142   0  19 115    3     0   0  0  0   0 3175
-56  143   0  16 110    3     0   0  0  0   0 3175
-57  144   0  21 110    3     1   0  0  1   0 3203
-58  145   0  30 153    3     0   0  0  0   0 3203
-59  146   0  20 103    3     0   0  0  0   0 3203
-60  147   0  17 119    3     0   0  0  0   0 3225
-61  148   0  17 119    3     0   0  0  0   0 3225
-62  149   0  23 119    3     0   0  0  0   2 3232
-63  150   0  24 110    3     0   0  0  0   0 3232
-64  151   0  28 140    1     0   0  0  0   0 3234
-65  154   0  26 133    3     1   2  0  0   0 3260
-66  155   0  20 169    3     0   1  0  1   1 3274
-67  156   0  24 115    3     0   0  0  0   2 3274
-68  159   0  28 250    3     1   0  0  0   6 3303
-69  160   0  20 141    1     0   2  0  1   1 3317
-70  161   0  22 158    2     0   1  0  0   2 3317
-71  162   0  22 112    1     1   2  0  0   0 3317
-72  163   0  31 150    3     1   0  0  0   2 3321
-73  164   0  23 115    3     1   0  0  0   1 3331
-74  166   0  16 112    2     0   0  0  0   0 3374
-75  167   0  16 135    1     1   0  0  0   0 3374
-76  168   0  18 229    2     0   0  0  0   0 3402
-77  169   0  25 140    1     0   0  0  0   1 3416
-78  170   0  32 134    1     1   1  0  0   4 3430
-79  172   0  20 121    2     1   0  0  0   0 3444
-80  173   0  23 190    1     0   0  0  0   0 3459
-81  174   0  22 131    1     0   0  0  0   1 3460
-82  175   0  32 170    1     0   0  0  0   0 3473
-83  176   0  30 110    3     0   0  0  0   0 3475
-84  177   0  20 127    3     0   0  0  0   0 3487
-85  179   0  23 123    3     0   0  0  0   0 3544
-86  180   0  17 120    3     1   0  0  0   0 3572
-87  181   0  19 105    3     0   0  0  0   0 3572
-88  182   0  23 130    1     0   0  0  0   0 3586
-89  183   0  36 175    1     0   0  0  0   0 3600
-90  184   0  22 125    1     0   0  0  0   1 3614
-91  185   0  24 133    1     0   0  0  0   0 3614
-92  186   0  21 134    3     0   0  0  0   2 3629
-93  187   0  19 235    1     1   0  1  0   0 3629
-94  188   0  25  95    1     1   3  0  1   0 3637
-95  189   0  16 135    1     1   0  0  0   0 3643
-96  190   0  29 135    1     0   0  0  0   1 3651
-97  191   0  29 154    1     0   0  0  0   1 3651
-98  192   0  19 147    1     1   0  0  0   0 3651
-99  193   0  19 147    1     1   0  0  0   0 3651
-100 195   0  30 137    1     0   0  0  0   1 3699
-101 196   0  24 110    1     0   0  0  0   1 3728
-102 197   0  19 184    1     1   0  1  0   0 3756
-103 199   0  24 110    3     0   1  0  0   0 3770
-104 200   0  23 110    1     0   0  0  0   1 3770
-105 201   0  20 120    3     0   0  0  0   0 3770
-106 202   0  25 241    2     0   0  1  0   0 3790
-107 203   0  30 112    1     0   0  0  0   1 3799
-108 204   0  22 169    1     0   0  0  0   0 3827
-109 205   0  18 120    1     1   0  0  0   2 3856
-110 206   0  16 170    2     0   0  0  0   4 3860
-111 207   0  32 186    1     0   0  0  0   2 3860
-112 208   0  18 120    3     0   0  0  0   1 3884
-113 209   0  29 130    1     1   0  0  0   2 3884
-114 210   0  33 117    1     0   0  0  1   1 3912
-115 211   0  20 170    1     1   0  0  0   0 3940
-116 212   0  28 134    3     0   0  0  0   1 3941
-117 213   0  14 135    1     0   0  0  0   0 3941
-118 214   0  28 130    3     0   0  0  0   0 3969
-119 215   0  25 120    1     0   0  0  0   2 3983
-120 216   0  16  95    3     0   0  0  0   1 3997
-121 217   0  20 158    1     0   0  0  0   1 3997
-122 218   0  26 160    3     0   0  0  0   0 4054
-123 219   0  21 115    1     0   0  0  0   1 4054
-124 220   0  22 129    1     0   0  0  0   0 4111
-125 221   0  25 130    1     0   0  0  0   2 4153
-126 222   0  31 120    1     0   0  0  0   2 4167
-127 223   0  35 170    1     0   1  0  0   1 4174
-128 224   0  19 120    1     1   0  0  0   0 4238
-129 225   0  24 116    1     0   0  0  0   1 4593
-130 226   0  45 123    1     0   0  0  0   1 4990
-131   4   1  28 120    3     1   1  0  1   0  709
-132  10   1  29 130    1     0   0  0  1   2 1021
-133  11   1  34 187    2     1   0  1  0   0 1135
-134  13   1  25 105    3     0   1  1  0   0 1330
-135  15   1  25  85    3     0   0  0  1   0 1474
-136  16   1  27 150    3     0   0  0  0   0 1588
-137  17   1  23  97    3     0   0  0  1   1 1588
-138  18   1  24 128    2     0   1  0  0   1 1701
-139  19   1  24 132    3     0   0  1  0   0 1729
-140  20   1  21 165    1     1   0  1  0   1 1790
-141  22   1  32 105    1     1   0  0  0   0 1818
-142  23   1  19  91    1     1   2  0  1   0 1885
-143  24   1  25 115    3     0   0  0  0   0 1893
-144  25   1  16 130    3     0   0  0  0   1 1899
-145  26   1  25  92    1     1   0  0  0   0 1928
-146  27   1  20 150    1     1   0  0  0   2 1928
-147  28   1  21 200    2     0   0  0  1   2 1928
-148  29   1  24 155    1     1   1  0  0   0 1936
-149  30   1  21 103    3     0   0  0  0   0 1970
-150  31   1  20 125    3     0   0  0  1   0 2055
-151  32   1  25  89    3     0   2  0  0   1 2055
-152  33   1  19 102    1     0   0  0  0   2 2082
-153  34   1  19 112    1     1   0  0  1   0 2084
-154  35   1  26 117    1     1   1  0  0   0 2084
-155  36   1  24 138    1     0   0  0  0   0 2100
-156  37   1  17 130    3     1   1  0  1   0 2125
-157  40   1  20 120    2     1   0  0  0   3 2126
-158  42   1  22 130    1     1   1  0  1   1 2187
-159  43   1  27 130    2     0   0  0  1   0 2187
-160  44   1  20  80    3     1   0  0  1   0 2211
-161  45   1  17 110    1     1   0  0  0   0 2225
-162  46   1  25 105    3     0   1  0  0   1 2240
-163  47   1  20 109    3     0   0  0  0   0 2240
-164  49   1  18 148    3     0   0  0  0   0 2282
-165  50   1  18 110    2     1   1  0  0   0 2296
-166  51   1  20 121    1     1   1  0  1   0 2296
-167  52   1  21 100    3     0   1  0  0   4 2301
-168  54   1  26  96    3     0   0  0  0   0 2325
-169  56   1  31 102    1     1   1  0  0   1 2353
-170  57   1  15 110    1     0   0  0  0   0 2353
-171  59   1  23 187    2     1   0  0  0   1 2367
-172  60   1  20 122    2     1   0  0  0   0 2381
-173  61   1  24 105    2     1   0  0  0   0 2381
-174  62   1  15 115    3     0   0  0  1   0 2381
-175  63   1  23 120    3     0   0  0  0   0 2395
-176  65   1  30 142    1     1   1  0  0   0 2410
-177  67   1  22 130    1     1   0  0  0   1 2410
-178  68   1  17 120    1     1   0  0  0   3 2414
-179  69   1  23 110    1     1   1  0  0   0 2424
-180  71   1  17 120    2     0   0  0  0   2 2438
-181  75   1  26 154    3     0   1  1  0   1 2442
-182  76   1  20 105    3     0   0  0  0   3 2450
-183  77   1  26 190    1     1   0  0  0   0 2466
-184  78   1  14 101    3     1   1  0  0   0 2466
-185  79   1  28  95    1     1   0  0  0   2 2466
-186  81   1  14 100    3     0   0  0  0   2 2495
-187  82   1  23  94    3     1   0  0  0   0 2495
-188  83   1  17 142    2     0   0  1  0   0 2495
-189  84   1  21 130    1     1   0  1  0   3 2495</code></pre>
+head(lowb)</code></pre>
+<pre><code>  id low age lwt race smoke ptl ht ui ftv  bwt
+1 85   0  19 182    2     0   0  0  1   0 2523
+2 86   0  33 155    3     0   0  0  0   3 2551
+3 87   0  20 105    1     1   0  0  0   1 2557
+4 88   0  21 108    1     1   0  0  1   2 2594
+5 89   0  18 107    1     1   0  0  1   0 2600
+6 91   0  21 124    3     0   0  0  0   0 2622</code></pre>
 <div id="a.-fit-model-for-bwt" class="section level4">
 <h4>a. fit model for bwt</h4>
 <pre class="r"><code>fit &lt;- glm(bwt~ht*(smoke+age), family = gaussian, data = lowb)
@@ -998,6 +820,439 @@ Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&
 </div>
 </div>
 </div>
+<div id="day-2.-logistic-regression-excercises-1" class="section level2">
+<h2>Day 2. Logistic regression ‘excercises 1’</h2>
+<div id="r-commands" class="section level3">
+<h3>R commands</h3>
+<p>First the data file needs to be read in. The data is in episode.txt. It is a text file. The first lines are:</p>
+<pre><code>episode followup  cd4  age
+    0   24  125   35
+    0   12   50   34
+    1    6   30   37
+    0    6   80   36
+    0    3  170   35
+    0    6   95   26
+    0    4   35   44
+    0    3   50   42
+    2    6   25   64</code></pre>
+<p>The first line contains the column names. This can be read in with the command <strong>read.table()</strong>. This results in a data frame object. A data frame contains several columns of data. These columns can be of different type: they can be a grouping variable, a continuous variable or a variable containing characters. We will call the data frame epi.dat:<strong>epi.dat <span class="math inline">\(&lt;-\)</span> read.table(file=“episode.txt”, header=TRUE)</strong>.The header=TRUE states that the first line contains the column names.</p>
+<p>In this file the columns are separated by spaces. Often a different separator is used, for instance a comma, called a csv (comma separated value) file. Then one can use :<br />
+<strong>read.table(file=“episode.txt”, header=TRUE, sep=“,”)</strong>. To see what the names of the columns are: <strong>names(epi.dat)</strong>. To look at a specific column, e.g. cd4: <strong>epi.dat$cd4</strong>. So if you want to use a variable from a data frame, use the name of that data frame, then a dollar sign’ followed by the column name. In the cd4 column the cd4 values of the patients are stored. From this we need to make a new column which has a 1 if the cd4 value is smaller than 200 and a zero otherwise. To do this use <strong>cd4$&lt;$200</strong>. If you do this you see that you get a column with TRUE and FALSE in it. To make this a column with 0 and 1, multiply the statement with 1 and put the result in a column called immune: <strong>immune <span class="math inline">\(&lt;-\)</span> 1*(cd4$&lt;$200)</strong>. This variable immune is in your workspace, not in the data frame. To get it in the data frame: <strong>epi.dat <span class="math inline">\(&lt;-\)</span>data.frame(epi.dat,immune)</strong>. The get rid of immune in the workspace: <strong>rm(immune)</strong>.</p>
+<p>Now we are ready to fit the models. If you do not like to type the name of the data frame, a dollar sign and the column name all of the time you can make it clear that you want to use the epi.dat data frame by : <strong>attach(epi.dat)</strong>. After this if you want to use a variable from this data frame just type the column name.</p>
+<p>If there is an exposure in the data file that is a group variable, coded other than 0-1, then you should tell this to R by using the function <strong>factor()</strong>. So <strong>factor(group)</strong> tells R that group is not a numeric variable but that its values should be used as group labels. To fit the logistic regression model with immune as an exposure variable use<br />
+<strong>fit <span class="math inline">\(&lt;-\)</span> glm(episode<span class="math inline">\(\sim\)</span>immune,family=binomial)</strong><br />
+The command <strong>summary(fit)</strong> will give you the results.<br />
+For every patient also the follow-up time is recorded. It might sometimes be a good idea to model the odds per month follow-up, thus to use the model $ (  /followup )=+immune<span class="math inline">\(. Rewriting gives :\
+\)</span>()=+immune+(followup)<span class="math inline">\(, that is followup is in the model without a coefficient attached to it. To achieve this in R the term **offset** is used: **glm(episode\)</span>$immune+offset(log(followup)), family=binomial)<strong>.<br />
+To fit the logistic regression model 3 use: </strong>model3 <span class="math inline">\(&lt;-\)</span> glm(episode<span class="math inline">\(\sim\)</span>immune+age,family=binomial)<strong>.<br />
+model3 will contain the result. It will be an object of glm-type because you used glm to create it. To see what is in it use </strong>names(model3)<strong> and if you want to see something specific use e.g. </strong>model3$coefficients<strong>. To get the tables from the text : </strong>summary(model3)<strong>. Profile confidence intervals can be obtained by: </strong>confint(fit3)** and the wald intervals by <strong>confint.default(fit3)</strong>. The deviance residuals can be obtained by <strong>residuals(model3)</strong> and the fitted values by <strong>fitted.values(model3)</strong>.<br />
+Now you can leave out 1 variable from the model and look at the differences in AIC’s. You can do this by fitting all the different models and then comparing them. You can also use the function <strong>drop1(fit)</strong>. This function looks at the terms in fit, then leaves the terms out one by one and calculates for every term left out the AIC of the model. The command <strong>drop1(fit, test=“Chisq”)</strong> calculates the likelihood ratio test for every term left out. Then you can fit a model by leaving out the variable with the least influence and then start the procedure all over again using this last model as a starting point, etc. For the AIC this can also be done automatically: <strong>step(model3)</strong>.</p>
+</div>
+<div id="episode.txt" class="section level3">
+<h3>1. episode.txt</h3>
+<pre><code>1.  Reproduce the output for the 2 models for episode from the text.
+    (First read in the data from episode.txt)</code></pre>
+<p>We will use <code>dplyr</code> to assign a new column in the dataframe called ‘immune’</p>
+<pre class="r"><code>require(dplyr) # this makes sure that dplyr is loaded
+require(magrittr) # for handy piping
+
+epi &lt;- read.table(file = fromParentDir(&quot;data/episode.txt&quot;), header = T)
+
+epi %&lt;&gt;%
+  mutate(immune = cd4&lt;200)
+
+head(epi)</code></pre>
+<pre><code>  episode followup cd4 age immune
+1       0       24 125  35   TRUE
+2       0       12  50  34   TRUE
+3       1        6  30  37   TRUE
+4       0        6  80  36   TRUE
+5       0        3 170  35   TRUE
+6       0        6  95  26   TRUE</code></pre>
+<p>Fit glm model</p>
+<pre class="r"><code>fit &lt;- glm(episode~immune, family = binomial, data = epi)
+summary(fit)</code></pre>
+<pre><code>
+Call:
+glm(formula = episode ~ immune, family = binomial, data = epi)
+
+Deviance Residuals: 
+    Min       1Q   Median       3Q      Max  
+-0.8410  -0.8410  -0.3482  -0.3482   2.3804  
+
+Coefficients:
+            Estimate Std. Error z value Pr(&gt;|z|)    
+(Intercept)  -2.7726     0.5951  -4.659 3.18e-06 ***
+immuneTRUE    1.9151     0.6752   2.836  0.00456 ** 
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+(Dispersion parameter for binomial family taken to be 1)
+
+    Null deviance: 90.424  on 97  degrees of freedom
+Residual deviance: 80.070  on 96  degrees of freedom
+AIC: 84.07
+
+Number of Fisher Scoring iterations: 5</code></pre>
+<p>Fit glm model with offset for follow-up time</p>
+<pre class="r"><code>fit2 &lt;- glm(episode~immune+offset(followup), data = epi, family = binomial)
+summary(fit2)</code></pre>
+<pre><code>
+Call:
+glm(formula = episode ~ immune + offset(followup), family = binomial, 
+    data = epi)
+
+Deviance Residuals: 
+    Min       1Q   Median       3Q      Max  
+-4.6483  -0.1038  -0.0136  -0.0018   5.5305  
+
+Coefficients:
+            Estimate Std. Error z value Pr(&gt;|z|)    
+(Intercept) -18.2932     0.9899 -18.479  &lt; 2e-16 ***
+immuneTRUE    5.0963     1.2132   4.201 2.66e-05 ***
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+(Dispersion parameter for binomial family taken to be 1)
+
+    Null deviance: 307.80  on 97  degrees of freedom
+Residual deviance: 292.04  on 96  degrees of freedom
+AIC: 296.04
+
+Number of Fisher Scoring iterations: 6</code></pre>
+<p>This results in very different coefficients</p>
+<p>Fit model with age</p>
+<pre class="r"><code>fit3 &lt;- glm(episode~immune+age, family = binomial, data = epi)
+drop1(fit3, test = &quot;Chisq&quot;)</code></pre>
+<pre><code>Single term deletions
+
+Model:
+episode ~ immune + age
+       Df Deviance    AIC    LRT Pr(&gt;Chi)   
+&lt;none&gt;      78.427 84.427                   
+immune  1   87.063 91.063 8.6363 0.003295 **
+age     1   80.070 84.070 1.6435 0.199852   
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<p>Age does not seem to be important for modeling episode</p>
+<pre><code>2.  This datafile also contains the variable followup. This is the
+    time a patient is in the study. Fit a logistic regression model
+    with the log of the follow up time as an exposure variable and
+    compare this model with the one that only contains an intercept
+    using the AIC.
+    </code></pre>
+<pre class="r"><code>fit0 &lt;- glm(episode~1, data = epi, family = binomial)
+fit1 &lt;- glm(episode~log(followup), data = epi, family = binomial)
+
+AIC(fit0, fit1)</code></pre>
+<pre><code>     df      AIC
+fit0  1 92.42361
+fit1  2 94.22060</code></pre>
+<pre><code>3.  It is possible to fit a model with an exposure with a fixed
+    coefficient of 1. The way to do it is to use the function
+    offset: **glm(episode $\sim$
+    offset(log(followup)),family=binomial)**. Fit this model and
+    compare the AIC with the former one.</code></pre>
+<pre class="r"><code>fit2 &lt;- glm(episode~offset(log(followup)), family = binomial, data = epi)
+AIC(fit1, fit2)</code></pre>
+<pre><code>     df      AIC
+fit1  2 94.22060
+fit2  1 95.15912</code></pre>
+<pre><code>4.  Write down the logistic regression model for the model with the
+    offset. Give an interpretation of this model.</code></pre>
+<pre class="r"><code>fit4 &lt;- glm(episode~immune+offset(log(followup)), family = binomial, data = epi)
+summary(fit4)</code></pre>
+<pre><code>
+Call:
+glm(formula = episode ~ immune + offset(log(followup)), family = binomial, 
+    data = epi)
+
+Deviance Residuals: 
+    Min       1Q   Median       3Q      Max  
+-1.2103  -0.6371  -0.3763  -0.2684   2.7706  
+
+Coefficients:
+            Estimate Std. Error z value Pr(&gt;|z|)    
+(Intercept)  -4.9149     0.5999  -8.193 2.54e-16 ***
+immuneTRUE    1.8140     0.6852   2.648  0.00811 ** 
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+(Dispersion parameter for binomial family taken to be 1)
+
+    Null deviance: 93.159  on 97  degrees of freedom
+Residual deviance: 84.341  on 96  degrees of freedom
+AIC: 88.341
+
+Number of Fisher Scoring iterations: 5</code></pre>
+<p>Since we use the follow-up time as an offset, we are modeling the odds of experiencing an event per year (since <code>followup</code> is in years)</p>
+<p><span class="math display">\[\ln{(\frac{\pi}{1-\pi}*\frac{1}{time}}) = \alpha + \beta*x\]</span></p>
+<p>So that makes</p>
+<p><span class="math display">\[\pi = \frac{1}{1+e^{-(\alpha + \beta*x + \ln(time))}}=\frac{1}{1+e^{-(\alpha + \beta*x)}/time}\]</span></p>
+<p>When time goes to infinity, probability of an event goes to 1, which makes sense. Also, the probability (density?) is greater for patients with compromised immune status.</p>
+<pre class="r"><code>odds_0 &lt;- exp(predict(fit4, newdata = data.frame(immune = F, followup=10)))
+odds_1 &lt;- exp(predict(fit4, newdata = data.frame(immune = T, followup=10)))
+odds_10000 &lt;- exp(predict(fit4, newdata = data.frame(immune = F, followup=10000)))
+p0 = odds_0 / (1+odds_0)
+p1 = odds_1 / (1+odds_1)
+p10000 = odds_10000 / (1+odds_10000)</code></pre>
+<p>Given 10 year of follow-up, a patient with an intact immune system has a probabilty of 6.8% for an event, while a patient with compromized immune system has a probability of 31.0</p>
+<p>A patient with intact immune system and 10000 years of follow-up has a probability of 98.7%</p>
+<p>Note that we could also use <code>predict(fit4, newdata = ..., type = &quot;response&quot;)</code> to get the probabilities directly. However, this way we can show the relationship with the logistic model.</p>
+</div>
+<div id="lowbirth.dat" class="section level3">
+<h3>2. lowbirth.dat</h3>
+<pre><code>1.  Read in the dataset lowbirth.dat</code></pre>
+<pre class="r"><code>lowb &lt;- read.table(fromParentDir(&quot;data/lowbirth.dat&quot;), header = T)</code></pre>
+<pre><code>2.  Fit three models, one with exposure age, one with exposure smoke
+    and one with exposure ht.</code></pre>
+<p>Probably they want us to model <code>low</code> as an outcome</p>
+<pre class="r"><code>fit1 &lt;- glm(low ~ age, data = lowb, family = binomial)
+fit2 &lt;- glm(low ~ smoke, data = lowb, family = binomial)
+fit3 &lt;- glm(low ~ ht, data = lowb, family = binomial)</code></pre>
+<pre><code>3.  For all 3 models give an interpretation of the estimate of
+    $\beta$ for the specific exposure at hand.
+    </code></pre>
+<pre class="r"><code>lapply(list(fit1, fit2, fit3), coefficients)</code></pre>
+<pre><code>[[1]]
+(Intercept)         age 
+ 0.38458192 -0.05115294 
+
+[[2]]
+(Intercept)       smoke 
+ -1.0870515   0.7040592 
+
+[[3]]
+(Intercept)          ht 
+  -0.877070    1.213542 </code></pre>
+<p>Age has a negative <span class="math inline">\(\beta\)</span>, so according to this model, the probability of low birthweight will decrease with age (which probably is not true)</p>
+<pre><code>4.  Compare all 3 models to the model with only an intercept in it
+    using AIC. Calculate for each the likelihood ratio and give this
+    an interpretation.</code></pre>
+<p>We will use <code>map</code> from <code>purrr</code>, which applies a function to each element of its input.</p>
+<pre class="r"><code>fit0 &lt;- glm(low ~ 1, data = lowb, family = binomial)
+
+AIC(fit0, fit1, fit2, fit3)</code></pre>
+<pre><code>     df      AIC
+fit0  1 236.6720
+fit1  2 235.9120
+fit2  2 233.8046
+fit3  2 234.6499</code></pre>
+<pre class="r"><code>ls &lt;- list(fit0, fit1, fit2, fit3) %&gt;%
+  map(logLik) %&gt;%
+  map_dbl(exp)
+
+lrs &lt;- ls / ls[1]
+lrs</code></pre>
+<pre><code>[1]  1.000000  3.974977 11.400969  7.471283</code></pre>
+<p>All AICs are close, but fit2 is the lowest and it is better than fit0.</p>
+<p>The likelihood ratio for fit2 (vs fit0) is also highest (11.4)</p>
+<pre><code>5.  Also compare the 3 models with each other by comparing AIC. Also
+    calculate likelihood ratios.</code></pre>
+<pre class="r"><code>ls[3] / ls[2]</code></pre>
+<pre><code>[1] 2.868185</code></pre>
+<pre class="r"><code>ls[3] / ls[4]</code></pre>
+<pre><code>[1] 1.525972</code></pre>
+<pre class="r"><code>ls[4] / ls[2]</code></pre>
+<pre><code>[1] 1.879579</code></pre>
+<p>fit2 &gt; fit3 &gt; fit1 according to both likelihood ratios and AIC.</p>
+<p>Since all models have exactly 1 predictor, this was to be expected.</p>
+<pre><code>6.  Which model fits the data best? Give your argumentation.</code></pre>
+<p>fit2, it has the lowest AIC.</p>
+</div>
+<div id="pdd.csv" class="section level3">
+<h3>3. pdd.csv</h3>
+<pre><code>1.  Read in the data file pdd.csv</code></pre>
+<pre class="r"><code>pdd &lt;- read.csv(fromParentDir(&quot;data/pdd.csv&quot;))
+head(pdd)</code></pre>
+<pre><code>  nop gender arterio pdd  n
+1   0      0       0   4 46
+2   0      0       1   4 30
+3   0      1       0   9 66
+4   0      1       1   3 16
+5   1      0       0   5 16
+6   1      0       1  13 45</code></pre>
+<pre><code>    Note that this file is different from the other files. It
+    doesn’t have a 0-1 variable in it. Instead the data is grouped.
+    The column pdd contains the number of parrots with PDD and the
+    column $n$ contains the total number of parrots. So $n-pdd$ is
+    the number of parrots without PDD. As an example, line number 6
+    states: there were 16 male parrots, from the NOP, having no
+    arteriosclerosis, and 5 of these had PDD. To fit a logistic
+    regression model the dependent variable is not just one column.
+    It is a matrix containing the number of PDD-cases and the number
+    without PDD. So the dependent variable is :
+    **cbind(pdd,n-pdd)**. cbind stands for column bind: it binds
+    together two columns into a matrix. The model can now be fitted
+    with: **glm(cbind(pdd,n-pdd)$\sim$ exposure, family=binomial)**
+
+2.  How many PDD cases are there from the NOP center (type:
+    **pdd\[nop==1\]**) and how many parrots in total? Answer the
+    same question for parrots not from the nop center. (type:
+    **pdd\[nop!=1\]**).</code></pre>
+<p>For these situations, <code>dplyr</code> comes in handy</p>
+<pre class="r"><code>pdd %&gt;%
+  group_by(nop) %&gt;%
+  summarize(n_pdd = sum(pdd))</code></pre>
+<pre><code># A tibble: 2 x 2
+    nop n_pdd
+  &lt;int&gt; &lt;int&gt;
+1     0    20
+2     1    45</code></pre>
+<pre><code>    If you want to know what the square brackets stand for, type:
+    **RSiteSearch(“indexing”,restrict=“docs”)** then go to “an
+    introduction to R” and then to chapter 2.7 and read it.
+
+3.  Use the previous exercise to make a table of pdd by nop.</code></pre>
+<pre class="r"><code>pdd %&gt;%
+  group_by(nop) %&gt;%
+  summarize(n_pdd = sum(pdd), n_no_pdd = sum(n-pdd))</code></pre>
+<pre><code># A tibble: 2 x 3
+    nop n_pdd n_no_pdd
+  &lt;int&gt; &lt;int&gt;    &lt;int&gt;
+1     0    20      138
+2     1    45      105</code></pre>
+<pre><code>4.  Calculate the odds ratio and give it an interpretation. Why does
+    the outcome seem logical?</code></pre>
+<pre class="r"><code>or &lt;- (45*138)/(20*105)
+or</code></pre>
+<pre><code>[1] 2.957143</code></pre>
+<p>There are more parrots with pdd for NOP, therefore the odds ratio is greater then 1.</p>
+<pre><code>5.  Fit the logistic regression model with nop as exposure and
+    compare the results with those from the previous question.</code></pre>
+<pre class="r"><code>fit &lt;- glm(cbind(pdd, n-pdd) ~ nop, data = pdd, family = binomial)
+summary(fit)</code></pre>
+<pre><code>
+Call:
+glm(formula = cbind(pdd, n - pdd) ~ nop, family = binomial, data = pdd)
+
+Deviance Residuals: 
+    Min       1Q   Median       3Q      Max  
+-0.8504  -0.1688   0.1095   0.2364   0.6911  
+
+Coefficients:
+            Estimate Std. Error z value Pr(&gt;|z|)    
+(Intercept)  -1.9315     0.2393  -8.073 6.87e-16 ***
+nop           1.0842     0.2983   3.634 0.000279 ***
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+(Dispersion parameter for binomial family taken to be 1)
+
+    Null deviance: 15.5528  on 7  degrees of freedom
+Residual deviance:  1.3975  on 6  degrees of freedom
+AIC: 33.704
+
+Number of Fisher Scoring iterations: 4</code></pre>
+<pre class="r"><code>exp(fit$coefficients[2])</code></pre>
+<pre><code>     nop 
+2.957143 </code></pre>
+<p>The odds ratio coincides with the odds ratio from the logistic regression model</p>
+</div>
+<div id="dalmatian.cvs" class="section level3">
+<h3>4. Dalmatian.cvs</h3>
+<pre><code>1.  Read in the data file dalmatian.csv.</code></pre>
+<pre class="r"><code>dalmatian &lt;- read.csv(fromParentDir(&quot;data/dalmatian.csv&quot;))
+str(dalmatian)</code></pre>
+<pre><code>&#39;data.frame&#39;:   1243 obs. of  6 variables:
+ $ deaf    : int  0 0 0 0 0 0 0 0 0 0 ...
+ $ spot    : int  2 2 2 2 2 2 2 2 2 2 ...
+ $ blueeye : int  0 0 0 0 0 0 0 0 0 0 ...
+ $ headspot: int  0 0 1 0 0 1 1 1 0 0 ...
+ $ gender  : int  0 1 1 1 0 0 0 1 1 1 ...
+ $ fhs     : num  -0.173 -1.038 -1.038 -1.038 -1.038 ...</code></pre>
+<pre><code>2.  Explain how the variable fhs deals with the heritability.</code></pre>
+<p>This description is copied from Classical Methods in Data Analysis, day 11 logistic regression:</p>
+<blockquote>
+<p>In the years 1995 through 1998 a research was done among 1243 Dalmatian puppies. It was determined whether or not they were deaf in at least one ear. The research question was if deafness was related to pigmentation. In order to answer this it was measured whether or not there were many spots on the skin, whether or not they had a spot on the head and whether or not the dog had blue eyes. In addition one wants to determine if there was heredity involved. In order to look at this the family history score was determined. This is a method to cope with litter effects (heredity): for every puppy it was determined how many brothers or sisters were deaf. Call this number m. Then from the whole dataset the fraction of dogs that are deaf can be determined. This fraction is multiplied by litter size - 1. This is then the expected number of deaf brothers or sisters when there are no differences between litters. The family history score is now defined as fhs = m - fraction * (litter size - 1) Whether or not the puppy is deaf (0=no, 1=yes) deaf The number of spots on the skin (1=light, 2=moderate, 3=heavy) spot Whether or not the dog had blue eyes (0=no, 1=yes) blueeye Whether or not the dog had an spot on the head (0=no, 1=yes) headspot Gender (0=male, 1=female) gender Family history score fhs</p>
+</blockquote>
+<p>Basically it is the difference between the proportion of deaf dogs in a litter minus the expected proportion of deaf dogs in that litter if all litters were equal (‘the marginal probability’).</p>
+<pre><code>3.  Fit the logistic regression model for deaf, with fhs as an
+    exposure variable.
+    </code></pre>
+<pre class="r"><code>fit1 &lt;- glm(deaf ~ fhs, data = dalmatian, family = binomial)
+summary(fit1)</code></pre>
+<pre><code>
+Call:
+glm(formula = deaf ~ fhs, family = binomial, data = dalmatian)
+
+Deviance Residuals: 
+    Min       1Q   Median       3Q      Max  
+-1.4296  -0.6062  -0.5012  -0.4382   2.2741  
+
+Coefficients:
+            Estimate Std. Error z value Pr(&gt;|z|)    
+(Intercept) -1.58544    0.07853 -20.190  &lt; 2e-16 ***
+fhs          0.41004    0.05144   7.971 1.57e-15 ***
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+(Dispersion parameter for binomial family taken to be 1)
+
+    Null deviance: 1145.0  on 1242  degrees of freedom
+Residual deviance: 1081.2  on 1241  degrees of freedom
+AIC: 1085.2
+
+Number of Fisher Scoring iterations: 4</code></pre>
+<pre><code>4.  Compare the AIC of the previous model with the model that only
+    contains a constant. Also calculate the likelihood ratio and
+    interpret the results.</code></pre>
+<pre class="r"><code>fit0 &lt;- glm(deaf ~ 1, data = dalmatian, family = binomial)
+
+AIC(fit0, fit1)</code></pre>
+<pre><code>     df      AIC
+fit0  1 1146.958
+fit1  2 1085.183</code></pre>
+<pre class="r"><code>exp(as.numeric(logLik(fit1) - logLik(fit0)))</code></pre>
+<pre><code>[1] 7.056742e+13</code></pre>
+<p>The AIC for the model with the hereditability variable is much lower, and the likelihood ratio is over <span class="math inline">\(10^13\)</span>, so it seems that hereditability is important to explain the number of deaf dogs in a litter.</p>
+<p>Lets plot the distribution of fhs for deaf and non-deaf dogs:</p>
+<pre class="r"><code>require(ggplot2)
+
+dalmatian %&gt;%
+  mutate(deaf = factor(deaf)) %&gt;% # treat deaf as factor variable
+  ggplot(aes(x = fhs, fill = deaf, col = deaf)) + 
+  geom_density(alpha = 0.5)</code></pre>
+<p><img src="figure/assignments_week1.Rmd/unnamed-chunk-48-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><strong>Exercises 2</strong></p>
+<ol style="list-style-type: decimal">
+<li><p>osteochon.csv</p>
+<ol style="list-style-type: decimal">
+<li><p>Read in the data file osteochon.csv</p></li>
+<li><p>Fit a logistic regression model with the exposure variables food, ground and height.</p></li>
+<li><p>Give for each exposure variable the likelihood ratio test, when it is left out of the model. Decide which exposure should be left out.</p></li>
+<li><p>Fit the model without that exposure and do the same with this model as above. Continue until you decide nothing can be left out anymore.</p></li>
+<li><p>Describe the final model you are left with and interpret the result.</p></li>
+<li><p>Give profile confidence intervals for the estimates in the final model and</p></li>
+<li><p>Write a short account of the analysis you just did. It should contain what the analysis was and its results.</p></li>
+</ol></li>
+<li><p>episode.txt</p>
+<ol style="list-style-type: decimal">
+<li><p>Read in the file episode.txt</p></li>
+<li><p>Fit the logistic regression model with exposures immune and age and with log(followup) as an offset.</p></li>
+<li><p>Interpret the parameters and discuss the difference with the model without the offset.</p></li>
+<li><p>Can immune or age or both be left out? Use AIC to check this.</p></li>
+</ol></li>
+<li><p>osteochon.csv</p>
+<ol style="list-style-type: decimal">
+<li><p>Read in the data file osteochon.csv</p></li>
+<li><p>Fit the logistic regression model with exposures father, food, ground and heigt. (Remember to use factor() for food, ground and father)</p></li>
+<li><p>Use likelihood ratio tests to see which exposure can be left out, then fit that model and again see which exposure can be left out. Continue until no more exposures can be left out.</p></li>
+<li><p>Discuss the final model. Give a possible interpretation of the terms in the model and why they are likely to be related to osteochondrosis.</p></li>
+<li><p>Start off with the full model again and try to reduce it by using AIC.</p></li>
+<li><p>Is the final model the same as the one you got with the likelihood ratio tests? Can you explain this?</p></li>
+<li><p>Give the 95% profile confidence interval for height and give the interpretation of this.</p></li>
+</ol></li>
+<li><p>lowbirth .dat</p>
+<ol style="list-style-type: decimal">
+<li><p>Fit the logistic regression model with exposures age, lwt, race, smoke, ptl, ht, ui and ftv.</p></li>
+<li><p>Find out which exposures can be left out using AIC.</p></li>
+<li><p>Discuss the final model.</p></li>
+<li><p>Write a short report about your findings. Include the statistical model you used, the method you used to reduce this model and the final results (estimates and standard errors).</p></li>
+</ol></li>
+</ol>
+</div>
+</div>
 <div id="session-information" class="section level2">
 <h2>Session information</h2>
 <!-- Insert the session information into the document -->
@@ -1013,16 +1268,16 @@ attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
 other attached packages:
-[1] stringr_1.2.0  ggplot2_2.2.1  dplyr_0.7.4    magrittr_1.5  
-[5] epistats_0.1.0
+[1] bindrcpp_0.2   purrr_0.2.4    stringr_1.2.0  ggplot2_2.2.1 
+[5] dplyr_0.7.4    magrittr_1.5   epistats_0.1.0
 
 loaded via a namespace (and not attached):
  [1] Rcpp_0.12.14     knitr_1.18       bindr_0.1        munsell_0.4.3   
  [5] colorspace_1.3-2 R6_2.2.2         rlang_0.1.6      plyr_1.8.4      
  [9] tools_3.3.2      grid_3.3.2       gtable_0.2.0     git2r_0.20.0    
 [13] htmltools_0.3.6  lazyeval_0.2.0   yaml_2.1.16      rprojroot_1.2   
-[17] digest_0.6.13    assertthat_0.2.0 tibble_1.3.4     bindrcpp_0.2    
-[21] glue_1.2.0       evaluate_0.10.1  rmarkdown_1.8    stringi_1.1.6   
+[17] digest_0.6.13    assertthat_0.2.0 tibble_1.3.4     glue_1.2.0      
+[21] evaluate_0.10.1  rmarkdown_1.8    labeling_0.3     stringi_1.1.6   
 [25] scales_0.4.1     backports_1.1.0  pkgconfig_2.0.1 </code></pre>
 </div>
 
