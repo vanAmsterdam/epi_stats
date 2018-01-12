@@ -315,10 +315,10 @@ div.tocify {
 shared across the workflowr files. -->
 <!-- Update knitr chunk options -->
 <!-- Insert the date the file was last updated -->
-<p><strong>Last updated:</strong> 2018-01-09</p>
+<p><strong>Last updated:</strong> 2018-01-12</p>
 <!-- Insert the code version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
-<p><strong>Code version:</strong> 6029a62</p>
+<p><strong>Code version:</strong> 985c8f5</p>
 <!-- Add your analysis here -->
 <div id="setup" class="section level2">
 <h2>Setup</h2>
@@ -820,8 +820,8 @@ Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&
 </div>
 </div>
 </div>
-<div id="day-2.-logistic-regression-excercises-1" class="section level2">
-<h2>Day 2. Logistic regression ‘excercises 1’</h2>
+<div id="day-2.-logistic-regression-part-1" class="section level2">
+<h2>Day 2. Logistic regression part 1</h2>
 <div id="r-commands" class="section level3">
 <h3>R commands</h3>
 <p>First the data file needs to be read in. The data is in episode.txt. It is a text file. The first lines are:</p>
@@ -1214,43 +1214,716 @@ dalmatian %&gt;%
   ggplot(aes(x = fhs, fill = deaf, col = deaf)) + 
   geom_density(alpha = 0.5)</code></pre>
 <p><img src="figure/assignments_week1.Rmd/unnamed-chunk-48-1.png" width="672" style="display: block; margin: auto;" /></p>
-<p><strong>Exercises 2</strong></p>
-<ol style="list-style-type: decimal">
-<li><p>osteochon.csv</p>
-<ol style="list-style-type: decimal">
-<li><p>Read in the data file osteochon.csv</p></li>
-<li><p>Fit a logistic regression model with the exposure variables food, ground and height.</p></li>
-<li><p>Give for each exposure variable the likelihood ratio test, when it is left out of the model. Decide which exposure should be left out.</p></li>
-<li><p>Fit the model without that exposure and do the same with this model as above. Continue until you decide nothing can be left out anymore.</p></li>
-<li><p>Describe the final model you are left with and interpret the result.</p></li>
-<li><p>Give profile confidence intervals for the estimates in the final model and</p></li>
-<li><p>Write a short account of the analysis you just did. It should contain what the analysis was and its results.</p></li>
-</ol></li>
-<li><p>episode.txt</p>
-<ol style="list-style-type: decimal">
-<li><p>Read in the file episode.txt</p></li>
-<li><p>Fit the logistic regression model with exposures immune and age and with log(followup) as an offset.</p></li>
-<li><p>Interpret the parameters and discuss the difference with the model without the offset.</p></li>
-<li><p>Can immune or age or both be left out? Use AIC to check this.</p></li>
-</ol></li>
-<li><p>osteochon.csv</p>
-<ol style="list-style-type: decimal">
-<li><p>Read in the data file osteochon.csv</p></li>
-<li><p>Fit the logistic regression model with exposures father, food, ground and heigt. (Remember to use factor() for food, ground and father)</p></li>
-<li><p>Use likelihood ratio tests to see which exposure can be left out, then fit that model and again see which exposure can be left out. Continue until no more exposures can be left out.</p></li>
-<li><p>Discuss the final model. Give a possible interpretation of the terms in the model and why they are likely to be related to osteochondrosis.</p></li>
-<li><p>Start off with the full model again and try to reduce it by using AIC.</p></li>
-<li><p>Is the final model the same as the one you got with the likelihood ratio tests? Can you explain this?</p></li>
-<li><p>Give the 95% profile confidence interval for height and give the interpretation of this.</p></li>
-</ol></li>
-<li><p>lowbirth .dat</p>
-<ol style="list-style-type: decimal">
-<li><p>Fit the logistic regression model with exposures age, lwt, race, smoke, ptl, ht, ui and ftv.</p></li>
-<li><p>Find out which exposures can be left out using AIC.</p></li>
-<li><p>Discuss the final model.</p></li>
-<li><p>Write a short report about your findings. Include the statistical model you used, the method you used to reduce this model and the final results (estimates and standard errors).</p></li>
-</ol></li>
-</ol>
+</div>
+</div>
+<div id="exercises-2" class="section level2">
+<h2>Exercises 2</h2>
+<div id="osteochon.csv" class="section level3">
+<h3>1. osteochon.csv</h3>
+<pre><code>1.  Read in the data file osteochon.csv</code></pre>
+<pre class="r"><code>ost &lt;- read.csv(fromParentDir(&quot;data/osteochon.csv&quot;))
+str(ost)</code></pre>
+<pre><code>&#39;data.frame&#39;:   440 obs. of  5 variables:
+ $ father: int  1 1 1 1 1 1 1 1 1 1 ...
+ $ food  : int  3 2 1 2 2 1 1 2 2 2 ...
+ $ ground: int  2 1 2 1 1 2 2 1 1 2 ...
+ $ height: int  166 165 160 163 161 155 162 166 162 164 ...
+ $ oc    : int  0 0 1 0 0 0 0 0 0 0 ...</code></pre>
+<pre><code>2.  Fit a logistic regression model with the exposure variables
+    food, ground and height.</code></pre>
+<pre class="r"><code>fit &lt;- glm(oc ~ food + ground + height, data = ost, family = binomial)
+summary(fit)</code></pre>
+<pre><code>
+Call:
+glm(formula = oc ~ food + ground + height, family = binomial, 
+    data = ost)
+
+Deviance Residuals: 
+    Min       1Q   Median       3Q      Max  
+-0.9326  -0.5907  -0.5059  -0.4202   2.5172  
+
+Coefficients:
+             Estimate Std. Error z value Pr(&gt;|z|)    
+(Intercept) -18.42595    5.53937  -3.326  0.00088 ***
+food         -0.05759    0.23212  -0.248  0.80404    
+ground        0.40544    0.29397   1.379  0.16784    
+height        0.09785    0.03352   2.919  0.00351 ** 
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+(Dispersion parameter for binomial family taken to be 1)
+
+    Null deviance: 361.41  on 439  degrees of freedom
+Residual deviance: 351.00  on 436  degrees of freedom
+AIC: 359
+
+Number of Fisher Scoring iterations: 4</code></pre>
+<pre><code>3.  Give for each exposure variable the likelihood ratio test, when
+    it is left out of the model. Decide which exposure should be
+    left out.</code></pre>
+<pre class="r"><code>drop1(fit, test = &quot;Chisq&quot;)</code></pre>
+<pre><code>Single term deletions
+
+Model:
+oc ~ food + ground + height
+       Df Deviance    AIC    LRT Pr(&gt;Chi)   
+&lt;none&gt;      351.00 359.00                   
+food    1   351.06 357.06 0.0615 0.804078   
+ground  1   352.96 358.96 1.9644 0.161049   
+height  1   359.89 365.89 8.8931 0.002862 **
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<p>Both <code>food</code> and <code>ground</code> can be removed from the model without significantly reducing the likelihood of the model. When we are doing stepwise elimination, we should first remove <code>food</code> from the model.</p>
+<pre><code>4.  Fit the model without that exposure and do the same with this
+    model as above. Continue until you decide nothing can be left
+    out anymore.</code></pre>
+<pre class="r"><code>fit2 &lt;- glm(oc ~ ground + height, data = ost, family = binomial)
+drop1(fit2, test = &quot;Chisq&quot;)</code></pre>
+<pre><code>Single term deletions
+
+Model:
+oc ~ ground + height
+       Df Deviance    AIC    LRT Pr(&gt;Chi)   
+&lt;none&gt;      351.06 357.06                   
+ground  1   352.99 356.99 1.9343 0.164291   
+height  1   359.91 363.91 8.8519 0.002928 **
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<p>We can remove <code>ground</code> here as expected. Notice that the p-value for removing <code>ground</code> from the model is exacty the same as in the previous step</p>
+<pre class="r"><code>fit3 &lt;- glm(oc ~ height, data = ost, family = binomial)
+drop1(fit3, test = &quot;Chisq&quot;)</code></pre>
+<pre><code>Single term deletions
+
+Model:
+oc ~ height
+       Df Deviance    AIC    LRT Pr(&gt;Chi)   
+&lt;none&gt;      352.99 356.99                   
+height  1   361.41 363.41 8.4226 0.003706 **
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<p>Only <code>height</code> remains, we can not remove that one.</p>
+<pre><code>5.  Describe the final model you are left with and interpret the
+    result.</code></pre>
+<pre class="r"><code>summary(fit3)</code></pre>
+<pre><code>
+Call:
+glm(formula = oc ~ height, family = binomial, data = ost)
+
+Deviance Residuals: 
+    Min       1Q   Median       3Q      Max  
+-0.9325  -0.5938  -0.5208  -0.4357   2.3829  
+
+Coefficients:
+             Estimate Std. Error z value Pr(&gt;|z|)   
+(Intercept) -17.31649    5.47881  -3.161  0.00157 **
+height        0.09440    0.03318   2.845  0.00444 **
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+(Dispersion parameter for binomial family taken to be 1)
+
+    Null deviance: 361.41  on 439  degrees of freedom
+Residual deviance: 352.99  on 438  degrees of freedom
+AIC: 356.99
+
+Number of Fisher Scoring iterations: 4</code></pre>
+<p>In our final model, we see that only <code>height</code> is included. When height increases, the odds of getting osteochondrosis increases.</p>
+<pre><code>6.  Give profile confidence intervals for the estimates in the final
+    model and</code></pre>
+<pre class="r"><code>confint(fit3)</code></pre>
+<pre><code>                  2.5 %     97.5 %
+(Intercept) -28.2865831 -6.7577637
+height        0.0303029  0.1606951</code></pre>
+<p>From the help page <code>help(confint)</code> we can read that this function calls method <code>confint.glm</code> from package <code>MASS</code>, which uses the profile method (and not the Wald method), which we want.</p>
+<pre><code>7.  Write a short account of the analysis you just did. It should
+    contain what the analysis was and its results.</code></pre>
+<p>Left to reader.</p>
+</div>
+<div id="episode.txt-1" class="section level3">
+<h3>2. episode.txt</h3>
+<pre><code>1.  Read in the file episode.txt</code></pre>
+<pre class="r"><code>episode &lt;- read.table(fromParentDir(&quot;data/episode.txt&quot;), header = T)
+str(episode)</code></pre>
+<pre><code>&#39;data.frame&#39;:   98 obs. of  4 variables:
+ $ episode : int  0 0 1 0 0 0 0 0 1 1 ...
+ $ followup: int  24 12 6 6 3 6 4 3 6 13 ...
+ $ cd4     : int  125 50 30 80 170 95 35 50 25 15 ...
+ $ age     : int  35 34 37 36 35 26 44 42 64 38 ...</code></pre>
+<pre><code>2.  Fit the logistic regression model with exposures immune and age
+    and with log(followup) as an offset.</code></pre>
+<pre class="r"><code>fit &lt;- glm(episode ~ cd4 + age + offset(log(followup)), data = episode, 
+           family = binomial)
+summary(fit)</code></pre>
+<pre><code>
+Call:
+glm(formula = episode ~ cd4 + age + offset(log(followup)), family = binomial, 
+    data = episode)
+
+Deviance Residuals: 
+     Min        1Q    Median        3Q       Max  
+-1.41569  -0.64337  -0.31148  -0.09379   2.46146  
+
+Coefficients:
+             Estimate Std. Error z value Pr(&gt;|z|)   
+(Intercept) -3.773165   1.272292  -2.966  0.00302 **
+cd4         -0.005509   0.002254  -2.444  0.01452 * 
+age          0.024287   0.028195   0.861  0.38902   
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+(Dispersion parameter for binomial family taken to be 1)
+
+    Null deviance: 93.159  on 97  degrees of freedom
+Residual deviance: 78.968  on 95  degrees of freedom
+AIC: 84.968
+
+Number of Fisher Scoring iterations: 6</code></pre>
+<pre><code>3.  Interpret the parameters and discuss the difference with the
+    model without the offset.</code></pre>
+<pre class="r"><code>fit2 &lt;- glm(episode ~ cd4 + age, data = episode, 
+           family = binomial)
+summary(fit2)</code></pre>
+<pre><code>
+Call:
+glm(formula = episode ~ cd4 + age, family = binomial, data = episode)
+
+Deviance Residuals: 
+     Min        1Q    Median        3Q       Max  
+-1.17309  -0.73441  -0.34569  -0.08989   2.58264  
+
+Coefficients:
+             Estimate Std. Error z value Pr(&gt;|z|)   
+(Intercept) -2.010532   1.282568  -1.568  0.11698   
+cd4         -0.005870   0.002253  -2.605  0.00918 **
+age          0.036245   0.028522   1.271  0.20382   
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+(Dispersion parameter for binomial family taken to be 1)
+
+    Null deviance: 90.424  on 97  degrees of freedom
+Residual deviance: 73.395  on 95  degrees of freedom
+AIC: 79.395
+
+Number of Fisher Scoring iterations: 6</code></pre>
+<p>In the model without the offset, only the intercept changes. This indicates that the baseline risk is dependent on follow-up (which makes sense), but there seems to be no confounding effect of follow-up on CD4 or age.</p>
+<pre><code>4.  Can immune or age or both be left out? Use AIC to check this.</code></pre>
+<pre class="r"><code>drop1(fit2)</code></pre>
+<pre><code>Single term deletions
+
+Model:
+episode ~ cd4 + age
+       Df Deviance    AIC
+&lt;none&gt;      73.395 79.395
+cd4     1   87.063 91.063
+age     1   75.043 79.043</code></pre>
+<p>Age can be left out, it will make the AIC decrease</p>
+</div>
+<div id="osteochon.csv-1" class="section level3">
+<h3>3. osteochon.csv</h3>
+<pre><code>1.  Read in the data file osteochon.csv</code></pre>
+<pre class="r"><code>ost &lt;- read.csv(fromParentDir(&quot;data/osteochon.csv&quot;), header = T)
+str(ost)</code></pre>
+<pre><code>&#39;data.frame&#39;:   440 obs. of  5 variables:
+ $ father: int  1 1 1 1 1 1 1 1 1 1 ...
+ $ food  : int  3 2 1 2 2 1 1 2 2 2 ...
+ $ ground: int  2 1 2 1 1 2 2 1 1 2 ...
+ $ height: int  166 165 160 163 161 155 162 166 162 164 ...
+ $ oc    : int  0 0 1 0 0 0 0 0 0 0 ...</code></pre>
+<pre><code>2.  Fit the logistic regression model with exposures father, food,
+    ground and heigt. (Remember to use factor() for food, ground and
+    father)
+    </code></pre>
+<pre class="r"><code>fit &lt;- glm(oc ~ factor(father)+factor(food)+factor(ground)+height, 
+           data = ost, family = binomial)
+summary(fit)</code></pre>
+<pre><code>
+Call:
+glm(formula = oc ~ factor(father) + factor(food) + factor(ground) + 
+    height, family = binomial, data = ost)
+
+Deviance Residuals: 
+     Min        1Q    Median        3Q       Max  
+-1.31760  -0.60006  -0.42885  -0.00014   2.66411  
+
+Coefficients:
+                   Estimate Std. Error z value Pr(&gt;|z|)   
+(Intercept)       -21.22072    6.49750  -3.266  0.00109 **
+factor(father)2    -0.36855    1.08219  -0.341  0.73343   
+factor(father)3     0.29233    1.09129   0.268  0.78880   
+factor(father)4     1.28479    0.99157   1.296  0.19507   
+factor(father)5   -16.28480 1931.91844  -0.008  0.99327   
+factor(father)6    -0.43177    1.08223  -0.399  0.68992   
+factor(father)7     0.92181    0.94354   0.977  0.32858   
+factor(father)8     0.10411    1.09103   0.095  0.92398   
+factor(father)9    -0.32744    1.07269  -0.305  0.76018   
+factor(father)10    0.32104    1.01286   0.317  0.75127   
+factor(father)11    0.05689    1.09009   0.052  0.95838   
+factor(father)12  -17.00697 1640.47966  -0.010  0.99173   
+factor(father)13    0.94060    1.03143   0.912  0.36180   
+factor(father)14  -17.06297 1864.54502  -0.009  0.99270   
+factor(father)15  -16.73689 1601.33090  -0.010  0.99166   
+factor(father)16   -0.88182    1.29308  -0.682  0.49527   
+factor(father)17  -16.54058 1763.47840  -0.009  0.99252   
+factor(father)18    0.32694    1.02005   0.321  0.74858   
+factor(father)19    0.49285    1.02140   0.483  0.62943   
+factor(father)20    0.88794    1.02911   0.863  0.38823   
+factor(father)21   -0.99384    1.29472  -0.768  0.44272   
+factor(father)22   -0.30801    1.08686  -0.283  0.77688   
+factor(father)23   -1.45067    1.31421  -1.104  0.26967   
+factor(father)24    0.19011    0.99870   0.190  0.84903   
+factor(father)25    0.76143    0.95690   0.796  0.42619   
+factor(father)26    0.12745    1.07746   0.118  0.90584   
+factor(father)27    1.03615    1.00323   1.033  0.30169   
+factor(father)28   -0.21298    1.08985  -0.195  0.84506   
+factor(father)29    0.86990    0.99215   0.877  0.38060   
+factor(father)30  -16.68318 1949.51777  -0.009  0.99317   
+factor(food)2      -0.30636    0.46885  -0.653  0.51347   
+factor(food)3      -0.34040    0.53165  -0.640  0.52199   
+factor(ground)2     0.35120    0.32363   1.085  0.27784   
+height              0.11854    0.03955   2.997  0.00272 **
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+(Dispersion parameter for binomial family taken to be 1)
+
+    Null deviance: 361.41  on 439  degrees of freedom
+Residual deviance: 304.90  on 406  degrees of freedom
+AIC: 372.9
+
+Number of Fisher Scoring iterations: 17</code></pre>
+<pre><code>3.  Use likelihood ratio tests to see which exposure can be left
+    out, then fit that model and again see which exposure can be
+    left out. Continue until no more exposures can be left out.</code></pre>
+<pre class="r"><code>drop1(fit, test = &quot;Chisq&quot;)</code></pre>
+<pre><code>Single term deletions
+
+Model:
+oc ~ factor(father) + factor(food) + factor(ground) + height
+               Df Deviance    AIC    LRT Pr(&gt;Chi)   
+&lt;none&gt;              304.90 372.90                   
+factor(father) 29   350.89 360.89 45.994 0.023496 * 
+factor(food)    2   305.36 369.36  0.462 0.793692   
+factor(ground)  1   306.10 372.10  1.200 0.273289   
+height          1   314.50 380.50  9.600 0.001945 **
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<p>Let’s drop <code>food</code> as it has a LRT &lt; 1</p>
+<pre class="r"><code>fit2 &lt;- glm(oc ~ factor(father)+factor(ground)+height, 
+           data = ost, family = binomial)
+drop1(fit2, test = &quot;Chisq&quot;)</code></pre>
+<pre><code>Single term deletions
+
+Model:
+oc ~ factor(father) + factor(ground) + height
+               Df Deviance    AIC    LRT Pr(&gt;Chi)   
+&lt;none&gt;              305.36 369.36                   
+factor(father) 29   351.06 357.06 45.696 0.025150 * 
+factor(ground)  1   306.67 368.67  1.310 0.252376   
+height          1   314.72 376.72  9.354 0.002224 **
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<p>Let’s drop <code>ground</code> since the <span class="math inline">\(\chi^2\)</span> test is not significant (it does not significantly reduce the likelihood of our model)</p>
+<pre class="r"><code>fit3 &lt;- glm(oc ~ factor(father)+height, 
+           data = ost, family = binomial)
+drop1(fit3, test = &quot;Chisq&quot;)</code></pre>
+<pre><code>Single term deletions
+
+Model:
+oc ~ factor(father) + height
+               Df Deviance    AIC    LRT Pr(&gt;Chi)   
+&lt;none&gt;              306.67 368.67                   
+factor(father) 29   352.99 356.99 46.320 0.021801 * 
+height          1   315.80 375.80  9.128 0.002517 **
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<p>We cannot reduce the model any further.</p>
+<pre><code>4.  Discuss the final model. Give a possible interpretation of the
+    terms in the model and why they are likely to be related to
+    osteochondrosis.
+    </code></pre>
+<p>Left for your own interpretation.</p>
+<pre><code>5.  Start off with the full model again and try to reduce it by
+    using AIC.</code></pre>
+<pre class="r"><code>drop1(fit)</code></pre>
+<pre><code>Single term deletions
+
+Model:
+oc ~ factor(father) + factor(food) + factor(ground) + height
+               Df Deviance    AIC
+&lt;none&gt;              304.90 372.90
+factor(father) 29   350.89 360.89
+factor(food)    2   305.36 369.36
+factor(ground)  1   306.10 372.10
+height          1   314.50 380.50</code></pre>
+<p>Let’s drop <code>father</code> as it decreases the AIC the most</p>
+<pre class="r"><code>fit2 &lt;- glm(oc ~ factor(food)+factor(ground)+height, 
+           data = ost, family = binomial)
+drop1(fit2)</code></pre>
+<pre><code>Single term deletions
+
+Model:
+oc ~ factor(food) + factor(ground) + height
+               Df Deviance    AIC
+&lt;none&gt;              350.89 360.89
+factor(food)    2   351.06 357.06
+factor(ground)  1   352.76 360.76
+height          1   359.84 367.84</code></pre>
+<p>Let’s drop <code>food</code></p>
+<pre class="r"><code>fit3 &lt;- glm(oc ~ factor(ground)+height, 
+           data = ost, family = binomial)
+drop1(fit3)</code></pre>
+<pre><code>Single term deletions
+
+Model:
+oc ~ factor(ground) + height
+               Df Deviance    AIC
+&lt;none&gt;              351.06 357.06
+factor(ground)  1   352.99 356.99
+height          1   359.91 363.91</code></pre>
+<p>Let’s drop <code>ground</code>. Losing this variable does not change the AIC more than 2, but is is a simpler model so it is preferrable by ‘Ockham’s razor’</p>
+<pre class="r"><code>fit3 &lt;- glm(oc ~ height, 
+           data = ost, family = binomial)
+drop1(fit3)</code></pre>
+<pre><code>Single term deletions
+
+Model:
+oc ~ height
+       Df Deviance    AIC
+&lt;none&gt;      352.99 356.99
+height  1   361.41 363.41</code></pre>
+<p>We cannot reduce the model any further without decreasing the likelihood.</p>
+<pre><code>6.  Is the final model the same as the one you got with the
+    likelihood ratio tests? Can you explain this?</code></pre>
+<p>The <code>father</code> model takes up 29 degrees of freedom, because it has 30 uniqe values. This makes the model estimate 29 parameters (means for each group). The AIC ‘punishes’ more complex models by adding 2 for each included predictor.</p>
+<pre><code>7.  Give the 95% profile confidence interval for height and give the
+    interpretation of this.</code></pre>
+<pre class="r"><code>confint(fit3)</code></pre>
+<pre><code>                  2.5 %     97.5 %
+(Intercept) -28.2865831 -6.7577637
+height        0.0303029  0.1606951</code></pre>
+<p>This confidence interval does not include 0. This means that for any null hypothesis of <span class="math inline">\(\beta_{height}\)</span> within this confidence interval, we would not reject the null-hypothesis, given these data.</p>
+</div>
+<div id="lowbirth-.dat" class="section level3">
+<h3>4. lowbirth .dat</h3>
+<p>This was skipped for now, see the previous excercise</p>
+<pre><code>1.  Fit the logistic regression model with exposures age, lwt, race,
+    smoke, ptl, ht, ui and ftv.
+
+2.  Find out which exposures can be left out using AIC.
+
+3.  Discuss the final model.
+
+4.  Write a short report about your findings. Include the
+    statistical model you used, the method you used to reduce this
+    model and the final results (estimates and standard errors).</code></pre>
+</div>
+</div>
+<div id="day-5.-poisson-and-glm" class="section level2">
+<h2>Day 5. Poisson and GLM</h2>
+<div id="lung-cancer" class="section level3">
+<h3>1. Lung cancer</h3>
+<blockquote>
+<p>To the lung cancer count data from the text, fit the model $()=_0+(population;size/1000)+CITY+AGE $. The offset is population size in thousands.</p>
+</blockquote>
+<pre class="r"><code>lung &lt;- read.table(fromParentDir(&quot;data/cancer&quot;), header = T)
+str(lung)</code></pre>
+<pre><code>&#39;data.frame&#39;:   24 obs. of  4 variables:
+ $ age  : int  1 2 3 4 5 6 1 2 3 4 ...
+ $ city : int  1 1 1 1 1 1 2 2 2 2 ...
+ $ cases: int  11 11 11 10 11 10 13 6 15 10 ...
+ $ pop  : int  3059 800 710 581 509 605 2879 1083 923 834 ...</code></pre>
+<pre class="r"><code>fit &lt;- glm(cases ~ offset(log(pop/1000)) + factor(city) + factor(age), 
+           data = lung, family = poisson)
+summary(fit)</code></pre>
+<pre><code>
+Call:
+glm(formula = cases ~ offset(log(pop/1000)) + factor(city) + 
+    factor(age), family = poisson, data = lung)
+
+Deviance Residuals: 
+     Min        1Q    Median        3Q       Max  
+-2.63573  -0.67296  -0.03436   0.37258   1.85267  
+
+Coefficients:
+              Estimate Std. Error z value Pr(&gt;|z|)    
+(Intercept)     1.2757     0.2003   6.370 1.89e-10 ***
+factor(city)2  -0.3301     0.1815  -1.818   0.0690 .  
+factor(city)3  -0.3715     0.1878  -1.978   0.0479 *  
+factor(city)4  -0.2723     0.1879  -1.450   0.1472    
+factor(age)2    1.1010     0.2483   4.434 9.23e-06 ***
+factor(age)3    1.5186     0.2316   6.556 5.53e-11 ***
+factor(age)4    1.7677     0.2294   7.704 1.31e-14 ***
+factor(age)5    1.8569     0.2353   7.891 3.00e-15 ***
+factor(age)6    1.4197     0.2503   5.672 1.41e-08 ***
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+(Dispersion parameter for poisson family taken to be 1)
+
+    Null deviance: 129.908  on 23  degrees of freedom
+Residual deviance:  23.447  on 15  degrees of freedom
+AIC: 137.84
+
+Number of Fisher Scoring iterations: 5</code></pre>
+<blockquote>
+<p>Make a plot of the deviance residuals against the fitted values and discuss this plot.</p>
+</blockquote>
+<pre class="r"><code>plot(fit, which = 3)</code></pre>
+<p><img src="figure/assignments_week1.Rmd/unnamed-chunk-72-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>For the lower predicted values, there are some observations with high deviance, namely 12, 7 and 18. There does not seem to be a lot of structure in the residuals, which indicates that the model fit’s the data pretty well.</p>
+<blockquote>
+<p>See which terms are needed in the model.</p>
+</blockquote>
+<pre class="r"><code>drop1(fit)</code></pre>
+<pre><code>Single term deletions
+
+Model:
+cases ~ offset(log(pop/1000)) + factor(city) + factor(age)
+             Df Deviance    AIC
+&lt;none&gt;            23.447 137.84
+factor(city)  3   28.307 136.69
+factor(age)   5  126.515 230.90</code></pre>
+<p>Dropping <code>city</code> would decrease the AIC, so we can do that. Dropping <code>age</code> increases the model by a great amount.</p>
+<pre class="r"><code>fit2 &lt;- glm(cases ~ offset(log(pop/1000)) + factor(age), 
+           data = lung, family = poisson)
+summary(fit2)</code></pre>
+<pre><code>
+Call:
+glm(formula = cases ~ offset(log(pop/1000)) + factor(age), family = poisson, 
+    data = lung)
+
+Deviance Residuals: 
+    Min       1Q   Median       3Q      Max  
+-2.8520  -0.6424  -0.1067   0.7853   1.5468  
+
+Coefficients:
+             Estimate Std. Error z value Pr(&gt;|z|)    
+(Intercept)    1.0455     0.1741   6.006 1.90e-09 ***
+factor(age)2   1.0823     0.2481   4.363 1.29e-05 ***
+factor(age)3   1.5017     0.2314   6.489 8.66e-11 ***
+factor(age)4   1.7503     0.2292   7.637 2.22e-14 ***
+factor(age)5   1.8472     0.2352   7.855 4.00e-15 ***
+factor(age)6   1.4083     0.2501   5.630 1.80e-08 ***
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+(Dispersion parameter for poisson family taken to be 1)
+
+    Null deviance: 129.908  on 23  degrees of freedom
+Residual deviance:  28.307  on 18  degrees of freedom
+AIC: 136.69
+
+Number of Fisher Scoring iterations: 5</code></pre>
+<blockquote>
+<p>Give the estimates of the best fitted model and give their profile likelihood intervals and discuss these.</p>
+</blockquote>
+<pre class="r"><code>confint(fit2)</code></pre>
+<pre><code>                 2.5 %   97.5 %
+(Intercept)  0.6837463 1.368330
+factor(age)2 0.5930558 1.570406
+factor(age)3 1.0506603 1.961774
+factor(age)4 1.3043879 2.206600
+factor(age)5 1.3876652 2.313616
+factor(age)6 0.9143186 1.899720</code></pre>
+<p>For each age group, the confidence interval does not include 0, which implies a significant difference between the groups.</p>
+<p>The risk seems to increase monotonically up untill age catergory 5, after which it decreases a little. Let’s see if there are enough observations in that category</p>
+<pre class="r"><code>lung %&gt;%
+  group_by(age) %&gt;%
+  summarize(sum(pop))</code></pre>
+<pre><code># A tibble: 6 x 2
+    age `sum(pop)`
+  &lt;int&gt;      &lt;int&gt;
+1     1      11600
+2     2       3811
+3     3       3367
+4     4       2748
+5     5       2217
+6     6       2665</code></pre>
+<p>The populution is not too small for this upper age category, which gives us no reason to discard the possibility that risk goes down a little for the upper age category.</p>
+</div>
+<div id="coronary" class="section level3">
+<h3>2. Coronary</h3>
+<blockquote>
+<p>The table above gives the number of coronary deaths for smokers and nonsmokers per age group. Read in the data.</p>
+</blockquote>
+<pre class="r"><code>coronary &lt;- read.table(fromParentDir(&quot;data/coronary&quot;), header = T)
+str(coronary)</code></pre>
+<pre><code>&#39;data.frame&#39;:   10 obs. of  4 variables:
+ $ Age   : int  1 1 2 2 3 3 4 4 5 5
+ $ Smoke : int  1 0 1 0 1 0 1 0 1 0
+ $ deaths: int  32 2 104 12 206 28 186 28 102 31
+ $ Pyears: int  52407 18790 43248 10673 28612 5710 12663 2585 5317 1462</code></pre>
+<blockquote>
+<p>Use a poisson model to analyze the data. Use the likelihood ratio tests to see which terms are needed in the model.</p>
+</blockquote>
+<pre class="r"><code>fit &lt;- glm(deaths ~ Age + Smoke + offset(log(Pyears/1000)), data = coronary,
+           family = poisson)
+summary(fit)</code></pre>
+<pre><code>
+Call:
+glm(formula = deaths ~ Age + Smoke + offset(log(Pyears/1000)), 
+    family = poisson, data = coronary)
+
+Deviance Residuals: 
+    Min       1Q   Median       3Q      Max  
+-4.5712  -2.7562   0.2857   1.4261   3.7183  
+
+Coefficients:
+            Estimate Std. Error z value Pr(&gt;|z|)    
+(Intercept) -1.21057    0.13929  -8.691  &lt; 2e-16 ***
+Age          0.83583    0.02904  28.777  &lt; 2e-16 ***
+Smoke        0.40637    0.10720   3.791  0.00015 ***
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+(Dispersion parameter for poisson family taken to be 1)
+
+    Null deviance: 935.067  on 9  degrees of freedom
+Residual deviance:  69.182  on 7  degrees of freedom
+AIC: 130.25
+
+Number of Fisher Scoring iterations: 4</code></pre>
+<pre class="r"><code>drop1(fit, test = &quot;Chisq&quot;)</code></pre>
+<pre><code>Single term deletions
+
+Model:
+deaths ~ Age + Smoke + offset(log(Pyears/1000))
+       Df Deviance    AIC    LRT  Pr(&gt;Chi)    
+&lt;none&gt;       69.18 130.25                     
+Age     1   905.98 965.04 836.79 &lt; 2.2e-16 ***
+Smoke   1    85.01 144.08  15.83 6.932e-05 ***
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<p>We cannot reduce the model further without losing likelihood of our model</p>
+<blockquote>
+<p>Give a careful interpretation of the estimates</p>
+</blockquote>
+<p>The rate of coronary events per person year increases with age, and is higher for smokers.</p>
+<blockquote>
+<p>Are there age and smoke effects for the <span class="math inline">\(\log(\)</span>person years<span class="math inline">\()\)</span>. What can you say about the age effects and the smoke effects on the <span class="math inline">\(\log(\)</span>person years<span class="math inline">\()\)</span></p>
+</blockquote>
+<pre class="r"><code>fit2 &lt;- glm(deaths ~ Age + Smoke, data = coronary, family = poisson)
+summary(fit2)</code></pre>
+<pre><code>
+Call:
+glm(formula = deaths ~ Age + Smoke, family = poisson, data = coronary)
+
+Deviance Residuals: 
+   Min      1Q  Median      3Q     Max  
+-6.502  -3.075   0.445   1.588   7.035  
+
+Coefficients:
+            Estimate Std. Error z value Pr(&gt;|z|)    
+(Intercept)  2.34507    0.13518  17.347  &lt; 2e-16 ***
+Age          0.20617    0.02688   7.671  1.7e-14 ***
+Smoke        1.83060    0.10718  17.079  &lt; 2e-16 ***
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+(Dispersion parameter for poisson family taken to be 1)
+
+    Null deviance: 644.27  on 9  degrees of freedom
+Residual deviance: 157.59  on 7  degrees of freedom
+AIC: 218.66
+
+Number of Fisher Scoring iterations: 5</code></pre>
+<p>The estimate for age decreases and the estimate for smoke increases when the offset of person years is disregarded.</p>
+<p>This is an indication of confounding. As we can see immediately from the table, there are much less observed person years in the higher categories for age. This reduces the number of deaths in these categories, and thus our estimate of the effect of age.</p>
+<p>We also have observed more person years for smoking participants, which increases the number of deaths in those categories and makes us overestimate the effect of smoking on deaths if we disregard the person years offset.</p>
+</div>
+<div id="eggs" class="section level3">
+<h3>3. Eggs</h3>
+<blockquote>
+<p>In an experiment from 1996 the effects of crowding on reproductive properties of a certain species of leave beetle was examined. Cages of fixed size could contain either 1 male and 1 female or 5 males and 5 females. The temp variable contains the temperature which could be either 21 or 24. The TRT measurures the crowding which can be either “I” for cages with 1 female and “”G&quot; for cages with 5 females. The variable of interest was the number of eggs (NumEggs). A complicating feature is that in cages with 5 females, there is no easy way to indentify which females led a given eggmass. The variable unit can be disregarded The data is in the file BeetleEggCrowding.txt .</p>
+</blockquote>
+<p>There is no real question in this description, but we will model the number of eggs based on crowding and temperature. For a sensible model interpretation, we will model the number of eggs per female, by including this as an offset.</p>
+<pre class="r"><code>eggs &lt;- read.table(fromParentDir(&quot;data/BeetleEggCrowding.txt&quot;), header = T)
+str(eggs)</code></pre>
+<pre><code>&#39;data.frame&#39;:   84 obs. of  4 variables:
+ $ Temp   : int  21 21 21 21 21 21 21 21 21 21 ...
+ $ TRT    : Factor w/ 2 levels &quot;G&quot;,&quot;I&quot;: 2 2 2 2 2 2 2 2 2 2 ...
+ $ Unit   : int  1 2 3 4 5 6 7 8 9 10 ...
+ $ NumEggs: int  8 0 3 5 1 3 13 7 0 6 ...</code></pre>
+<p>Lets set <code>Temp</code> to factor as it has only 2 levels.</p>
+<pre class="r"><code>eggs %&lt;&gt;%
+  mutate(Temp = factor(Temp))</code></pre>
+<p>And create an offset variable for the number of females.</p>
+<p>This is a little tricky, first we assign the ‘labels’ 5 and 1 to the corresponding groups ‘G’ and ‘I’. Then we tell R to treat this as a character (not a number, but more like a letter) Then we convert this to a numeric wich is what we want for it.</p>
+<p>There are different ways of doing this, but this works.</p>
+<p>One remark: internally, factors are represented as number in R. So each category gets assigned an integer from 1 - nlevels. Converting a factor variable to numeric directly will return the category number, but we wanted the actual ‘1’ and ‘5’, so that’s why we first need conversion to character and then to numeric</p>
+<pre class="r"><code>eggs$females &lt;- eggs$TRT %&gt;%
+  factor(levels = c(&quot;G&quot;, &quot;I&quot;), labels = c(5, 1)) %&gt;%
+  as.character() %&gt;%
+  as.numeric()
+
+head(eggs)</code></pre>
+<pre><code>  Temp TRT Unit NumEggs females
+1   21   I    1       8       1
+2   21   I    2       0       1
+3   21   I    3       3       1
+4   21   I    4       5       1
+5   21   I    5       1       1
+6   21   I    6       3       1</code></pre>
+<p>Now lets model</p>
+<pre class="r"><code>fit &lt;- glm(NumEggs ~ Temp + TRT + offset(log(females)), data = eggs,
+           family = poisson)
+summary(fit)</code></pre>
+<pre><code>
+Call:
+glm(formula = NumEggs ~ Temp + TRT + offset(log(females)), family = poisson, 
+    data = eggs)
+
+Deviance Residuals: 
+   Min      1Q  Median      3Q     Max  
+-3.406  -2.623  -1.134   1.454   4.985  
+
+Coefficients:
+            Estimate Std. Error z value Pr(&gt;|z|)    
+(Intercept)  -0.2090     0.1365  -1.531  0.12585    
+Temp24        0.3574     0.1094   3.267  0.00109 ** 
+TRTI          1.3863     0.1346  10.300  &lt; 2e-16 ***
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+(Dispersion parameter for poisson family taken to be 1)
+
+    Null deviance: 637.85  on 83  degrees of freedom
+Residual deviance: 494.02  on 81  degrees of freedom
+AIC: 679.88
+
+Number of Fisher Scoring iterations: 6</code></pre>
+<p>We see that the number of eggs per female is higher in the ‘I’ group, so crowding reduces the number of eggs. Also, having a higher temperature is leads to more eggs.</p>
+<p>Let’s see if crowding and temperature interact.</p>
+<pre class="r"><code>fit2 &lt;- glm(NumEggs ~ Temp * TRT + offset(log(females)), data = eggs,
+           family = poisson)
+summary(fit2)</code></pre>
+<pre><code>
+Call:
+glm(formula = NumEggs ~ Temp * TRT + offset(log(females)), family = poisson, 
+    data = eggs)
+
+Deviance Residuals: 
+   Min      1Q  Median      3Q     Max  
+-3.817  -2.662  -1.076   1.575   5.174  
+
+Coefficients:
+            Estimate Std. Error z value Pr(&gt;|z|)    
+(Intercept)  -0.6650     0.2357  -2.821 0.004784 ** 
+Temp24        1.0415     0.2742   3.799 0.000145 ***
+TRTI          1.9299     0.2522   7.651 1.99e-14 ***
+Temp24:TRTI  -0.8379     0.2997  -2.796 0.005176 ** 
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+(Dispersion parameter for poisson family taken to be 1)
+
+    Null deviance: 637.85  on 83  degrees of freedom
+Residual deviance: 485.57  on 80  degrees of freedom
+AIC: 673.43
+
+Number of Fisher Scoring iterations: 6</code></pre>
+<p>Yes they do. So now wee see that in the non-crowded situation, a higher temperature does not increase the production as much as it does in the crowded situation.</p>
 </div>
 </div>
 <div id="session-information" class="section level2">
@@ -1272,13 +1945,13 @@ other attached packages:
 [5] dplyr_0.7.4    magrittr_1.5   epistats_0.1.0
 
 loaded via a namespace (and not attached):
- [1] Rcpp_0.12.14     knitr_1.18       bindr_0.1        munsell_0.4.3   
- [5] colorspace_1.3-2 R6_2.2.2         rlang_0.1.6      plyr_1.8.4      
- [9] tools_3.3.2      grid_3.3.2       gtable_0.2.0     git2r_0.20.0    
-[13] htmltools_0.3.6  lazyeval_0.2.0   yaml_2.1.16      rprojroot_1.2   
-[17] digest_0.6.13    assertthat_0.2.0 tibble_1.3.4     glue_1.2.0      
-[21] evaluate_0.10.1  rmarkdown_1.8    labeling_0.3     stringi_1.1.6   
-[25] scales_0.4.1     backports_1.1.0  pkgconfig_2.0.1 </code></pre>
+ [1] Rcpp_0.12.14     knitr_1.18       bindr_0.1        MASS_7.3-47     
+ [5] munsell_0.4.3    colorspace_1.3-2 R6_2.2.2         rlang_0.1.6     
+ [9] plyr_1.8.4       tools_3.3.2      grid_3.3.2       gtable_0.2.0    
+[13] git2r_0.20.0     htmltools_0.3.6  lazyeval_0.2.0   yaml_2.1.16     
+[17] rprojroot_1.2    digest_0.6.13    assertthat_0.2.0 tibble_1.3.4    
+[21] glue_1.2.0       evaluate_0.10.1  rmarkdown_1.8    labeling_0.3    
+[25] stringi_1.1.6    scales_0.4.1     backports_1.1.0  pkgconfig_2.0.1 </code></pre>
 </div>
 
 <hr>
