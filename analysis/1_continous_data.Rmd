@@ -231,27 +231,6 @@ summary(fit)
 aov(fit)
 ```
 
-Let's go to python
-
-```{r}
-df = data.frame(xcont, xgroup, y)
-feather::write_feather(df, "df.feather")
-```
-
-```{bash}
-which python
-```
-
-
-```{python, engine.path="/Users/vanAmsterdam/anaconda3/bin/python"}
-import pandas as pd
-import feather
-
-path = 'df.feather'
-df = feather.read_dataframe(path)
-
-print(df[:3])
-```
 
 
 ## Interaction
@@ -283,6 +262,9 @@ aov(fit)
 
 ```
 
+When a continous variable is only included as an interaction term, 
+it is called nesting. So the continous variable is nested in the 
+group variable.
 
 ## Session information
 

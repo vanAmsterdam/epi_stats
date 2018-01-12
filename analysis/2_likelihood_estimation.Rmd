@@ -110,18 +110,9 @@ y <- x1 %>%
 fit <- glm(y ~ x1, family = binomial)
 
 summary(fit)
-
 ```
 
 #### Create a general function for simulating logistic regression data
-
-```{r}
-data.frame(
-  
-)
-
-simulate_logit <- function() {print("foo")}
-```
 
 
 ## Maximam likelihood estimation
