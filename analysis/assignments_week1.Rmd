@@ -306,7 +306,7 @@ goodness of fit.
 Birthweight decreases with smoking as expected, and decreases in the presence 
 of hypertension. For older mothers, the effect of hypertension gets stronger.
 
-## Day 2. Logistic regression 'excercises 1'
+## Day 2. Logistic regression part 1
 
 ### R commands
 
@@ -509,7 +509,7 @@ with the logistic model.
 
 
 
-### 2.  lowbirth.dat
+### 2. lowbirth.dat
 
     1.  Read in the dataset lowbirth.dat
 
@@ -579,7 +579,7 @@ Since all models have exactly 1 predictor, this was to be expected.
 
 fit2, it has the lowest AIC.
 
-### 3.  pdd.csv
+### 3. pdd.csv
 
     1.  Read in the data file pdd.csv
 
@@ -648,7 +648,7 @@ exp(fit$coefficients[2])
 
 The odds ratio coincides with the odds ratio from the logistic regression model
 
-### 4.  Dalmatian.cvs
+### 4. Dalmatian.cvs
 
     1.  Read in the data file dalmatian.csv.
 
@@ -706,70 +706,236 @@ dalmatian %>%
 ```
 
 
-**Exercises 2**
+## Exercises 2
 
-1.  osteochon.csv
+### 1. osteochon.csv
 
     1.  Read in the data file osteochon.csv
+    
+```{r}
+ost <- read.csv(fromParentDir("data/osteochon.csv"))
+str(ost)
+```
 
     2.  Fit a logistic regression model with the exposure variables
         food, ground and height.
+
+```{r}
+fit <- glm(oc ~ food + ground + height, data = ost, family = binomial)
+summary(fit)
+```
+
 
     3.  Give for each exposure variable the likelihood ratio test, when
         it is left out of the model. Decide which exposure should be
         left out.
 
+```{r}
+drop1(fit, test = "Chisq")
+```
+
+Both `food` and `ground` can be removed from the model without significantly
+reducing the likelihood of the model. When we are doing stepwise elimination,
+we should first remove `food` from the model.
+
     4.  Fit the model without that exposure and do the same with this
         model as above. Continue until you decide nothing can be left
         out anymore.
 
+```{r}
+fit2 <- glm(oc ~ ground + height, data = ost, family = binomial)
+drop1(fit2, test = "Chisq")
+
+```
+
+We can remove `ground` here as expected. Notice that the p-value 
+for removing `ground` from the model is exacty the same as in the previous step
+
+```{r}
+fit3 <- glm(oc ~ height, data = ost, family = binomial)
+drop1(fit3, test = "Chisq")
+
+```
+
+Only `height` remains, we can not remove that one.
+
     5.  Describe the final model you are left with and interpret the
         result.
+
+```{r}
+summary(fit3)
+```
+
+In our final model, we see that only `height` is included.
+When height increases, the odds of getting osteochondrosis increases.
 
     6.  Give profile confidence intervals for the estimates in the final
         model and
 
+```{r}
+confint(fit3)
+```
+
+From the help page `help(confint)` we can read that this function 
+calls method `confint.glm` from package `MASS`, which uses the profile 
+method (and not the Wald method), which we want.
+
     7.  Write a short account of the analysis you just did. It should
         contain what the analysis was and its results.
 
-2.  episode.txt
+Left to reader.
+
+### 2. episode.txt
 
     1.  Read in the file episode.txt
+
+```{r}
+episode <- read.table(fromParentDir("data/episode.txt"), header = T)
+str(episode)
+```
 
     2.  Fit the logistic regression model with exposures immune and age
         and with log(followup) as an offset.
 
+```{r}
+fit <- glm(episode ~ cd4 + age + offset(log(followup)), data = episode, 
+           family = binomial)
+summary(fit)
+```
+
+
     3.  Interpret the parameters and discuss the difference with the
         model without the offset.
 
+```{r}
+fit2 <- glm(episode ~ cd4 + age, data = episode, 
+           family = binomial)
+summary(fit2)
+```
+
+In the model without the offset, only the intercept changes. 
+This indicates that the baseline risk is dependent on follow-up (which makes sense),
+but there seems to be no confounding effect of follow-up on CD4 or age.
+
     4.  Can immune or age or both be left out? Use AIC to check this.
 
-3.  osteochon.csv
+```{r}
+drop1(fit2)
+```
+
+Age can be left out, it will make the AIC decrease
+
+### 3. osteochon.csv
 
     1.  Read in the data file osteochon.csv
+
+```{r}
+ost <- read.csv(fromParentDir("data/osteochon.csv"), header = T)
+str(ost)
+```
+
 
     2.  Fit the logistic regression model with exposures father, food,
         ground and heigt. (Remember to use factor() for food, ground and
         father)
+        
+```{r}
+fit <- glm(oc ~ factor(father)+factor(food)+factor(ground)+height, 
+           data = ost, family = binomial)
+summary(fit)
+```
+
 
     3.  Use likelihood ratio tests to see which exposure can be left
         out, then fit that model and again see which exposure can be
         left out. Continue until no more exposures can be left out.
 
+```{r}
+drop1(fit, test = "Chisq")
+```
+
+Let's drop `food` as it has a LRT < 1
+
+```{r}
+fit2 <- glm(oc ~ factor(father)+factor(ground)+height, 
+           data = ost, family = binomial)
+drop1(fit2, test = "Chisq")
+```
+
+Let's drop `ground` since the $\chi^2$ test is not significant 
+(it does not significantly reduce the likelihood of our model)
+
+```{r}
+fit3 <- glm(oc ~ factor(father)+height, 
+           data = ost, family = binomial)
+drop1(fit3, test = "Chisq")
+```
+
+We cannot reduce the model any further.
+
     4.  Discuss the final model. Give a possible interpretation of the
         terms in the model and why they are likely to be related to
         osteochondrosis.
+        
+Left for your own interpretation.
 
     5.  Start off with the full model again and try to reduce it by
         using AIC.
 
+
+```{r}
+drop1(fit)
+```
+
+Let's drop `father` as it decreases the AIC the most
+
+```{r}
+fit2 <- glm(oc ~ factor(food)+factor(ground)+height, 
+           data = ost, family = binomial)
+drop1(fit2)
+```
+
+Let's drop `food`
+
+```{r}
+fit3 <- glm(oc ~ factor(ground)+height, 
+           data = ost, family = binomial)
+drop1(fit3)
+```
+
+Let's drop `ground`. Losing this variable does not change the AIC more than 
+2, but is is a simpler model so it is preferrable by 'Ockham's razor'
+
+```{r}
+fit3 <- glm(oc ~ height, 
+           data = ost, family = binomial)
+drop1(fit3)
+
+```
+
+We cannot reduce the model any further without decreasing the likelihood.
+
     6.  Is the final model the same as the one you got with the
         likelihood ratio tests? Can you explain this?
+
+The `father` model takes up 29 degrees of freedom, because it has 30 uniqe values.
+This makes the model estimate 29 parameters (means for each group). 
+The AIC 'punishes' more complex models by adding 2 for each included predictor.
 
     7.  Give the 95% profile confidence interval for height and give the
         interpretation of this.
 
-4.  lowbirth .dat
+```{r}
+confint(fit3)
+```
+
+This confidence interval does not include 0. This means that for any null 
+hypothesis of $\beta_{height}$ within this confidence interval, 
+we would not reject the null-hypothesis, given these data.
+
+### 4. lowbirth .dat
+
+This was skipped for now, see the previous excercise
 
     1.  Fit the logistic regression model with exposures age, lwt, race,
         smoke, ptl, ht, ui and ftv.
@@ -782,7 +948,186 @@ dalmatian %>%
         statistical model you used, the method you used to reduce this
         model and the final results (estimates and standard errors).
 
+## Day 5. Poisson and GLM
 
+### 1. Lung cancer
+
+> To the lung cancer count data from the text, fit the model $\ln(\mu)=\beta_0+\ln(population\;size/1000)+CITY+AGE  $. The offset is population size in thousands.
+
+```{r}
+lung <- read.table(fromParentDir("data/cancer"), header = T)
+str(lung)
+```
+
+```{r}
+fit <- glm(cases ~ offset(log(pop/1000)) + factor(city) + factor(age), 
+           data = lung, family = poisson)
+summary(fit)
+```
+
+> Make a plot of the deviance residuals against the fitted values and discuss this plot.
+
+```{r}
+plot(fit, which = 3)
+```
+
+For the lower predicted values, there are some observations with high deviance,
+ namely 12, 7 and 18. There does not seem to be a lot of structure in the 
+ residuals, which indicates that the model fit's the data pretty well.
+
+>  See which terms are needed in the model.
+
+```{r}
+drop1(fit)
+```
+
+Dropping `city` would decrease the AIC, so we can do that. Dropping `age` 
+increases the model by a great amount.
+
+```{r}
+fit2 <- glm(cases ~ offset(log(pop/1000)) + factor(age), 
+           data = lung, family = poisson)
+summary(fit2)
+```
+
+> Give the estimates of the best fitted model and give their profile likelihood intervals and discuss these.
+
+```{r}
+confint(fit2)
+```
+
+For each age group, the confidence interval does not include 0, 
+which implies a significant difference between the groups.
+
+The risk seems to increase monotonically up untill age catergory 5, after 
+which it decreases a little. 
+Let's see if there are enough observations in that category
+
+```{r}
+lung %>%
+  group_by(age) %>%
+  summarize(sum(pop))
+```
+
+The populution is not too small for this upper age category, 
+which gives us no reason to discard the possibility that risk goes down 
+a little for the upper age category.
+
+### 2. Coronary
+> The table above gives the number of coronary deaths for smokers and nonsmokers per age group. Read in the data.
+
+```{r}
+coronary <- read.table(fromParentDir("data/coronary"), header = T)
+str(coronary)
+```
+
+> Use a poisson model to analyze the data. Use the likelihood ratio tests to see which terms are needed in the model.
+
+```{r}
+fit <- glm(deaths ~ Age + Smoke + offset(log(Pyears/1000)), data = coronary,
+           family = poisson)
+summary(fit)
+drop1(fit, test = "Chisq")
+```
+
+
+We cannot reduce the model further without losing likelihood of our model
+
+> Give a careful interpretation of the estimates
+
+The rate of coronary events per person year increases with age, and is higher 
+for smokers. 
+
+> Are there age and smoke effects for the $\log($person years$)$. What can you say about the age effects and the smoke effects on the $\log($person years$)$
+
+```{r}
+fit2 <- glm(deaths ~ Age + Smoke, data = coronary, family = poisson)
+summary(fit2)
+```
+
+The estimate for age decreases and the estimate for smoke increases when 
+the offset of person years is disregarded. 
+
+This is an indication of confounding. As we can see immediately from the table,
+there are much less observed person years in the higher categories for age. 
+This reduces the number of deaths in these categories, and thus our estimate 
+of the effect of age.
+
+We also have observed more person years for smoking participants, 
+which increases the number of deaths in those categories and makes us 
+overestimate the effect of smoking on deaths if we disregard the person years
+offset.
+
+### 3. Eggs
+> In an experiment from 1996 the effects of crowding on reproductive properties of a certain species of leave beetle was examined. Cages of fixed size could contain either 1 male and 1 female or 5 males and 5 females. The temp variable contains the temperature which could be either 21 or 24. The TRT measurures the crowding which can be either "I" for cages with 1 female and ""G" for cages with 5 females. The variable of interest was the number of eggs  (NumEggs). A complicating feature is that in cages with 5 females, there is no easy way to indentify which females led a given eggmass.
+The variable unit can be disregarded 
+The data is in the file BeetleEggCrowding.txt .
+
+There is no real question in this description, but we will model the 
+number of eggs based on crowding and temperature. 
+For a sensible model interpretation, we will model the number of eggs per female,
+by including this as an offset.
+
+```{r}
+eggs <- read.table(fromParentDir("data/BeetleEggCrowding.txt"), header = T)
+str(eggs)
+```
+
+Lets set `Temp` to factor as it has only 2 levels.
+
+```{r}
+eggs %<>%
+  mutate(Temp = factor(Temp))
+```
+
+
+And create an offset variable for the number of females.
+
+This is a little tricky, first we assign the 'labels' 5 and 1 to the corresponding
+ groups 'G' and 'I'. 
+Then we tell R to treat this as a character (not a number, but more like a letter)
+Then we convert this to a numeric wich is what we want for it.
+
+There are different ways of doing this, but this works.
+
+One remark: internally, factors are represented as number in R. So each category 
+gets assigned an integer from 1 - nlevels. 
+Converting a factor variable to numeric directly will return the category number,
+but we wanted the actual '1' and '5', 
+so that's why we first need conversion to character and then to numeric
+
+```{r}
+eggs$females <- eggs$TRT %>%
+  factor(levels = c("G", "I"), labels = c(5, 1)) %>%
+  as.character() %>%
+  as.numeric()
+
+head(eggs)
+```
+
+Now lets model
+
+```{r}
+fit <- glm(NumEggs ~ Temp + TRT + offset(log(females)), data = eggs,
+           family = poisson)
+summary(fit)
+```
+
+We see that the number of eggs per female is higher in the 'I' group,
+so crowding reduces the number of eggs. Also, having a higher temperature 
+is leads to more eggs.
+
+Let's see if crowding and temperature interact.
+
+```{r}
+fit2 <- glm(NumEggs ~ Temp * TRT + offset(log(females)), data = eggs,
+           family = poisson)
+summary(fit2)
+```
+
+Yes they do. So now wee see that in the non-crowded situation, 
+a higher temperature does not increase the production as much as it 
+does in the crowded situation.
 
 ## Session information
 

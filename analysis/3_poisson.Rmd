@@ -1,0 +1,111 @@
+---
+title: "Count data and Poisson Regression"
+author: "Wouter van Amsterdam"
+date: 2018-01-12
+output: html_document
+---
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+```
+
+<!-- Update knitr chunk options -->
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+<!-- Insert the date the file was last updated -->
+```{r last-updated, echo=FALSE, results='asis'}
+```
+
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+```{r code-version, echo=FALSE, results='asis'}
+```
+
+<!-- Add your analysis here -->
+
+## Intro
+
+Tutor: Jan van den Broek
+
+### Profile likelihood
+
+Marginal likelihood of a parameter
+
+### Poisson distribution
+
+$$\ln(\mu) = linear\ model$$
+
+$$P(Y_i = y_i) = \frac{e^{-\mu}\mu^{y_i}}{y_i!}$$
+
+In rare disease situation, no offset necessary
+Grouped binomial data will not work, due to numerical 
+problems
+
+
+$$L(\mu) = \prod_i{\frac{e^{-\mu}\mu^{y_i}}{y_i!}}$$
+
+This gives
+
+$$l(\mu) = \sum_i{[-\mu + y_i\ln(\mu)-ln(y_i!)]}$$
+
+### With offset
+With offset for population this is interpreted as a risk:
+
+$$\ln(\frac{\mu}{population}) = linear\ model$$
+
+With offset for person time, it is interpreted as rates.
+
+## Exponential family
+
+* normal
+* gamma: concentrations
+* log-normal: concentrations / normal
+* inversed gaussian
+
+* exponential
+* chi-squared
+* beta
+* Dirichlet
+* Bernoulli
+* categorical
+* Poisson
+* Wishart
+* inverse Wishart
+* geometric
+
+### With restrictions
+
+* binomial (fixed number of trials)
+* multinomial (fixed number of trials)
+* negative binomial (fixed number of trials)
+
+### GLM
+
+* distribution from exponential family
+* linear predictor
+* there is a link function from linear predictor to distribution
+
+
+Remark: only for normal distribution the variance is independent of the mean.
+
+When there is a limited range (like strictly positive), the normal distribution is not appropriate
+
+## On science
+
+Chamberlain's method of multiple working hypothesis
+
+Instead of a single hypothesis.
+
+
+Likelihood connects models with data.
+All things that make biological sense can be used.
+
+
+## Session information
+
+<!-- Insert the session information into the document -->
+```{r session-info}
+```
