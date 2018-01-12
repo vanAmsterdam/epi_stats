@@ -315,10 +315,10 @@ div.tocify {
 shared across the workflowr files. -->
 <!-- Update knitr chunk options -->
 <!-- Insert the date the file was last updated -->
-<p><strong>Last updated:</strong> 2018-01-09</p>
+<p><strong>Last updated:</strong> 2018-01-12</p>
 <!-- Insert the code version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
-<p><strong>Code version:</strong> f01647e</p>
+<p><strong>Code version:</strong> 20b6bf6</p>
 <!-- Add your analysis here -->
 <div id="introduction" class="section level2">
 <h2>Introduction</h2>
@@ -417,11 +417,6 @@ Number of Fisher Scoring iterations: 3</code></pre>
 </div>
 <div id="create-a-general-function-for-simulating-logistic-regression-data" class="section level4">
 <h4>Create a general function for simulating logistic regression data</h4>
-<pre class="r"><code>data.frame(
-  
-)</code></pre>
-<pre><code>data frame with 0 columns and 0 rows</code></pre>
-<pre class="r"><code>simulate_logit &lt;- function() {print(&quot;foo&quot;)}</code></pre>
 </div>
 </div>
 </div>
@@ -490,7 +485,7 @@ plot(p_sec, log_likelihoods, ylim = c(-800,0))
 n2 &lt;- 100
 x2 &lt;- sample(c(0,1), size = n2, replace = T, prob = c(1-pi, pi))
 points(p_sec, map_dbl(p_sec, function(p) log_likelihood(p, x2)))</code></pre>
-<p><img src="figure/2_likelihood_estimation.Rmd/unnamed-chunk-4-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/2_likelihood_estimation.Rmd/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>Look at derivatives</p>
 <pre class="r"><code>set.seed(2)
 n_sec = 10^(1:6)
