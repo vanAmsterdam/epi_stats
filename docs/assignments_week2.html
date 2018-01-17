@@ -11,9 +11,9 @@
 
 <meta name="author" content="Wouter van Amsterdam" />
 
-<meta name="date" content="2017-10-29" />
+<meta name="date" content="2018-01-15" />
 
-<title>Assignments week 2 for Classical Methods in Data Analysis</title>
+<title>Assignments Modern Methods in Data Analysis, week 2</title>
 
 <script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -25,8 +25,8 @@
 <link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
 <script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
 <script src="site_libs/navigation-1.1/tabsets.js"></script>
-<link href="site_libs/highlightjs-1.1/textmate.css" rel="stylesheet" />
-<script src="site_libs/highlightjs-1.1/highlight.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
 <link href="site_libs/font-awesome-4.5.0/css/font-awesome.min.css" rel="stylesheet" />
 
 <style type="text/css">code{white-space: pre;}</style>
@@ -36,10 +36,12 @@
   }
 </style>
 <script type="text/javascript">
-if (window.hljs && document.readyState && document.readyState === "complete") {
-   window.setTimeout(function() {
-      hljs.initHighlighting();
-   }, 0);
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
 }
 </script>
 
@@ -302,9 +304,9 @@ div.tocify {
 
 
 
-<h1 class="title toc-ignore">Assignments week 2 for Classical Methods in Data Analysis</h1>
+<h1 class="title toc-ignore">Assignments Modern Methods in Data Analysis, week 2</h1>
 <h4 class="author"><em>Wouter van Amsterdam</em></h4>
-<h4 class="date"><em>2017-10-29</em></h4>
+<h4 class="date"><em>2018-01-15</em></h4>
 
 </div>
 
@@ -313,1873 +315,994 @@ div.tocify {
 shared across the workflowr files. -->
 <!-- Update knitr chunk options -->
 <!-- Insert the date the file was last updated -->
-<p><strong>Last updated:</strong> 2017-11-07</p>
+<p><strong>Last updated:</strong> 2018-01-17</p>
 <!-- Insert the code version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
-<p><strong>Code version:</strong> a78ee25</p>
+<p><strong>Code version:</strong> 74f93f8</p>
 <!-- Add your analysis here -->
-<div id="day-5-anova-and-non-parametric-methods" class="section level2">
-<h2>Day 5: ANOVA and non-parametric methods</h2>
-<div id="exercises-without-spss-or-r" class="section level3">
-<h3>Exercises without SPSS or R</h3>
-<div id="section" class="section level4">
-<h4>1.</h4>
-<blockquote>
-<p>Twelve plots of land were randomly divided into three groups of four plots. Two fertilizers, A and B, are applied for the cultivation of wheat while the third group C serves as a control group, without application of fertilizer. The wheat yields are as follows:</p>
-</blockquote>
-<pre class="r"><code>yields &lt;- matrix(c(72, 74, 60, 
-          67, 78, 64,
-          60, 72, 65, 
-          66, 68, 55),
-          nrow = 4, byrow = T,
-       dimnames = list(1:4, c(&quot;A&quot;, &quot;B&quot;, &quot;C&quot;)))
-yields</code></pre>
-<pre><code>   A  B  C
-1 72 74 60
-2 67 78 64
-3 60 72 65
-4 66 68 55</code></pre>
-<blockquote>
-<ol style="list-style-type: lower-alpha">
-<li>How would you perform the randomization for this study?</li>
-</ol>
-</blockquote>
-<p>Randomize assignment to fertilizers or control. Perform double blinding, including ‘placebo’ fertilizer.</p>
-<blockquote>
-<p>The following ANOVA table was produced on the basis of data above:</p>
-</blockquote>
-<blockquote>
-<p>Sum of Squares df Mean Square F p-value Between Groups 289.50 ? ? ? 0.015 Within Groups 186.75 ? ?<br />
-Total 476.25 ?</p>
-</blockquote>
-<blockquote>
-<ol start="2" style="list-style-type: lower-alpha">
-<li>Fill in the missing parts of the ANOVA table. See if you can find the p-value in the F tables.</li>
-</ol>
-</blockquote>
-<p>Recall that:</p>
-<p><span class="math display">\[df_{total} = \sum{(n_j)}-1\]</span> <span class="math display">\[df_{within} = \sum({n_j-1})\]</span> <span class="math display">\[df_{between} = J-1\]</span></p>
-<p>Here <span class="math inline">\(J = 3\)</span> the number of groups.</p>
-<pre class="r"><code>n_total = length(yields)
-n_groups = ncol(yields)
-n_pergroup = nrow(yields)
-
-sum_squares &lt;- function(x) sum((x-mean(x))^2)
-
-ss_total = sum_squares(as.vector(yields))
-ss_within = sum(apply(yields, 2, sum_squares)) # this applies &#39;sum_squares&#39; to each column of yields
-ss_between = sum(n_pergroup*((colMeans(yields) - mean(yields))^2))
-
-df_total = n_total - 1
-df_within = 3*(n_pergroup - 1)
-df_between = n_groups - 1
-
-ms_within = ss_within / df_within
-ms_between = ss_between / df_between
-
-f_value = ms_between / ms_within
-
-qf(p = 0.95, df1 = df_between, df2 = df_within)</code></pre>
-<pre><code>[1] 4.256495</code></pre>
-<p>So here <span class="math inline">\(a = 2\)</span> and <span class="math inline">\(b = 9\)</span>.</p>
-<blockquote>
-<ol start="3" style="list-style-type: lower-alpha">
-<li>Test the null hypothesis that there is no difference among the three treatments A, B and C, meaning that the use of fertilizers under the conditions of the experiment has no effect.</li>
-</ol>
-</blockquote>
-<pre class="r"><code>pf(q = f_value, df1 = df_between, df2 = df_within, lower.tail = F)</code></pre>
-<pre><code>[1] 0.01480523</code></pre>
-<blockquote>
-<ol start="4" style="list-style-type: lower-alpha">
-<li>If no significant overall result had been found by ANOVA, would the result of multiple post-hoc tests be valid?</li>
-</ol>
-</blockquote>
-<p>No, this is only meaningful when there is an overall effect found.</p>
-<p>Now replicate with built-in anova:</p>
-<pre class="r"><code>yields_melted = data.frame(group = rep(c(&quot;A&quot;, &quot;B&quot;, &quot;C&quot;), each = 4),
-                          yield = as.vector(yields))
-yields_melted</code></pre>
-<pre><code>   group yield
-1      A    72
-2      A    67
-3      A    60
-4      A    66
-5      B    74
-6      B    78
-7      B    72
-8      B    68
-9      C    60
-10     C    64
-11     C    65
-12     C    55</code></pre>
-<pre class="r"><code>summary(aov(yield~group, data = yields_melted))</code></pre>
-<pre><code>            Df Sum Sq Mean Sq F value Pr(&gt;F)  
-group        2  289.5  144.75   6.976 0.0148 *
-Residuals    9  186.8   20.75                 
----
-Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
-</div>
-<div id="section-1" class="section level4">
-<h4>2.</h4>
-<blockquote>
-<p>The aim of a certain survey in a hospital was to compare the waiting times of patients in two clinics. The waiting times (in minutes) were as follows:</p>
-</blockquote>
-<pre class="r"><code>load(epistats::fromParentDir(&quot;data/clinic.RData&quot;))
-summary(clinic)</code></pre>
-<pre><code>      TIME            CLINIC  
- Min.   : 4.00   clinic 1:61  
- 1st Qu.:11.00   clinic 2:11  
- Median :16.00   NA&#39;s    : 1  
- Mean   :18.94                
- 3rd Qu.:21.00                
- Max.   :90.00                
- NA&#39;s   :1                    </code></pre>
-<p>Looks like there is a row with only missing values, let’s remove that row.</p>
-<pre class="r"><code>clinic[is.na(clinic$TIME),]</code></pre>
-<pre><code>   TIME CLINIC
-73   NA   &lt;NA&gt;</code></pre>
-<pre class="r"><code>full_clinic &lt;- clinic
-clinic &lt;- clinic[!is.na(clinic$TIME),]</code></pre>
-<p>Create plots of the densities</p>
-<pre class="r"><code>require(ggplot2)</code></pre>
-<pre><code>Loading required package: ggplot2</code></pre>
-<pre class="r"><code>ggplot(clinic, aes(x = TIME, fill = CLINIC)) + 
-  geom_density(alpha = .7)</code></pre>
-<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;" /></p>
-<p>Both distributions of waiting times seem approximately normally distributed, with some right skewness and (of course) a lower bound of (&gt;)0.</p>
-<blockquote>
-<p>What are the problems when you compare these data? What type of analysis would you prefer? Which questions exactly are answered with your analysis? What would you do if some waiting times were â€˜censoredâ€™ because patients left the hospital? The data are given in the file clinic.sav or clinic.RData, if you want to easily get some descriptive statistics to help you answer the questions above.</p>
-</blockquote>
-<p>Both groups are of unequal size, and their variances seem to differ. This will cause troubles with ANOVA as it violates homoscedasticity. Since these are left-bounded varaibles, they seem approximately poisson-distributed. Currently we have no tools to deal with censored data. The most straightforward approach seems to be to do a Welch unpaired two-sample T-test (Welch = no equal variance assumption). We could look at the Wilcoxon rank sum test or the Mann-Whitney test. These tests do not require normality, however they do require homoscedasticity. Looking at the distributions of our data, heteroscedasticity seems to be a bigger problem than non-normality.</p>
-<pre class="r"><code>t.test(TIME ~ CLINIC, data = clinic, paired = F, var.equal = F)</code></pre>
-<pre><code>
-    Welch Two Sample t-test
-
-data:  TIME by CLINIC
-t = -2.1655, df = 10.724, p-value = 0.05381
-alternative hypothesis: true difference in means is not equal to 0
-95 percent confidence interval:
- -32.8550782   0.3185656
-sample estimates:
-mean in group clinic 1 mean in group clinic 2 
-              16.45902               32.72727 </code></pre>
-<p>Check distribution of residuals</p>
-<pre class="r"><code>fit &lt;- lm(TIME~CLINIC, data = clinic)
-plot(fit, which = 2)</code></pre>
-<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-9-1.png" width="672" style="display: block; margin: auto;" /></p>
-<p>The residuals are higher than expected on the upper side of the distribution, which indicates right skewed data, as could be seen from the density plots.</p>
+<div id="setup" class="section level2">
+<h2>Setup</h2>
+<div id="load-some-packages" class="section level3">
+<h3>Load some packages</h3>
+<pre class="r"><code>library(epistats) # contains &#39;fromParentDir&#39; and other handy functions
+library(magrittr) # for &#39;piping&#39;  &#39;%&gt;%&#39;
+library(dplyr)    # for data mangling, selecting columns and filtering rows
+library(ggplot2)  # awesome plotting library
+library(stringr)  # for working with strings
+library(purrr)    # for the &#39;map&#39; function, which is an alternative for lapply, sapply, mapply, etc.</code></pre>
+<p>For installing packages, type <code>install.packages(&lt;package_name&gt;)</code>, for instance: <code>install.packages(dplyr)</code></p>
+<p><code>epistats</code> is only available from GitHub, and can be installed as follows:</p>
+<pre class="r"><code>install.packages(devtools) # when not installed already
+devtools::install_github(&quot;vanAmsterdam/epistats&quot;)</code></pre>
 </div>
 </div>
-<div id="exercises-in-r" class="section level3">
-<h3>Exercises in R</h3>
-<div id="section-2" class="section level4">
-<h4>9.</h4>
+<div id="resampling" class="section level2">
+<h2>Resampling</h2>
 <blockquote>
-<p>Answer the research questions from exercise #1, but now in R (use dataset wheat.RData). a. Make sure to perform a complete analysis, including checking the model assumptions.</p>
+<p>Most of the exercises below come from Moore and McCabe’s Introduction to Practical Statistics, (8th Ed) chapter 16; some have been adapted slightly. Note that for exercises 16.40 and further an R script with commands is available on Moodle. In the answers to the exercises, at the end of the current document, some extra explanation about the R commands is provided. You can also have a look at the following resource that explains most common bootstrap functions in R: <a href="http://www.statmethods.net/advstats/bootstrapping.html" class="uri">http://www.statmethods.net/advstats/bootstrapping.html</a></p>
 </blockquote>
-<p>Perform ANOVA</p>
-<pre class="r"><code>load(epistats::fromParentDir(&quot;data/wheat.RData&quot;))
-fit &lt;- aov(YIELD~FERTILIZ, data = wheat)
-summary(fit)</code></pre>
-<pre><code>            Df Sum Sq Mean Sq F value Pr(&gt;F)  
-FERTILIZ     2  289.5  144.75   6.976 0.0148 *
-Residuals    9  186.8   20.75                 
----
-Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
-<pre class="r"><code>pairwise.t.test(wheat$YIELD, wheat$FERTILIZ, p.adj = &quot;none&quot;)</code></pre>
-<pre><code>
-    Pairwise comparisons using t tests with pooled SD 
-
-data:  wheat$YIELD and wheat$FERTILIZ 
-
-  A      B     
-B 0.0656 -     
-C 0.1376 0.0047
-
-P value adjustment method: none </code></pre>
-<p>Dunnay post-hoc analysis (comparing with a basline) is not available in R We used no p-value adjustment, since only two comparisons were performed that are of interest: A vs C and B vs C. However, we could apply Bonferroni adjustment by taking these p-values and multiplying them by 2 (instead of 3 for aforementioned reasons).</p>
-<p>Check assumptions: Normal distribution of residuals Recall that the <code>lm</code> function is used for linear regression. In our case of a interval outcome variable and a categorical independent variable, it calculates the mean for each level of our independent variable. The resulting residuals are the difference between the observed value and the mean for the corresponding group. So these are exactly the same as for the ANOVA method, and can be used to easily get the residuals from our model.</p>
-<pre class="r"><code>fit &lt;- lm(YIELD~FERTILIZ, data = wheat)
-plot(fit, which = c(1,2))</code></pre>
-<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-11-1.png" width="672" style="display: block; margin: auto;" /><img src="figure/assignments_week2.Rmd/unnamed-chunk-11-2.png" width="672" style="display: block; margin: auto;" /></p>
-<ul>
-<li>From the first plot (fitted vs residuals), we can see that the spread is more or less the same for each group, so homoscedasticity seems to hold.</li>
-<li>From the second plot, we see that the residuals fit the normal distribution quite OK, exept for the lower tail, where it seems that the actual values are a little lower than what would be expected from a normal distribution.</li>
-<li>Independence of observations can not be checked from the data, but should follow from the study design</li>
-</ul>
+<div id="ex.-16.7-what-is-wrong" class="section level3">
+<h3>Ex. 16.7 What is wrong?</h3>
 <blockquote>
-<ol start="2" style="list-style-type: lower-alpha">
-<li>How does the output for this analysis compare to the output for the same analysis in SPSS?</li>
-</ol>
+<p>Explain what is wrong with each of the following statements.</p>
 </blockquote>
-<p>The same F-value and p-value are calculated. Comparing with SPSS, this table does not include a row for ‘total’.</p>
+<div id="a-the-bootstrap-distribution-is-created-by-resampling-with-replacement-from-the-population." class="section level4">
+<h4>(a) The bootstrap distribution is created by resampling with replacement from the population.</h4>
+<p>It is created by resampling with replacement from the sample, not the population</p>
 </div>
-<div id="starfish" class="section level4">
-<h4>10. Starfish</h4>
-<p>Answer the research questions from exercise #3, but now in R (use dataset starfish.RData).</p>
-<blockquote>
-<ol start="3" style="list-style-type: decimal">
-<li>To study the reproductive cycle of a specific species of starfish, individuals from two different locations were observed. To check whether the populations of starfishes at the two places differ in the mean metabole, two random samples were compared. The data has been saved in the file starfish.sav.</li>
-</ol>
-</blockquote>
-<blockquote>
-<ol style="list-style-type: lower-alpha">
-<li>Perform an independent samples t-test to test whether the mean metabole differs between the two locations and comment on the result.</li>
-</ol>
-</blockquote>
-<pre class="r"><code>load(epistats::fromParentDir(&quot;data/starfish.RData&quot;))
-t.test(metabole~location, data = starfish, var.equal = F, paired = F)</code></pre>
-<pre><code>
-    Welch Two Sample t-test
-
-data:  metabole by location
-t = -0.71322, df = 10.254, p-value = 0.4916
-alternative hypothesis: true difference in means is not equal to 0
-95 percent confidence interval:
- -11.459307   5.887879
-sample estimates:
-mean in group A mean in group B 
-       170.7143        173.5000 </code></pre>
-<pre class="r"><code>t.test(metabole~location, data = starfish, var.equal = T, paired = F)</code></pre>
-<pre><code>
-    Two Sample t-test
-
-data:  metabole by location
-t = -0.71937, df = 11, p-value = 0.4869
-alternative hypothesis: true difference in means is not equal to 0
-95 percent confidence interval:
- -11.308907   5.737478
-sample estimates:
-mean in group A mean in group B 
-       170.7143        173.5000 </code></pre>
-<blockquote>
-<ol start="2" style="list-style-type: lower-alpha">
-<li>Also perform a one-way analysis of variance and compare this with the result from a).</li>
-</ol>
-</blockquote>
-<pre class="r"><code>summary(aov(metabole~location, data = starfish))</code></pre>
-<pre><code>            Df Sum Sq Mean Sq F value Pr(&gt;F)
-location     1   25.1   25.07   0.517  0.487
-Residuals   11  532.9   48.45               </code></pre>
-<p>For a single independent variable with only 2-levels, the one-way ANOVA is equivalent to the unpaired two-sample T-test, assuming equal variance.</p>
-<blockquote>
-<ol start="3" style="list-style-type: lower-alpha">
-<li>What is the relation between the t-value of the t-test and the F-value of the ANOVA?</li>
-</ol>
-</blockquote>
-<pre class="r"><code>t.test(metabole~location, data = starfish, var.equal = T, paired = F)$statistic^2</code></pre>
-<pre><code>       t 
-0.517491 </code></pre>
-<p>The F-value is the squared t-value.</p>
+<div id="b-the-bootstrap-distribution-is-created-by-resampling-without-replacement-from-the-original-sample." class="section level4">
+<h4>(b) The bootstrap distribution is created by resampling without replacement from the original sample.</h4>
+<p>It is resampling with replacements</p>
 </div>
-<div id="sleep" class="section level4">
-<h4>11. Sleep</h4>
-<blockquote>
-<p>This exercise uses the built-in dataset sleep. a. Load the built-in dataset sleep into your workspace: data(sleep). (Type help(sleep) for information on the study design.)</p>
-</blockquote>
-<pre class="r"><code>data(sleep)</code></pre>
-<blockquote>
-<ol start="2" style="list-style-type: lower-alpha">
-<li>Make a boxplot and QQ-plot of the difference in extra hours of sleep for the two drugs for each patient.</li>
-</ol>
-</blockquote>
-<p>Note that these are paired data</p>
-<pre class="r"><code>diff = sleep[sleep$group == &quot;1&quot;, &quot;extra&quot;] - sleep[sleep$group == &quot;2&quot;, &quot;extra&quot;]
-boxplot(diff)</code></pre>
-<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-16-1.png" width="672" style="display: block; margin: auto;" /></p>
-<pre class="r"><code>qqnorm(diff)
-qqline(diff, col = &quot;red&quot;)</code></pre>
-<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-16-2.png" width="672" style="display: block; margin: auto;" /></p>
-<p>Looks pretty normally distributed.</p>
-<blockquote>
-<ol start="3" style="list-style-type: lower-alpha">
-<li>Which parametric test would you want to use to detect a difference in sleep for the two drugs? Is this test allowed? Would a non-parametric test be allowed here?</li>
-</ol>
-</blockquote>
-<p>A paired t-test could be used. The differences look pretty normally distributed. Otherwiss the Wilcoxon signed rank test could be used, assuming independent samples.</p>
-<pre class="r"><code>t.test(extra~group, data = sleep)</code></pre>
-<pre><code>
-    Welch Two Sample t-test
-
-data:  extra by group
-t = -1.8608, df = 17.776, p-value = 0.07939
-alternative hypothesis: true difference in means is not equal to 0
-95 percent confidence interval:
- -3.3654832  0.2054832
-sample estimates:
-mean in group 1 mean in group 2 
-           0.75            2.33 </code></pre>
-<pre class="r"><code>wilcox.test(extra~group, data = sleep)</code></pre>
-<pre><code>Warning in wilcox.test.default(x = c(0.7, -1.6, -0.2, -1.2, -0.1, 3.4,
-3.7, : cannot compute exact p-value with ties</code></pre>
-<pre><code>
-    Wilcoxon rank sum test with continuity correction
-
-data:  extra by group
-W = 25.5, p-value = 0.06933
-alternative hypothesis: true location shift is not equal to 0</code></pre>
-<blockquote>
-<ol start="12" style="list-style-type: decimal">
-<li>Open the dataset water.RData. The dataset describes mortality and drinking water hardness for 61 cities in England and Wales. The column mortality is the averaged annual mortality per 100000 male inhabitants and the column hardness represents the calcium concentration (in parts per million). The meaning of the remaining columns is self-explanatory.</li>
-</ol>
-<ol style="list-style-type: lower-alpha">
-<li>Make a boxplot in which the hardness of the water in northern and southern regions is compared.</li>
-</ol>
-</blockquote>
-<pre class="r"><code>load(epistats::fromParentDir(&quot;data/water.RData&quot;))
-str(water)</code></pre>
-<pre><code>&#39;data.frame&#39;:   61 obs. of  4 variables:
- $ location : Factor w/ 2 levels &quot;North&quot;,&quot;South&quot;: 2 1 2 1 1 1 1 2 1 2 ...
- $ town     : chr  &quot;Bath&quot; &quot;Birkenhead&quot; &quot;Birmingham&quot; &quot;Blackburn&quot; ...
- $ mortality: int  1247 1668 1466 1800 1609 1558 1807 1299 1637 1359 ...
- $ hardness : int  105 17 5 14 18 10 15 78 10 84 ...</code></pre>
-<pre class="r"><code>boxplot(hardness~location, data = water)</code></pre>
-<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-18-1.png" width="672" style="display: block; margin: auto;" /></p>
-<blockquote>
-<ol start="2" style="list-style-type: lower-alpha">
-<li>Compare the hardness of water in northern and southern regions in a t-test. Are the conditions of a t-test met?</li>
-</ol>
-</blockquote>
-<pre class="r"><code>t.test(hardness~location, data = water, var.equal = F, paired = F)</code></pre>
-<pre><code>
-    Welch Two Sample t-test
-
-data:  hardness by location
-t = -4.3432, df = 40.136, p-value = 9.284e-05
-alternative hypothesis: true difference in means is not equal to 0
-95 percent confidence interval:
- -57.68764 -21.05082
-sample estimates:
-mean in group North mean in group South 
-           30.40000            69.76923 </code></pre>
-<p>Equal variance does not have to be assumed. Normality of residuals however does need to be assumed. Inspect them with a QQ-plot:</p>
-<pre class="r"><code>plot(lm(hardness~location, data = water), which = 2)</code></pre>
-<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-20-1.png" width="672" style="display: block; margin: auto;" /></p>
-<p>Does not look all too bad.</p>
-<blockquote>
-<ol start="3" style="list-style-type: lower-alpha">
-<li>Could you use a non-parametric test instead of the t-test in part b)?</li>
-</ol>
-</blockquote>
-<p>The variance in the South region is much higher than in the North region, this violates the assumptions from the Wilcoxon rank-sum test and the Mann-Whitney test, so no.</p>
+<div id="c-when-generating-the-resamples-it-is-best-to-use-a-sample-size-larger-than-the-size-of-the-original-sample." class="section level4">
+<h4>(c) When generating the resamples, it is best to use a sample size larger than the size of the original sample.</h4>
+<p>No, this will give falsly tight confidence bounds as you are simulating that you have gathered a lot of data, while you have only simulated data.</p>
 </div>
-<div id="student-incomes" class="section level4">
-<h4>13. Student incomes</h4>
+<div id="d-the-bootstrap-distribution-will-be-similar-to-the-sampling-distribution-in-shape-center-and-spread." class="section level4">
+<h4>(d) The bootstrap distribution will be similar to the sampling distribution in shape, center, and spread.</h4>
+<p>The bootstrap distribution is centered around the the sample mean, with sample spread. These can be different from the population and thus different from the ‘true’ sampling distribution</p>
+</div>
+</div>
+<div id="ex.-16.40-confidence-interval-for-the-average-iq-score." class="section level3">
+<h3>Ex. 16.40 Confidence interval for the average IQ score.</h3>
 <blockquote>
-<p>This is a repeat of exercise #8, but now in R. In the dataset incomes.RData the column income represents a (would-be) sample of incomes for 100 randomly chosen students in Utrecht. The aim of this exercise is to make you aware of the risks involved when using transformation techniques in parametric statistics. a. Compute the mean income in this sample.</p>
+<p>The distribution of the 60 IQ test scores in IQ.txt is roughly Normal (make a histogram and normal QQ-plot to check this), and the sample size is large enough that we expect a Normal sampling distribution. We will compare confidence intervals for the population mean IQ μ based on this sample.</p>
 </blockquote>
-<pre class="r"><code>load(epistats::fromParentDir(&quot;data/incomes.RData&quot;))
-str(incomes)</code></pre>
-<pre><code>&#39;data.frame&#39;:   100 obs. of  1 variable:
- $ income: num  486 1235 233 462 723 ...</code></pre>
-<pre class="r"><code>mean(incomes$income)</code></pre>
-<pre><code>[1] 685</code></pre>
-<blockquote>
-<ol start="2" style="list-style-type: lower-alpha">
-<li>Ignoring all conditions, compute a 95% confidence interval for the mean income of all students in Utrecht.</li>
-</ol>
-</blockquote>
-<pre class="r"><code>t.test(incomes$income)$conf.int</code></pre>
-<pre><code>[1] 529.4857 840.5142
+<div id="a-use-the-formula-sn-to-find-the-standard-error-of-the-mean.-give-the-usual-95-confidence-interval-based-on-this-standard-error-and-the-t-distribution." class="section level4">
+<h4>(a) Use the formula s/√n to find the standard error of the mean. Give the usual 95% confidence interval based on this standard error and the t distribution.</h4>
+<pre class="r"><code>iq &lt;- read.table(fromParentDir(&quot;data/IQ.txt&quot;), header = T)
+str(iq)</code></pre>
+<pre><code>&#39;data.frame&#39;:   60 obs. of  1 variable:
+ $ IQscore: int  86 99 95 94 72 73 95 124 97 95 ...</code></pre>
+<pre class="r"><code>qqnorm(iq$IQscore)</code></pre>
+<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>n    &lt;- nrow(iq)
+mean &lt;- mean(iq$IQscore)
+sd   &lt;- sd(iq$IQscore)
+se   &lt;- sd / sqrt(n)
+q_val&lt;- qt(p = 0.025, df = n-1) 
+
+mean + c(-1, 1)*se*abs(q_val)</code></pre>
+<pre><code>[1]  93.99302 101.50698</code></pre>
+<p>Compare with t-test</p>
+<pre class="r"><code>t.test(iq$IQscore)$conf.int</code></pre>
+<pre><code>[1]  93.99302 101.50698
 attr(,&quot;conf.level&quot;)
 [1] 0.95</code></pre>
 <blockquote>
+<ol start="2" style="list-style-type: lower-alpha">
+<li>Install the libraries boot and simpleboot and load them (using the facilities under the tab Packages in R or RStudio, or using the commands in the R script.) Bootstrap the mean of the IQ scores, with R = 10000 resamples. Make a histogram and Normal quantile plot of the bootstrap distribution. Does the bootstrap distribution appear Normal? What is the bootstrap standard error? Give the bootstrap t 95% confidence interval.</li>
+</ol>
+</blockquote>
+<p>Only need to do this once:</p>
+<pre class="r"><code>install.packages(c(&quot;boot&quot;, &quot;simpleboot&quot;))</code></pre>
+<pre class="r"><code>library(boot)
+library(simpleboot)</code></pre>
+<pre class="r"><code>set.seed(12345)
+bootresults &lt;- one.boot(iq$IQscore, mean, R = 10000)
+
+mean(bootresults$t); sd(bootresults$t)</code></pre>
+<pre><code>[1] 97.73412</code></pre>
+<pre><code>[1] 1.847751</code></pre>
+<pre class="r"><code>qqnorm(bootresults$t)</code></pre>
+<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-8-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>hist(bootresults$t)</code></pre>
+<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-8-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Looks nicely normally distributed.</p>
+<p>Now for the 95% CI:</p>
+<pre class="r"><code>mean(bootresults$t) + c(-1,1)*qt(0.025, df = nrow(iq)-1, lower.tail = F)*sd(bootresults$t)/sqrt(nrow(iq))</code></pre>
+<pre><code>[1] 97.25680 98.21145</code></pre>
+<blockquote>
 <ol start="3" style="list-style-type: lower-alpha">
-<li>Is the interval found in b) reliable?</li>
+<li>Give the 95% confidence percentile, BCa, and basic intervals. How well do your five confidence intervals agree? Was bootstrapping needed to find a reasonable confidence interval, or was the formula-based confidence interval in (a) good enough?</li>
 </ol>
 </blockquote>
-<p>This interval should be reliable when the income in the population is normally distributed, or when the central-limit theorem helps us. First take a look at the distribution of our sample</p>
-<pre class="r"><code>hist(incomes$income)</code></pre>
-<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-23-1.png" width="672" style="display: block; margin: auto;" /></p>
-<p>These are highly skewed, now it is hard to know whether the central limit theorem will help us. We could try bootstrapping to see if our sample-mean looks T-distributed, but that will go too far for now.</p>
+<pre class="r"><code>boot.ci(bootresults)</code></pre>
+<pre><code>Warning in boot.ci(bootresults): bootstrap variances needed for studentized
+intervals</code></pre>
+<pre><code>BOOTSTRAP CONFIDENCE INTERVAL CALCULATIONS
+Based on 10000 bootstrap replicates
+
+CALL : 
+boot.ci(boot.out = bootresults)
+
+Intervals : 
+Level      Normal              Basic         
+95%   ( 94.14, 101.39 )   ( 94.15, 101.38 )  
+
+Level     Percentile            BCa          
+95%   ( 94.12, 101.35 )   ( 94.08, 101.30 )  
+Calculations and Intervals on Original Scale</code></pre>
+<p>The bootstrapping intervals agree, they are all a little narrower than the t-test based confidence interval, however the difference is small.</p>
+<p>This is an (approximately) normally distributed vriable, so the t-test interval is accurate.</p>
+</div>
+</div>
+<div id="ex.-16.65-a-small-sample-permutation-test." class="section level3">
+<h3>Ex. 16.65 A small-sample permutation test.</h3>
 <blockquote>
-<ol start="4" style="list-style-type: lower-alpha">
-<li>Transform the column income into a column logincome by taking the logarithms of the values in income.</li>
-</ol>
+<p>To illustrate the process, let’s perform a permutation test by hand for a small random subset of the DRP data (Example 16.11). Here are the data (different from those in the lecture): Treatment group 57 53 Control group 19 37 41 42 (a) Calculate the difference in means xtreatment − xcontrol between the two groups. This is the observed value of the statistic.</p>
 </blockquote>
-<pre class="r"><code>incomes$logincome &lt;- log(incomes$income)
-hist(incomes$logincome)</code></pre>
-<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-24-1.png" width="672" style="display: block; margin: auto;" /></p>
-<p>Looks much nicer.</p>
+<pre class="r"><code>df &lt;- data.frame(
+  treat = c(&quot;treat&quot;, &quot;treat&quot;, &quot;control&quot;, &quot;control&quot;, &quot;control&quot;, &quot;control&quot;),
+  x = c(57, 53, 19, 37, 41, 42)
+)
+
+diffx &lt;- df %&gt;% 
+  group_by(treat) %&gt;% 
+  summarize(mean = mean(x)) %&gt;%
+  pull(mean) %&gt;%
+  diff()
+diffx</code></pre>
+<pre><code>[1] 20.25</code></pre>
 <blockquote>
-<ol start="5" style="list-style-type: lower-alpha">
-<li>Compute a 95% confidence interval for the mean of log transformed student incomes in Utrecht.</li>
+<ol start="2" style="list-style-type: lower-alpha">
+<li>Resample: randomly shuffle the 6 scores, where the two first scores will have the treatment (1), and the last 4 have control (0). What is the difference in group means for this resample?</li>
 </ol>
 </blockquote>
-<pre class="r"><code>t.test(incomes$logincome)$conf.int</code></pre>
-<pre><code>[1] 5.909353 6.272293
-attr(,&quot;conf.level&quot;)
-[1] 0.95</code></pre>
-<blockquote>
-<ol start="6" style="list-style-type: lower-alpha">
-<li>On the interval found in e), carry out a backward transformation to obtain an interval estimate for the mean income of all students in Utrecht.</li>
-</ol>
-</blockquote>
-<pre class="r"><code>exp(t.test(incomes$logincome)$conf.int)</code></pre>
-<pre><code>[1] 368.4675 529.6905
-attr(,&quot;conf.level&quot;)
-[1] 0.95</code></pre>
-<blockquote>
-<ol start="7" style="list-style-type: lower-alpha">
-<li>Is the interval found in f) reliable?</li>
-</ol>
-</blockquote>
-<pre class="r"><code>t.test(incomes$income)$conf.int</code></pre>
-<pre><code>[1] 529.4857 840.5142
-attr(,&quot;conf.level&quot;)
-[1] 0.95</code></pre>
-<pre class="r"><code>exp(t.test(incomes$logincome)$conf.int)</code></pre>
-<pre><code>[1] 368.4675 529.6905
-attr(,&quot;conf.level&quot;)
-[1] 0.95</code></pre>
-<p>The confidence intervals for both methods are pretty different, there is hardly any overlap. Since the log-transformed variable fits the model assumptions better, this result is deemed more reliable</p>
-<p>NB todo: create histogram, and plot both confidence intervals and the median in a single plot</p>
-<p>Now for a normally distributed variable:</p>
 <pre class="r"><code>set.seed(2)
-x &lt;- 10+ rnorm(100)
-hist(x)</code></pre>
-<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-28-1.png" width="672" style="display: block; margin: auto;" /></p>
-<pre class="r"><code>t.test(x)$conf.int</code></pre>
-<pre><code>[1]  9.739095 10.199509
-attr(,&quot;conf.level&quot;)
-[1] 0.95</code></pre>
-<pre class="r"><code>exp(t.test(log(x))$conf.int)</code></pre>
-<pre><code>[1]  9.674883 10.134954
-attr(,&quot;conf.level&quot;)
-[1] 0.95</code></pre>
-<p>Now check a two sample test for (random) groups</p>
-<pre class="r"><code>require(ggplot2)
-incomes$group &lt;- sample(c(&quot;A&quot;, &quot;B&quot;), p = c(0.5,0.5), size = nrow(incomes), replace = T)
-# increase the income of group B a little
-incomes$new_income &lt;- incomes$income + as.numeric(incomes$group == &quot;B&quot;) * .5 * (median(incomes$income))
-incomes$log_new_income &lt;- log(incomes$new_income)
-
-ggplot(incomes, aes(x = new_income, fill = group)) + 
-  geom_density(alpha = 0.7)</code></pre>
-<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-29-1.png" width="672" style="display: block; margin: auto;" /></p>
-<pre class="r"><code>ggplot(incomes, aes(x = log_new_income, fill = group)) + 
-  geom_density(alpha = 0.7)</code></pre>
-<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-29-2.png" width="672" style="display: block; margin: auto;" /></p>
-<pre class="r"><code>t.test(new_income ~ group, data = incomes)</code></pre>
-<pre><code>
-    Welch Two Sample t-test
-
-data:  new_income by group
-t = -2.4005, df = 91.482, p-value = 0.0184
-alternative hypothesis: true difference in means is not equal to 0
-95 percent confidence interval:
- -694.09505  -65.54443
-sample estimates:
-mean in group A mean in group B 
-       617.3772        997.1970 </code></pre>
-<pre class="r"><code>t.test(log_new_income ~ group, data = incomes)</code></pre>
-<pre><code>
-    Welch Two Sample t-test
-
-data:  log_new_income by group
-t = -4.0519, df = 95.791, p-value = 0.0001033
-alternative hypothesis: true difference in means is not equal to 0
-95 percent confidence interval:
- -0.9109779 -0.3118915
-sample estimates:
-mean in group A mean in group B 
-       6.044898        6.656333 </code></pre>
-<p>The T-test seems to have higher power in for the log-transformed income.</p>
-</div>
-</div>
-</div>
-<div id="day-6-correlation-and-regression" class="section level2">
-<h2>Day 6: Correlation and regression</h2>
-<blockquote>
-<p>Start every exercise by thinking about the research question(s), the research design, the dependent and explanatory variables, the descriptive statistics and the analysis plan. Discuss these issues with your fellow students. The further you are in the course, the easier it should be to identify the research question and the proper approach(es) to answering that question.</p>
-</blockquote>
-<div id="exercises-without-spss-or-r-1" class="section level3">
-<h3>Exercises without SPSS or R</h3>
-<div id="section-3" class="section level4">
-<h4>1.</h4>
-<blockquote>
-<p>In a sample of 10 animals of a certain species the lengths of the right foreleg and the right hind leg have been measured.</p>
-</blockquote>
-<pre class="r"><code>y1 = c(54, 53, 58, 55, 56, 55, 56, 57, 53, 57) # Foreleg
-y2 = c(56, 55, 57, 57, 56, 58, 59, 59, 56, 58) # Hind leg</code></pre>
-<blockquote>
-<p>The mean (standard deviation) for both legs are 55.4 (1.71) and 57.1 (1.37) respectively and the covariance is 1.51. Study the association between the length of the foreleg and the hind leg. a. Would you prefer correlation or regression?</p>
-</blockquote>
-<p>Correlation would be preferred, as there is no a priori reason to believe that one is cause by the other, or should predict the other.</p>
-<blockquote>
-<ol start="2" style="list-style-type: lower-alpha">
-<li>Make a scatter plot. Try to guess the value of the Pearsonâ€™s correlation coefficient.</li>
-</ol>
-</blockquote>
-<pre class="r"><code>plot(y1, y2)</code></pre>
-<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-31-1.png" width="672" style="display: block; margin: auto;" /></p>
-<p>A guess would be around 0.5</p>
+df %&gt;%
+  mutate(treat = sample(treat)) %&gt;% # shuffle treat
+  group_by(treat) %&gt;%
+  summarize(mean = mean(x)) %&gt;% # calculate mean by group
+  pull(mean) %&gt;%
+  diff() # get difference</code></pre>
+<pre><code>[1] 8.25</code></pre>
 <blockquote>
 <ol start="3" style="list-style-type: lower-alpha">
-<li>Calculate the Pearsonâ€™s correlation coefficient and its standard error. Check the significance. What does the significance mean?</li>
+<li>Repeat step (b) 1000 times to get 1000 resamples and 1000 values of the statistic. (Obviously you will not do this 1000 times by hand. Do it a few times by hand until you understand the procedure, then proceed with R.) Make a table of the distribution of these 1000 values. This is the permutation distribution for your resamples.</li>
 </ol>
 </blockquote>
-<pre class="r"><code>n = length(y1)
-r = sum((y1 - mean(y1))*(y2 - mean(y2))) / sqrt((sum_squares(y1)*sum_squares(y2)))
-r</code></pre>
-<pre><code>[1] 0.6438632</code></pre>
-<pre class="r"><code>cor(y1, y2)</code></pre>
-<pre><code>[1] 0.6438632</code></pre>
-<pre class="r"><code>se_r = sqrt((1-r^2)/(n-2))
-se_r</code></pre>
-<pre><code>[1] 0.2705181</code></pre>
-<pre class="r"><code>t = r / se_r
-2*pt(q = t, df = n-2, lower.tail = F)</code></pre>
-<pre><code>[1] 0.04453792</code></pre>
-<pre class="r"><code>cor.test(y1, y2)</code></pre>
-<pre><code>
-    Pearson&#39;s product-moment correlation
-
-data:  y1 and y2
-t = 2.3801, df = 8, p-value = 0.04454
-alternative hypothesis: true correlation is not equal to 0
-95 percent confidence interval:
- 0.02394336 0.90614462
-sample estimates:
-      cor 
-0.6438632 </code></pre>
-<blockquote>
-<ol start="4" style="list-style-type: lower-alpha">
-<li>Calculate a 95% confidence interval for the correlation coefficient, using Fisher’s Z transformation procedure.</li>
-</ol>
-</blockquote>
-<pre class="r"><code>z = .5*log((1+r)/(1-r))
-lo = z - qnorm(p = 0.025)/sqrt(n-3)
-hi = z + qnorm(p = 0.025)/sqrt(n-3)
-lo_r = (exp(2*lo)-1)/(exp(2*lo)+1)
-hi_r = (exp(2*hi)-1)/(exp(2*hi)+1)
-lo_r; hi_r</code></pre>
-<pre><code>[1] 0.9061446</code></pre>
-<pre><code>[1] 0.02394336</code></pre>
-<pre class="r"><code>cor.test(y1, y2)$conf.int</code></pre>
-<pre><code>[1] 0.02394336 0.90614462
-attr(,&quot;conf.level&quot;)
-[1] 0.95</code></pre>
-</div>
-</div>
-<div id="exercises-with-r" class="section level3">
-<h3>Exercises with R</h3>
-<div id="section-4" class="section level4">
-<h4>6.</h4>
-<blockquote>
-<p>In a sample of 10 animals of a certain species the lengths of the foreleg and the hind leg have been measured. The data are also given in the dataset <code>legs.RData</code>. Study the association between the length of the foreleg and the hind leg.</p>
-</blockquote>
-<pre class="r"><code>load(epistats::fromParentDir(&quot;data/legs.RData&quot;))
-plot(y1, y2)</code></pre>
-<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-34-1.png" width="672" style="display: block; margin: auto;" /></p>
-<pre class="r"><code>cor.test(y1, y2)</code></pre>
-<pre><code>
-    Pearson&#39;s product-moment correlation
-
-data:  y1 and y2
-t = 2.3801, df = 8, p-value = 0.04454
-alternative hypothesis: true correlation is not equal to 0
-95 percent confidence interval:
- 0.02394336 0.90614462
-sample estimates:
-      cor 
-0.6438632 </code></pre>
-<pre class="r"><code>qqnorm(y1); qqline(y1, col = &quot;red&quot;)</code></pre>
-<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-34-2.png" width="672" style="display: block; margin: auto;" /></p>
-<pre class="r"><code>qqnorm(y2); qqline(y2, col = &quot;red&quot;)</code></pre>
-<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-34-3.png" width="672" style="display: block; margin: auto;" /></p>
-<p>There is a statistically significant association between the foreleg and the hind leg in our data.</p>
-</div>
-<div id="section-5" class="section level4">
-<h4>7.</h4>
-<blockquote>
-<p>Get the data in the file infantmortality.txt in R. The dataset is about infant mortality in the USA. The first column in the dataset presents the state of the USA to which the data applies; name it therefore state. The second column presents the teenage birth rate per 1000 births and could be named teen. The third column presents the infant mortality rate per 1000 live births; name this column mort. In the USA there is a conjecture that infant mortality is in many cases caused by teenage mothers who do not receive proper prenatal care. a. Perform a linear regression with teen as explanatory variable and mort as the response variable.</p>
-</blockquote>
-<pre class="r"><code>infants &lt;- read.table(epistats::fromParentDir(&quot;data/infantmortality.txt&quot;), header = F)
-colnames(infants) &lt;- c(&quot;state&quot;, &quot;teen&quot;, &quot;mort&quot;)
-head(infants)</code></pre>
-<pre><code>  state teen mort
-1    AL 17.4 13.3
-2    AR 19.0 10.3
-3    AZ 13.8  9.4
-4    CA 10.9  8.9
-5    CO 10.2  8.6
-6    CT  8.8  9.1</code></pre>
-<pre class="r"><code>plot(mort~teen, data = infants)</code></pre>
-<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-35-1.png" width="672" style="display: block; margin: auto;" /></p>
-<pre class="r"><code>fit &lt;- lm(mort~teen, data = infants)
-summary(fit)</code></pre>
-<pre><code>
-Call:
-lm(formula = mort ~ teen, data = infants)
-
-Residuals:
-    Min      1Q  Median      3Q     Max 
--1.6429 -1.0348 -0.0184  0.6831  3.5902 
-
-Coefficients:
-            Estimate Std. Error t value Pr(&gt;|t|)    
-(Intercept)  7.52640    0.64930  11.592 3.03e-15 ***
-teen         0.22509    0.05052   4.456 5.32e-05 ***
----
-Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
-
-Residual standard error: 1.14 on 46 degrees of freedom
-Multiple R-squared:  0.3015,    Adjusted R-squared:  0.2863 
-F-statistic: 19.85 on 1 and 46 DF,  p-value: 5.317e-05</code></pre>
-<blockquote>
-<ol start="2" style="list-style-type: lower-alpha">
-<li>Do not forget to check the regression conditions!</li>
-</ol>
-</blockquote>
-<pre class="r"><code>plot(fit, which = c(1,2))</code></pre>
-<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-36-1.png" width="672" style="display: block; margin: auto;" /><img src="figure/assignments_week2.Rmd/unnamed-chunk-36-2.png" width="672" style="display: block; margin: auto;" /></p>
-<p>From plot 1: the relationship between <code>teen</code> and <code>mort</code> seems more or less linear. From plot 2: variance seems equal across all levels of <code>teen</code>. From plot 3: residuals look OK normally distributed, with a little heavy tail on the left.</p>
-<p>Independence of observations cannot be checked from the data, but is probable due to the study design.</p>
-<blockquote>
-<ol start="3" style="list-style-type: lower-alpha">
-<li>Do your results in a) confirm the conjecture?</li>
-</ol>
-</blockquote>
-<p>Yes, they provide evidence that with increasing amount of teenage pregnancy, infant mortality rises. However, whether or not this is a causal relationship cannot be judged from the data alone. For instance, there may be another unmeasured variable that explains the observed association.</p>
-<blockquote>
-<ol start="4" style="list-style-type: lower-alpha">
-<li>Calculate two 95% confidence intervals: one for the infant mortality for cases in which the teenage birth rate is equal to the sample mean, and one for an individual case with teenage birth rate equal to the sample mean. Comment on the difference between those intervals.</li>
-</ol>
-</blockquote>
-<pre class="r"><code># by &#39;hand&#39; 
-n = nrow(infants)
-se = sd(fit$residuals)
-y0 = fit$coefficients[1] + fit$coefficients[2] * mean(infants$teen)
-## mean prediction
-y0 + c(1,-1) * qt(df = n-1, p = .025, lower.tail = T)  * se * sqrt(1/n)</code></pre>
-<pre><code>[1]  9.997392 10.652608</code></pre>
-<pre class="r"><code>## individual prediction
-y0 + c(1,-1) * qt(df = n-1, p = .025, lower.tail = T)  * se * sqrt(1+1/n)</code></pre>
-<pre><code>[1]  8.031746 12.618254</code></pre>
-<pre class="r"><code>predict(fit, newdata = data.frame(teen = mean(infants$teen)), type = &quot;response&quot;, interval = &quot;confidence&quot;, level = 0.95)</code></pre>
-<pre><code>     fit     lwr      upr
-1 10.325 9.99366 10.65634</code></pre>
-<pre class="r"><code>predict(fit, newdata = data.frame(teen = mean(infants$teen)), type = &quot;response&quot;, interval = &quot;prediction&quot;, level = 0.95)</code></pre>
-<pre><code>     fit      lwr      upr
-1 10.325 8.005622 12.64438</code></pre>
-<p>Calculating a confidence interval for the mean predicted infant mortality for a certain level of <code>teen</code> with our model is dependent on the model variance <span class="math inline">\(\sigma_{\epsilon}\)</span> and the location of the predictor (closer or further away from the mean). It is calculated with the function:</p>
-<p><span class="math display">\[\hat{y}_0 \pm t_{(n-2, \alpha/2)}\sigma_{\epsilon}\sqrt{\frac{1}{n} + \frac{(x_0-\bar{x})}{\sum_{i = 1}^n{(x_i-\bar{x})^2}}}\]</span></p>
-<p>Predicting the risk of mortality for an individual for a certain level of <code>teen</code> also requires to take into account the level of spread at that level of <code>teen</code> (although this spread is assumed to be equal for each value of <code>teen</code>…), so it is a wider confidence interval. It is calculated with the function:</p>
-<p><span class="math display">\[\hat{y}_0 \pm t_{(n-2, \alpha/2)}\sigma_{\epsilon}\sqrt{1 + \frac{1}{n} + \frac{(x_0-\bar{x})}{\sum_{i = 1}^n{(x_i-\bar{x})^2}}}\]</span></p>
-<p>Note that the hand-calculated confidence intervals differ slightly from the confidence intervals which r gives us.</p>
-</div>
-<div id="section-6" class="section level4">
-<h4>8.</h4>
-<blockquote>
-<p>In the file <code>heparin.RData</code> the clotting times of blood samples are registered for different doses of heparin. Research is directed towards the relationship between these quantities. a. Perform a regression analysis and check whether the assumptions of normality, linearity and homoscedasticity are fulfilled.</p>
-</blockquote>
-<pre class="r"><code>load(epistats::fromParentDir(&quot;data/heparin.RData&quot;))
-plot(TIME~DOSE, data = heparine)</code></pre>
-<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-38-1.png" width="672" style="display: block; margin: auto;" /></p>
-<pre class="r"><code>fit &lt;- lm(TIME~DOSE, data = heparine)
-plot(fit, which = c(1,2))</code></pre>
-<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-38-2.png" width="672" style="display: block; margin: auto;" /><img src="figure/assignments_week2.Rmd/unnamed-chunk-38-3.png" width="672" style="display: block; margin: auto;" /></p>
-<p>From plot 1: the relationship seems more or less linear From plot 2: there is clear heteroscedasticity: variance increases with DOSE From plot 3: the residuals look somewhat normally distributed, with heavier tails</p>
-<blockquote>
-<ol start="2" style="list-style-type: lower-alpha">
-<li>A logarithmic transformation on the dependent variable is often proposed when assumpÂ¬tions are not fulfilled. Check whether this transformation leads to fulfilment of the three assumptions.</li>
-</ol>
-</blockquote>
-<pre class="r"><code>heparine$log_time &lt;- log(heparine$TIME)
-plot(log_time~DOSE, data = heparine)</code></pre>
-<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-39-1.png" width="672" style="display: block; margin: auto;" /></p>
-<pre class="r"><code>fit2 &lt;- lm(log_time~DOSE, data = heparine)
-plot(fit2, which = c(1,2))</code></pre>
-<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-39-2.png" width="672" style="display: block; margin: auto;" /><img src="figure/assignments_week2.Rmd/unnamed-chunk-39-3.png" width="672" style="display: block; margin: auto;" /></p>
-<p>From plot 1: Linearity seems to be less in the log-transformed time From plot 2: The spread in residuals is relatively equal accross levels of <code>DOSE</code>, so homoscedasticity seems to hold From plot 3: residuals are nicely normally distribueted</p>
-<blockquote>
-<ol start="3" style="list-style-type: lower-alpha">
-<li>Carry out another regression analysis in which both variables are logarithmically transformed. Check again the assumptions and conclude on the results.</li>
-</ol>
-</blockquote>
-<pre class="r"><code>heparine$log_dose &lt;- log(heparine$DOSE)
-plot(log_time~log_dose, data = heparine)</code></pre>
-<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-40-1.png" width="672" style="display: block; margin: auto;" /></p>
-<pre class="r"><code>fit3 &lt;- lm(log_time~log_dose, data = heparine)
-plot(fit3, which = c(1,2))</code></pre>
-<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-40-2.png" width="672" style="display: block; margin: auto;" /><img src="figure/assignments_week2.Rmd/unnamed-chunk-40-3.png" width="672" style="display: block; margin: auto;" /></p>
-<p>Everything looks better when both variables are log-transformed!</p>
-</div>
-<div id="more-simulations-on-log-transformation" class="section level4">
-<h4>More simulations on log transformation</h4>
-<p>Create variables with linear correlation.</p>
-<pre class="r"><code>set.seed(2)
-x &lt;- runif(n = 100)
-y &lt;- x + rnorm(100, sd = .2)
-plot(x, y)</code></pre>
-<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-41-1.png" width="672" style="display: block; margin: auto;" /></p>
-<pre class="r"><code>fit0 &lt;- lm(y~x)
-summary(fit0)</code></pre>
-<pre><code>
-Call:
-lm(formula = y ~ x)
-
-Residuals:
-     Min       1Q   Median       3Q      Max 
--0.44615 -0.17082  0.00341  0.18597  0.41970 
-
-Coefficients:
-            Estimate Std. Error t value Pr(&gt;|t|)    
-(Intercept) 0.009864   0.043454   0.227    0.821    
-x           0.989705   0.075656  13.082   &lt;2e-16 ***
----
-Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
-
-Residual standard error: 0.2247 on 98 degrees of freedom
-Multiple R-squared:  0.6359,    Adjusted R-squared:  0.6321 
-F-statistic: 171.1 on 1 and 98 DF,  p-value: &lt; 2.2e-16</code></pre>
-<pre class="r"><code>plot(fit0, which = 1)</code></pre>
-<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-41-2.png" width="672" style="display: block; margin: auto;" /></p>
-<p>Nice: no heteroscedasticity</p>
-<pre class="r"><code>plot(exp(x), exp(y))</code></pre>
-<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-42-1.png" width="672" style="display: block; margin: auto;" /></p>
-<pre class="r"><code>fit1 &lt;- lm(exp(y)~exp(x))
-summary(fit1)</code></pre>
-<pre><code>
-Call:
-lm(formula = exp(y) ~ exp(x))
-
-Residuals:
-     Min       1Q   Median       3Q      Max 
--0.98398 -0.30306 -0.02978  0.23005  1.21803 
-
-Coefficients:
-            Estimate Std. Error t value Pr(&gt;|t|)    
-(Intercept) -0.04753    0.15412  -0.308    0.758    
-exp(x)       1.05901    0.08636  12.262   &lt;2e-16 ***
----
-Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
-
-Residual standard error: 0.4433 on 98 degrees of freedom
-Multiple R-squared:  0.6054,    Adjusted R-squared:  0.6014 
-F-statistic: 150.4 on 1 and 98 DF,  p-value: &lt; 2.2e-16</code></pre>
-<pre class="r"><code>plot(fit1, which = 1)</code></pre>
-<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-42-2.png" width="672" style="display: block; margin: auto;" /></p>
-<p>Now we see heteroscedasticity: increasing variance with values of y.</p>
-</div>
-</div>
-<div id="challenge-exercise" class="section level3">
-<h3>Challenge exercise</h3>
-<div id="section-7" class="section level4">
-<h4>9.</h4>
-<blockquote>
-<p>The question arises how body mass index (BMI) is related to the process of gastric emptying, measured by the percentage of retention after 120 minutes (ret120). The data of 55 patients of a certain hospital can be found in the file diabetes.sav or diabetes.RData. a. Make a scatter plot of BMI and ret120 and give an interpretation of the correlation coefficient and its significance.</p>
-</blockquote>
-<pre class="r"><code>load(epistats::fromParentDir(&quot;data/diabetes.RData&quot;))
-plot(ret120~bmi, data = diabetes.df)</code></pre>
-<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-43-1.png" width="672" style="display: block; margin: auto;" /></p>
-<pre class="r"><code>cor.test(~ret120+bmi, data = diabetes.df)</code></pre>
-<pre><code>
-    Pearson&#39;s product-moment correlation
-
-data:  ret120 and bmi
-t = 0.49223, df = 53, p-value = 0.6246
-alternative hypothesis: true correlation is not equal to 0
-95 percent confidence interval:
- -0.2014435  0.3269056
-sample estimates:
-       cor 
-0.06745889 </code></pre>
-<p>Based on the scatter plot, there seems to be no correlation between <code>bmi</code> and <code>ret120</code>. It is therefore not surprising that the correlation-coefficient is not statistically significantly different from 0.</p>
-<blockquote>
-<ol start="2" style="list-style-type: lower-alpha">
-<li>The file consists of two groups of patients, diabetes and non-diabetes. Try to make a scatter plot in which the two groups can be distinguished</li>
-</ol>
-</blockquote>
-<pre class="r"><code>require(ggplot2)
-ggplot(diabetes.df, aes(x = bmi, y = ret120, col = diabetes, shape = diabetes)) + 
-  geom_point()</code></pre>
-<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-44-1.png" width="672" style="display: block; margin: auto;" /></p>
-<blockquote>
-<ol start="3" style="list-style-type: lower-alpha">
-<li>Calculate the correlation coefficient for the two groups separately and give your conclusion</li>
-</ol>
-</blockquote>
-<pre class="r"><code>cor.test(~ret120+bmi, data = diabetes.df[diabetes.df$diabetes==&quot;Yes&quot;,])</code></pre>
-<pre><code>
-    Pearson&#39;s product-moment correlation
-
-data:  ret120 and bmi
-t = 2.3647, df = 32, p-value = 0.02428
-alternative hypothesis: true correlation is not equal to 0
-95 percent confidence interval:
- 0.05463693 0.64032903
-sample estimates:
-      cor 
-0.3856767 </code></pre>
-<pre class="r"><code>cor.test(~ret120+bmi, data = diabetes.df[diabetes.df$diabetes==&quot;No&quot;,])</code></pre>
-<pre><code>
-    Pearson&#39;s product-moment correlation
-
-data:  ret120 and bmi
-t = -3.1963, df = 19, p-value = 0.004753
-alternative hypothesis: true correlation is not equal to 0
-95 percent confidence interval:
- -0.8149817 -0.2143745
-sample estimates:
-       cor 
--0.5913374 </code></pre>
-<p>It looks like there is an association between <code>bmi</code> and <code>ret120</code>, but is different in the group with diabetes from the patients without diabetes. In a model this can be seen as interaction.</p>
-<pre class="r"><code>fit0 &lt;- lm(ret120~bmi, data = diabetes.df)
-summary(fit0)</code></pre>
-<pre><code>
-Call:
-lm(formula = ret120 ~ bmi, data = diabetes.df)
-
-Residuals:
-     Min       1Q   Median       3Q      Max 
--14.2922  -5.3188   0.7915   4.5624  12.4345 
-
-Coefficients:
-            Estimate Std. Error t value Pr(&gt;|t|)    
-(Intercept) 24.14883    5.69207   4.243 8.91e-05 ***
-bmi          0.06481    0.13167   0.492    0.625    
----
-Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
-
-Residual standard error: 6.655 on 53 degrees of freedom
-Multiple R-squared:  0.004551,  Adjusted R-squared:  -0.01423 
-F-statistic: 0.2423 on 1 and 53 DF,  p-value: 0.6246</code></pre>
-<pre class="r"><code>plot(fit0, which = c(1,2))</code></pre>
-<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-46-1.png" width="672" style="display: block; margin: auto;" /><img src="figure/assignments_week2.Rmd/unnamed-chunk-46-2.png" width="672" style="display: block; margin: auto;" /></p>
-<pre class="r"><code>fit1 &lt;- lm(ret120~bmi*diabetes, data = diabetes.df)
-summary(fit1)</code></pre>
-<pre><code>
-Call:
-lm(formula = ret120 ~ bmi * diabetes, data = diabetes.df)
-
-Residuals:
-     Min       1Q   Median       3Q      Max 
--13.9786  -4.7620   0.4032   3.8993  11.3598 
-
-Coefficients:
-                Estimate Std. Error t value Pr(&gt;|t|)    
-(Intercept)      61.4222    11.2366   5.466 1.39e-06 ***
-bmi              -0.8323     0.2582  -3.224 0.002208 ** 
-diabetesYes     -46.4974    12.5446  -3.707 0.000518 ***
-bmi:diabetesYes   1.1371     0.2889   3.936 0.000251 ***
----
-Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
-
-Residual standard error: 5.841 on 51 degrees of freedom
-Multiple R-squared:  0.2621,    Adjusted R-squared:  0.2187 
-F-statistic:  6.04 on 3 and 51 DF,  p-value: 0.001337</code></pre>
-<pre class="r"><code>plot(fit1, which = c(1,2))</code></pre>
-<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-46-3.png" width="672" style="display: block; margin: auto;" /><img src="figure/assignments_week2.Rmd/unnamed-chunk-46-4.png" width="672" style="display: block; margin: auto;" /></p>
-<p>Adding <code>diabetes</code> as an interaction term in model 1 is the same as making two models, one for each group:</p>
-<pre class="r"><code>fit_no = lm(ret120~bmi, data = diabetes.df[diabetes.df$diabetes == &quot;No&quot;,])
-summary(fit_no)</code></pre>
-<pre><code>
-Call:
-lm(formula = ret120 ~ bmi, data = diabetes.df[diabetes.df$diabetes == 
-    &quot;No&quot;, ])
-
-Residuals:
-     Min       1Q   Median       3Q      Max 
--13.9786  -3.5358   0.0707   4.3658   8.8026 
-
-Coefficients:
-            Estimate Std. Error t value Pr(&gt;|t|)    
-(Intercept)  61.4222    11.3331   5.420 3.14e-05 ***
-bmi          -0.8323     0.2604  -3.196  0.00475 ** 
----
-Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
-
-Residual standard error: 5.891 on 19 degrees of freedom
-Multiple R-squared:  0.3497,    Adjusted R-squared:  0.3155 
-F-statistic: 10.22 on 1 and 19 DF,  p-value: 0.004753</code></pre>
-<pre class="r"><code>fit_yes = lm(ret120~bmi, data = diabetes.df[diabetes.df$diabetes == &quot;Yes&quot;,])
-summary(fit_yes)</code></pre>
-<pre><code>
-Call:
-lm(formula = ret120 ~ bmi, data = diabetes.df[diabetes.df$diabetes == 
-    &quot;Yes&quot;, ])
-
-Residuals:
-     Min       1Q   Median       3Q      Max 
--10.8878  -5.5619   0.4182   3.7021  11.3598 
-
-Coefficients:
-            Estimate Std. Error t value Pr(&gt;|t|)  
-(Intercept)  14.9247     5.5487   2.690   0.0113 *
-bmi           0.3048     0.1289   2.365   0.0243 *
----
-Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
-
-Residual standard error: 5.811 on 32 degrees of freedom
-Multiple R-squared:  0.1487,    Adjusted R-squared:  0.1221 
-F-statistic: 5.592 on 1 and 32 DF,  p-value: 0.02428</code></pre>
-<p>Is model 1 better than model 0?</p>
-<pre class="r"><code>anova(fit0, fit1)</code></pre>
-<pre><code>Analysis of Variance Table
-
-Model 1: ret120 ~ bmi
-Model 2: ret120 ~ bmi * diabetes
-  Res.Df    RSS Df Sum of Sq      F    Pr(&gt;F)    
-1     53 2347.3                                  
-2     51 1739.9  2    607.41 8.9024 0.0004828 ***
----
-Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
-<p>Yes</p>
-<p>To interpret the coefficients of fit1:</p>
-<p>for patients without diabetes: <span class="math display">\[ret120 = 61.422 - 0.8323 * bmi\]</span> for patients with diabetes: <span class="math display">\[ret120 = 61.422 - 46.3974 + (0.8323 + 1.1371)*bmi\]</span></p>
-<p>In a plot</p>
-<pre class="r"><code># some plot parameters
-xmin = floor(min(diabetes.df$bmi))
-xmax = ceiling(max(diabetes.df$bmi))
-ymin = floor(min(diabetes.df$ret120))
-ymax = ceiling(max(diabetes.df$ret120))
-
-par(mfrow = c(1,2))
-
-
-plot(ret120~bmi, data = diabetes.df[diabetes.df$diabetes == &quot;No&quot;,], 
-     xlim = c(xmin, xmax), ylim = c(ymin, ymax), main = &quot;Without diabetes&quot;)
-abline(a = fit1$coefficients[&quot;(Intercept)&quot;], b = fit1$coefficients[&quot;bmi&quot;], col = &quot;red&quot;)
-
-plot(ret120~bmi, data = diabetes.df[diabetes.df$diabetes == &quot;Yes&quot;,], 
-     xlim = c(xmin, xmax), ylim = c(ymin, ymax), main = &quot;With diabetes&quot;)
-abline(a = (fit1$coefficients[&quot;(Intercept)&quot;] + fit1$coefficients[&quot;diabetesYes&quot;]), 
-       b = (fit1$coefficients[&quot;bmi&quot;] + fit1$coefficients[&quot;bmi:diabetesYes&quot;]), col = &quot;red&quot;)</code></pre>
-<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-49-1.png" width="672" style="display: block; margin: auto;" /></p>
-<pre class="r"><code>par(mfrow = c(1,1))</code></pre>
-<p>This plot can be made very easily with ggplot2</p>
-<pre class="r"><code>require(ggplot2)
-ggplot(diabetes.df, aes(x = bmi, y = ret120)) + # define dataset, x and y variable
-  geom_point() + # add points to the plot, making this a scatterplot
-  geom_smooth(method = &quot;lm&quot;) + # add linear regression line
-  facet_wrap(~diabetes) # make this plot for all levels of the factor variable `diabetes`</code></pre>
-<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-50-1.png" width="672" style="display: block; margin: auto;" /></p>
-</div>
-</div>
-</div>
-<div id="day-7-categorical-data" class="section level2">
-<h2>Day 7: Categorical data</h2>
-<div id="sample-size-determination-via-r" class="section level3">
-<h3>Sample size determination via R</h3>
-<blockquote>
-<p>The statistical package R may be extended by the library <code>pwr</code>. This library offers several utilities to carry out basic sample size computations. It contains, among others, the functions: - 1-sample proportion. To determine sample size in a 1-sample proportion test one may use this function: pwr.p.test(n=..,h=..,sig.level=..,power=..,alternative=..) with h is the effect size h = 2|arcsin(âˆšp1)- arcsin(âˆšp0)| - 2-samples proportion To determine sample size in a 2-sample proportion test one may use this function: pwr.2p.test(n=..,h=..,sig.level=..,power=..,alternative=..) with h is the effect size h = 2|arcsin(âˆšp2)- arcsin(âˆšp1)| - If the sample sizes are going to be unequal, then one may use the function: pwr.2p2n.test(n1=..,n2=..,h=..,sig.level=..,power=..,alternative=..) with h is the effect size h = 2|arcsin(âˆšp2)- arcsin(âˆšp1)| (Note that in this case one of the two sample sizes must be given beforehand.) - Instead of explicitly calculating the effect size using the arcsin, you can use the R command ES.h() to obtain this effect size. - Chi-square test In case of a chi-square test you can use the function: pwr.chisq.test(w=..,n=..,df=..,sig.level=..,power=..) with w is the effect size. Use the function ES.w2 to obtain the effect size for the chi-square test for association in a contingency table.</p>
-</blockquote>
-<p>Example ES.w2 test.</p>
-<pre class="r"><code># install.packages(&quot;pwr&quot;)
-library(pwr)</code></pre>
-<pre><code>Warning: package &#39;pwr&#39; was built under R version 3.4.2</code></pre>
-<pre class="r"><code># simulate a contingy table
+<pre class="r"><code>npermutations = 1000
 set.seed(2)
-n = 50
-myData &lt;- data.frame(
-  id = 1:n,
-  # first a categorical variable with 2 levels: true or false, with p = 0.5 each
-  a  = sample(c(T,F), replace = T, size = n)
-)
 
-# then a second categorical variable that is the same as the first
-myData$b &lt;- myData$a
-# though with some values randomly flipped from true to false or vice versa...
-p_flip = 0.2
-flippers &lt;- sample(1:n, size = p_flip*n, replace = F)
-myData$b[flippers] &lt;- !myData$b[flippers]
+diffs &lt;- numeric(npermutations)
 
-myData</code></pre>
-<pre><code>   id     a     b
-1   1  TRUE FALSE
-2   2 FALSE FALSE
-3   3 FALSE FALSE
-4   4  TRUE  TRUE
-5   5 FALSE FALSE
-6   6 FALSE FALSE
-7   7  TRUE  TRUE
-8   8 FALSE FALSE
-9   9  TRUE  TRUE
-10 10 FALSE FALSE
-11 11 FALSE FALSE
-12 12  TRUE  TRUE
-13 13 FALSE  TRUE
-14 14  TRUE  TRUE
-15 15  TRUE  TRUE
-16 16 FALSE FALSE
-17 17 FALSE FALSE
-18 18  TRUE  TRUE
-19 19  TRUE  TRUE
-20 20  TRUE  TRUE
-21 21 FALSE FALSE
-22 22  TRUE  TRUE
-23 23 FALSE FALSE
-24 24  TRUE  TRUE
-25 25  TRUE  TRUE
-26 26  TRUE FALSE
-27 27  TRUE  TRUE
-28 28  TRUE  TRUE
-29 29 FALSE FALSE
-30 30  TRUE FALSE
-31 31  TRUE  TRUE
-32 32  TRUE  TRUE
-33 33 FALSE  TRUE
-34 34 FALSE FALSE
-35 35 FALSE  TRUE
-36 36 FALSE FALSE
-37 37 FALSE  TRUE
-38 38  TRUE  TRUE
-39 39 FALSE FALSE
-40 40  TRUE  TRUE
-41 41 FALSE FALSE
-42 42  TRUE  TRUE
-43 43  TRUE FALSE
-44 44  TRUE FALSE
-45 45 FALSE FALSE
-46 46 FALSE FALSE
-47 47 FALSE FALSE
-48 48  TRUE  TRUE
-49 49 FALSE FALSE
-50 50 FALSE  TRUE</code></pre>
-<pre class="r"><code>myTable &lt;-xtabs(~a+b, data = myData)
-myTable</code></pre>
-<pre><code>       b
-a       FALSE TRUE
-  FALSE    20    5
-  TRUE      5   20</code></pre>
-<pre class="r"><code>ES.w2(myTable)</code></pre>
-<pre><code>[1] 49.00367</code></pre>
-</div>
-<div id="exercises-without-spss-or-r-2" class="section level3">
-<h3>Exercises without SPSS or R</h3>
-<div id="section-8" class="section level4">
-<h4>1.</h4>
-<blockquote>
-<p>To improve the wellbeing of laboratory mice a test was carried out to see whether mice should be housed solitarily or in the company of another mouse. In this preference test 20 mice were given the choice of sleeping alone or together with a (dominant) mouse of equal sex. Seventeen of the mice preferred sleeping in company while 3 chose to sleep solitarily. Give a 95% confidence interval for the population proportion of mice that prefer sleeping alone.</p>
-</blockquote>
-<pre class="r"><code>n = 20
-r = 3
-a = 0.05
-
-p_0   = 0.5
-p_hat = r / n
-p_hat</code></pre>
-<pre><code>[1] 0.15</code></pre>
-<pre class="r"><code>p_value = choose(n, r)*p_0^r*(1-p_0)^(n-r)
-p_value</code></pre>
-<pre><code>[1] 0.001087189</code></pre>
-<pre class="r"><code>## Pick the Agresti-Coull confidence interval
-rb &lt;- r + qnorm(a/2, lower.tail = F)^2 / 2
-nb &lt;- n + qnorm(a/2, lower.tail = F)^2
-pb &lt;- rb/nb
-se_pb &lt;- sqrt(pb*(1-pb)/nb)
-
-pb + c(-1,1)*qnorm(a/2, lower.tail = F)*se_pb</code></pre>
-<pre><code>[1] 0.04393901 0.36884860</code></pre>
-<pre class="r"><code>unlist(binom::binom.agresti.coull(x = r, n = n, conf.level = 1-a)[c(&quot;lower&quot;, &quot;upper&quot;)])</code></pre>
-<pre><code>     lower      upper 
-0.04393901 0.36884860 </code></pre>
-<p>Our manual calculation matches the result from the R-function <code>binom.agresti.coull</code>.</p>
-</div>
-<div id="section-9" class="section level4">
-<h4>2.</h4>
-<blockquote>
-<p>Two groups of patients, say group A and B, are checked whether they are contaminated by a certain virus. Group A consists of 50 persons and 30 of them are contaminated. Group B consists of 60 persons and 30 of them are contaminated. a. Compute a 95% confidence interval for the contaminated proportion in the population associated with group A.</p>
-</blockquote>
-<pre class="r"><code>a = 0.05
-na = 50
-ra = 30
-
-# manual calculation follow the exact code from above. Let&#39;s use the R-function
-unlist(binom::binom.agresti.coull(x = ra, n = na, conf.level = 1-a)[c(&quot;lower&quot;, &quot;upper&quot;)])</code></pre>
-<pre><code>    lower     upper 
-0.4616341 0.7240963 </code></pre>
-<blockquote>
-<ol start="2" style="list-style-type: lower-alpha">
-<li>Compute a 95% confidence interval for the contaminated proportion in the population associated with group B.</li>
-</ol>
-</blockquote>
-<pre class="r"><code>nb = 60
-rb = 30
-
-unlist(binom::binom.agresti.coull(x = rb, n = nb, conf.level = 1-a)[c(&quot;lower&quot;, &quot;upper&quot;)])</code></pre>
-<pre><code>    lower     upper 
-0.3773502 0.6226498 </code></pre>
-<blockquote>
-<ol start="3" style="list-style-type: lower-alpha">
-<li>Compute a 95% confidence interval for the difference of the two contaminated proportions in the associated populations.</li>
-</ol>
-</blockquote>
-<p>NB these are unpaired observations. Use Agresti-Coull again.</p>
-<pre class="r"><code>z  = qnorm(a/2, lower.tail = F)
-z2 = z^2
-
-na2 = na + z2/2
-ra2 = ra + z2/4
-pa2 = ra2/na2
-
-nb2 = nb + z2/2
-rb2 = rb + z2/4
-pb2 = rb2/nb2
-
-pdiff &lt;- pb2-pa2
-
-pdiff + c(-1,1)*z*sqrt(pa2*(1-pa2)/na2 + pb2*(1-pb2)/nb2)</code></pre>
-<pre><code>[1] -0.27883884  0.08623754</code></pre>
-<p>NB I could not find any R package that does this calculation.</p>
-</div>
-<div id="section-10" class="section level4">
-<h4>3.</h4>
-<blockquote>
-<p>In a study the researchers want to compare a new treatment against the standard treatment. When calculating the required number of patients, the researchers assumed a normal 30% failure rate due to adverse events, and it is expected that the new treatment reduces the number of adverse events with 50% (from 30% to 15%). Afterwards, it seemed that their starting point was not completely correct. In the group with the standard treatment, they find a failure rate of 38% and in the group with the new treatment the expected rate is still 15%. If the assumption was 38% instead of 30% argue whether fewer or more patients would have been required for the study.</p>
-</blockquote>
-<p>Recall that</p>
-<p><span class="math display">\[n \geq \frac{(Z_{\alpha}\sqrt{2\bar{p}(1-\bar{p})} + Z_{\beta}\sqrt{p_1(1-p_1)+p_2(1-p_2)})^2}{\delta^2}\]</span></p>
-<p>With <span class="math inline">\(\bar{p} = \frac{p_1+p_2}{2}\)</span>; <span class="math inline">\(\delta = p_2 - p_1\)</span>;</p>
-<p>We can see that if the hypothesized difference between the proportions increases, the required sample size decreases (in other words: a bigger effect is easier to detect.)</p>
-</div>
-</div>
-<div id="exercises-with-r-1" class="section level3">
-<h3>Exercises with R</h3>
-<div id="section-11" class="section level4">
-<h4>11.</h4>
-<blockquote>
-<p>This is a repeat of exercise 5, so you can compare the results to those from SPSS. The table below is about 636 Peruvian children. It presents a cross classification as to gender of the children (girl or boy) and respiratory problems (yes or no). a. Enter the data in R</p>
-</blockquote>
-<pre class="r"><code>peru &lt;- data.frame(
-  sex     = c(rep(&quot;girl&quot;, 335), rep(&quot;boy&quot;, 301)),
-  problems = c(rep(T, 254), rep(F, 81), rep(T, 237), rep(F, 64))
-)
-peruT &lt;- xtabs(~sex+problems, data = peru)
-peruT</code></pre>
-<pre><code>      problems
-sex    FALSE TRUE
-  boy     64  237
-  girl    81  254</code></pre>
-<blockquote>
-<ol start="2" style="list-style-type: lower-alpha">
-<li>Determine the proportion of girls in the dataset.</li>
-</ol>
-</blockquote>
-<pre class="r"><code>addmargins(peruT, margin = c(1,2))</code></pre>
-<pre><code>      problems
-sex    FALSE TRUE Sum
-  boy     64  237 301
-  girl    81  254 335
-  Sum    145  491 636</code></pre>
-<pre class="r"><code>prop.table(addmargins(peruT, margin = 2), margin = 2)</code></pre>
-<pre><code>      problems
-sex        FALSE      TRUE       Sum
-  boy  0.4413793 0.4826884 0.4732704
-  girl 0.5586207 0.5173116 0.5267296</code></pre>
-<blockquote>
-<ol start="3" style="list-style-type: lower-alpha">
-<li>Does the sample proportion in a) differ significantly from the worldwide proportion 0.49?</li>
-</ol>
-</blockquote>
-<pre class="r"><code>unlist(binom::binom.agresti.coull(x = 301, n = 636, conf.level = .95)[c(&quot;lower&quot;, &quot;upper&quot;)])</code></pre>
-<pre><code>    lower     upper 
-0.4347437 0.5121182 </code></pre>
-<p>The confidence interval contains the <span class="math inline">\(H_0\)</span> value, so there is not enough proof to reject the null hypothesis.</p>
-</div>
-<div id="section-12" class="section level4">
-<h4>12.</h4>
-<blockquote>
-<p>This is a repeat of exercise 6, so you can compare the results to those from SPSS. In a 1997 poll on smoking habits 220 of 750 American males indicated that they smoked cigarettes. In a 2002 poll (of different American males) the results were 194 out of 750. a. Create the dataset. It is not necessary to make a datasheet of 1500 rows but just 4 rows where every row is one cell of the contingency table. Figure out how you can do this.</p>
-</blockquote>
-<pre class="r"><code>smoke &lt;- data.frame(
-  year = factor(c(1997, 1997, 2002, 2002)),
-  smoking = c(T, F, T, F),
-  number = c(220, 750-220, 194, 750-194)
-)
-smoke</code></pre>
-<pre><code>  year smoking number
-1 1997    TRUE    220
-2 1997   FALSE    530
-3 2002    TRUE    194
-4 2002   FALSE    556</code></pre>
-<blockquote>
-<ol start="2" style="list-style-type: lower-alpha">
-<li>Carry out a chi-square test to test whether the population proportions are different.</li>
-</ol>
-</blockquote>
-<pre class="r"><code>xtabs(number~year+smoking, data = smoke)</code></pre>
-<pre><code>      smoking
-year   FALSE TRUE
-  1997   530  220
-  2002   556  194</code></pre>
-<pre class="r"><code>chisq.test(xtabs(number~year+smoking, data = smoke))</code></pre>
-<pre><code>
-    Pearson&#39;s Chi-squared test with Yates&#39; continuity correction
-
-data:  xtabs(number ~ year + smoking, data = smoke)
-X-squared = 2.0852, df = 1, p-value = 0.1487</code></pre>
-</div>
-<div id="section-13" class="section level4">
-<h4>13.</h4>
-<blockquote>
-<p>This is a repeat of exercise 8, so you can compare the results to those from SPSS. A psychiatrist wants to investigate the effect of the symptom ‘depersonalization’ on the prognosis of patients suffering from depression. For this study 23 patients with signs of depersonalization are matched one by one with 23 other patients with no signs of depersonalization. The matching is with respect to age, gender, duration of illness (depression) and some other variables concerning the personality of the patients. In the table the numbers of patients are given who were declared cured or not cured at the moment of discharge from the hospital after an EEG was made. What is your conclusion with respect to the effect of the symptom? Carry out an appropriate test and formulate a conclusion.</p>
-</blockquote>
-<pre class="r"><code>dep_table &lt;- matrix(c(14, 5, 2, 2), nrow = 2, byrow = T,
-                dimnames = list(c(&quot;no_dep_cured&quot;, &quot;no_dep_not_cured&quot;), 
-                                c(&quot;dep_cured&quot;, &quot;dep_not_cured&quot;)))
-dep_table</code></pre>
-<pre><code>                 dep_cured dep_not_cured
-no_dep_cured            14             5
-no_dep_not_cured         2             2</code></pre>
-<pre class="r"><code>mcnemar.test(dep_table)</code></pre>
-<pre><code>
-    McNemar&#39;s Chi-squared test with continuity correction
-
-data:  dep_table
-McNemar&#39;s chi-squared = 0.57143, df = 1, p-value = 0.4497</code></pre>
-<p>No statistically significant effect of the symptom on the chance of being cured.</p>
-</div>
-<div id="section-14" class="section level4">
-<h4>14.</h4>
-<blockquote>
-<p>The following table compiles data from six studies designed to investigate the accuracy of death certificates. The results of 5,373 autopsies were compared to the causes of death listed on the certificates. Of those considered, 3,726 certificates were confirmed to be accurate, 783 either lacked information or contained inaccuracies but did not require recoding of the underlying cause of death, and 864 were incorrect and required recoding. The data is stored in autopsie.RData.</p>
-</blockquote>
-<pre class="r"><code>load(epistats::fromParentDir(&quot;data/autopsie.RData&quot;))
-str(autopsie)</code></pre>
-<pre><code>List of 3
- $ DATE  : num [1:18] 1 1 1 2 2 2 3 3 3 4 ...
- $ STATUS: num [1:18] 1 2 3 1 2 3 1 2 3 1 ...
- $ FREQ  : num [1:18] 2040 367 327 149 60 48 288 25 70 703 ...
- - attr(*, &quot;label.table&quot;)=List of 3
-  ..$ DATE  : NULL
-  ..$ STATUS: NULL
-  ..$ FREQ  : NULL
- - attr(*, &quot;variable.labels&quot;)= Named chr [1:3] &quot;date of study&quot; &quot;certificate status&quot; &quot;weight&quot;
-  ..- attr(*, &quot;names&quot;)= chr [1:3] &quot;DATE&quot; &quot;STATUS&quot; &quot;FREQ&quot;</code></pre>
-<blockquote>
-<ol style="list-style-type: lower-alpha">
-<li>Try to reproduce the table above in R.</li>
-</ol>
-</blockquote>
-<pre class="r"><code>autopsie_table &lt;- xtabs(FREQ~DATE+STATUS, data = autopsie)
-addmargins(autopsie_table)</code></pre>
-<pre><code>     STATUS
-DATE     1    2    3  Sum
-  1   2040  367  327 2734
-  2    149   60   48  257
-  3    288   25   70  383
-  4    703  197  252 1152
-  5    425   62   88  575
-  6    121   72   79  272
-  Sum 3726  783  864 5373</code></pre>
-<blockquote>
-<ol start="2" style="list-style-type: lower-alpha">
-<li>Test whether the results are homogeneous across the six studies.</li>
-</ol>
-</blockquote>
-<pre class="r"><code>chisq.test(autopsie_table)</code></pre>
-<pre><code>
-    Pearson&#39;s Chi-squared test
-
-data:  autopsie_table
-X-squared = 209.09, df = 10, p-value &lt; 2.2e-16</code></pre>
-<blockquote>
-<ol start="3" style="list-style-type: lower-alpha">
-<li>It should be noted that autopsies are not performed at random; in fact, many are done because the cause of death listed on the certificate is uncertain. What problems might arise if we attempt to use the results of these studies to make inference about the population as a whole? (Source: M Pagano &amp; K Gauvreau, Principles of Biostatistics. Belmont, CA: Wadsworth, Inc 1993.)</li>
-</ol>
-</blockquote>
-<p>The autopsies performed in this study are not a representative sample of the population of all death certificates. As suggested, an autopsy may be performed more often when the cause of death listed on the death certificate is uncertain. In this situation, it may expected that the actual cause of death is more often different from the stated cause of death. This will lead to an overrepresentation of the incorrectly recorded cause of death.</p>
-</div>
-<div id="section-15" class="section level4">
-<h4>15.</h4>
-<blockquote>
-<p>In a study concerning the influence of acid rain on Pinus sylvestris one thousand trees were randomly selected and age and extent of damage of each tree were determined. The results are given in the following summary (see below). The data is also given in the dataset damage.RData. Test whether there is an association between age and influence of acid rain. Does this mean that there is a direct causal relationship?</p>
-</blockquote>
-<pre class="r"><code>load(epistats::fromParentDir(&quot;data/damage.RData&quot;))
-damage_table &lt;- xtabs(~AGE+DAMAGE, data = damage)
-damage_table</code></pre>
-<pre><code>             DAMAGE
-AGE           none fair large
-  &lt;= 20 years  149  303   248
-  &gt; 20 years   151   97    52</code></pre>
-<pre class="r"><code>chisq.test(damage_table)</code></pre>
-<pre><code>
-    Pearson&#39;s Chi-squared test
-
-data:  damage_table
-X-squared = 88.282, df = 2, p-value &lt; 2.2e-16</code></pre>
-<p>There is a statistically significant different in damage between the two age groups. This does not mean that there is any causal connection. There may for instance be a third, unmeasured variable that explains the association. Or there may be some form of bias in the measurements.</p>
-</div>
-<div id="section-16" class="section level4">
-<h4>16.</h4>
-<blockquote>
-<p>Below several datasets are given. Describe for each case the design, choose the most appropriate test and give an answer to the research questions. a. The following table displays the preferences of ice cream flavors of three age groups of randomly selected young adults. Is there a relationship between age group and ice cream flavor preference?</p>
-</blockquote>
-<p>Design: cross-sectional</p>
-<pre class="r"><code>x &lt;- matrix(c(130, 110, 74, 105, 135, 80, 93, 154, 78), byrow = T, nrow = 3)
-x</code></pre>
-<pre><code>     [,1] [,2] [,3]
-[1,]  130  110   74
-[2,]  105  135   80
-[3,]   93  154   78</code></pre>
-<pre class="r"><code>chisq.test(x)</code></pre>
-<pre><code>
-    Pearson&#39;s Chi-squared test
-
-data:  x
-X-squared = 13.943, df = 4, p-value = 0.00748</code></pre>
-<p>Yes there is a relationship.</p>
-<blockquote>
-<ol start="2" style="list-style-type: lower-alpha">
-<li>In the past, a number of professions were prohibited from advertising. In 1977, the U.S. Supreme Court ruled that prohibiting doctors and lawyers from advertising violated their right to free-speech. The article â€œShould Dentists Advertise?â€ (.J. of Ad. Research (June 1982): 33-38) compared the attitudes of consumers and dentists toward the advertising of dental services. Independent random samples of 101 consumers and 124 dentists were asked to respond to the following statement: â€œI favor the use of advertising by dentists to attract new patients.â€ Possible responses were strongly agree, agree, neutral, disagree, and strongly disagree. The data presented in the article appears in the table below. The authors were interested in determining whether the two groups - consumers and dentists - differed in their attitudes toward advertising</li>
-</ol>
-</blockquote>
-<p>Design: independent unpaired samples</p>
-<pre class="r"><code>x &lt;- matrix(c(34, 49, 9, 4, 5, 9, 18, 23, 28, 46), nrow = 2, byrow = T)
-x</code></pre>
-<pre><code>     [,1] [,2] [,3] [,4] [,5]
-[1,]   34   49    9    4    5
-[2,]    9   18   23   28   46</code></pre>
-<pre class="r"><code>chisq.test(x)</code></pre>
-<pre><code>
-    Pearson&#39;s Chi-squared test
-
-data:  x
-X-squared = 84.496, df = 4, p-value &lt; 2.2e-16</code></pre>
-<p>It looks like dentists are more likely to oppose advertising than consumers.</p>
-<blockquote>
-<ol start="3" style="list-style-type: lower-alpha">
-<li>A pollster sampled 200 voters, 100 from District 1 and 100 from District 2, to determine their opinion on an upcoming referendum. The results of the survey are given in the table below. Is there evidence that the two districts will vote differently in the referendum?</li>
-</ol>
-</blockquote>
-<p>Design: independent unpaired sample</p>
-<pre class="r"><code>x &lt;- matrix(c(72, 21, 7, 60, 34, 6), nrow = 2, byrow = T)
-x</code></pre>
-<pre><code>     [,1] [,2] [,3]
-[1,]   72   21    7
-[2,]   60   34    6</code></pre>
-<pre class="r"><code>chisq.test(x)</code></pre>
-<pre><code>
-    Pearson&#39;s Chi-squared test
-
-data:  x
-X-squared = 4.2406, df = 2, p-value = 0.12</code></pre>
+for (i in 1:npermutations) {
+  diffs[i] &lt;- df %&gt;%
+    mutate(treat = sample(treat)) %&gt;% # shuffle treat
+    group_by(treat) %&gt;%
+    summarize(mean = mean(x)) %&gt;% # calculate mean by group
+    pull(mean) %&gt;%
+    diff() # get difference
+}</code></pre>
+<p>Look at the distribution of the differences</p>
+<pre class="r"><code>hist(diffs)</code></pre>
+<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-14-1.png" width="672" style="display: block; margin: auto;" /></p>
 <blockquote>
 <ol start="4" style="list-style-type: lower-alpha">
-<li>A random sample of 400 undergraduate college students were classified according to class and study habits. From the data in the table below, test to see whether the two classifications are independent.</li>
+<li>What proportion of the 1000 statistic values were equal to or greater than the original value in part (a)? You have just estimated the one-sided P-value for the original 6 observations.</li>
 </ol>
 </blockquote>
-<p>Design: cross-sectional</p>
-<pre class="r"><code>x &lt;- matrix(c(20, 42, 58, 25, 48, 32, 31, 28, 35, 24, 27, 30), byrow = T, nrow = 4)
-x</code></pre>
-<pre><code>     [,1] [,2] [,3]
-[1,]   20   42   58
-[2,]   25   48   32
-[3,]   31   28   35
-[4,]   24   27   30</code></pre>
-<pre class="r"><code>chisq.test(x)</code></pre>
-<pre><code>
-    Pearson&#39;s Chi-squared test
-
-data:  x
-X-squared = 15.216, df = 6, p-value = 0.01864</code></pre>
+<pre class="r"><code>mean(diffs &gt;=diffx)</code></pre>
+<pre><code>[1] 0.063</code></pre>
 <blockquote>
 <ol start="5" style="list-style-type: lower-alpha">
-<li>A recent experiment investigated the relationship between smoking and urinary incontinence. Of the 322 subjects in the study who were incontinent, 113 were smokers, 51 were former smokers, and 158 had never smoked. Of the 284 control subjects who were not incontinent, 68 were smokers, 23 were former smokers, and 193 had never smoked.</li>
+<li>For this small data set, there are only 15 possible permutations of the data. As a result, we can calculate the exact P-value by counting the number of permutations with a statistic value greater than or equal to the original value and then dividing by 15. What is the exact P-value here? How close was your estimate?</li>
 </ol>
 </blockquote>
-<p>Design: case-control</p>
-<pre class="r"><code>x &lt;- matrix(c(113, 51, 158, 68, 23, 193), ncol = 2, byrow = F,
-            dimnames = list(c(&quot;smoker&quot;, &quot;former_smoker&quot;, &quot;never_smoker&quot;),
-                            c(&quot;case&quot;, &quot;control&quot;)))
-x</code></pre>
-<pre><code>              case control
-smoker         113      68
-former_smoker   51      23
-never_smoker   158     193</code></pre>
-<pre class="r"><code>chisq.test(x)</code></pre>
-<pre><code>
-    Pearson&#39;s Chi-squared test
-
-data:  x
-X-squared = 22.98, df = 2, p-value = 1.023e-05</code></pre>
+<p>Create all permutations by making a matrix with all the possible positions in the data where treatment can be located</p>
+<pre class="r"><code>treat_positions &lt;- combn(6,2)
+treat_positions</code></pre>
+<pre><code>     [,1] [,2] [,3] [,4] [,5] [,6] [,7] [,8] [,9] [,10] [,11] [,12] [,13]
+[1,]    1    1    1    1    1    2    2    2    2     3     3     3     4
+[2,]    2    3    4    5    6    3    4    5    6     4     5     6     5
+     [,14] [,15]
+[1,]     4     5
+[2,]     6     6</code></pre>
+<p>Calculate differences</p>
+<pre class="r"><code>possible_differences &lt;- apply(treat_positions, 2, function(pos) {
+  mean(df$x[pos]) - mean(df$x[-pos])
+})
+sort(possible_differences)</code></pre>
+<pre><code> [1] -20.25 -17.25 -16.50  -8.25  -5.25  -3.75  -3.00   0.00   5.25   8.25
+[11]   8.25   9.00  11.25  12.00  20.25</code></pre>
+<pre class="r"><code>mean(possible_differences &gt;= diffx)</code></pre>
+<pre><code>[1] 0.06666667</code></pre>
+<p>The exact p-value is pretty close</p>
+</div>
+<div id="comparing-serum-retinol-levels." class="section level3">
+<h3>16.76 Comparing serum retinol levels.</h3>
 <blockquote>
-<ol start="6" style="list-style-type: lower-alpha">
-<li>Some parents of the West Bay little leaguers think that they are noticing a pattern. There seems to be a relationship between the number on the kids’ jerseys and their position. These parents decide to record what they see. The hypothetical data appear below. Test whether the parents’ suspicion that there is a relationship between jersey number and position is right.</li>
+<p>The formal medical term for vitamin A in the blood is serum retinol. Serum retinol has various beneficial effects, such as protecting against fractures. Medical researchers working with children in Papua New Guinea asked whether recent infections reduce the level of serum retinol. They classified children as recently infected or not on the basis of other blood tests, then measured serum retinol. Of the 90 children in the sample, 55 had been recently infected. Dataset retinol.txt gives the serum retinol levels for both groups, in micromoles per liter. (a) The researchers are interested in the proportional reduction in serum retinol. Verify that the mean for infected children is 0.620 and that the mean for uninfected children is 0.778.</p>
+</blockquote>
+<pre class="r"><code>retinol &lt;- read.table(fromParentDir(&quot;data/retinol.txt&quot;), header = T)
+str(retinol)</code></pre>
+<pre><code>&#39;data.frame&#39;:   90 obs. of  2 variables:
+ $ retinol : num  0.59 1.08 0.88 0.62 0.46 0.39 1.44 1.04 0.67 0.86 ...
+ $ infected: int  0 0 0 0 0 0 0 0 0 0 ...</code></pre>
+<pre class="r"><code>retinol %&gt;%
+  group_by(infected) %&gt;%
+  summarize(mean(retinol))</code></pre>
+<pre><code># A tibble: 2 x 2
+  infected `mean(retinol)`
+     &lt;int&gt;           &lt;dbl&gt;
+1        0           0.778
+2        1           0.620</code></pre>
+<pre class="r"><code>ratio &lt;- retinol %&gt;%
+  group_by(infected) %&gt;%
+  summarize(mean = mean(retinol)) %&gt;%
+  pull(mean) %&gt;%
+  (function(x) (x/lag(x))[2])</code></pre>
+<blockquote>
+<ol start="2" style="list-style-type: lower-alpha">
+<li>There is no standard test for the null hypothesis that the ratio of the population means is 1. We can do a permutation test on the ratio of sample means. Carry out a one-sided test and report the P-value. Briefly describe the center and shape of the permutation distribution. Why do you expect the center to be close to 1?</li>
 </ol>
 </blockquote>
-<p>Design: cross-sectional</p>
-<pre class="r"><code>x &lt;- matrix(c(12, 5, 5, 5, 10, 2, 4, 4, 7), nrow = 3, byrow = T)
-x</code></pre>
-<pre><code>     [,1] [,2] [,3]
-[1,]   12    5    5
-[2,]    5   10    2
-[3,]    4    4    7</code></pre>
-<pre class="r"><code>fisher.test(x)</code></pre>
+<p>First let’s calculate the number of possible permutations, to see if calculating all permutations is feasible</p>
+<pre class="r"><code>retinol %&gt;% 
+  group_by(infected) %&gt;% # group by infected
+  summarize(n = n())  # count number of infected</code></pre>
+<pre><code># A tibble: 2 x 2
+  infected     n
+     &lt;int&gt; &lt;int&gt;
+1        0    35
+2        1    55</code></pre>
+<pre class="r"><code>choose(35+55, 55)</code></pre>
+<pre><code>[1] 1.132459e+25</code></pre>
+<p>Getting all permutations is clearly infeasible, so let’s do 1000</p>
+<pre class="r"><code>nperm  = 1000
+ratios = numeric(nperm)
+set.seed(2)
+
+for (i in 1:nperm) {
+  ratios[i] &lt;-
+    retinol %&gt;%
+      mutate(shuff_intected = sample(infected)) %&gt;%
+      group_by(shuff_intected) %&gt;%
+      summarize(mean = mean(retinol)) %&gt;%
+      pull(mean) %&gt;%
+      (function(x) (x / lag(x))[2]) # divide each element by the previous, take second element (which is the fraction if x is 2 numbers)
+}</code></pre>
+<pre class="r"><code>hist(ratios)</code></pre>
+<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-22-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Distributions looks pretty symmetric around 1, which is the null value for a ratio</p>
+<pre class="r"><code>qqnorm(ratios)</code></pre>
+<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-23-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Pretty nice normal distribution</p>
+<p>Now for the P-value</p>
+<pre class="r"><code>mean(ratios &lt; ratio) </code></pre>
+<pre><code>[1] 0.011</code></pre>
+<p>With plot for observed ratio</p>
+<pre class="r"><code>hist(ratios)
+abline(v = ratio, lty = 2)</code></pre>
+<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-25-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="methods-of-resampling." class="section level3">
+<h3>16.77 Methods of resampling.</h3>
+<blockquote>
+<p>In the previous exercise we did a permutation test for the hypothesis “no difference between infected and uninfected children” using the ratio of mean serum retinol levels to measure “difference.” We might also want a bootstrap confidence interval for the ratio of population means for infected and uninfected children. Describe carefully how resampling is done for the permutation test and for the bootstrap, paying attention to the difference between the two resampling methods.</p>
+</blockquote>
+<p>Permution tests are used to simulate a distribution for the null-hypothesis. For this unpaired case it means shuffling the outcome (infected), which are expected to depend on the determinant (retinol). Under the null-hypothesis there is no relationship between the determinant and the outcome, so each possible configuration of outcomes is equially likely to occur. A number of random configurations is simulated, and the test statistic is calculated for each permution. This gives the distribution of the null-hypothesis. Based on this distribution, we can see how probable it is to find a value for the statistic or more extreme, which is the exact definition of a p-value. So permutations give p-values</p>
+<p>Bootstrapping simulates drawing random samples from the population, but uses the actual observed distribution in the sample as a proxy for the population distribution (which is usually unknown if you’re doing research). Drawing re-samples from this sample distribution and calculating the test statistic for each re-sample gives an idea of the range of possible values of the statistic for a sample of the given size. This distrubution of the sample statistic can be used to approximate the confidence interval, which can (loosely) be defined as the range of values which a sample test statistic is (e.g. 95%) likelily to fall in between, when taking many samples.</p>
+</div>
+<div id="calcium-intake-and-blood-pressure.-exercise-from-previous-edition" class="section level3">
+<h3>Calcium intake and blood pressure. (Exercise from previous edition)</h3>
+<blockquote>
+<p>Does added calcium intake reduce the blood pressure of black men? In a randomized comparative double-blind trial, 10 men were given a calcium supplement for twelve weeks and 11 others received a placebo. Whether or not blood pressure dropped was recorded for each subject. Here are the data: Treatment Subjects Successes Proportion Calcium 10 6 0.60 Placebo 11 4 0.36 Total 21 10 0.48</p>
+</blockquote>
+<pre class="r"><code>calcium &lt;- data.frame(
+  treatment = rep(c(1, 0), c(10, 11)),
+  success   = rep(c(1, 0, 1, 0), c(6, 4, 4, 7))
+)
+calcium</code></pre>
+<pre><code>   treatment success
+1          1       1
+2          1       1
+3          1       1
+4          1       1
+5          1       1
+6          1       1
+7          1       0
+8          1       0
+9          1       0
+10         1       0
+11         0       1
+12         0       1
+13         0       1
+14         0       1
+15         0       0
+16         0       0
+17         0       0
+18         0       0
+19         0       0
+20         0       0
+21         0       0</code></pre>
+<blockquote>
+<p>We want to use these sample data to test equality of the population proportions of successes. Carry out a permutation test. Describe the permutation distribution. The permutation test does not depend on a “nice” distribution shape. Give the P-value and report your conclusion.</p>
+</blockquote>
+<p>The question here is to randomly divide 10 successes over 21 subjects.</p>
+<p>The possible number of permutations:</p>
+<pre class="r"><code>choose(21, 10)</code></pre>
+<pre><code>[1] 352716</code></pre>
+<p>This is doable.</p>
+<p>We can get all the permutations by assigning 10 ‘rownumbers’ or positions for the successes in the 21 participants.</p>
+<pre class="r"><code>positions &lt;- combn(21, 10)
+
+positions[, 1:5]</code></pre>
+<pre><code>      [,1] [,2] [,3] [,4] [,5]
+ [1,]    1    1    1    1    1
+ [2,]    2    2    2    2    2
+ [3,]    3    3    3    3    3
+ [4,]    4    4    4    4    4
+ [5,]    5    5    5    5    5
+ [6,]    6    6    6    6    6
+ [7,]    7    7    7    7    7
+ [8,]    8    8    8    8    8
+ [9,]    9    9    9    9    9
+[10,]   10   11   12   13   14</code></pre>
+<p>Let’s make sure that all treated participants are in the first 10 rows.</p>
+<p>The the number of successes in the treatment group is the number of times a position of <span class="math inline">\(\leq 10\)</span> happens in the permuted positions. Let’s call this <span class="math inline">\(n\)</span>, than the difference in ratios is <span class="math inline">\(\frac{n}{10}-\frac{10-n}{11}\)</span></p>
+<pre class="r"><code>diffs &lt;- apply(positions, 2, function(position) {
+  n = sum(position &lt;= 10)
+  (n/10) - ((10-n)/11)
+})</code></pre>
+<p>Look at the distribution</p>
+<pre class="r"><code>hist(diffs)</code></pre>
+<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-30-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Compare with observed ratio to get a p-value</p>
+<pre class="r"><code>diffx &lt;- 6/10 - 4 / 11
+
+mean(diffx &lt;= diffs)</code></pre>
+<pre><code>[1] 0.2599428</code></pre>
+<p>Now check with pre-defined functions:</p>
+<pre class="r"><code>perm::permTS(calcium$success ~ calcium$treatment, alternative = &quot;less&quot;, method = &quot;exact.ce&quot;)</code></pre>
+<pre><code>
+    Exact Permutation Test (complete enumeration)
+
+data:  calcium$success by calcium$treatment
+p-value = 0.2599
+alternative hypothesis: true mean calcium$treatment=0 - mean calcium$treatment=1 is less than 0
+sample estimates:
+mean calcium$treatment=0 - mean calcium$treatment=1 
+                                         -0.2363636 </code></pre>
+<pre class="r"><code>fisher.test(calcium$success, calcium$treatment, alternative = &quot;greater&quot;)</code></pre>
 <pre><code>
     Fisher&#39;s Exact Test for Count Data
 
-data:  x
-p-value = 0.05387
-alternative hypothesis: two.sided</code></pre>
+data:  calcium$success and calcium$treatment
+p-value = 0.2599
+alternative hypothesis: true odds ratio is greater than 1
+95 percent confidence interval:
+ 0.436804      Inf
+sample estimates:
+odds ratio 
+  2.502462 </code></pre>
+<p>Our manual calculation coincides with Fisher’s test and permTS method</p>
+<p>Internally, <code>permTS</code> does something similar as we did with the permutations It creates a ‘cm’ matrix with all possible combinations, the dimensions of this matrix is 352716x21. Check the code with:</p>
+<p><code>View(permute:::permTS.default)</code> which calls: <code>View(permute:::twosample.exact.ce)</code> which calls: <code>View(permute:::chooseMatrix)</code></p>
 </div>
-<div id="section-17" class="section level4">
-<h4>17.</h4>
+</div>
+<div id="survival-exercises" class="section level2">
+<h2>Survival Exercises</h2>
+<div id="we-will-have-a-closer-look-at-the-data-from-the-lecture-on-remission-times-for-leukemia" class="section level3">
+<h3>1. We will have a closer look at the data from the lecture, on remission times for leukemia:</h3>
 <blockquote>
-<p>Calculate in each of the following situations the minimum required total sample size. a. In a certain (high risk) population the incidence of thrombosis is assumed to be 30%, that is H0: p0 = 0.3. We want to sample a group large enough to detect an incidence of 40%, that is H1: p1 = 0.4, if that is the real, true incidence. We set the two-sided Î± at 0.05 and want a power of 0.90 to detect the difference in incidence.</p>
+<p>Read in the dataset leukaemia.txt (saved as a flat text file), changing your working directory first or adding the path name to the file name:</p>
 </blockquote>
-<pre class="r"><code>library(pwr)
-p0 = .3
-p1 = .4
-a = .05
-b = .9
-
-h = ES.h(p0, p1)
-pwr.p.test(h = h, sig.level = a, power = b, alternative = &quot;two.sided&quot;)</code></pre>
-<pre><code>
-     proportion power calculation for binomial distribution (arcsine transformation) 
-
-              h = 0.2101589
-              n = 237.9033
-      sig.level = 0.05
-          power = 0.9
-    alternative = two.sided</code></pre>
+<pre class="r"><code>leuk&lt;-read.table(fromParentDir(&quot;data/leukaemia.txt&quot;), header = TRUE)</code></pre>
+<blockquote>
+<ol style="list-style-type: lower-alpha">
+<li>Fit five models (name them fit0 – fit4) with the following predictor variables: none (intercept only), GROUP, logWBCC, GROUP and logWBCC, GROUP*logWBCC. fit0&lt;-coxph(Surv(TIME, STATUS)~1, data=leuk) etc.</li>
+</ol>
+</blockquote>
+<pre class="r"><code>require(survival)
+fit0 &lt;- coxph(Surv(TIME,  STATUS) ~ 1, data = leuk)
+fit1 &lt;- coxph(Surv(TIME,  STATUS) ~ GROUP, data = leuk)
+fit2 &lt;- coxph(Surv(TIME,  STATUS) ~ logWBCC, data = leuk)
+fit3 &lt;- coxph(Surv(TIME,  STATUS) ~ GROUP + logWBCC, data = leuk)
+fit4 &lt;- coxph(Surv(TIME,  STATUS) ~ GROUP * logWBCC, data = leuk)</code></pre>
 <blockquote>
 <ol start="2" style="list-style-type: lower-alpha">
-<li>In a randomized clinical trial the control treatment is assumed to have a â€œsuccessâ€ rate of 0.2. The experimental treatment is expected to lead to a â€œsuccessâ€ rate of at least 0.4. The goal is to detect this difference of 0.2 with a two-sided Î± of 0.05 and a power of 0.80.</li>
+<li>Ask for the log-likelihood of the empty model: fit0$loglik Ask for the summaries of the 4 models fit1-fit4, and for their log-likelihoods.</li>
 </ol>
 </blockquote>
-<p>Calculate power for 2 unpaired samples of equal size.</p>
-<pre class="r"><code>p0 = .2
-p1 = .4
-a = .05
-b = .8
+<pre class="r"><code>fit0$loglik</code></pre>
+<pre><code>[1] -93.18427</code></pre>
+<p>Let’s combine the summaries of the models by converting them to data.frames with <code>broom</code>, and bind them together with <code>rbindlist</code></p>
+<pre class="r"><code>fits &lt;- list(fit1, fit2, fit3, fit4)
 
-h = ES.h(p0, p1)
-pwr.2p.test(h = h, sig.level = a, power = b, alternative = &quot;two.sided&quot;)</code></pre>
-<pre><code>
-     Difference of proportion power calculation for binomial distribution (arcsine transformation) 
+summaries &lt;- map(fits, broom::tidy) %&gt;%
+  data.table::rbindlist(idcol = &quot;model&quot;)
 
-              h = 0.4421432
-              n = 80.29912
-      sig.level = 0.05
-          power = 0.8
-    alternative = two.sided
-
-NOTE: same sample sizes</code></pre>
+summaries</code></pre>
+<pre><code>   model                  term   estimate std.error  statistic
+1:     1         GROUPtreatmnt -1.5721251 0.4123967 -3.8121670
+2:     2               logWBCC  1.6464371 0.2979940  5.5250677
+3:     3         GROUPtreatmnt -1.3860755 0.4247984 -3.2629020
+4:     3               logWBCC  1.6908904 0.3358976  5.0339462
+5:     4         GROUPtreatmnt -2.3749100 1.7054652 -1.3925291
+6:     4               logWBCC  1.5548945 0.3986606  3.9002964
+7:     4 GROUPtreatmnt:logWBCC  0.3175219 0.5257887  0.6038963
+        p.value   conf.low  conf.high
+1: 1.377538e-04 -2.3804079 -0.7638424
+2: 3.293585e-08  1.0623795  2.2304946
+3: 1.102776e-03 -2.2186651 -0.5534860
+4: 4.804846e-07  1.0325432  2.3492376
+5: 1.637622e-01 -5.7175604  0.9677404
+6: 9.607498e-05  0.7735341  2.3362550
+7: 5.459126e-01 -0.7130050  1.3480487</code></pre>
 <blockquote>
 <ol start="3" style="list-style-type: lower-alpha">
-<li>Using a paired design we want to compare two tests A and B with respect to their dichotomous outcome â€œpositiveâ€ or â€œnegativeâ€ in a group of individuals. How large should the sample size n be, or the number of informative pairs to detect an OR equal to 2 with a two-sided Î± of 0.05 and a power of 0.80?</li>
+<li>Interpret the coefficients of the models 1 through 4. What are you assuming with these models about the effect of group and logWBCC on the hazard of relapse?</li>
 </ol>
 </blockquote>
-<p>This calls for the McNemar test. The <code>MESS</code> package contains a function for calculating sample sizes of this test. However, this function requires 2 estimated parameters: both a <code>psi</code> and an <code>paid</code> argument, which are probably equivalent to the <span class="math inline">\(\Psi\)</span> and <span class="math inline">\(p\)</span> from the equations of the lecture.</p>
-<p><span class="math display">\[n = f_{11} + f_{12} + f_{21} + f_{22}\]</span> <span class="math display">\[p = min(\frac{f_{12}}{n}, \frac{f_{21}}{n})\]</span> <span class="math display">\[\Psi = max(\frac{f_{12}}{f_{21}}, \frac{f_{21}}{f_{12}})\]</span></p>
-<p><span class="math display">\[n \geq \frac{(Z_{\alpha}\sqrt{\Psi + 1} + Z_{\beta(1)}\sqrt{(\Psi+1)-p(\Psi-1)})^2}{p(\Psi-1)^2}\]</span></p>
-<p>We know that for paired data, the odds ratio is the fraction of the anti-diagonal elements, so <span class="math inline">\(OR = \Psi = 2\)</span>. The power of the McNemar test is said to be only dependent on the anti-diagonal (=informative) pairs, we can calculate their sum for a few values of p, and see if this sum stays the same. We will write the 2x2 table in such a way that <span class="math inline">\(f_{12} &lt; f_{21}\)</span>, so that:</p>
-<p><span class="math inline">\(p = \frac{f_12}{n}\)</span>; thus <span class="math inline">\(f_{12} = n*p\)</span> (we will set p, and get n from the sample size calculation)</p>
-<p><span class="math inline">\(\Psi = \frac{f_{21}}{f_{12}}\)</span>; so <span class="math inline">\(f_{21} = \Psi*f_{12}\)</span> This gives us:</p>
-<p><span class="math display">\[n_{informative\ pairs} = f_{12} + f_{21} = n*p + \Psi*n*p = (1+\Psi)*n*p\]</span></p>
-<p>The range of values for <span class="math inline">\(p\)</span> is restricted by <span class="math inline">\(0 &lt; p \leq 1/3\)</span>. Since we said that <span class="math inline">\(p = f_{12}/n &lt; f_{21}/n\)</span> and <span class="math inline">\(\frac{f_{21}}{f_{12}} = 2\)</span>, whe know that <span class="math inline">\(p_{12} + p_{21} = p_{12} + 2*p_{12} = 3*p_{12} \leq 1\)</span> because the sum of the 4 probabilities is always 1. So <span class="math inline">\(p_{12} \leq 1/3\)</span></p>
-<pre class="r"><code>psi = 2
-p_sequence = seq(from = 0.03, to = .33, length.out = 10)
-n_sequence = sapply(p_sequence, function(p) {
-  res = MESS::power_mcnemar_test(paid = p, psi = psi,
-                                 sig.level = 0.05, power = 0.8, 
-                                 alternative = &quot;two.sided&quot;)
-  res$n
-})
-informative_pairs = (psi+1)*p_sequence*n_sequence
-data.frame(p = p_sequence, n_total = n_sequence, n_informative = informative_pairs)</code></pre>
-<pre><code>            p   n_total n_informative
-1  0.03000000 782.52596      70.42734
-2  0.06333333 369.42237      70.19025
-3  0.09666667 241.21454      69.95222
-4  0.13000000 178.75185      69.71322
-5  0.16333333 141.78214      69.47325
-6  0.19666667 117.34285      69.23228
-7  0.23000000  99.98593      68.99029
-8  0.26333333  87.02186      68.74727
-9  0.29666667  76.96989      68.50320
-10 0.33000000  68.94754      68.25806</code></pre>
-<pre class="r"><code>n_inf_min = floor(10*min(informative_pairs)) / 10
-n_inf_max = ceiling(10*max(informative_pairs)) / 10</code></pre>
-<p>This gives us 10 different values for the required number of informative pairs. They are not exactly equal, but all range between 68.2 and 70.5. Probably taking &gt;71 would be the a good guess.</p>
-<p>We can make a function that uses this workflow to calculate the required number of required informative pairs for a given odds ratio (<span class="math inline">\(/Psi\)</span>). For each given <span class="math inline">\(\Psi\)</span> get the range of possible <span class="math inline">\(p\)</span> probabilities (like between 0 and 1/3 above). Calculate the required number of informative pairs for each of these <span class="math inline">\(p\)</span> values and compare the results.</p>
-<pre class="r"><code>sample_size.mcnemar &lt;- function(psi, 
-                                n_estimations = 10,
-                                sig.level = 0.05, power = 0.8,
-                                alternative = &quot;two.sided&quot;) {
-  # determine max p for a given psi
-  p_max = 1/(1+psi)
-  p_sequence = seq(from = p_max / n_estimations, to = p_max, 
-                   length.out = n_estimations)
-  n_sequence = sapply(p_sequence, function(p) {
-    res = MESS::power_mcnemar_test(paid = p, psi = psi,
-                                   sig.level = 0.05, power = 0.8, 
-                                   alternative = &quot;two.sided&quot;)
-    res$n
-  })
-  n_informative_pairs = (psi+1)*p_sequence*n_sequence
-  data.frame(p = p_sequence, n_total = n_sequence, n_informative = n_informative_pairs)
-}
-
-str(sample_size.mcnemar(2))</code></pre>
-<pre><code>&#39;data.frame&#39;:   10 obs. of  3 variables:
- $ p            : num  0.0333 0.0667 0.1 0.1333 0.1667 ...
- $ n_total      : num  704 351 233 174 139 ...
- $ n_informative: num  70.4 70.2 69.9 69.7 69.4 ...</code></pre>
-<pre class="r"><code>ors &lt;- seq(1.2, 4, by = 0.2) # set a range of odds ratios
-sizes &lt;- sapply(ors, function(psi) {
-  res &lt;- sample_size.mcnemar(psi)
-  res$n_informative
-})
-
-size_ranges &lt;- apply(sizes, 2, range) # get range of values from each column
-
-# create a data.frame for pretty printing
-size_df &lt;- data.frame(OR = ors, 
-                      min_informative_pairs = size_ranges[1,],
-                      max_informative_pairs = size_ranges[2,])
-size_df$range_diff &lt;- size_df$max_informative_pairs-size_df$min_informative_pairs
-
-size_df</code></pre>
-<pre><code>    OR min_informative_pairs max_informative_pairs range_diff
-1  1.2             947.35315             949.47863   2.125476
-2  1.4             280.19018             282.32377   2.133589
-3  1.6             145.00408             147.14851   2.144432
-4  1.8              93.75579              95.91265   2.156861
-5  2.0              68.23349              70.40367   2.170182
-6  2.2              53.39394              55.57788   2.183942
-7  2.4              43.85794              46.05588   2.197944
-8  2.6              37.28643              39.49834   2.211918
-9  2.8              32.51829              34.74409   2.225792
-10 3.0              28.91922              31.15869   2.239471
-11 3.2              26.11639              28.36931   2.252919
-12 3.4              23.87783              26.14392   2.266094
-13 3.6              22.05230              24.33126   2.278965
-14 3.8              20.53731              22.82888   2.291567
-15 4.0              19.26129              21.56514   2.303857</code></pre>
-<p>For each of these odds ratios, the range of calculated sample sizes of informative pairs differs by only 2, so indeed this number seems to be determined <em>mostly</em> by the odds ratio. Although for higher odds ratios the range becomes wider.</p>
+<pre class="r"><code>require(data.table)
+summaries[order(term)]</code></pre>
+<pre><code>   model                  term   estimate std.error  statistic
+1:     1         GROUPtreatmnt -1.5721251 0.4123967 -3.8121670
+2:     3         GROUPtreatmnt -1.3860755 0.4247984 -3.2629020
+3:     4         GROUPtreatmnt -2.3749100 1.7054652 -1.3925291
+4:     4 GROUPtreatmnt:logWBCC  0.3175219 0.5257887  0.6038963
+5:     2               logWBCC  1.6464371 0.2979940  5.5250677
+6:     3               logWBCC  1.6908904 0.3358976  5.0339462
+7:     4               logWBCC  1.5548945 0.3986606  3.9002964
+        p.value   conf.low  conf.high
+1: 1.377538e-04 -2.3804079 -0.7638424
+2: 1.102776e-03 -2.2186651 -0.5534860
+3: 1.637622e-01 -5.7175604  0.9677404
+4: 5.459126e-01 -0.7130050  1.3480487
+5: 3.293585e-08  1.0623795  2.2304946
+6: 4.804846e-07  1.0325432  2.3492376
+7: 9.607498e-05  0.7735341  2.3362550</code></pre>
+<p>In models 1 and 3 there is a significant group effect of GROUP (decreased hazard). In all models, logWBCC seems to have a significant effect. The interaction term of model 4 can be left out.</p>
+<p>Estimates higher than 0 correspond with increased hazards. The exponent of this estimate gives the hazard ratio (leaving the rest the same)</p>
+<p>Assumptions are proportional hazards, so the effects of group and logWBCC on the hazard do not depend on time (the hazard ratios are constant in time).</p>
 <blockquote>
 <ol start="4" style="list-style-type: lower-alpha">
-<li>In a randomized controlled trial two methods to quit smoking will be compared. The first method is through support groups and the second method uses nicotine patches. Based on previous publications it is known that through support groups 30% of the people who have stopped smoking still not smoke after 6 months. The researchers expect that by the use of nicotine patches this proportion will be twice as high. How many smokers should the researchers include in their trial to demonstrate this difference with a power of 80% and a one-sided alpha of 5%?</li>
+<li>Calculate likelihood ratio test values and AIC’s (assume that the empty model, fit0, uses no degrees of freedom)</li>
 </ol>
 </blockquote>
-<pre class="r"><code>p0 = .3
-p1 = .6
-a = .05
-b = .8
-
-h = ES.h(p0, p1)
-pwr.2p.test(h = h, sig.level = a, power = b, alternative = &quot;less&quot;)</code></pre>
-<pre><code>
-     Difference of proportion power calculation for binomial distribution (arcsine transformation) 
-
-              h = -0.6128748
-              n = 32.91961
-      sig.level = 0.05
-          power = 0.8
-    alternative = less
-
-NOTE: same sample sizes</code></pre>
-</div>
-</div>
-</div>
-<div id="day-8-survial-analysis" class="section level2">
-<h2>Day 8 Survial analysis</h2>
-<div id="exercises-with-r-2" class="section level3">
-<h3>Exercises with R</h3>
-<blockquote>
-<p>Start R and change your working directory if necessary (File, Change dirâ€¦) To do survival analysis in R, we first need to make the survival library available:</p>
-</blockquote>
-<pre class="r"><code>library(survival)</code></pre>
-<div id="section-18" class="section level4">
-<h4>7.</h4>
-<blockquote>
-<p>A random sample of 12 multiple myeloma patients was taken from the dataset in exercise #5. We will produce the estimates of mean and median survival times via three different methods and draw a simple Kaplan-Meier curve from this random sample. a. First, enter the data and create a data frame:</p>
-</blockquote>
-<pre class="r"><code>time &lt;- c(4,5,7,10,12,15,17,18,40,51,66,91)
-status &lt;- c(1,1,0,1,1,0,1,0,0,1,1,1)
-km.df &lt;- data.frame(cbind(time,status))</code></pre>
-<blockquote>
-<ol start="2" style="list-style-type: lower-alpha">
-<li>Get the mean and median survival time for the whole dataset and for only the non-censored observations:</li>
-</ol>
-</blockquote>
-<pre class="r"><code>mean(km.df$time); median(km.df$time)</code></pre>
-<pre><code>[1] 28</code></pre>
-<pre><code>[1] 16</code></pre>
-<pre class="r"><code>mean(km.df$time[km.df$status==1]) </code></pre>
-<pre><code>[1] 32</code></pre>
-<pre class="r"><code>median(km.df$time[km.df$status==1])</code></pre>
-<pre><code>[1] 14.5</code></pre>
-<blockquote>
-<p>What are the problems with these estimates?</p>
-</blockquote>
-<p>The mean and median follow-up times for the entire dataset are underestimations of the actual survival due to censoring. The mean and median survival time of the deceased are also an underestimation of the actual survival time.</p>
-<blockquote>
-<ol start="3" style="list-style-type: lower-alpha">
-<li>Make a â€survival objectâ€ of the data, examine the object, and make a Kaplan-Meier plot:</li>
-</ol>
-</blockquote>
-<pre class="r"><code>surv_object &lt;- Surv(km.df$time, km.df$status) # this is a surv-object, it combines follow-up time with exit status (event or sensoring)
-surv_object[1:10]</code></pre>
-<pre><code> [1]  4   5   7+ 10  12  15+ 17  18+ 40+ 51 </code></pre>
-<pre class="r"><code>km &lt;- survfit(surv_object~1,conf.type=&quot;none&quot;) # this a fit performed on a surv-object
-summary(km)</code></pre>
-<pre><code>Call: survfit(formula = surv_object ~ 1, conf.type = &quot;none&quot;)
-
- time n.risk n.event survival std.err
-    4     12       1    0.917  0.0798
-    5     11       1    0.833  0.1076
-   10      9       1    0.741  0.1295
-   12      8       1    0.648  0.1426
-   17      6       1    0.540  0.1544
-   51      3       1    0.360  0.1795
-   66      2       1    0.180  0.1558
-   91      1       1    0.000     NaN</code></pre>
-<pre class="r"><code>plot(km)
-lines(c(0,51),c(.5,.5), lty = 2
-      )</code></pre>
-<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-80-1.png" width="672" style="display: block; margin: auto;" /></p>
-<blockquote>
-<p>This last command adds a horizontal line through (0, 0.5) and (51, 0.5) to the K-M plot. It intersects at (51, 0.5), indicating that 51 is the median survival time, corrected for censoring.</p>
-</blockquote>
-<blockquote>
-<ol start="8" style="list-style-type: decimal">
-<li>Freireich et al. (1963) compared the times in remission of a group of leukemia patients treated with 6-mercuraptopurine and of an untreated control group. The event of interest was the first relapse (end of remission period). The outcome was time from entry into the study to first relapse. (Source: Anderson S. et al. Statistical Methods for Comparative Studies. New York: John Wiley &amp; Sons, 1980.)</li>
-</ol>
-<ol style="list-style-type: lower-alpha">
-<li>Read in the data:</li>
-</ol>
-</blockquote>
-<pre class="r"><code>Fr &lt;- read.table(epistats::fromParentDir(&quot;data/Anderson.txt&quot;), header = T)</code></pre>
-<blockquote>
-<p>Make a â€survival objectâ€ of the data, examine the object, and make a Kaplan-Meier plot:</p>
-</blockquote>
-<pre class="r"><code>Freisurv&lt;-survfit(Surv(Fr$TIME, Fr$STAT)~Fr$GROUP)
-summary(Freisurv)</code></pre>
-<pre><code>Call: survfit(formula = Surv(Fr$TIME, Fr$STAT) ~ Fr$GROUP)
-
-                Fr$GROUP=control 
- time n.risk n.event survival std.err lower 95% CI upper 95% CI
-    1     21       2   0.9048  0.0641      0.78754        1.000
-    2     19       2   0.8095  0.0857      0.65785        0.996
-    3     17       1   0.7619  0.0929      0.59988        0.968
-    4     16       2   0.6667  0.1029      0.49268        0.902
-    5     14       2   0.5714  0.1080      0.39455        0.828
-    8     12       4   0.3810  0.1060      0.22085        0.657
-   11      8       2   0.2857  0.0986      0.14529        0.562
-   12      6       2   0.1905  0.0857      0.07887        0.460
-   15      4       1   0.1429  0.0764      0.05011        0.407
-   17      3       1   0.0952  0.0641      0.02549        0.356
-   22      2       1   0.0476  0.0465      0.00703        0.322
-   23      1       1   0.0000     NaN           NA           NA
-
-                Fr$GROUP=treatmnt 
- time n.risk n.event survival std.err lower 95% CI upper 95% CI
-    6     21       3    0.857  0.0764        0.720        1.000
-    7     17       1    0.807  0.0869        0.653        0.996
-   10     15       1    0.753  0.0963        0.586        0.968
-   13     12       1    0.690  0.1068        0.510        0.935
-   16     11       1    0.627  0.1141        0.439        0.896
-   22      7       1    0.538  0.1282        0.337        0.858
-   23      6       1    0.448  0.1346        0.249        0.807</code></pre>
-<pre class="r"><code>plot(Freisurv, lty=c(1,2))
-legend(x=25,y=1.0,legend=c(&quot;control&quot;,&quot;treatment&quot;),lty=c(1,2))
-lines(c(0,35),c(.5,.5), col = &quot;blue&quot;)</code></pre>
-<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-82-1.png" width="672" style="display: block; margin: auto;" /></p>
-<blockquote>
-<ol start="2" style="list-style-type: lower-alpha">
-<li>Perform a log-rank test to see if there is a difference between groups:</li>
-</ol>
-</blockquote>
-<pre class="r"><code>survdiff(Surv(Fr$TIME, Fr$STAT)~ Fr$GROUP)</code></pre>
-<pre><code>Call:
-survdiff(formula = Surv(Fr$TIME, Fr$STAT) ~ Fr$GROUP)
-
-                   N Observed Expected (O-E)^2/E (O-E)^2/V
-Fr$GROUP=control  21       21     10.7      9.77      16.8
-Fr$GROUP=treatmnt 21        9     19.3      5.46      16.8
-
- Chisq= 16.8  on 1 degrees of freedom, p= 4.17e-05 </code></pre>
-<blockquote>
-<ol start="9" style="list-style-type: decimal">
-<li>Normally you often deal with time in the form of dates in calendar format. Different formats are used in different places of the world and even different formats in the same data file. However, in survival analysis the number of days between the starting date and the end date are used. How can we deal with the different formats of the dates and extract the number of days between two dates.</li>
-</ol>
-<ol style="list-style-type: lower-alpha">
-<li>Read the raw data file stroke.csv in the rawdata directory of the package ISwR:</li>
-</ol>
-</blockquote>
-<pre class="r"><code>library(ISwR)</code></pre>
-<pre><code>Warning: package &#39;ISwR&#39; was built under R version 3.4.2</code></pre>
-<pre><code>
-Attaching package: &#39;ISwR&#39;</code></pre>
-<pre><code>The following object is masked from &#39;package:survival&#39;:
-
-    lung</code></pre>
-<pre class="r"><code>data(&quot;stroke&quot;)
-
-stroke &lt;- read.csv2(system.file(&quot;rawdata&quot;,&quot;stroke.csv&quot;, package=&quot;ISwR&quot;,na.strings=&quot;.&quot;))
-head(stroke)</code></pre>
-<pre><code>  SEX       DIED       DSTR AGE DGN COMA DIAB MINF HAN
-1   1  7.01.1991  2.01.1991  76 INF    0    0    1   0
-2   1          .  3.01.1991  58 INF    0    0    0   0
-3   1  2.06.1991  8.01.1991  74 INF    0    0    1   1
-4   0 13.01.1991 11.01.1991  77 ICH    0    1    0   1
-5   0 23.01.1996 13.01.1991  76 INF    0    1    0   1
-6   1 13.01.1991 13.01.1991  48 ICH    1    0    0   1</code></pre>
-<blockquote>
-<ol start="2" style="list-style-type: lower-alpha">
-<li>Change the capitals of the variable names into lovercase</li>
-</ol>
-</blockquote>
-<pre class="r"><code>names(stroke)&lt;-tolower(names(stroke))
-head(stroke)</code></pre>
-<pre><code>  sex       died       dstr age dgn coma diab minf han
-1   1  7.01.1991  2.01.1991  76 INF    0    0    1   0
-2   1          .  3.01.1991  58 INF    0    0    0   0
-3   1  2.06.1991  8.01.1991  74 INF    0    0    1   1
-4   0 13.01.1991 11.01.1991  77 ICH    0    1    0   1
-5   0 23.01.1996 13.01.1991  76 INF    0    1    0   1
-6   1 13.01.1991 13.01.1991  48 ICH    1    0    0   1</code></pre>
-<ol start="3" style="list-style-type: lower-alpha">
-<li>Change the date format to the standard date format (â€œYYYY-MM-DDâ€) of R:</li>
-</ol>
-<pre class="r"><code>stroke &lt;- transform(stroke, died = as.Date(died, format=&quot;%d.%m.%Y&quot;), dstr = as.Date(dstr, format=&quot;%d.%m.%Y&quot;))
-head(stroke)</code></pre>
-<pre><code>  sex       died       dstr age dgn coma diab minf han
-1   1 1991-01-07 1991-01-02  76 INF    0    0    1   0
-2   1       &lt;NA&gt; 1991-01-03  58 INF    0    0    0   0
-3   1 1991-06-02 1991-01-08  74 INF    0    0    1   1
-4   0 1991-01-13 1991-01-11  77 ICH    0    1    0   1
-5   0 1996-01-23 1991-01-13  76 INF    0    1    0   1
-6   1 1991-01-13 1991-01-13  48 ICH    1    0    0   1</code></pre>
-<blockquote>
-<ol start="4" style="list-style-type: lower-alpha">
-<li>It is possible to perform arithmetic on dates, that is, they behave mostly like numeric vectors. Discuss the results:</li>
-</ol>
-</blockquote>
-<pre class="r"><code>summary(stroke$died)</code></pre>
-<pre><code>        Min.      1st Qu.       Median         Mean      3rd Qu. 
-&quot;1991-01-07&quot; &quot;1992-03-14&quot; &quot;1993-01-23&quot; &quot;1993-02-15&quot; &quot;1993-11-04&quot; 
-        Max.         NA&#39;s 
-&quot;1996-02-22&quot;        &quot;338&quot; </code></pre>
-<pre class="r"><code>summary(stroke$dstr)</code></pre>
-<pre><code>        Min.      1st Qu.       Median         Mean      3rd Qu. 
-&quot;1991-01-02&quot; &quot;1991-11-08&quot; &quot;1992-08-12&quot; &quot;1992-07-27&quot; &quot;1993-04-30&quot; 
-        Max. 
-&quot;1993-12-31&quot; </code></pre>
-<pre class="r"><code>summary(stroke$died - stroke$dstr)</code></pre>
-<pre><code>  Length    Class     Mode 
-     829 difftime  numeric </code></pre>
-<pre class="r"><code>head(stroke$died - stroke$dstr)</code></pre>
-<pre><code>Time differences in days
-[1]    5   NA  145    2 1836    0</code></pre>
+<pre class="r"><code>anova(fit0, fit1, fit2, fit3, fit4)</code></pre>
+<pre><code>Analysis of Deviance Table
+ Cox model: response is  Surv(TIME, STATUS)
+ Model 1: ~ 1
+ Model 2: ~ GROUP
+ Model 3: ~ logWBCC
+ Model 4: ~ GROUP + logWBCC
+ Model 5: ~ GROUP * logWBCC
+   loglik   Chisq Df P(&gt;|Chi|)    
+1 -93.184                         
+2 -85.008 16.3517  1 5.261e-05 ***
+3 -75.763 18.4899  0 &lt; 2.2e-16 ***
+4 -69.828 11.8708  1 0.0005702 ***
+5 -69.648  0.3594  1 0.5488232    
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<pre class="r"><code>AIC(fit0, fit1, fit2, fit3, fit4)</code></pre>
+<pre><code>Warning in is.na(coefficients(object)): is.na() applied to non-(list or
+vector) of type &#39;NULL&#39;</code></pre>
+<pre><code>     df      AIC
+fit0  0       NA
+fit1  1 172.0168
+fit2  1 153.5270
+fit3  2 143.6562
+fit4  3 145.2968</code></pre>
+<p>The lowest AIC is for fit3, both terms but no interaction. We already observed earlier on that the interaction term in model 4 was not significant, so it must be left out (AIC penalizes extra terms)</p>
 <blockquote>
 <ol start="5" style="list-style-type: lower-alpha">
-<li>Replace the missing dates with the date of the end of the study (â€œ1996-1-1â€) and put the results in a new variable â€œendâ€. Also make a status variable with denotes whether the end date is a real date (TRUE) or censored to end of study date (False)</li>
+<li>Also compare the models via the likelihood ratio test, with commands like anova(fit1, fit3, test=“Chisq”) Note that not all comparisons are possible.</li>
 </ol>
 </blockquote>
-<pre class="r"><code>stroke&lt;-transform(stroke, end = pmin(died, as.Date(&quot;1996-1-1&quot;), na.rm=T), 
-                  dead =!is.na(died)&amp; died &lt; as.Date(&quot;1996-1-1&quot;))
-head(stroke)</code></pre>
-<pre><code>  sex       died       dstr age dgn coma diab minf han        end  dead
-1   1 1991-01-07 1991-01-02  76 INF    0    0    1   0 1991-01-07  TRUE
-2   1       &lt;NA&gt; 1991-01-03  58 INF    0    0    0   0 1996-01-01 FALSE
-3   1 1991-06-02 1991-01-08  74 INF    0    0    1   1 1991-06-02  TRUE
-4   0 1991-01-13 1991-01-11  77 ICH    0    1    0   1 1991-01-13  TRUE
-5   0 1996-01-23 1991-01-13  76 INF    0    1    0   1 1996-01-01 FALSE
-6   1 1991-01-13 1991-01-13  48 ICH    1    0    0   1 1991-01-13  TRUE</code></pre>
+<pre class="r"><code>anova(fit1, fit2, test = &quot;Chisq&quot;)</code></pre>
+<pre><code>Analysis of Deviance Table
+ Cox model: response is  Surv(TIME, STATUS)
+ Model 1: ~ GROUP
+ Model 2: ~ logWBCC
+   loglik Chisq Df P(&gt;|Chi|)    
+1 -85.008                       
+2 -75.763 18.49  0 &lt; 2.2e-16 ***
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<p>The anova gives a result, but fit2 is not nested within fit1, so it’s meaningless.s</p>
 <blockquote>
 <ol start="6" style="list-style-type: lower-alpha">
-<li>Calculate the number of days</li>
+<li>Decide which model is best. Interpret the coefficients of this best model.</li>
 </ol>
 </blockquote>
-<pre class="r"><code>stroke &lt;- transform(stroke, obstime = as.numeric(end-dstr, units=&quot;days&quot;))
-head(stroke)</code></pre>
-<pre><code>  sex       died       dstr age dgn coma diab minf han        end  dead
-1   1 1991-01-07 1991-01-02  76 INF    0    0    1   0 1991-01-07  TRUE
-2   1       &lt;NA&gt; 1991-01-03  58 INF    0    0    0   0 1996-01-01 FALSE
-3   1 1991-06-02 1991-01-08  74 INF    0    0    1   1 1991-06-02  TRUE
-4   0 1991-01-13 1991-01-11  77 ICH    0    1    0   1 1991-01-13  TRUE
-5   0 1996-01-23 1991-01-13  76 INF    0    1    0   1 1996-01-01 FALSE
-6   1 1991-01-13 1991-01-13  48 ICH    1    0    0   1 1991-01-13  TRUE
-  obstime
-1       5
-2    1824
-3     145
-4       2
-5    1814
-6       0</code></pre>
+<p>We already saw that model 3 has the lowest AIC, so we will pick that one</p>
+<pre class="r"><code>summary(fit3)</code></pre>
+<pre><code>Call:
+coxph(formula = Surv(TIME, STATUS) ~ GROUP + logWBCC, data = leuk)
+
+  n= 42, number of events= 30 
+
+                 coef exp(coef) se(coef)      z Pr(&gt;|z|)    
+GROUPtreatmnt -1.3861    0.2501   0.4248 -3.263   0.0011 ** 
+logWBCC        1.6909    5.4243   0.3359  5.034  4.8e-07 ***
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+              exp(coef) exp(-coef) lower .95 upper .95
+GROUPtreatmnt    0.2501     3.9991    0.1088    0.5749
+logWBCC          5.4243     0.1844    2.8082   10.4776
+
+Concordance= 0.852  (se = 0.062 )
+Rsquare= 0.671   (max possible= 0.988 )
+Likelihood ratio test= 46.71  on 2 df,   p=7.187e-11
+Wald test            = 33.6  on 2 df,   p=5.061e-08
+Score (logrank) test = 46.07  on 2 df,   p=9.921e-11</code></pre>
+<p>Treatment reduces the hazard, logWBCC increases the hazard</p>
+</div>
+<div id="researchers-are-interested-in-the-influence-of-age-nephrectomy-on-the-survival-of-hypernephroma-patients.-read-the-data-below-into-r-from-the-file-nephrect.txt" class="section level3">
+<h3>2. Researchers are interested in the influence of age nephrectomy on the survival of hypernephroma patients. Read the data below into R from the file nephrect.txt:</h3>
+<pre class="r"><code>neph&lt;-read.table(fromParentDir(&quot;data/nephrect.txt&quot;), header = TRUE)
+str(neph)</code></pre>
+<pre><code>&#39;data.frame&#39;:   36 obs. of  4 variables:
+ $ survtime: int  9 6 21 15 8 17 12 104 9 56 ...
+ $ status  : int  1 1 1 1 1 1 1 0 1 1 ...
+ $ nephrect: int  0 0 0 0 0 0 0 1 1 1 ...
+ $ age     : int  1 1 1 2 2 2 3 1 1 1 ...</code></pre>
+<blockquote>
+<p>Survival times of 36 hypernephroma patients classified according to age group and whether or not they have had a nephrectomy.</p>
+</blockquote>
+<blockquote>
+<ol style="list-style-type: lower-alpha">
+<li>Make Kaplan-Meier plots for the three age groups, and test whether there is an effect of age on survival time (not taking nephrectomy into account) using the Log-rank test.</li>
+</ol>
+</blockquote>
+<pre class="r"><code>plot(survfit(Surv(survtime, status)~age, data = neph))</code></pre>
+<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-42-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>survdiff(Surv(survtime, status)~age, data = neph)</code></pre>
+<pre><code>Call:
+survdiff(formula = Surv(survtime, status) ~ age, data = neph)
+
+       N Observed Expected (O-E)^2/E (O-E)^2/V
+age=1 19       17    19.59    0.3424    1.0150
+age=2 12       10    10.77    0.0554    0.0952
+age=3  5        5     1.64    6.9042    8.2183
+
+ Chisq= 8.3  on 2 degrees of freedom, p= 0.0161 </code></pre>
+<p>According to the log-rank test, there is a significant difference in survival between age groups. (see documentation: the default for <code>rho</code> is 0, which corresponds to the log-rank test)</p>
+<blockquote>
+<ol start="2" style="list-style-type: lower-alpha">
+<li>Test whether there is an effect of age on survival time (not taking nephrectomy into account) using the Likelihood Ratio test and the Wald test from a Cox Proportional Hazards regression model. (Define AGE as a categorical variable.) Compare this result to the log-rank test.</li>
+</ol>
+</blockquote>
+<pre class="r"><code>fit1 &lt;- coxph(Surv(survtime, status) ~ factor(age), data = neph)
+summary(fit1)</code></pre>
+<pre><code>Call:
+coxph(formula = Surv(survtime, status) ~ factor(age), data = neph)
+
+  n= 36, number of events= 32 
+
+               coef exp(coef) se(coef)     z Pr(&gt;|z|)   
+factor(age)2 0.1010    1.1063   0.4204 0.240  0.81004   
+factor(age)3 1.5144    4.5467   0.5807 2.608  0.00911 **
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+             exp(coef) exp(-coef) lower .95 upper .95
+factor(age)2     1.106     0.9039    0.4853     2.522
+factor(age)3     4.547     0.2199    1.4569    14.189
+
+Concordance= 0.602  (se = 0.054 )
+Rsquare= 0.148   (max possible= 0.993 )
+Likelihood ratio test= 5.79  on 2 df,   p=0.05542
+Wald test            = 7.09  on 2 df,   p=0.02881
+Score (logrank) test = 8.4  on 2 df,   p=0.01498</code></pre>
+<p>The log-rank gives the lowest p-value. Likelihood ratio test is not significant</p>
+<blockquote>
+<ol start="3" style="list-style-type: lower-alpha">
+<li>From the Cox PH output, give the hazard ratio of age class 2 vs 1 and 3 vs 1. Give the 95% confidence intervals for these hazard ratios. Interpret the results.</li>
+</ol>
+</blockquote>
+<pre class="r"><code>broom::tidy(fit1) %&gt;%
+  mutate_at(.vars = c(&quot;estimate&quot;, &quot;conf.low&quot;, &quot;conf.high&quot;), exp)</code></pre>
+<pre><code>          term estimate std.error statistic     p.value  conf.low
+1 factor(age)2 1.106331 0.4203911 0.2403689 0.810044275 0.4853415
+2 factor(age)3 4.546690 0.5806640 2.6080477 0.009106028 1.4569116
+  conf.high
+1  2.521869
+2 14.189183</code></pre>
+<p>Hazard ratios are the <code>estimate</code>s (exponentiated as required). For the 2 vs 1 hazard ratio, the confidence interval includes the null value of 1, which coincides with the p.value of &gt; 0.05</p>
+<blockquote>
+<ol start="4" style="list-style-type: lower-alpha">
+<li>Now take only nephrectomy as the explanatory variable. Make Kaplan-Meier plots for the two groups, test for a difference in nephrectomy status using the log-rank test.</li>
+</ol>
+</blockquote>
+<pre class="r"><code>plot(survfit(Surv(survtime, status)~nephrect, data = neph))</code></pre>
+<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-46-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>survdiff(Surv(survtime, status)~nephrect, data = neph)</code></pre>
+<pre><code>Call:
+survdiff(formula = Surv(survtime, status) ~ nephrect, data = neph)
+
+            N Observed Expected (O-E)^2/E (O-E)^2/V
+nephrect=0  7        7     2.46     8.408      10.5
+nephrect=1 29       25    29.54     0.699      10.5
+
+ Chisq= 10.5  on 1 degrees of freedom, p= 0.00122 </code></pre>
+<blockquote>
+<ol start="5" style="list-style-type: lower-alpha">
+<li>Test whether there is an effect of nephrectomy using the likelihood ratio and Wald tests in a Cox PH model. Compare this result to the log-rank test. Give the hazard ratio of no nephrectomy vs nephrectomy. Calculate a 95% confidence interval for this hazard ratio.</li>
+</ol>
+</blockquote>
+<pre class="r"><code>fit2 &lt;- coxph(Surv(survtime, status)~nephrect, data = neph)
+summary(fit2)</code></pre>
+<pre><code>Call:
+coxph(formula = Surv(survtime, status) ~ nephrect, data = neph)
+
+  n= 36, number of events= 32 
+
+            coef exp(coef) se(coef)      z Pr(&gt;|z|)   
+nephrect -1.4941    0.2245   0.5070 -2.947  0.00321 **
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+         exp(coef) exp(-coef) lower .95 upper .95
+nephrect    0.2245      4.455    0.0831    0.6063
+
+Concordance= 0.598  (se = 0.037 )
+Rsquare= 0.19   (max possible= 0.993 )
+Likelihood ratio test= 7.56  on 1 df,   p=0.005955
+Wald test            = 8.69  on 1 df,   p=0.003208
+Score (logrank) test = 10.31  on 1 df,   p=0.00132</code></pre>
+<pre class="r"><code>exp(coef(fit2))</code></pre>
+<pre><code> nephrect 
+0.2244505 </code></pre>
+<pre class="r"><code>exp(confint((fit2)))</code></pre>
+<pre><code>              2.5 %    97.5 %
+nephrect 0.08309507 0.6062696</code></pre>
+<p>Nefrectomy seems to have a lower hazard of dying</p>
+<blockquote>
+<ol start="6" style="list-style-type: lower-alpha">
+<li>Test for a difference in nephrectomy status using a Cox PH model again, but now for each of the three original age classes separately (hint: make 3 new data frames with selections of age groups). Does the effect of nephrecto¬my appear to be the same in each age class? (Optional: how would you test this, using Cox PH?)</li>
+</ol>
+</blockquote>
+<p>Let’s do this with <code>dplyr</code> function <code>group_by</code></p>
+<pre class="r"><code>fits &lt;- neph %&gt;%
+  group_by(age) %&gt;%
+  do(fit = coxph(Surv(survtime, status)~nephrect, data = .))
+
+broom::tidy(fits, fit)   </code></pre>
+<pre><code># A tibble: 3 x 8
+# Groups: age [3]
+    age term     estimate std.error statistic p.value conf.low conf.high
+  &lt;int&gt; &lt;chr&gt;       &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;   &lt;dbl&gt;    &lt;dbl&gt;     &lt;dbl&gt;
+1     1 nephrect   -2.00      0.827    -2.42   0.0156    -3.62   -0.379 
+2     2 nephrect   -1.71      0.922    -1.86   0.0629    -3.52    0.0923
+3     3 nephrect    0.370     1.19      0.311  0.755     -1.96    2.70  </code></pre>
+<p>The estimate for nephrectomy is different in the different age groups, however, the confidence intervals all overlap.</p>
+<p>We can test this by using <code>age</code> as an interaction</p>
+<pre class="r"><code>fit2 &lt;- coxph(Surv(survtime, status)~nephrect*factor(age), data = neph)
+summary(fit2)</code></pre>
+<pre><code>Call:
+coxph(formula = Surv(survtime, status) ~ nephrect * factor(age), 
+    data = neph)
+
+  n= 36, number of events= 32 
+
+                           coef exp(coef)  se(coef)      z Pr(&gt;|z|)   
+nephrect              -1.996683  0.135785  0.729653 -2.736  0.00621 **
+factor(age)2          -0.032209  0.968304  0.836657 -0.038  0.96929   
+factor(age)3           0.002361  1.002364  1.179871  0.002  0.99840   
+nephrect:factor(age)2  0.002939  1.002944  0.971967  0.003  0.99759   
+nephrect:factor(age)3  2.140991  8.507868  1.342752  1.594  0.11083   
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+                      exp(coef) exp(-coef) lower .95 upper .95
+nephrect                 0.1358     7.3646   0.03249    0.5675
+factor(age)2             0.9683     1.0327   0.18787    4.9909
+factor(age)3             1.0024     0.9976   0.09925   10.1236
+nephrect:factor(age)2    1.0029     0.9971   0.14926    6.7393
+nephrect:factor(age)3    8.5079     0.1175   0.61216  118.2424
+
+Concordance= 0.653  (se = 0.057 )
+Rsquare= 0.354   (max possible= 0.993 )
+Likelihood ratio test= 15.75  on 5 df,   p=0.007586
+Wald test            = 14.94  on 5 df,   p=0.01061
+Score (logrank) test = 19.98  on 5 df,   p=0.00126</code></pre>
+<p>Interaction term is indeed not significant</p>
 <blockquote>
 <ol start="7" style="list-style-type: lower-alpha">
-<li>Try also the same commands of the previous question but then with the units=â€weeksâ€, unit=â€monthsâ€, unit=â€hoursâ€. What do you see?</li>
+<li>Check the Cox PH assumption for AGE by building a model with NEPHRECT as explanatory variable and AGE as stratum variable. Get a log-minus-log plot and check whether the resulting log cumulative hazard functions are approximately parallel.</li>
 </ol>
 </blockquote>
-<pre class="r"><code>data.frame(hours = as.numeric(stroke$end - stroke$dstr, unit = &quot;hours&quot;)[1:10],
-           days  = as.numeric(stroke$end - stroke$dstr, unit = &quot;days&quot;)[1:10],
-           weeks = as.numeric(stroke$end - stroke$dstr, unit = &quot;weeks&quot;)[1:10])</code></pre>
-<pre><code>   hours days       weeks
-1    120    5   0.7142857
-2  43776 1824 260.5714286
-3   3480  145  20.7142857
-4     48    2   0.2857143
-5  43536 1814 259.1428571
-6      0    0   0.0000000
-7  25248 1052 150.2857143
-8   7968  332  47.4285714
-9  43488 1812 258.8571429
-10 24720 1030 147.1428571</code></pre>
-<blockquote>
-<ol start="10" style="list-style-type: decimal">
-<li>An experiment will be conducted to test the effectiveness of a new treatment on a total of 100 patients. The current treatment for this disease achieves 50% survival after two years. The researcher believes that if the survival proportion of the treatment group is 0.6 or better, people will begin to use his treatment. He wants to know how many subjects he needs. Testing will be done at the 0.05 significance level and the required power is set to 90%. Calculate the minimum required total sample size.</li>
-</ol>
-</blockquote>
-<p>Using the equations: <span class="math display">\[\delta_0 = \frac{log(p_1)}{log{p_0}} = HR\]</span> <span class="math display">\[d = (\frac{1+\delta_0}{1-\delta_0})^2(Z_{\alpha} + Z_{\beta})^2\]</span> <span class="math display">\[n \geq \frac{2d}{2-p_0-p_1}\]</span></p>
-<pre class="r"><code>a   = .05
-pow = .9
-b   = 1-pow
-p0  = .5
-p1  = .6
+<pre class="r"><code>fit3 &lt;- coxph(Surv(survtime, status)~nephrect + strata(factor(age)), data = neph)
+summary(fit3)</code></pre>
+<pre><code>Call:
+coxph(formula = Surv(survtime, status) ~ nephrect + strata(factor(age)), 
+    data = neph)
 
+  n= 36, number of events= 32 
 
-delta0 = log(p1)/log(p0)
-d = ((1+delta0)/(1-delta0))^2*(qnorm(a, lower.tail = F)+qnorm(b, lower.tail = F))^2
-n = 2*d/(2-p0-p1)
-n</code></pre>
-<pre><code>[1] 829.877</code></pre>
-<p>NB for some reason, I come up with a different number than the official answer. The found a d of 384, our d = 873</p>
+            coef exp(coef) se(coef)      z Pr(&gt;|z|)  
+nephrect -1.3077    0.2705   0.5399 -2.422   0.0154 *
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+         exp(coef) exp(-coef) lower .95 upper .95
+nephrect    0.2705      3.698   0.09387    0.7792
+
+Concordance= 0.607  (se = 0.055 )
+Rsquare= 0.14   (max possible= 0.962 )
+Likelihood ratio test= 5.42  on 1 df,   p=0.0199
+Wald test            = 5.87  on 1 df,   p=0.01543
+Score (logrank) test = 6.57  on 1 df,   p=0.01035</code></pre>
+<p>The fast way:</p>
+<pre class="r"><code>plot(survfit(fit3), col = c(&quot;red&quot;, &quot;blue&quot;, &quot;black&quot;), fun = &quot;cloglog&quot;)</code></pre>
+<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-52-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>The lines cross, so this vialates our assumption of proportional hazards</p>
 </div>
+<div id="myeloma" class="section level3">
+<h3>3. Myeloma</h3>
+<blockquote>
+<p>Read the data file myeloma.dat (a comma-separated file with headers at the top) into R and attach it:</p>
+</blockquote>
+<pre class="r"><code>myel&lt;-read.table(fromParentDir(&quot;data/myeloma.dat&quot;), header = TRUE)
+str(myel)</code></pre>
+<pre><code>&#39;data.frame&#39;:   48 obs. of  10 variables:
+ $ patient: int  1 2 3 4 5 6 7 8 9 10 ...
+ $ time   : int  13 52 6 40 10 7 66 10 10 14 ...
+ $ status : int  1 0 1 1 1 0 1 0 1 1 ...
+ $ age    : int  66 66 53 69 65 57 52 60 70 70 ...
+ $ sex    : int  1 1 0 1 1 0 1 1 1 1 ...
+ $ bun    : int  25 13 15 10 20 12 21 41 37 40 ...
+ $ ca     : int  10 11 13 10 10 8 10 9 12 11 ...
+ $ hb     : num  14.6 12 11.4 10.2 13.2 9.9 12.8 14 7.5 10.6 ...
+ $ pc     : int  18 100 33 30 66 45 11 70 47 27 ...
+ $ bj     : int  1 0 1 1 0 0 1 1 0 0 ...</code></pre>
+<blockquote>
+<p>The dataset contains the following variables on 48 patients diagnosed with multiple myeloma: Variable Description survtime survival time from diagnosis multiple myeloma (months) status censoring status (0=censored, 1=death from multiple myeloma) age age (years) sex sex (1=male, 2=female) bun blood urea nitrogen ca serum calcium hb haemoglobin pc percentage plasma cells in bone marrow bj Bence-Jones protein in urine</p>
+</blockquote>
+<blockquote>
+<p>The object of the research is to determine the best fitting Cox proportional hazards model to explain death from multiple myeloma.</p>
+</blockquote>
+<blockquote>
+<ol style="list-style-type: lower-alpha">
+<li>First, get some descriptive statistics on the data. Then get a sense of the individual variables’ effect on survival, by fitting a Cox PH model on each of the explanatory variables separately.</li>
+</ol>
+</blockquote>
+<pre class="r"><code>summary(myel)</code></pre>
+<pre><code>    patient           time           status          age       
+ Min.   : 1.00   Min.   : 1.00   Min.   :0.00   Min.   :50.00  
+ 1st Qu.:12.75   1st Qu.: 6.75   1st Qu.:0.75   1st Qu.:58.75  
+ Median :24.50   Median :14.50   Median :1.00   Median :62.50  
+ Mean   :24.50   Mean   :23.38   Mean   :0.75   Mean   :62.90  
+ 3rd Qu.:36.25   3rd Qu.:37.00   3rd Qu.:1.00   3rd Qu.:68.25  
+ Max.   :48.00   Max.   :91.00   Max.   :1.00   Max.   :77.00  
+      sex              bun               ca               hb       
+ Min.   :0.0000   Min.   :  6.00   Min.   : 8.000   Min.   : 4.90  
+ 1st Qu.:0.0000   1st Qu.: 13.75   1st Qu.: 9.000   1st Qu.: 8.65  
+ Median :1.0000   Median : 21.00   Median :10.000   Median :10.20  
+ Mean   :0.6042   Mean   : 33.92   Mean   : 9.938   Mean   :10.25  
+ 3rd Qu.:1.0000   3rd Qu.: 39.25   3rd Qu.:10.000   3rd Qu.:12.57  
+ Max.   :1.0000   Max.   :172.00   Max.   :15.000   Max.   :14.60  
+       pc               bj        
+ Min.   :  3.00   Min.   :0.0000  
+ 1st Qu.: 21.25   1st Qu.:0.0000  
+ Median : 33.00   Median :0.0000  
+ Mean   : 42.94   Mean   :0.3125  
+ 3rd Qu.: 63.00   3rd Qu.:1.0000  
+ Max.   :100.00   Max.   :1.0000  </code></pre>
+<p>Let’s model all variables separately (except for patient, time and status)</p>
+<pre class="r"><code>vars &lt;- setdiff(colnames(myel), c(&quot;patient&quot;, &quot;time&quot;, &quot;status&quot;))
+
+fits &lt;- map(vars, .f = function(var) {
+  fit = coxph(Surv(time, status)~get(var), data = myel)
+})
+names(fits) &lt;- vars
+
+fits_summary &lt;- map_dfr(fits, broom::tidy, .id = &quot;var&quot;)
+fits_summary</code></pre>
+<pre><code>  var     term     estimate   std.error  statistic     p.value
+1 age get(var)  0.010370389 0.027974456  0.3707092 0.710854121
+2 sex get(var) -0.064606144 0.354630810 -0.1821786 0.855442567
+3 bun get(var)  0.020151980 0.005726557  3.5190396 0.000433112
+4  ca get(var) -0.088886279 0.132472799 -0.6709776 0.502234810
+5  hb get(var) -0.134673527 0.059294189 -2.2712770 0.023130216
+6  pc get(var)  0.001587994 0.005680465  0.2795535 0.779820101
+7  bj get(var) -0.553957353 0.387880839 -1.4281637 0.153244733
+      conf.low   conf.high
+1 -0.044458538  0.06519932
+2 -0.759669760  0.63045747
+3  0.008928135  0.03137582
+4 -0.348528193  0.17075564
+5 -0.250888002 -0.01845905
+6 -0.009545514  0.01272150
+7 -1.314189828  0.20627512</code></pre>
+<blockquote>
+<ol start="2" style="list-style-type: lower-alpha">
+<li>Now, fit an empty model (no explanatory variables), and use the forward method (use the add1() function, the option test=”Chisq” for a likelihood ratio test, and the scope option to indicate which variables may be included) to build a final model.</li>
+</ol>
+</blockquote>
+<pre class="r"><code>fit0 &lt;- coxph(Surv(time, status)~1, data = myel)
+
+add1(fit0, scope = vars, test = &quot;Chisq&quot;)</code></pre>
+<pre><code>Warning in is.na(fit$coefficients): is.na() applied to non-(list or vector)
+of type &#39;NULL&#39;</code></pre>
+<pre><code>Single term additions
+
+Model:
+Surv(time, status) ~ 1
+       Df    AIC    LRT Pr(&gt;Chi)   
+&lt;none&gt;    214.68                   
+age     1 216.54 0.1378 0.710431   
+sex     1 216.65 0.0330 0.855821   
+bun     1 207.32 9.3624 0.002215 **
+ca      1 216.20 0.4746 0.490884   
+hb      1 211.66 5.0169 0.025101 * 
+pc      1 216.60 0.0773 0.780977   
+bj      1 214.51 2.1680 0.140913   
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<pre class="r"><code>fit1 &lt;- coxph(Surv(time, status)~bun, data = myel)
+add1(fit1, scope = vars, test = &quot;Chisq&quot;)</code></pre>
+<pre><code>Single term additions
+
+Model:
+Surv(time, status) ~ bun
+       Df    AIC    LRT Pr(&gt;Chi)  
+&lt;none&gt;    207.32                  
+age     1 209.32 0.0000  0.99531  
+sex     1 209.30 0.0144  0.90438  
+bun     0 207.32 0.0000           
+ca      1 209.28 0.0398  0.84194  
+hb      1 204.70 4.6171  0.03165 *
+pc      1 209.04 0.2805  0.59635  
+bj      1 204.99 4.3274  0.03750 *
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<pre class="r"><code>fit2 &lt;- coxph(Surv(time, status)~bun+hb, data = myel)
+add1(fit2, scope = vars, test = &quot;Chisq&quot;)</code></pre>
+<pre><code>Single term additions
+
+Model:
+Surv(time, status) ~ bun + hb
+       Df    AIC     LRT Pr(&gt;Chi)  
+&lt;none&gt;    204.70                   
+age     1 206.45 0.24630   0.6197  
+sex     1 206.31 0.39250   0.5310  
+bun     0 204.70 0.00000           
+ca      1 206.70 0.00067   0.9794  
+hb      0 204.70 0.00000           
+pc      1 206.47 0.22516   0.6351  
+bj      1 203.90 2.79772   0.0944 .
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<p>No more significant improvements</p>
+<blockquote>
+<ol start="3" style="list-style-type: lower-alpha">
+<li>The re¬searchers also wish to know whether the effects of the risk factors might be modified by the age or sex of a patient, so, in the final model, test for possible interactions with these two. Note: to fit the interaction term you will also have to fit the main effect (age or sex).</li>
+</ol>
+</blockquote>
+<pre class="r"><code>fit3 &lt;- coxph(Surv(time, status)~(bun+hb)*(age + sex), data = myel)
+summary(fit3)</code></pre>
+<pre><code>Call:
+coxph(formula = Surv(time, status) ~ (bun + hb) * (age + sex), 
+    data = myel)
+
+  n= 48, number of events= 36 
+
+              coef  exp(coef)   se(coef)      z Pr(&gt;|z|)
+bun     -0.0005735  0.9994266  0.0402039 -0.014    0.989
+hb      -0.3425636  0.7099480  0.6870670 -0.499    0.618
+age     -0.0640206  0.9379857  0.1125184 -0.569    0.569
+sex      0.2781463  1.3206795  1.4752258  0.189    0.850
+bun:age  0.0003291  1.0003291  0.0006804  0.484    0.629
+bun:sex  0.0031629  1.0031679  0.0120207  0.263    0.792
+hb:age   0.0030344  1.0030391  0.0104302  0.291    0.771
+hb:sex  -0.0151251  0.9849887  0.1445146 -0.105    0.917
+
+        exp(coef) exp(-coef) lower .95 upper .95
+bun        0.9994     1.0006    0.9237     1.081
+hb         0.7099     1.4086    0.1847     2.729
+age        0.9380     1.0661    0.7524     1.169
+sex        1.3207     0.7572    0.0733    23.796
+bun:age    1.0003     0.9997    0.9990     1.002
+bun:sex    1.0032     0.9968    0.9798     1.027
+hb:age     1.0030     0.9970    0.9827     1.024
+hb:sex     0.9850     1.0152    0.7420     1.308
+
+Concordance= 0.675  (se = 0.06 )
+Rsquare= 0.275   (max possible= 0.989 )
+Likelihood ratio test= 15.46  on 8 df,   p=0.05081
+Wald test            = 17.62  on 8 df,   p=0.02428
+Score (logrank) test = 21.28  on 8 df,   p=0.006433</code></pre>
+<p>There seems to be no significant interaction</p>
+<pre class="r"><code>drop1(fit3)</code></pre>
+<pre><code>Single term deletions
+
+Model:
+Surv(time, status) ~ (bun + hb) * (age + sex)
+        Df    AIC
+&lt;none&gt;     215.22
+bun:age  1 213.45
+bun:sex  1 213.29
+hb:age   1 213.31
+hb:sex   1 213.23</code></pre>
+<p>Dropping the interactions improves the model, so final model is model 2</p>
+<ol start="4" style="list-style-type: lower-alpha">
+<li>Interpret the coefficients from your final model (direction and size of the hazard ratios).</li>
+</ol>
+<pre class="r"><code>summary(fit2)</code></pre>
+<pre><code>Call:
+coxph(formula = Surv(time, status) ~ bun + hb, data = myel)
+
+  n= 48, number of events= 36 
+
+         coef exp(coef)  se(coef)      z Pr(&gt;|z|)    
+bun  0.020043  1.020245  0.005816  3.446 0.000569 ***
+hb  -0.134952  0.873758  0.061956 -2.178 0.029391 *  
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+    exp(coef) exp(-coef) lower .95 upper .95
+bun    1.0202     0.9802    1.0087    1.0319
+hb     0.8738     1.1445    0.7738    0.9866
+
+Concordance= 0.67  (se = 0.06 )
+Rsquare= 0.253   (max possible= 0.989 )
+Likelihood ratio test= 13.98  on 2 df,   p=0.0009213
+Wald test            = 16.11  on 2 df,   p=0.0003173
+Score (logrank) test = 19.54  on 2 df,   p=5.712e-05</code></pre>
+<p><code>bun</code> increases the hazard of dying (see <code>exp(coef)</code> for hazard ratio) <code>hb</code> decreases the hazard of dying (see <code>exp(coef)</code> for hazard ratio)</p>
+</div>
+<div id="this-exercise-is-a-repeat-of-exercise-2-but-in-spss.-read-the-data-from-exercise-2-into-spss-file-read-text-data-from-the-file-nephrect.txt." class="section level3">
+<h3>4. This exercise is a repeat of exercise 2, but in SPSS. Read the data from exercise 2 into SPSS (File, Read Text Data) from the file NEPHRECT.TXT.</h3>
+<p>This one was skipped</p>
+</div>
+<div id="this-exercise-is-a-repeat-of-exercise-3-but-in-spss.-open-the-data-file-myeloma.por.-use-utilities-variables-to-study-the-meaning-of-the-variables-in-the-data-file." class="section level3">
+<h3>5. This exercise is a repeat of exercise 3, but in SPSS. Open the data file MYELOMA.POR. Use Utilities, Variables… to study the meaning of the variables in the data file.</h3>
+<p>This one was skipped</p>
 </div>
 </div>
 <div id="session-information" class="section level2">
 <h2>Session information</h2>
 <!-- Insert the session information into the document -->
 <pre class="r"><code>sessionInfo()</code></pre>
-<pre><code>R version 3.4.1 (2017-06-30)
-Platform: x86_64-w64-mingw32/x64 (64-bit)
-Running under: Windows 7 x64 (build 7601) Service Pack 1
+<pre><code>R version 3.4.3 (2017-11-30)
+Platform: x86_64-apple-darwin15.6.0 (64-bit)
+Running under: macOS Sierra 10.12.6
 
 Matrix products: default
+BLAS: /Library/Frameworks/R.framework/Versions/3.4/Resources/lib/libRblas.0.dylib
+LAPACK: /Library/Frameworks/R.framework/Versions/3.4/Resources/lib/libRlapack.dylib
 
 locale:
-[1] LC_COLLATE=Dutch_Netherlands.1252  LC_CTYPE=Dutch_Netherlands.1252   
-[3] LC_MONETARY=Dutch_Netherlands.1252 LC_NUMERIC=C                      
-[5] LC_TIME=Dutch_Netherlands.1252    
+[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
 
 attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
 other attached packages:
-[1] ISwR_2.0-7         survival_2.41-3    pwr_1.2-1         
-[4] ggplot2_2.2.1.9000
+ [1] data.table_1.10.4-3 survival_2.41-3     bindrcpp_0.2       
+ [4] simpleboot_1.1-3    boot_1.3-20         purrr_0.2.4        
+ [7] stringr_1.2.0       ggplot2_2.2.1       dplyr_0.7.4        
+[10] magrittr_1.5        epistats_0.1.0     
 
 loaded via a namespace (and not attached):
- [1] Rcpp_0.12.12      knitr_1.17        magrittr_1.5     
- [4] splines_3.4.1     munsell_0.4.3     lattice_0.20-35  
- [7] colorspace_1.3-2  rlang_0.1.2       stringr_1.2.0    
-[10] plyr_1.8.4        tools_3.4.1       epistats_0.1.0   
-[13] grid_3.4.1        binom_1.1-1       gtable_0.2.0     
-[16] git2r_0.19.0      htmltools_0.3.6   yaml_2.1.14      
-[19] lazyeval_0.2.0    rprojroot_1.2     digest_0.6.12    
-[22] tibble_1.3.4      Matrix_1.2-10     MESS_0.4-15      
-[25] evaluate_0.10.1   rmarkdown_1.6     labeling_0.3     
-[28] stringi_1.1.5     compiler_3.4.1    geepack_1.2-1    
-[31] scales_0.5.0.9000 backports_1.1.0   geeM_0.10.0      </code></pre>
+ [1] Rcpp_0.12.14     pillar_1.1.0     compiler_3.4.3   git2r_0.20.0    
+ [5] plyr_1.8.4       bindr_0.1        tools_3.4.3      digest_0.6.13   
+ [9] nlme_3.1-131     lattice_0.20-35  evaluate_0.10.1  tibble_1.4.1    
+[13] gtable_0.2.0     pkgconfig_2.0.1  rlang_0.1.6      psych_1.7.8     
+[17] Matrix_1.2-12    cli_1.0.0        parallel_3.4.3   yaml_2.1.16     
+[21] perm_1.0-0.0     knitr_1.18       rprojroot_1.2    grid_3.4.3      
+[25] glue_1.2.0       R6_2.2.2         foreign_0.8-69   rmarkdown_1.8   
+[29] reshape2_1.4.3   tidyr_0.7.2      backports_1.1.2  scales_0.5.0    
+[33] htmltools_0.3.6  splines_3.4.3    mnormt_1.5-5     assertthat_0.2.0
+[37] colorspace_1.3-2 utf8_1.1.3       stringi_1.1.6    lazyeval_0.2.1  
+[41] munsell_0.4.3    broom_0.4.3      crayon_1.3.4    </code></pre>
 </div>
 
 <hr>

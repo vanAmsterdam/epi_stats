@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+<meta name="author" content="Wouter van Amsterdam" />
+
+<meta name="date" content="2018-01-15" />
+
+<title>Survival analysis</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/font-awesome-4.5.0/css/font-awesome.min.css" rel="stylesheet" />
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+
+<div class="container-fluid main-container">
+
+<!-- tabsets -->
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+</script>
+
+<!-- code folding -->
+
+
+
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+  padding-left: 25px;
+  text-indent: 0;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">epi_stats</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/jdblischak/workflowr">
+    <span class="fa fa-github"></span>
+     
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">Survival analysis</h1>
+<h4 class="author"><em>Wouter van Amsterdam</em></h4>
+<h4 class="date"><em>2018-01-15</em></h4>
+
+</div>
+
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+<!-- Update knitr chunk options -->
+<!-- Insert the date the file was last updated -->
+<p><strong>Last updated:</strong> 2018-01-17</p>
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+<p><strong>Code version:</strong> 74f93f8</p>
+<!-- Add your analysis here -->
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>Tutor: Rebecca Stellato</p>
+</div>
+<div id="survival-analysis" class="section level2">
+<h2>Survival analysis</h2>
+<p>Data: events + time + censoring</p>
+<p>Time from well defined starting point, almost always right-skewed</p>
+<div id="formalism" class="section level3">
+<h3>Formalism</h3>
+<div id="survival-function" class="section level4">
+<h4>Survival function</h4>
+<p><span class="math inline">\(F(t)\)</span> is the cumulative probability of dying at time-point t for a participant. Monotonically increasing, bounded at 1</p>
+<p><span class="math inline">\(S(t) = 1 - F(t)\)</span></p>
+<p>Can be done parametric (exponential or Weibull).</p>
+</div>
+<div id="kaplan-meier" class="section level4">
+<h4>Kaplan-Meier</h4>
+<p>Usually: Kaplan-Meier, which is unparametric.</p>
+<p>For each time interval <span class="math inline">\(j\)</span></p>
+<ul>
+<li><span class="math inline">\(n_j\)</span>: number of patients entering interval</li>
+<li><span class="math inline">\(d_j\)</span>: number of events in interval</li>
+</ul>
+<p>Probability of surviving at time <span class="math inline">\(t\)</span> with <span class="math inline">\(t_k &lt; t &lt; t_{k+1}\)</span></p>
+<p><span class="math display">\[S(t) = \prod_j^k{\frac{n_j-d_j}{n_j}}\]</span></p>
+</div>
+<div id="testing" class="section level4">
+<h4>Testing</h4>
+<p>Log-rank test</p>
+</div>
+<div id="hazard-fuction" class="section level4">
+<h4>Hazard fuction</h4>
+<p>Hazard rate is instantatinious rate of an event</p>
+<p><span class="math display">\[\lambda(t) = -S&#39;(t)/S(t)\]</span></p>
+<p>Culmulative hazard</p>
+</div>
+</div>
+<div id="cox-proportional-hazard-regression" class="section level3">
+<h3>Cox proportional hazard regression</h3>
+<p>Assumption</p>
+<ul>
+<li>Everyone has the same unknown baseline hazard rate <span class="math inline">\(\lambda_0(t)\)</span></li>
+<li>individual hazard rate is by mutiplying the baseline with exponential function</li>
+</ul>
+<p><span class="math display">\[\lambda_i(t) = \lambda_0(t)e^{\beta_1x_1+\beta_2x_2...}\]</span></p>
+<p>Then <span class="math inline">\(e^{\beta_j}\)</span> is the <strong>hazard ratio</strong></p>
+<p>Baseline intercept incorporated in <span class="math inline">\(\lambda_0\)</span></p>
+<p><span class="math display">\[h_{i\ vs\ j} = e^{B(X_i - X_j)}\]</span></p>
+<p><strong>assumption</strong> this quantity does not depend on <span class="math inline">\(t\)</span></p>
+<p>This is what proportional hazard means</p>
+<div id="implementation-in-r" class="section level4">
+<h4>Implementation in R</h4>
+<p>Uses Wald-test</p>
+</div>
+<div id="assumptions" class="section level4">
+<h4>Assumptions</h4>
+<p>Cox proportional hazards is semi-parametric</p>
+<p>No assumption on baseline hazard distribution.</p>
+<p>Use partial likelihood (without baseline hazard) by evaluating hazard funcation.</p>
+<p>If event happend to subject <span class="math inline">\(i\)</span> at time <span class="math inline">\(Y_i\)</span>, the probability that this happend is:</p>
+<p><span class="math display">\[L_i(\beta) = \frac{\lambda(Y_i|X_i)}{\sum_{j:Y_j\geq Y_i}{\lambda{Y_i|X_j}}}\]</span></p>
+<p>Confidence based on Wald, Score, or likelihood ratio-test</p>
+</div>
+<div id="stratified-cox-model" class="section level4">
+<h4>Stratified Cox model</h4>
+<p><span class="math display">\[\lambda_i(t) = \lambda_g(t)e^{\beta_1x_1+\beta_2x_2...}\]</span></p>
+<p>Where <span class="math inline">\(g\)</span> the groups</p>
+<p>Then groups no longer in linear predictor. <span class="math inline">\(\beta_i\)</span> assumed to be equal in both groups.</p>
+<div id="check-proportional-hazards-assumptions-for-categorical-variables" class="section level5">
+<h5>Check proportional hazards assumptions for categorical variables</h5>
+<ul>
+<li>Stratify by group</li>
+<li>Plot LML (log minus log = log (cumulative))</li>
+<li>if two (cumulative) hazards are proportional, their logs will be parallel and differ by a constant</li>
+</ul>
+<p>As long as they don’t cross, it is OK (except when you have a lot of data)</p>
+<p>If you don’t STRATIFY, you’ll get out what you put in (propartianality), so allways use stratified analysis (with <code>strata</code> in R).</p>
+<p>If this is OK, we can use it in the unstratified model</p>
+<p>Otherwise: you can only do stratified analysis. You can create sort of survival times based on both models and compare.</p>
+<p>Or some interaction with time.</p>
+</div>
+</div>
+<div id="checking-other-assumptions" class="section level4">
+<h4>Checking other assumptions</h4>
+<p>Continous variables: unable to do visually</p>
+<p><code>coxzph</code> for statistical tests</p>
+</div>
+<div id="variations-for-2-variable-problems" class="section level4">
+<h4>Variations for 2 variable problems</h4>
+<ul>
+<li>g = group</li>
+<li>x = continous variable</li>
+</ul>
+<ol style="list-style-type: decimal">
+<li>baseline same for g, effect of x same in both group</li>
+<li>baseline same for g, effect of x different (interaction)</li>
+<li>baseline different for g, effect of x same in groups (strata)</li>
+<li>baseline different for g, effect of x different
+<ul>
+<li>can do 2 models</li>
+<li>can do with strata <code>coxph(surv ~ x * strata(g))</code></li>
+</ul></li>
+</ol>
+<p>Compare models with likelihood ratio test or AIC</p>
+</div>
+</div>
+<div id="predict-survival-from-cox-proportional-hazards" class="section level3">
+<h3>Predict survival from Cox proportional hazards</h3>
+<ul>
+<li>go from hazard to cumulative hazard</li>
+<li>use <span class="math inline">\(H(t) = -\ln(S(t)) \iff S(t) = e^{-H(t)}\)</span></li>
+<li>gives <span class="math inline">\(S_i(t) = S_0(t)^{e^{\beta_1x_1+...}}\)</span></li>
+</ul>
+<p>So if baseline survival is <span class="math inline">\(p\)</span>, than for patient with hazard ratio <span class="math inline">\(HR\)</span> is <span class="math inline">\(p^{HR}\)</span>. Baseline assumes all covariate values are 0.</p>
+<p>With R, predictions are given for ‘mean’ values when not given (also: ‘mean’ treatment which is like half treated)</p>
+<p>R can give predicted survival curves for any levels of covariates.</p>
+</div>
+</div>
+<div id="with-data" class="section level2">
+<h2>With data</h2>
+<p>Gene expression analysis for progression-free survival</p>
+<pre class="r"><code>data(nki70, package = &quot;penalized&quot;)
+str(nki70)</code></pre>
+<pre><code>&#39;data.frame&#39;:   144 obs. of  77 variables:
+ $ time          : num  7.75 4.66 8.74 7.57 7.3 ...
+ $ event         : num  0 1 0 0 0 0 1 0 1 0 ...
+ $ Diam          : Factor w/ 2 levels &quot;&lt;=2cm&quot;,&quot;&gt;2cm&quot;: 1 1 2 1 1 1 1 1 2 1 ...
+ $ N             : Factor w/ 2 levels &quot;&gt;=4&quot;,&quot;1-3&quot;: 2 2 2 2 2 2 2 2 2 2 ...
+ $ ER            : Factor w/ 2 levels &quot;Negative&quot;,&quot;Positive&quot;: 2 2 2 2 1 2 2 1 1 2 ...
+ $ Grade         : Ord.factor w/ 3 levels &quot;Poorly diff&quot;&lt;..: 2 3 3 2 1 2 1 1 1 3 ...
+ $ Age           : int  50 42 50 43 47 47 38 45 31 41 ...
+ $ TSPYL5        : num  -0.188 0.151 0.117 0.105 0.308 ...
+ $ Contig63649_RC: num  -0.153 -0.2101 -0.2581 -0.1369 0.0354 ...
+ $ DIAPH3        : num  -0.2951 0.0336 0.0779 -0.0198 0.1559 ...
+ $ NUSAP1        : num  -0.5658 0.0365 -0.0883 -0.2721 0.1728 ...
+ $ AA555029_RC   : num  -0.2186 -0.0647 -0.3197 -0.0507 -0.1345 ...
+ $ ALDH4A1       : num  -0.1804 -0.0481 0.1253 0.0322 0.3686 ...
+ $ QSCN6L1       : num  -0.1878 -0.0258 -0.0874 -0.1807 0.1735 ...
+ $ FGF18         : num  -0.317 -0.425 -0.236 -0.142 -0.445 ...
+ $ DIAPH3.1      : num  -0.3012 0.2045 0.2365 -0.0299 0.1098 ...
+ $ Contig32125_RC: num  -0.1134 0.0161 0.1602 0.1352 -0.0381 ...
+ $ BBC3          : num  0.0184 0.0751 0.119 0.0722 -0.2978 ...
+ $ DIAPH3.2      : num  -0.12126 0.05913 0.07661 -0.00672 0.06186 ...
+ $ RP5.860F19.3  : num  -0.1546 -0.0616 0.2324 -0.0962 -0.2064 ...
+ $ C16orf61      : num  -0.2719 -0.0415 -0.1831 -0.1503 0.192 ...
+ $ SCUBE2        : num  -0.531 0.276 0.257 0.446 -1.012 ...
+ $ EXT1          : num  -0.2293 -0.2071 -0.2743 0.0464 -0.0452 ...
+ $ FLT1          : num  0.0293 -0.1484 0.0465 -0.2051 0.0808 ...
+ $ GNAZ          : num  -0.1691 -0.0292 -0.1308 0.1103 -0.3458 ...
+ $ OXCT1         : num  -0.1799 -0.1971 -0.2128 -0.2395 0.0278 ...
+ $ MMP9          : num  -0.0622 -0.3456 -0.5843 -0.348 -0.3355 ...
+ $ RUNDC1        : num  0.0877 -0.182 0.1318 0.0529 -0.0481 ...
+ $ Contig35251_RC: num  -0.0375 -0.0476 -0.1358 -0.0599 0.5975 ...
+ $ ECT2          : num  -0.1479 0.4806 0.1285 -0.0144 0.1465 ...
+ $ GMPS          : num  -0.2571 -0.1385 -0.4022 0.126 0.0591 ...
+ $ KNTC2         : num  -0.1277 0.2036 0.2773 -0.0253 -0.098 ...
+ $ WISP1         : num  -0.104 0.0597 -0.1044 -0.0198 -0.1151 ...
+ $ CDC42BPA      : num  -0.2244 0.1777 -0.3014 -0.0141 -0.1002 ...
+ $ SERF1A        : num  -0.1362 0.0886 -0.1745 0.0472 0.0705 ...
+ $ AYTL2         : num  -0.00944 -0.07273 -0.02608 0.02205 0.08181 ...
+ $ GSTM3         : num  0.1897 -0.3264 -0.0617 0.1756 -0.1378 ...
+ $ GPR180        : num  -0.0953 -0.1108 -0.1127 -0.1082 -0.0299 ...
+ $ RAB6B         : num  -0.337 -0.215 -0.224 -0.227 0.865 ...
+ $ ZNF533        : num  0.241 -0.658 -0.254 0.628 -0.519 ...
+ $ RTN4RL1       : num  -0.0366 -0.0468 0.2032 -0.067 0.0314 ...
+ $ UCHL5         : num  -0.1239 -0.1567 -0.2551 -0.0564 0.0296 ...
+ $ PECI          : num  0.0676 -0.223 0.0364 0.0851 -0.0838 ...
+ $ MTDH          : num  -0.2064 -0.1888 -0.3056 0.1185 -0.0878 ...
+ $ Contig40831_RC: num  -0.0743 -0.0162 -0.2395 -0.1126 0.4614 ...
+ $ TGFB3         : num  -0.0614 -0.0571 -0.048 0.0451 -0.1629 ...
+ $ MELK          : num  -0.2134 0.0939 -0.0815 -0.1117 0.1667 ...
+ $ COL4A2        : num  -0.12703 -0.02267 0.12498 -0.00666 -0.05592 ...
+ $ DTL           : num  -0.1893 0.0887 0.1164 0.0184 -0.0482 ...
+ $ STK32B        : num  0.0183 -0.0495 0.0861 0.1023 -0.1246 ...
+ $ DCK           : num  -0.0903 -0.0527 -0.1226 -0.0197 -0.0133 ...
+ $ FBXO31        : num  -0.18289 -0.04913 -0.00443 -0.07715 0.00606 ...
+ $ GPR126        : num  -0.267 -0.252 -0.573 -0.335 0.558 ...
+ $ SLC2A3        : num  -0.09184 -0.15137 -0.00182 -0.17129 -0.04141 ...
+ $ PECI.1        : num  0.08651 -0.26519 0.12603 0.15233 -0.00498 ...
+ $ ORC6L         : num  -0.403 -0.121 -0.244 -0.213 0.218 ...
+ $ RFC4          : num  -0.0714 -0.0635 -0.213 0.0271 0.2393 ...
+ $ CDCA7         : num  -0.708 -0.38 -0.54 -0.721 -0.265 ...
+ $ LOC643008     : num  -0.2165 -0.1678 -0.4666 -0.0888 -0.047 ...
+ $ MS4A7         : num  0.3891 -0.264 0.0512 0.2989 -0.315 ...
+ $ MCM6          : num  -0.2447 -0.0379 -0.0394 -0.0386 -0.0897 ...
+ $ AP2B1         : num  -0.00683 -0.05842 0.14922 0.21125 0.04529 ...
+ $ C9orf30       : num  -0.1528 -0.1043 -0.2461 -0.0997 0.1405 ...
+ $ IGFBP5        : num  -0.4054 -0.1913 -0.1702 0.0333 -0.5447 ...
+ $ HRASLS        : num  -0.14276 0.10849 -0.10125 -0.00861 0.28324 ...
+ $ PITRM1        : num  -0.102 -0.121 -0.22 -0.198 0.245 ...
+ $ IGFBP5.1      : num  -0.1203 -0.1045 -0.0587 0.0232 -0.3949 ...
+ $ NMU           : num  -0.141 -0.152 -0.428 0.038 -0.125 ...
+ $ PALM2.AKAP2   : num  0.14556 -0.19958 -0.00484 -0.20719 -0.14454 ...
+ $ LGP2          : num  -0.1447 -0.0702 0.1399 0.149 -0.2951 ...
+ $ PRC1          : num  -0.5268 0.1658 0.0322 -0.2862 0.053 ...
+ $ Contig20217_RC: num  -0.29226 -0.00163 -0.40881 -0.16965 0.10088 ...
+ $ CENPA         : num  -0.6629 0.0756 -0.1853 -0.2449 0.15 ...
+ $ EGLN1         : num  -0.0778 -0.0274 -0.03 -0.2055 0.0991 ...
+ $ NM_004702     : num  -0.19399 0.27757 -0.02672 -0.05446 0.00317 ...
+ $ ESM1          : num  -0.1509 -0.1596 -0.2708 -0.1425 0.0613 ...
+ $ C20orf46      : num  -0.2675 -0.1444 0.0225 -0.2189 0.0833 ...</code></pre>
+<pre class="r"><code>library(survival)
+
+fit &lt;- coxph(Surv(time, event)~Diam + Age, data = nki70)
+fit2 &lt;- coxph(Surv(time, event)~Diam * Age, data = nki70)
+summary(fit)</code></pre>
+<pre><code>Call:
+coxph(formula = Surv(time, event) ~ Diam + Age, data = nki70)
+
+  n= 144, number of events= 48 
+
+             coef exp(coef) se(coef)      z Pr(&gt;|z|)   
+Diam&gt;2cm  0.78169   2.18516  0.30750  2.542   0.0110 * 
+Age      -0.07003   0.93236  0.02533 -2.764   0.0057 **
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+         exp(coef) exp(-coef) lower .95 upper .95
+Diam&gt;2cm    2.1852     0.4576    1.1960    3.9924
+Age         0.9324     1.0725    0.8872    0.9798
+
+Concordance= 0.682  (se = 0.045 )
+Rsquare= 0.079   (max possible= 0.95 )
+Likelihood ratio test= 11.82  on 2 df,   p=0.002707
+Wald test            = 12.23  on 2 df,   p=0.002207
+Score (logrank) test = 12.42  on 2 df,   p=0.002007</code></pre>
+<pre class="r"><code>summary(fit2)</code></pre>
+<pre><code>Call:
+coxph(formula = Surv(time, event) ~ Diam * Age, data = nki70)
+
+  n= 144, number of events= 48 
+
+                 coef exp(coef) se(coef)      z Pr(&gt;|z|)
+Diam&gt;2cm      3.51598  33.64901  2.38231  1.476    0.140
+Age          -0.02720   0.97316  0.04575 -0.595    0.552
+Diam&gt;2cm:Age -0.06395   0.93805  0.05487 -1.165    0.244
+
+             exp(coef) exp(-coef) lower .95 upper .95
+Diam&gt;2cm       33.6490    0.02972    0.3156  3587.518
+Age             0.9732    1.02758    0.8897     1.064
+Diam&gt;2cm:Age    0.9381    1.06604    0.8424     1.045
+
+Concordance= 0.676  (se = 0.045 )
+Rsquare= 0.088   (max possible= 0.95 )
+Likelihood ratio test= 13.22  on 3 df,   p=0.004184
+Wald test            = 15.69  on 3 df,   p=0.001314
+Score (logrank) test = 17.12  on 3 df,   p=0.0006671</code></pre>
+<pre class="r"><code>broom::tidy(fit)</code></pre>
+<pre><code>      term   estimate  std.error statistic     p.value   conf.low
+1 Diam&gt;2cm  0.7816878 0.30750298  2.542049 0.011020461  0.1789930
+2      Age -0.0700324 0.02533369 -2.764397 0.005702805 -0.1196855
+    conf.high
+1  1.38438253
+2 -0.02037927</code></pre>
+<pre class="r"><code>AIC(fit, fit2)</code></pre>
+<pre><code>     df      AIC
+fit   2 424.0356
+fit2  3 424.6393</code></pre>
+<pre class="r"><code>anova(fit, fit2)</code></pre>
+<pre><code>Analysis of Deviance Table
+ Cox model: response is  Surv(time, event)
+ Model 1: ~ Diam + Age
+ Model 2: ~ Diam * Age
+   loglik  Chisq Df P(&gt;|Chi|)
+1 -210.02                    
+2 -209.32 1.3962  1    0.2374</code></pre>
+</div>
+<div id="session-information" class="section level2">
+<h2>Session information</h2>
+<!-- Insert the session information into the document -->
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 3.4.3 (2017-11-30)
+Platform: x86_64-apple-darwin15.6.0 (64-bit)
+Running under: macOS Sierra 10.12.6
+
+Matrix products: default
+BLAS: /Library/Frameworks/R.framework/Versions/3.4/Resources/lib/libRblas.0.dylib
+LAPACK: /Library/Frameworks/R.framework/Versions/3.4/Resources/lib/libRlapack.dylib
+
+locale:
+[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+[1] survival_2.41-3
+
+loaded via a namespace (and not attached):
+ [1] Rcpp_0.12.14     knitr_1.18       bindr_0.1        magrittr_1.5    
+ [5] splines_3.4.3    mnormt_1.5-5     lattice_0.20-35  R6_2.2.2        
+ [9] rlang_0.1.6      plyr_1.8.4       stringr_1.2.0    dplyr_0.7.4     
+[13] tools_3.4.3      parallel_3.4.3   grid_3.4.3       nlme_3.1-131    
+[17] broom_0.4.3      psych_1.7.8      git2r_0.20.0     htmltools_0.3.6 
+[21] yaml_2.1.16      rprojroot_1.2    digest_0.6.13    assertthat_0.2.0
+[25] tibble_1.4.1     Matrix_1.2-12    bindrcpp_0.2     reshape2_1.4.3  
+[29] purrr_0.2.4      tidyr_0.7.2      glue_1.2.0       evaluate_0.10.1 
+[33] rmarkdown_1.8    stringi_1.1.6    pillar_1.1.0     compiler_3.4.3  
+[37] backports_1.1.2  foreign_0.8-69   pkgconfig_2.0.1 </code></pre>
+</div>
+
+<hr>
+<p>
+    This <a href="http://rmarkdown.rstudio.com">R Markdown</a> site was created with <a href="https://github.com/jdblischak/workflowr">workflowr</a>
+</p>
+<hr>
+
+<!-- To enable disqus, uncomment the section below and provide your disqus_shortname -->
+
+<!-- disqus
+  <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+        var disqus_shortname = 'rmarkdown'; // required: replace example with your forum shortname
+
+        /* * * DON'T EDIT BELOW THIS LINE * * */
+        (function() {
+            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+-->
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

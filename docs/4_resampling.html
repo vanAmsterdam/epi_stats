@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+<meta name="author" content="Wouter van Amsterdam" />
+
+<meta name="date" content="2018-01-15" />
+
+<title>Lecture notes resampling</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/font-awesome-4.5.0/css/font-awesome.min.css" rel="stylesheet" />
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+
+<div class="container-fluid main-container">
+
+<!-- tabsets -->
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+</script>
+
+<!-- code folding -->
+
+
+
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+  padding-left: 25px;
+  text-indent: 0;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">epi_stats</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/jdblischak/workflowr">
+    <span class="fa fa-github"></span>
+     
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">Lecture notes resampling</h1>
+<h4 class="author"><em>Wouter van Amsterdam</em></h4>
+<h4 class="date"><em>2018-01-15</em></h4>
+
+</div>
+
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+<!-- Update knitr chunk options -->
+<!-- Insert the date the file was last updated -->
+<p><strong>Last updated:</strong> 2018-01-17</p>
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+<p><strong>Code version:</strong> 74f93f8</p>
+<!-- Add your analysis here -->
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>Tutor: Cas Kruitwagen</p>
+<div id="resampling" class="section level3">
+<h3>Resampling</h3>
+<p>Drawing random samples from sample with replacement.</p>
+<p>Gives estimate of sampling distribution of sample statistic</p>
+<ul>
+<li>Central limit theorem sampling distribution of the mean is approximately normal</li>
+<li>Always take same size, to reflect original variance. Otherwise too little variance.</li>
+<li>Draw with replacement, otherwise allways the same sample</li>
+</ul>
+<p>For other statistics than mean, bootstrapping can give an idea of the bias in the estimator and variance of sample statistics</p>
+<p>Bootstrapping gives estimates based on the sample distribution.</p>
+<p>Is good as long as the sample is large enough and i.i.d.</p>
+<p>For biased statistics: the bias that you see in boostrapping distribution, is around the same as for the actual sample distribution</p>
+<p>Difference between mean in bootstrapped samples and sample mean reflects the bias. I.E. the difference between sample statistic and true population parameters.</p>
+<p>Bootstrapping also gives an idea of the standard error</p>
+</div>
+<div id="sample" class="section level3">
+<h3>1 sample</h3>
+</div>
+<div id="independent-samples" class="section level3">
+<h3>2 independent samples</h3>
+<p>Do independent bootstrapping in both populations</p>
+<p>Log-transform will give confidence intervals for ratio (<span class="math inline">\(e^{a-b} = \frac{e^a}{e^b}\)</span>) of the geometric means (not the arithmetic mean).</p>
+<p>It works OK for getting p-value (stays pretty much the same). Confidence interval is not informative of what you want to know.</p>
+<p>Use bootstrapping for confidence interval. p-value can be ‘calculated’ by looking at the coverage for which the CI includes thu null-value</p>
+</div>
+<div id="paired-groups" class="section level3">
+<h3>2 paired groups</h3>
+<p>Make sure you keep the pairs together</p>
+<p>E.g. bootstrap the differences</p>
+</div>
+<div id="correlation" class="section level3">
+<h3>Correlation</h3>
+<p>R already uses Fisher’s-Z transformation for confidence intervals. Accounts for skewness</p>
+<p>Fisher’s Z-transformation assumes bivariate normal distribution.</p>
+<p>Bootstrapping does not require the normal assumption</p>
+</div>
+<div id="boostrapping-confidence-intervals" class="section level3">
+<h3>Boostrapping confidence intervals</h3>
+<div id="percentile-method" class="section level4">
+<h4>percentile method</h4>
+</div>
+<div id="bootstrap-t-normal" class="section level4">
+<h4>bootstrap t (“normal”)</h4>
+<p>Estimate bias by <span class="math inline">\(mean_{boot} - t_0\)</span> where <span class="math inline">\(t_0\)</span> is the sample statistic Estiamte standard error of sample distribution with <span class="math inline">\(sd_{boot}\)</span></p>
+<p>Assume normal distribution of bootstrap samples</p>
+<p><span class="math display">\[t_0 - bias \pm Z_{\alpha/2}*sd_{boot}\]</span></p>
+</div>
+<div id="basic-bootstrap-ci" class="section level4">
+<h4>basic bootstrap CI</h4>
+<p>Get confidence interval by:</p>
+<p><span class="math inline">\(t_0 - (high_percentile - t_0)\)</span>; <span class="math inline">\(t_0 - (low_percentile -t_0)\)</span></p>
+<p>This takes care of bias for asymmtric cases</p>
+<p>Asymmetry must reflect the bias</p>
+<p>For symmetric distributions, this reduces to regular percentile method</p>
+</div>
+<div id="bias-corrected-accelerated" class="section level4">
+<h4>bias corrected accelerated</h4>
+<p>I uses the percentile method, but <span class="math inline">\(\alpha\)</span> is not eveny divided over the two sides</p>
+<p>Bootstrapping usually gives a little too low coverage</p>
+</div>
+</div>
+</div>
+<div id="permutation-tests" class="section level2">
+<h2>Permutation tests</h2>
+<p>Normally in statistics, you assume a null-hypothesis distribution for the test statistic.</p>
+<p>What if your sampling distribution is unknown?</p>
+<p>Bootstrapping distribution is constructed from the observerd data, and this might not conform to the null hypothesis.</p>
+<p>Even if data come from null-distribution, then there could still be bias (e.g. different mean in sample)</p>
+<p>Permutation test: randomly permute the classification.</p>
+<p>For paired data: keep pairs together, permute observations within an individual</p>
+<p>This gives a sampling distribution under null-hypothesis.</p>
+<p>One-sided p-value is just the fraction of permutations under which the observed statistic is the same or more extreme</p>
+<p>The number of possible permutations is <span class="math inline">\({n_1 + n_2}\choose{n_1}\)</span> for 2 groups Number of possible permuations for <span class="math inline">\(n\)</span> observations of paired data is <span class="math inline">\(2^n\)</span></p>
+<p>If the number is low, it could be you never get a significant results If this becomes very high, just take a random sample of possible permutations ‘random sample’ is more like a ‘randomization test’ rather than ‘permutation test’.</p>
+<ul>
+<li>For correlation between <span class="math inline">\(x_{1, i}\)</span> and <span class="math inline">\(x_{2, i}\)</span>, keep the order of <span class="math inline">\(x_{1}\)</span>, permute <span class="math inline">\(x_{2}\)</span>. Number of permutions is <span class="math inline">\(n!\)</span>.</li>
+</ul>
+<p>Purmutation is a form of resampling without replacement</p>
+<div id="familiar-permutation-tests" class="section level3">
+<h3>Familiar permutation tests</h3>
+<p>Mann-Whitney test for 2 independent samples. Is a permutation test of the ranks of all observations. Sampling distribution of the sum of ranks of the smallest group is determined.</p>
+<p>Observed rank sum is compared to sampling distribution, p-value is calculated For large data: don’t calculate all permutations but assume normal distribution of test statistic</p>
+</div>
+<div id="fisher-exact-test" class="section level3">
+<h3>Fisher Exact test</h3>
+<p>Permute individual table entries randomly, keeping marginals the same.</p>
+<p>Famous lady tasting tea experiment. Guess if tea was added first, or milk. Lady knows the marginal distribution: n1 are milk first, n2 are tea first. Test statistic: number of “tea first” correct</p>
+<p>For this test, you don’t need to get distribution from all permutations, the distribution is known: hypergeometric distribution</p>
+<p><span class="math display">\[P(R = r) = \frac{{n_1}\choose{r}{n_2}\choose{}}\]</span></p>
+</div>
+</div>
+<div id="session-information" class="section level2">
+<h2>Session information</h2>
+<!-- Insert the session information into the document -->
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 3.4.3 (2017-11-30)
+Platform: x86_64-apple-darwin15.6.0 (64-bit)
+Running under: macOS Sierra 10.12.6
+
+Matrix products: default
+BLAS: /Library/Frameworks/R.framework/Versions/3.4/Resources/lib/libRblas.0.dylib
+LAPACK: /Library/Frameworks/R.framework/Versions/3.4/Resources/lib/libRlapack.dylib
+
+locale:
+[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+loaded via a namespace (and not attached):
+ [1] compiler_3.4.3  backports_1.1.2 magrittr_1.5    rprojroot_1.2  
+ [5] tools_3.4.3     htmltools_0.3.6 yaml_2.1.16     Rcpp_0.12.14   
+ [9] stringi_1.1.6   rmarkdown_1.8   knitr_1.18      git2r_0.20.0   
+[13] stringr_1.2.0   digest_0.6.13   evaluate_0.10.1</code></pre>
+</div>
+
+<hr>
+<p>
+    This <a href="http://rmarkdown.rstudio.com">R Markdown</a> site was created with <a href="https://github.com/jdblischak/workflowr">workflowr</a>
+</p>
+<hr>
+
+<!-- To enable disqus, uncomment the section below and provide your disqus_shortname -->
+
+<!-- disqus
+  <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+        var disqus_shortname = 'rmarkdown'; // required: replace example with your forum shortname
+
+        /* * * DON'T EDIT BELOW THIS LINE * * */
+        (function() {
+            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+-->
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
