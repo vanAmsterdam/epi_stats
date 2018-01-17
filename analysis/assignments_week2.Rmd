@@ -1,0 +1,728 @@
+---
+title: "Assignments Modern Methods in Data Analysis, week 2"
+author: "Wouter van Amsterdam"
+date: 2018-01-15
+output: html_document
+---
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+```
+
+<!-- Update knitr chunk options -->
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+<!-- Insert the date the file was last updated -->
+```{r last-updated, echo=FALSE, results='asis'}
+```
+
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+```{r code-version, echo=FALSE, results='asis'}
+```
+
+<!-- Add your analysis here -->
+
+## Setup
+
+### Load some packages
+
+```{r, message = F}
+library(epistats) # contains 'fromParentDir' and other handy functions
+library(magrittr) # for 'piping'  '%>%'
+library(dplyr)    # for data mangling, selecting columns and filtering rows
+library(ggplot2)  # awesome plotting library
+library(stringr)  # for working with strings
+library(purrr)    # for the 'map' function, which is an alternative for lapply, sapply, mapply, etc.
+```
+
+For installing packages, type `install.packages(<package_name>)`, for instance:
+`install.packages(dplyr)`
+
+`epistats` is only available from GitHub, and can be installed as follows:
+
+```{r, eval = F}
+install.packages(devtools) # when not installed already
+devtools::install_github("vanAmsterdam/epistats")
+```
+
+
+
+
+## Resampling
+> Most of the exercises below come from Moore and McCabe’s Introduction to Practical Statistics, (8th Ed) chapter 16; some have been adapted slightly.
+Note that for exercises 16.40 and further an R script with commands is available on Moodle. In the answers to the exercises, at the end of the current document, some extra explanation about the R commands is provided. You can also have a look at the following resource that explains most common bootstrap functions in R:
+http://www.statmethods.net/advstats/bootstrapping.html
+
+### Ex. 16.7 What is wrong?
+> Explain what is wrong with each of the following statements.
+
+#### (a) The bootstrap distribution is created by resampling with replacement from the population.
+
+It is created by resampling with replacement from the sample, not the population
+
+#### (b) The bootstrap distribution is created by resampling without replacement from the original sample.
+
+It is resampling with replacements
+
+#### (c) When generating the resamples, it is best to use a sample size larger than the size of the original sample.
+
+No, this will give falsly tight confidence bounds as you are simulating that 
+you have gathered a lot of data, while you have only simulated data.
+
+#### (d) The bootstrap distribution will be similar to the sampling distribution in shape, center, and spread.
+
+The bootstrap distribution is centered around the the sample mean, with sample 
+spread. These can be different from the population and thus different from the
+'true' sampling distribution
+
+### Ex. 16.40 Confidence interval for the average IQ score.
+> The distribution of the 60 IQ test scores in IQ.txt is roughly Normal (make a histogram and normal QQ-plot to check this), and the sample size is large enough that we expect a Normal sampling distribution. We will compare confidence intervals for the population mean IQ μ based on this sample.
+
+#### (a) Use the formula s/√n to find the standard error of the mean. Give the usual 95% confidence interval based on this standard error and the t distribution.
+
+```{r}
+iq <- read.table(fromParentDir("data/IQ.txt"), header = T)
+str(iq)
+
+qqnorm(iq$IQscore)
+```
+
+```{r}
+n    <- nrow(iq)
+mean <- mean(iq$IQscore)
+sd   <- sd(iq$IQscore)
+se   <- sd / sqrt(n)
+q_val<- qt(p = 0.025, df = n-1) 
+
+mean + c(-1, 1)*se*abs(q_val)
+```
+
+Compare with t-test
+
+```{r}
+t.test(iq$IQscore)$conf.int
+```
+
+
+> (b) Install the libraries boot and simpleboot and load them (using the facilities under the tab Packages in R or RStudio, or using the commands in the R script.)
+Bootstrap the mean of the IQ scores, with R = 10000 resamples. Make a histogram and Normal quantile plot of the bootstrap distribution. Does the bootstrap distribution appear Normal? What is the bootstrap standard error? Give the bootstrap t 95% confidence interval.
+
+Only need to do this once:
+```{r, eval = F, message = F}
+install.packages(c("boot", "simpleboot"))
+```
+
+```{r}
+library(boot)
+library(simpleboot)
+
+```
+
+```{r}
+set.seed(12345)
+bootresults <- one.boot(iq$IQscore, mean, R = 10000)
+
+mean(bootresults$t); sd(bootresults$t)
+
+qqnorm(bootresults$t)
+
+hist(bootresults$t)
+```
+
+Looks nicely normally distributed.
+
+Now for the 95% CI:
+
+```{r}
+mean(bootresults$t) + c(-1,1)*qt(0.025, df = nrow(iq)-1, lower.tail = F)*sd(bootresults$t)/sqrt(nrow(iq))
+```
+
+> (c) Give the 95% confidence percentile, BCa, and basic intervals. How well do your five confidence intervals  agree? Was bootstrapping needed to find a reasonable confidence interval, or was the formula-based confidence interval in (a) good enough?
+
+```{r}
+boot.ci(bootresults)
+```
+
+The bootstrapping intervals agree, they are all a little narrower than the 
+t-test based confidence interval, however the difference is small.
+
+This is an (approximately) normally distributed vriable, so the t-test 
+interval is accurate.
+
+### Ex. 16.65 A small-sample permutation test.
+
+> To illustrate the process, let’s perform a permutation test by hand for a small random subset of the DRP data (Example 16.11). Here are the data (different from those in the lecture):
+Treatment group	57 53
+Control group 		19 37 41 42
+(a) Calculate the difference in means xtreatment − xcontrol between the two groups. This
+is the observed value of the statistic.
+
+```{r}
+df <- data.frame(
+  treat = c("treat", "treat", "control", "control", "control", "control"),
+  x = c(57, 53, 19, 37, 41, 42)
+)
+
+diffx <- df %>% 
+  group_by(treat) %>% 
+  summarize(mean = mean(x)) %>%
+  pull(mean) %>%
+  diff()
+diffx
+```
+
+> (b) Resample: randomly shuffle the 6 scores, where the two first scores will have the treatment (1), and the last 4 have control (0). What is the difference in group
+means for this resample?
+
+```{r}
+set.seed(2)
+df %>%
+  mutate(treat = sample(treat)) %>% # shuffle treat
+  group_by(treat) %>%
+  summarize(mean = mean(x)) %>% # calculate mean by group
+  pull(mean) %>%
+  diff() # get difference
+```
+
+> (c) Repeat step (b) 1000 times to get 1000 resamples and 1000 values of the statistic. (Obviously you will not do this 1000 times by hand. Do it a few times by hand until you understand the procedure, then proceed with R.) Make a table of the distribution of these 1000 values. This is the permutation distribution for your resamples.
+
+```{r}
+npermutations = 1000
+set.seed(2)
+
+diffs <- numeric(npermutations)
+
+for (i in 1:npermutations) {
+  diffs[i] <- df %>%
+    mutate(treat = sample(treat)) %>% # shuffle treat
+    group_by(treat) %>%
+    summarize(mean = mean(x)) %>% # calculate mean by group
+    pull(mean) %>%
+    diff() # get difference
+}
+```
+
+
+Look at the distribution of the differences
+```{r}
+hist(diffs)
+```
+
+
+> (d) What proportion of the 1000 statistic values were equal to or greater than the original value in part (a)? You have just estimated the one-sided P-value for the original 6 observations.
+
+```{r}
+mean(diffs >=diffx)
+```
+
+> (e) For this small data set, there are only 15 possible permutations of the data. As a result,
+we can calculate the exact P-value by counting the number of permutations with a statistic value greater than or equal to the original value and then dividing by 15. What is the exact P-value here?
+How close was your estimate?
+
+Create all permutations by making a matrix with all the possible positions 
+in the data where treatment can be located 
+
+```{r}
+treat_positions <- combn(6,2)
+treat_positions
+```
+
+Calculate differences
+
+```{r}
+possible_differences <- apply(treat_positions, 2, function(pos) {
+  mean(df$x[pos]) - mean(df$x[-pos])
+})
+sort(possible_differences)
+
+mean(possible_differences >= diffx)
+```
+
+The exact p-value is pretty close
+
+### 16.76 Comparing serum retinol levels. 
+>The formal medical term for vitamin A in the blood is serum retinol. Serum retinol has various beneficial effects, such as protecting against fractures. Medical researchers working with children in Papua New Guinea asked whether recent infections reduce the level of serum retinol. They classified children as recently infected or not on the basis of other blood tests, then measured serum retinol. Of the 90 children in the sample, 55 had been recently
+infected. Dataset retinol.txt gives the serum retinol levels for both groups, in micromoles per liter.
+(a) The researchers are interested in the proportional reduction in serum retinol. Verify that the mean for infected children is 0.620 and that the mean for uninfected children is 0.778.
+
+```{r}
+retinol <- read.table(fromParentDir("data/retinol.txt"), header = T)
+str(retinol)
+```
+
+```{r}
+retinol %>%
+  group_by(infected) %>%
+  summarize(mean(retinol))
+
+
+ratio <- retinol %>%
+  group_by(infected) %>%
+  summarize(mean = mean(retinol)) %>%
+  pull(mean) %>%
+  (function(x) (x/lag(x))[2])
+
+```
+
+
+
+> (b) There is no standard test for the null hypothesis that the ratio of the population means is 1. We can do a permutation test on the ratio of sample means. Carry out a one-sided test and report the P-value. Briefly describe the center and shape of the permutation distribution. Why do you expect the center to be close to 1?
+
+First let's calculate the number of possible permutations, to see if 
+calculating all permutations is feasible
+
+```{r}
+retinol %>% 
+  group_by(infected) %>% # group by infected
+  summarize(n = n())  # count number of infected
+
+choose(35+55, 55)
+```
+
+Getting all permutations is clearly infeasible, so let's do 1000
+
+```{r}
+nperm  = 1000
+ratios = numeric(nperm)
+set.seed(2)
+
+for (i in 1:nperm) {
+  ratios[i] <-
+    retinol %>%
+      mutate(shuff_intected = sample(infected)) %>%
+      group_by(shuff_intected) %>%
+      summarize(mean = mean(retinol)) %>%
+      pull(mean) %>%
+      (function(x) (x / lag(x))[2]) # divide each element by the previous, take second element (which is the fraction if x is 2 numbers)
+}
+```
+
+```{r}
+hist(ratios)
+```
+
+Distributions looks pretty symmetric around 1, which is the null value 
+for a ratio
+
+```{r}
+qqnorm(ratios)
+```
+
+Pretty nice normal distribution
+
+Now for the P-value
+
+```{r}
+mean(ratios < ratio) 
+```
+
+With plot for observed ratio
+
+```{r}
+hist(ratios)
+abline(v = ratio, lty = 2)
+```
+
+### 16.77 Methods of resampling. 
+
+> In the previous exercise we did a permutation test for the hypothesis “no difference between infected and uninfected children” using the ratio of mean serum retinol levels to measure “difference.” We might also want a bootstrap confidence interval for the ratio of population means for infected and uninfected children. Describe carefully how resampling is done for the permutation test and for the bootstrap, paying attention to the difference between the two resampling methods.
+
+Permution tests are used to simulate a distribution for the null-hypothesis.
+For this unpaired case it means shuffling the outcome (infected), which 
+are expected to depend on the determinant (retinol). Under the null-hypothesis 
+there is no relationship between the determinant and the outcome, 
+so each possible configuration of outcomes is equially likely to occur. 
+A number of random configurations is simulated, and the test statistic is 
+calculated for each permution. This gives the distribution of the null-hypothesis.
+Based on this distribution, we can see how probable it is to find a value 
+for the statistic or more extreme, which is the exact definition of a p-value.
+So permutations give p-values
+
+Bootstrapping simulates drawing random samples from the population, but uses 
+the actual observed distribution in the sample as a proxy for the population 
+distribution (which is usually unknown if you're doing research). 
+Drawing re-samples from this sample distribution and calculating the test 
+statistic for each re-sample gives an idea of the range of possible values 
+of the statistic for a sample of the given size. This distrubution of the 
+sample statistic can be used to approximate the confidence interval, which 
+can (loosely) be defined as the range of values which a sample test statistic is 
+(e.g. 95%) likelily to fall in between, when taking many samples.
+
+### Calcium intake and blood pressure. (Exercise from previous edition)
+
+> Does added calcium intake reduce the blood pressure of black men? In a randomized comparative double-blind trial, 10 men were given a calcium supplement for twelve weeks and 11 others received a placebo. Whether or not blood pressure dropped was recorded for each subject. Here are the data:
+Treatment	 Subjects	Successes	Proportion
+Calcium 	10 		6 		0.60
+Placebo 	11 		4 		0.36
+Total 		21 		10 		0.48
+
+```{r}
+calcium <- data.frame(
+  treatment = rep(c(1, 0), c(10, 11)),
+  success   = rep(c(1, 0, 1, 0), c(6, 4, 4, 7))
+)
+calcium
+```
+
+
+> We want to use these sample data to test equality of the population proportions of successes. Carry out a permutation test. Describe the permutation distribution. The permutation test does not depend on a “nice” distribution shape. Give the P-value
+and report your conclusion.
+
+The question here is to randomly divide 10 successes over 21 subjects.
+
+The possible number of permutations:
+
+```{r}
+choose(21, 10)
+```
+
+This is doable.
+
+We can get all the permutations by assigning 10 'rownumbers' or positions 
+for the successes in the 21 participants.
+
+```{r}
+positions <- combn(21, 10)
+
+positions[, 1:5]
+```
+
+Let's make sure that all treated participants are in the first 10 rows. 
+
+The the number of successes in the treatment group is the number of times 
+a position of $\leq 10$ happens in the permuted positions. 
+Let's call this $n$, than the difference in ratios is $\frac{n}{10}-\frac{10-n}{11}$
+
+```{r}
+diffs <- apply(positions, 2, function(position) {
+  n = sum(position <= 10)
+  (n/10) - ((10-n)/11)
+})
+```
+
+Look at the distribution
+
+```{r}
+hist(diffs)
+```
+
+Compare with observed ratio to get a p-value
+
+```{r}
+diffx <- 6/10 - 4 / 11
+
+mean(diffx <= diffs)
+```
+
+
+Now check with pre-defined functions:
+
+```{r}
+perm::permTS(calcium$success ~ calcium$treatment, alternative = "less", method = "exact.ce")
+fisher.test(calcium$success, calcium$treatment, alternative = "greater")
+```
+
+Our manual calculation coincides with Fisher's test and permTS method
+
+
+Internally, `permTS` does something similar as we did with the permutations
+It creates a 'cm' matrix with all possible combinations, the dimensions 
+of this matrix is 352716x21. Check the code with:
+
+`View(permute:::permTS.default)` which calls:
+`View(permute:::twosample.exact.ce)` which calls:
+`View(permute:::chooseMatrix)`
+
+## Survival Exercises
+
+### 1.  We will have a closer look at the data from the lecture, on remission times for leukemia:
+
+> Read in the dataset leukaemia.txt (saved as a flat text file), changing your working directory first or adding the path name to the file name:
+
+```{r}
+leuk<-read.table(fromParentDir("data/leukaemia.txt"), header = TRUE)
+```
+
+> a)	Fit five models (name them fit0 – fit4) with the following predictor variables: none (intercept only), GROUP, logWBCC, GROUP and logWBCC, GROUP*logWBCC.
+fit0<-coxph(Surv(TIME, STATUS)~1, data=leuk)
+etc.
+
+```{r}
+require(survival)
+fit0 <- coxph(Surv(TIME,  STATUS) ~ 1, data = leuk)
+fit1 <- coxph(Surv(TIME,  STATUS) ~ GROUP, data = leuk)
+fit2 <- coxph(Surv(TIME,  STATUS) ~ logWBCC, data = leuk)
+fit3 <- coxph(Surv(TIME,  STATUS) ~ GROUP + logWBCC, data = leuk)
+fit4 <- coxph(Surv(TIME,  STATUS) ~ GROUP * logWBCC, data = leuk)
+```
+
+> b)	Ask for the log-likelihood of the empty model: fit0$loglik
+Ask for the summaries of the 4 models fit1-fit4, and for their log-likelihoods.
+
+```{r}
+fit0$loglik
+```
+
+Let's combine the summaries of the models by converting them to data.frames 
+with `broom`, and bind them together with `rbindlist`
+```{r}
+fits <- list(fit1, fit2, fit3, fit4)
+
+summaries <- map(fits, broom::tidy) %>%
+  data.table::rbindlist(idcol = "model")
+
+summaries
+```
+
+> c) Interpret the coefficients of the models 1 through 4. What are you assuming with these models about the effect of group and logWBCC on the hazard of relapse?
+
+```{r}
+require(data.table)
+summaries[order(term)]
+```
+
+In models 1 and 3 there is a significant group effect of GROUP (decreased hazard). 
+In all models, logWBCC seems to have a significant effect.
+The interaction term of model 4 can be left out.
+
+Estimates higher than 0 correspond with increased hazards.
+The exponent of this estimate gives the hazard ratio (leaving the rest the same)
+
+Assumptions are proportional hazards, so the effects of group and logWBCC 
+on the hazard do not depend on time (the hazard ratios are constant in time).
+
+> d)	Calculate likelihood ratio test values and AIC’s (assume that the empty model, fit0, uses no degrees of freedom) 
+
+```{r}
+anova(fit0, fit1, fit2, fit3, fit4)
+AIC(fit0, fit1, fit2, fit3, fit4)
+```
+
+The lowest AIC is for fit3, both terms but no interaction. 
+We already observed earlier on that the interaction term in model 4 was not 
+significant, so it must be left out (AIC penalizes extra terms)
+
+> e)	Also compare the models via the likelihood ratio test, with commands like anova(fit1, fit3, test="Chisq")
+Note that not all comparisons are possible.
+
+```{r}
+anova(fit1, fit2, test = "Chisq")
+```
+
+The anova gives a result, but fit2 is not nested within fit1, so it's meaningless.s
+
+> f)	Decide which model is best. Interpret the coefficients of this best model.
+
+We already saw that model 3 has the lowest AIC, so we will pick that one
+
+```{r}
+summary(fit3)
+```
+
+Treatment reduces the hazard, logWBCC increases the hazard
+
+### 2.	Researchers are interested in the influence of age nephrectomy on the survival of hypernephroma patients. Read the data below into R from the file nephrect.txt:
+
+```{r}
+neph<-read.table(fromParentDir("data/nephrect.txt"), header = TRUE)
+str(neph)
+```
+
+> Survival times of 36 hypernephroma patients classified according to age group and whether or not they have had a nephrectomy.
+
+> a)	Make Kaplan-Meier plots for the three age groups, and test whether there is an effect of age on survival time (not taking nephrectomy into account) using the Log-rank test.
+
+```{r}
+plot(survfit(Surv(survtime, status)~age, data = neph))
+```
+
+
+```{r}
+survdiff(Surv(survtime, status)~age, data = neph)
+```
+
+According to the log-rank test, there is a significant difference in survival 
+between age groups. (see documentation: the default for `rho` is 0, which 
+corresponds to the log-rank test)
+
+> b)	Test whether there is an effect of age on survival time (not taking nephrectomy into account) using the Likelihood Ratio test and the Wald test from a Cox Proportional Hazards regression model. (Define AGE as a categorical variable.) Compare this result to the log-rank test.
+
+```{r}
+fit1 <- coxph(Surv(survtime, status) ~ factor(age), data = neph)
+summary(fit1)
+```
+
+The log-rank gives the lowest p-value. Likelihood ratio test is not significant
+
+> c)	From the Cox PH output, give the hazard ratio of age class 2 vs 1 and 3 vs 1. Give the 95% confidence intervals for these hazard ratios. Interpret the results.
+
+```{r}
+broom::tidy(fit1) %>%
+  mutate_at(.vars = c("estimate", "conf.low", "conf.high"), exp)
+```
+
+Hazard ratios are the `estimate`s (exponentiated as required).
+For the 2 vs 1 hazard ratio, the confidence interval includes the null value 
+of 1, which coincides with the p.value of > 0.05
+
+> d)	Now take only nephrectomy as the explanatory variable. Make Kaplan-Meier plots for the two groups, test for a difference in nephrectomy status using the log-rank test.
+
+```{r}
+plot(survfit(Surv(survtime, status)~nephrect, data = neph))
+survdiff(Surv(survtime, status)~nephrect, data = neph)
+```
+
+> e)	Test whether there is an effect of nephrectomy using the likelihood ratio and Wald tests in a Cox PH model. Compare this result to the log-rank test. Give the hazard ratio of no nephrectomy vs nephrectomy. Calculate a 95% confidence interval for this hazard ratio.
+
+```{r}
+fit2 <- coxph(Surv(survtime, status)~nephrect, data = neph)
+summary(fit2)
+```
+
+```{r}
+exp(coef(fit2))
+exp(confint((fit2)))
+```
+
+Nefrectomy seems to have a lower hazard of dying
+
+> f)	Test for a difference in nephrectomy status using a Cox PH model again, but now for each of the three original age classes separately (hint: make 3 new data frames with selections of age groups). Does the effect of nephrecto¬my appear to be the same in each age class? (Optional: how would you test this, using Cox PH?)
+
+Let's do this with `dplyr` function `group_by`
+
+```{r}
+fits <- neph %>%
+  group_by(age) %>%
+  do(fit = coxph(Surv(survtime, status)~nephrect, data = .))
+
+broom::tidy(fits, fit)   
+```
+
+The estimate for nephrectomy is different in the different age groups, 
+however, the confidence intervals all overlap. 
+
+We can test this by using `age` as an interaction
+
+```{r}
+fit2 <- coxph(Surv(survtime, status)~nephrect*factor(age), data = neph)
+summary(fit2)
+```
+
+Interaction term is indeed not significant
+
+> g)	Check the Cox PH assumption for AGE by building a model with NEPHRECT as explanatory variable and AGE as stratum variable. Get a log-minus-log plot and check whether the resulting log cumulative hazard functions are approximately parallel.
+
+```{r}
+fit3 <- coxph(Surv(survtime, status)~nephrect + strata(factor(age)), data = neph)
+summary(fit3)
+```
+
+The fast way:
+```{r}
+plot(survfit(fit3), col = c("red", "blue", "black"), fun = "cloglog")
+```
+
+The lines cross, so this vialates our assumption of proportional hazards
+
+### 3. Myeloma
+
+> Read the data file myeloma.dat (a comma-separated file with headers at the top) into R and attach it:
+
+```{r}
+myel<-read.table(fromParentDir("data/myeloma.dat"), header = TRUE)
+str(myel)
+```
+
+> The dataset contains the following variables on 48 patients diagnosed with multiple myeloma:
+Variable	Description
+survtime	survival time from diagnosis multiple myeloma (months)
+status	censoring status (0=censored, 1=death from multiple myeloma)
+age	age (years)
+sex	sex (1=male, 2=female)
+bun	blood urea nitrogen
+ca	serum calcium
+hb	haemoglobin
+pc	percentage plasma cells in bone marrow
+bj	Bence-Jones protein in urine
+
+> The object of the research is to determine the best fitting Cox proportional hazards model to explain death from multiple myeloma.
+
+> a)	First, get some descriptive statistics on the data. Then get a sense of the individual variables’ effect on survival, by fitting a Cox PH model on each of the explanatory variables separately.
+
+```{r}
+summary(myel)
+```
+
+Let's model all variables separately (except for patient, time and status)
+
+```{r}
+vars <- setdiff(colnames(myel), c("patient", "time", "status"))
+
+fits <- map(vars, .f = function(var) {
+  fit = coxph(Surv(time, status)~get(var), data = myel)
+})
+names(fits) <- vars
+
+fits_summary <- map_dfr(fits, broom::tidy, .id = "var")
+fits_summary
+```
+
+> b)	Now, fit an empty model (no explanatory variables), and use the forward method (use the add1() function, the option test=”Chisq” for a likelihood ratio test, and the scope option to indicate which variables may be included) to build a final model.
+
+```{r}
+fit0 <- coxph(Surv(time, status)~1, data = myel)
+
+add1(fit0, scope = vars, test = "Chisq")
+
+fit1 <- coxph(Surv(time, status)~bun, data = myel)
+add1(fit1, scope = vars, test = "Chisq")
+
+fit2 <- coxph(Surv(time, status)~bun+hb, data = myel)
+add1(fit2, scope = vars, test = "Chisq")
+
+```
+
+No more significant improvements
+
+> c)	The re¬searchers also wish to know whether the effects of the risk factors might be modified by the age or sex of a patient, so, in the final model, test for possible interactions with these two.
+	Note: to fit the interaction term you will also have to fit the main effect (age or sex).
+
+```{r}
+fit3 <- coxph(Surv(time, status)~(bun+hb)*(age + sex), data = myel)
+summary(fit3)
+```
+
+There seems to be no significant interaction
+
+```{r}
+drop1(fit3)
+```
+
+Dropping the interactions improves the model, so final model is model 2
+
+d)	Interpret the coefficients from your final model (direction and size of the hazard ratios).
+
+```{r}
+summary(fit2)
+```
+
+`bun` increases the hazard of dying (see `exp(coef)` for hazard ratio)
+`hb` decreases the hazard of dying (see `exp(coef)` for hazard ratio)
+
+### 4. This exercise is a repeat of exercise 2, but in SPSS. Read the data from exercise 2 into SPSS (File, Read Text Data) from the file NEPHRECT.TXT.
+
+This one was skipped
+
+### 5.  This exercise is a repeat of exercise 3, but in SPSS. Open the data file MYELOMA.POR. Use Utilities, Variables... to study the meaning of the variables in the data file.
+
+This one was skipped
+
+## Session information
+
+<!-- Insert the session information into the document -->
+```{r session-info}
+```
