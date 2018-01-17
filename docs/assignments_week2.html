@@ -318,7 +318,7 @@ shared across the workflowr files. -->
 <p><strong>Last updated:</strong> 2018-01-17</p>
 <!-- Insert the code version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
-<p><strong>Code version:</strong> 74f93f8</p>
+<p><strong>Code version:</strong> 4ae1ef0</p>
 <!-- Add your analysis here -->
 <div id="setup" class="section level2">
 <h2>Setup</h2>
@@ -694,8 +694,11 @@ odds ratio
 </div>
 <div id="survival-exercises" class="section level2">
 <h2>Survival Exercises</h2>
-<div id="we-will-have-a-closer-look-at-the-data-from-the-lecture-on-remission-times-for-leukemia" class="section level3">
-<h3>1. We will have a closer look at the data from the lecture, on remission times for leukemia:</h3>
+<div id="leukemia" class="section level3">
+<h3>1. Leukemia</h3>
+<blockquote>
+<p>We will have a closer look at the data from the lecture, on remission times for leukemia:</p>
+</blockquote>
 <blockquote>
 <p>Read in the dataset leukaemia.txt (saved as a flat text file), changing your working directory first or adding the path name to the file name:</p>
 </blockquote>
@@ -843,8 +846,11 @@ Wald test            = 33.6  on 2 df,   p=5.061e-08
 Score (logrank) test = 46.07  on 2 df,   p=9.921e-11</code></pre>
 <p>Treatment reduces the hazard, logWBCC increases the hazard</p>
 </div>
-<div id="researchers-are-interested-in-the-influence-of-age-nephrectomy-on-the-survival-of-hypernephroma-patients.-read-the-data-below-into-r-from-the-file-nephrect.txt" class="section level3">
-<h3>2. Researchers are interested in the influence of age nephrectomy on the survival of hypernephroma patients. Read the data below into R from the file nephrect.txt:</h3>
+<div id="nephrectomy" class="section level3">
+<h3>2. Nephrectomy</h3>
+<blockquote>
+<p>Researchers are interested in the influence of age nephrectomy on the survival of hypernephroma patients. Read the data below into R from the file nephrect.txt:</p>
+</blockquote>
 <pre class="r"><code>neph&lt;-read.table(fromParentDir(&quot;data/nephrect.txt&quot;), header = TRUE)
 str(neph)</code></pre>
 <pre><code>&#39;data.frame&#39;:   36 obs. of  4 variables:
@@ -1258,12 +1264,18 @@ Wald test            = 16.11  on 2 df,   p=0.0003173
 Score (logrank) test = 19.54  on 2 df,   p=5.712e-05</code></pre>
 <p><code>bun</code> increases the hazard of dying (see <code>exp(coef)</code> for hazard ratio) <code>hb</code> decreases the hazard of dying (see <code>exp(coef)</code> for hazard ratio)</p>
 </div>
-<div id="this-exercise-is-a-repeat-of-exercise-2-but-in-spss.-read-the-data-from-exercise-2-into-spss-file-read-text-data-from-the-file-nephrect.txt." class="section level3">
-<h3>4. This exercise is a repeat of exercise 2, but in SPSS. Read the data from exercise 2 into SPSS (File, Read Text Data) from the file NEPHRECT.TXT.</h3>
+<div id="nephrectomy-spss" class="section level3">
+<h3>4. Nephrectomy SPSS</h3>
+<blockquote>
+<p>This exercise is a repeat of exercise 2, but in SPSS. Read the data from exercise 2 into SPSS (File, Read Text Data) from the file NEPHRECT.TXT.</p>
+</blockquote>
 <p>This one was skipped</p>
 </div>
-<div id="this-exercise-is-a-repeat-of-exercise-3-but-in-spss.-open-the-data-file-myeloma.por.-use-utilities-variables-to-study-the-meaning-of-the-variables-in-the-data-file." class="section level3">
-<h3>5. This exercise is a repeat of exercise 3, but in SPSS. Open the data file MYELOMA.POR. Use Utilities, Variables… to study the meaning of the variables in the data file.</h3>
+<div id="myeloma-spss" class="section level3">
+<h3>5. Myeloma SPSS</h3>
+<blockquote>
+<p>This exercise is a repeat of exercise 3, but in SPSS. Open the data file MYELOMA.POR. Use Utilities, Variables… to study the meaning of the variables in the data file.</p>
+</blockquote>
 <p>This one was skipped</p>
 </div>
 </div>
