@@ -439,7 +439,9 @@ of this matrix is 352716x21. Check the code with:
 
 ## Survival Exercises
 
-### 1.  We will have a closer look at the data from the lecture, on remission times for leukemia:
+### 1. Leukemia
+
+>We will have a closer look at the data from the lecture, on remission times for leukemia:
 
 > Read in the dataset leukaemia.txt (saved as a flat text file), changing your working directory first or adding the path name to the file name:
 
@@ -525,7 +527,9 @@ summary(fit3)
 
 Treatment reduces the hazard, logWBCC increases the hazard
 
-### 2.	Researchers are interested in the influence of age nephrectomy on the survival of hypernephroma patients. Read the data below into R from the file nephrect.txt:
+### 2. Nephrectomy
+
+> Researchers are interested in the influence of age nephrectomy on the survival of hypernephroma patients. Read the data below into R from the file nephrect.txt:
 
 ```{r}
 neph<-read.table(fromParentDir("data/nephrect.txt"), header = TRUE)
@@ -713,11 +717,15 @@ summary(fit2)
 `bun` increases the hazard of dying (see `exp(coef)` for hazard ratio)
 `hb` decreases the hazard of dying (see `exp(coef)` for hazard ratio)
 
-### 4. This exercise is a repeat of exercise 2, but in SPSS. Read the data from exercise 2 into SPSS (File, Read Text Data) from the file NEPHRECT.TXT.
+### 4. Nephrectomy SPSS
+
+> This exercise is a repeat of exercise 2, but in SPSS. Read the data from exercise 2 into SPSS (File, Read Text Data) from the file NEPHRECT.TXT.
 
 This one was skipped
 
-### 5.  This exercise is a repeat of exercise 3, but in SPSS. Open the data file MYELOMA.POR. Use Utilities, Variables... to study the meaning of the variables in the data file.
+### 5. Myeloma SPSS
+
+>This exercise is a repeat of exercise 3, but in SPSS. Open the data file MYELOMA.POR. Use Utilities, Variables... to study the meaning of the variables in the data file.
 
 This one was skipped
 

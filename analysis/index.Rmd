@@ -23,6 +23,7 @@ statistic courses in the Epidemiology Graduate Program of the Julius Center, Utr
 
 ### Assignments
 [assignments week 1](assignments_week1.html)
+
 [assignments week 2](assignments_week2.html)
 
 ## Notes
