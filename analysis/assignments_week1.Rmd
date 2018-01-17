@@ -1,5 +1,5 @@
 ---
-title: "Assignments Modern Methods in Data Analysis"
+title: "Assignments Modern Methods in Data Analysis, week 1"
 author: "Wouter van Amsterdam"
 date: 2018-01-08
 output: html_document

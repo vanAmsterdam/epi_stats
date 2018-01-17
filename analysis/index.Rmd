@@ -17,12 +17,13 @@ statistic courses in the Epidemiology Graduate Program of the Julius Center, Utr
 
 [assignments week 3](c_assignments_week3.html)
 
-[case studies (not finished!)](c_case_studies.html)
+[case studies (not finished)](c_case_studies.html)
 
 ## Modern Methods in Data Analysis
 
 ### Assignments
 [assignments week 1](assignments_week1.html)
+[assignments week 2](assignments_week2.html)
 
 ## Notes
 Due to how this website was made, the R-code 'thinks' it is in the `analysis` 
@@ -33,3 +34,13 @@ the parent directory. The function can be found in the package `epistats`,
 which can be installed with `devtools::install_github("vanAmsterdam/epistats")`
 
 If `devtools` is not yet installed, first run `install.packages("devtools")`
+
+
+### Function from a package
+
+Sometimes different packages provide functions with the same names. 
+For example, `read_spss` exists in both `foreign` and `heaven`. 
+
+To make sure you use the intended function 
+(and to circumvent using `library(package)`), use `<package>::<function>` 
+to use `<function>` from package `<package>`
