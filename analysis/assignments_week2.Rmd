@@ -437,6 +437,56 @@ of this matrix is 352716x21. Check the code with:
 `View(permute:::twosample.exact.ce)` which calls:
 `View(permute:::chooseMatrix)`
 
+Now let's do a more direct method, exploiting the fact that 
+every combination of $n$ successes in the treatment group 
+will yield the same results. 
+Note: this only works when 'success' is a binary variable, it 
+would not work in the more general case for continous outcomes.
+
+```{r}
+n1 = 10
+n2 = 11
+ns = 10
+diffx
+
+```
+
+```{r}
+perm_twogroup <- function(target, n1, n2, ns) {
+  
+  total_combinations <- choose(n1+n2, ns)
+  combinations <- integer(ns+1)
+  differences <- numeric(ns+1)
+  
+  for (n in 0:ns) {
+    i = n+1
+    
+    difference = n / n1 - (ns-n) / n2
+    ncombinations = choose(n1, n)*choose(n2, ns-n)
+    
+    differences[i] = difference
+    combinations[i]= ncombinations
+  }
+  
+  sum(combinations[differences>=target]) / total_combinations
+  
+}
+
+perm_twogroup(diffx, n1, n2, ns)
+```
+
+Lets compare computation speed:
+
+```{r}
+
+system.time(perm::permTS(calcium$success ~ calcium$treatment, alternative = "less", method = "exact.ce"))
+system.time(fisher.test(calcium$success, calcium$treatment, alternative = "greater"))
+system.time(perm_twogroup(diffx, n1, n2, ns))
+
+```
+
+We can see that `permTS` is extremely slow, compared to `fisher.test` and the manual exact method.
+
 ## Survival Exercises
 
 ### 1. Leukemia
@@ -728,6 +778,436 @@ This one was skipped
 >This exercise is a repeat of exercise 3, but in SPSS. Open the data file MYELOMA.POR. Use Utilities, Variables... to study the meaning of the variables in the data file.
 
 This one was skipped
+
+## Longitudinal data
+
+### Exercise 1:
+> We will start by reproducing the results of this morning’s lecture concerning the milk protein data:
+Start R, load the library nlme and access the data set Milk:
+
+```{r}
+library(nlme)
+data(Milk)
+summary(Milk)
+```
+
+>  In our analysis we will at first confine ourselves to time points 1 and 2:
+
+```{r}
+Milk12<-Milk[Milk$Time<3,]
+summary(Milk12)
+
+```
+
+
+> To calculate the mean for protein type the command
+
+> If we want to calculate the mean for the different weeks we can make use of the tapply function
+
+Or use `dplyr`
+
+```{r}
+tapply(Milk12$protein,Milk12$Time,mean)
+
+Milk12 %>%
+  group_by(Time) %>%
+  summarize(mean(protein))
+```
+
+> To avoid that we have to include the name of the dataset every time we name a variable, we will attach the data set to the search list:
+
+Let's not do this
+
+> So now R will also look in the dataset Milk12 to look for objects that you use in your commands. So after attaching the dataset it will suffice to write
+
+> Make a “spaghetti plot” of the protein data for weeks 1 and 2:
+
+```{r}
+with(Milk12,
+     interaction.plot(x.factor=Time,trace.factor=Cow,response=protein))
+```
+
+
+> We will now do a pooled T test and a paired T test on the data. Since cow “B20” has a missing protein value at time 2, we will delete this cow from the data set for now.
+
+```{r}
+Milk12complete<-Milk12 %>% filter(Cow!="B20")
+str(Milk12complete)
+```
+
+> (Note that dataset Milk12complete is added to the search list before Milk12, so R will look in Milk12Bcomplete first. Variables in Milk12 are “masked”.)
+
+```{r}
+t.test(protein~Time,var.equal=T, data = Milk12complete)
+t.test(protein~Time,paired=T, data = Milk12complete)
+```
+
+> Note that both T tests give highly significant results but the p value from the paired T test is much smaller: 2.6*10-7 vs. 4.6*10-10.
+
+> We can do equivalent analyses using ANOVA (Oneway and split-plot, respectively). This enables us to compare sums-of-squares of the ANOVA tables:
+
+```{r}
+summary(aov(protein~Time, data = Milk12complete))
+summary(aov(protein~Time+Error(Cow), data = Milk12complete))
+
+```
+
+> Note that SS(Residuals) of the One-way ANOVA is the same as the sum of the two SS residuals in the Split-plot ANOVA. It is split into a “between Cow” and “Within” part.
+
+> To get an idea about the distribution of protein for week 1 and week 2, we can produce a scatter plot and a boxplot by executing:
+
+```{r}
+plot(protein~Time, data = Milk12complete)
+boxplot(protein~Time, data = Milk12complete)
+
+```
+
+> If we want to calculate the mean protein per diet for every week and make a plot of them, we just have to execute the commands
+
+```{r}
+# tapply(protein,list(Diet,Time),mean)
+
+Milk12complete %>%
+  group_by(Diet, Time) %>%
+  summarize(mean(protein))
+
+with(Milk12complete,
+     interaction.plot(x.factor=Time,trace.factor=Diet,response=protein))
+
+  
+```
+
+
+```{r}
+# tapply(protein,list(Diet,Time),var)
+Milk12complete %>%
+  group_by(Time, Diet) %>%
+  summarize(mean = mean(protein), var = var(protein))
+```
+
+> shows that the variances per diet in week 1 are much larger than in week 2.
+
+> To produce histograms for the protein observations per diet per week
+
+```{r}
+library(lattice)		#Contains the function histogram
+histogram(~protein | Time*Diet, data = Milk12complete)
+
+```
+
+GGplot equivalent:
+
+```{r}
+Milk12complete %>%
+  ggplot(aes(x = protein)) +
+  geom_histogram() +
+  facet_grid(Diet~Time, scales = "fixed")
+```
+
+Comparing ggplot with lattice, we can see that the binwidth is pretty important
+
+Let's do 10 bins
+
+```{r}
+Milk12complete %>%
+  ggplot(aes(x = protein)) +
+  geom_histogram(bins = 10) +
+  facet_grid(Diet~Time, scales = "fixed")
+```
+
+
+> You can see that the histograms are more spread out in week 1.
+
+> We will now extend the analysis to the first 3 weeks, complete cases.
+
+```{r}
+# Milk123complete<-Milk[Milk$Time<4 & Milk$Cow!="B20",]
+Milk123complete<- Milk %>%
+  filter(Time<4 & Cow!="B20")
+with(Milk123complete,
+     interaction.plot(x.factor=Time,trace.factor=Diet,response=protein))
+
+```
+
+> Let’s first investigate the protein profiles per cow graphically. 
+(Normally we would have to tell R that our observations are grouped. We could accomplish this by creating a new groupedData set, where cow is our grouping variable: d.gr <-groupedData(protein~Time|Cow, data=Milk123complete)
+Here, the internal dataset Milk was already grouped.)
+
+> For a plot of all cows together (like the spaghetti interaction.plot), run
+
+
+`plot(Milk123complete,outer=~1,aspect=1,key=F)`
+
+This command does not work for me, probably because some package 
+makes some alteration to the plot function (it's not `lattice`).
+
+Let's do it 'by hand'
+
+```{r}
+Milk123complete %>%
+  ggplot(aes(x = Time, y = protein, col = Cow)) + 
+  geom_line() + 
+  theme(legend.position = "none")
+```
+
+(key=F suppresses the elaborate non-informative legend.)
+For the same plot, but now per diet group, run
+
+`plot(Milk123complete,outer=~Diet,layout=c(3,1),aspect=1,key=F)`
+
+Again this doesn't work, but GGplot2 can do the job
+
+
+```{r}
+Milk123complete %>%
+  ggplot(aes(x = Time, y = protein, col = Cow)) + 
+  geom_line() + 
+  facet_grid(~Diet, scales = "fixed") + 
+  theme(legend.position = "none")
+```
+
+> In the next part we will produce the slope as summary measure for each cow over the first three weeks of observation.
+To calculate our summary measure (the slope) for every cow we fit a linear model per cow. The “lmList” function (which works on groupedData objects) will calculate the slopes and intercepts for a linear regression model with protein as dependent variable and Time as predictor. This is done for each cow separately. The results are stored in the object “fits”. Typing “fits” then displays these results:
+
+```{r}
+fits<-lmList(protein~Time|Cow, data=Milk123complete)
+fits
+```
+
+> Note that there is a substantial amount of variation in intercepts and slopes. (It might be worthwhile to try to take this into account. We’ll do that tomorrow.)
+
+> And here is a “little trick” to extract the slopes for every cow (using the fact that the slope is the second coefficient of the first part of the output):
+
+```{r}
+slopes<-rep(0,78)
+for(i in 1:78)slopes[i]<-fits[[i]][1]$coefficients[2]
+```
+
+> (Note: the first of these two commands “initializes” slopes to be a vector consisting of 78 zeroes. The second command replaces these zeroes with the actual slopes.)
+
+Here's another way of doing this with the function `map` from `purrr`
+
+```{r}
+slopes2 <- fits %>% 
+  map("coefficients") %>% # grab coefficients
+  map_dbl(2)              # grab 2nd element
+
+cbind(slopes, slopes2)[1:10,]
+```
+
+This gives the same result, but depending on personal preference,
+the syntax may be a easier to read
+
+> From the output we see that the first 24 estimated lines belong to the cows on the Barley diet, the next 27 lines for the Mixed diet cows and the last 27 for cows on the Lupins diet.
+To link them to the diets, make a new variable:
+
+```{r}
+DIET<-factor(c(rep(0,24),rep(1,27),rep(2,27)),labels=c("B","BL","L"))
+```
+
+> To obtain the overall ANOVA table and estimates for the mean slope per diet:
+
+```{r}
+summary(aov(slopes~DIET))
+summary(lm(slopes~-1+DIET))
+
+```
+
+> If we do not use the slope as a summary measure, but take the observations themselves, we can again calculate means and variances by:
+
+```{r}
+# tapply(protein, list(Diet,Time), mean)
+# tapply(protein, list(Diet,Time), var)
+
+Milk123complete %>%
+  group_by(Time, Diet) %>%
+  summarize(mean(protein), var(protein))
+
+```
+
+> We can test the main effects and their interaction using ANOVA (either Twoway or split-plot) with diet and time as factors:
+
+```{r}
+summary(aov(protein~Diet*factor(Time), data = Milk123complete))
+summary(aov(protein~Diet*factor(Time)+Error(Cow), data = Milk123complete))
+
+```
+
+> And finally, to fit a linear mixed effects (LME) model with random intercept:
+
+```{r}
+lme.fit<-lme(fixed=protein~ Diet*factor(Time), random=~1|Cow, data = Milk123complete)
+anova(lme.fit)
+summary(lme.fit)
+
+```
+
+> From the estimates of the coefficient values, how can you calculate predictions for the protein values for each of the 3 diets, at each of the 3 time points?
+(Answer: add the appropriate coefficients to get:
+	Time 1	Time 2	Time 3
+Barley	3.889583	3.642500	3.507500
+Barley + lupins	3.861111	3.540000	3.345556
+Lupins	3.758148	3.427778	3.372963
+
+For each time-point add intercept the interaction terms.
+e.g. for lupins, time 3
+
+```{r}
+3.889583+(-.131435)+(-.382083)+(-.003102)
+```
+
+To get them all in 2 (or 3 for pretty printing) lines of codes:
+
+```{r}
+grid <- expand.grid(Diet = unique(Milk123complete$Diet), 
+                    Time = unique(factor(Milk123complete$Time)))
+grid$predictions <- predict(lme.fit, newdata = grid, level = 0)
+xtabs(predictions~Diet+Time, data = grid)
+```
+
+This works as follows:
+
+  - `expand.grid` creates a data.frame of all possible combinations of the supplied vectors
+  - `predict` will predict the protein based on the supplied model. 
+    - **`level = 0`** is needed, which means ignore grouping ('Cow'), otherwise 
+    the function will throw an error and ask for the grouping variable
+    (so you will have to provide a Cow name)
+  - `xtabs` is just to print it nicely
+
+
+> Clean up, by detaching the appropriate milk data files from the search list.
+
+We didn't attach, so no cleaning up required
+
+### Exercise 2:
+> The file Twisk1.dat contains longitudinal data concerning cholesterol measurements on several occasions. Furthermore, information about baseline values as well as time varying covariates is collected.
+id :		patient number
+chol:		serum cholesterol
+fitness:		max oxygen uptake (baseline)
+skinfold:	sum of four skin folds (time varying)
+smoke:	does the patient smoke? (time varying, 0=no, 1=yes)
+gender:	gender (factor, 1=male, 2=female)
+time:		time in weeks (1-6)
+
+> Read the data into an R object and summarize it by
+
+```{r}
+Twisk1<-read.table(fromParentDir("data/Twisk1.dat"),header=T)
+summary(Twisk1)
+
+```
+
+> Turn the variables id into a factor by `Twisk1$id<-factor(Twisk1$id)`
+Do the same for smoke and gender, and attach Twisk1 to the search list.
+
+Let's do this with `dplyr` for convenience
+
+```{r}
+Twisk1 %<>% 
+  mutate_at(vars(id, smoke, gender), factor)
+```
+
+> a.	Give mean and variance of the continuous variables chol, fitness and skinfold for all time points combined. 
+
+Here's how to do this with dplyr
+```{r}
+Twisk1 %>%
+  summarize_at(vars(chol, fitness, skinfold), funs(mean, var))
+```
+
+Here with dplyr, purrr and data.table 
+(admittably a little cumbersome, but this works for 30 variables and 20 functions too)
+```{r}
+Twisk1 %>%
+  select(chol, fitness, skinfold) %>%
+  map(function(x) data.frame(mean(x), var(x))) %>%
+  data.table::rbindlist(idcol = "variable")
+```
+
+> b.	Calculate these means and variances for every time point separately.
+
+Just 1 extra line compared to a)
+
+```{r}
+Twisk1 %>%
+  group_by(time) %>%
+  summarize_at(vars(chol, fitness, skinfold), funs(mean, var))
+```
+
+> c.	How many females are there in the sample? Use tapply with function table to obtain frequency tables at each time point..
+
+```{r}
+table(Twisk1$time, Twisk1$gender)
+```
+
+> d.	Use Twisk.gr<-groupedData(chol~time|id,data=Twisk1) to create a grouped dataset. Investigate graphically the individual profiles, also try to produce a graph where the profiles are shown by gender (outer=~gender). Warning: on some computers this may take some time, if you get bored press the escape key (several times).
+
+```{r}
+Twisk1 %>%
+  ggplot(aes(x = time, y = chol, col = id)) + 
+  geom_line() + 
+  theme(legend.position = "none")
+```
+
+```{r}
+Twisk1 %>%
+  ggplot(aes(x = time, y = chol, col = id)) + 
+  geom_line() + 
+  facet_grid(~gender) + 
+  theme(legend.position = "none")
+```
+
+> e.	Using a split plot ANOVA, test whether cholesterol levels change in time. (From question d, does a linear time effect seem feasible?)
+
+A linear time effect does not seem correct, based on the graph. We will 
+use time as a factor variable
+
+```{r}
+fit <- aov(chol~factor(time)+Error(id), data = Twisk1)
+summary(fit)
+```
+
+> f.	Is the effect of time for females the same as for males? Investigate by making an interaction plot and using split plot ANOVA.
+
+We can already observe the 'interaction' from the faceted plot from ggplot.
+The slope seems equal for both sexes, which indicates no interaction
+
+```{r}
+fit2 <- aov(chol~factor(time)*factor(gender)+Error(id), data = Twisk1)
+summary(fit2)
+```
+
+Here it seems that there is an important interaction with gender. 
+Maybe if we plot the means on each time point, this will become apparant
+
+```{r}
+Twisk1 %>% 
+  group_by(time, gender) %>%
+  summarize(chol = mean(chol)) %>%
+  ggplot(aes(x = time, y = chol, col = gender)) + 
+  geom_line()
+```
+
+> g.	Redo questions e and f using a linear mixed effect model with a random intercept. Compare the outputs and conclusions to those from e and f).
+
+First without interaction
+
+```{r}
+fit.lme <- lme(fixed = chol~factor(time), random = ~1|id, data = Twisk1)
+summary(fit.lme)
+```
+
+Now with interaction
+```{r}
+fit.lme2 <- lme(fixed = chol~factor(time)*gender, random = ~1|id, data = Twisk1)
+summary(fit.lme2)
+```
+
+Again, we have an indication of significant interaction between time and gender.
+
+> h.	After day 2: Formally compare the two LME model from part g, using AIC or a Likelihood Ratio test. (Note: we need to use ML instead of REML to get a valid comparison.) Also investigate a model with time and gender as main effects, without interaction. What happens if we leave out weeks 1 and 2?
+
+
 
 ## Session information
 

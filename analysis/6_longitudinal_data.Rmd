@@ -1,0 +1,211 @@
+---
+title: "Analysis of longitudinal data"
+author: "Wouter van Amsterdam"
+date: 2018-01-17
+output: html_document
+---
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+```
+
+<!-- Update knitr chunk options -->
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+<!-- Insert the date the file was last updated -->
+```{r last-updated, echo=FALSE, results='asis'}
+```
+
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+```{r code-version, echo=FALSE, results='asis'}
+```
+
+<!-- Add your analysis here -->
+
+## Intro
+
+Tutor: Cas Kruitwagen
+
+## Independent and dependent sources of variation
+
+E.g. multiple measurements in time for a single subject
+
+### Paired T-test
+
+For 2 time-points
+
+### Split-plot ANOVA
+
+Target: divide variation (sums of squares): e.g. time and persons
+
+Gives estimate of error between persons, and within persons over time
+
+Here there is not really an interaction between persons and time,
+it is used as a random effect.
+
+
+
+**Regression models ignoring the time dependency tend to overestimate
+the standard errors of time-varying covariates, 
+and underestimate the standard errors of time-invariant covariates.**
+
+#### Assumptions
+
+  1. Residuals are normally distributed
+  2. Covariance matrices for different levels of between subject factors are equal. (extension of homoscedasticity, variances and covariances at different 
+  time points are assumed to be equal for all 'cells'); sphericity
+  3. Compound symmetry: variances are equal at all time points. 
+  Correlations are equal for any two time points
+
+For 3 timepoints, the covariance matrix of a single group is:
+
+$$
+\left(\begin{array}{ccc} 
+var_1 & cov_{1,2} & cov_{1,3}\\
+cov_{2,1} & var_2 & cov_{2,3}\\
+cov_{3,1} & cov_{3,2} & var_3
+\end{array}\right)
+$$ 
+
+Assumption 2: covariance matrix any form, but 'symmetric positive definite'
+
+Robust to variance ratio < 2, 3 between groups
+
+Assumption 3:
+
+$$
+\sigma^2\left(\begin{array}{ccc} 
+1 & \rho & \rho\\
+\rho & 1 & \rho\\
+\rho & \rho & 1
+\end{array}\right)
+$$ 
+
+Assumption 3 is strict, it assumes that the correlation between 
+close-in-time observations is equal to the correlation between 
+far-away-in-time observations
+
+
+### Linear Mixed Effects models (MLE)
+
+Use 
+  - fixed effects (like diet and time, what you can reproduce by design)
+  - random effects (like participants), assumed to follow a known distribution
+
+
+Advantages over split-plot ANOVA
+
+  1. LME can handle missing value
+  2. Variance need not be the same at each time point (can be modelled separately)
+  3. Correlations between various time points may vary (can be modelled,
+  e.g. correlation between observations decreases when time differences increases)
+
+
+### With data
+
+```{r}
+require(dplyr)
+data("ChickWeight")
+str(ChickWeight)
+```
+
+```{r}
+length(unique(ChickWeight$Chick))
+unique(ChickWeight$Time)
+```
+
+#### Take only 2 timepoints
+
+Get only 2 timepoints
+
+```{r}
+chick <- ChickWeight %>% filter(Time %in% c(0, 2))
+head(chick)
+```
+
+T-test with only time
+
+```{r}
+t.test(weight~Time, data = chick)
+```
+
+```{r}
+boxplot(weight~Diet+Time, data = chick)
+```
+
+```{r}
+require(ggplot2)
+chick %>%
+  group_by(Time, Diet) %>%
+  summarize(weight = mean(weight)) %>%
+  ggplot(aes(x = Time, y = weight, col = Diet)) + geom_line()
+```
+
+Time * diet
+```{r}
+summary(aov(weight~Time*Diet, data = chick))
+```
+
+Time * Diet and chicks
+
+```{r}
+summary(aov(weight~Time*Diet + Error(Chick), data = chick))
+```
+
+#### All timepoints
+
+```{r}
+ChickWeight %>%
+  group_by(Diet, Time) %>%
+  summarize(weight = mean(weight)) %>%
+  ggplot(aes(x = Time, col = Diet, y = weight)) + geom_line()
+```
+
+```{r}
+aov(weight~Time*Diet + Error(Chick), data = ChickWeight) %>%
+  summary()
+```
+
+Use factor on time to eliminate linear assumption
+
+```{r}
+aov(weight~factor(Time)*Diet + Error(Chick), data = ChickWeight) %>%
+  summary()
+```
+
+```{r}
+fit <- lm(weight~Time*Diet, data = ChickWeight)
+summary(fit)
+```
+
+
+```{r}
+require(tidyr)
+mat <- ChickWeight %>% 
+  filter(Diet == 1) %>% 
+  data.table::dcast(Chick~Time, value.var = "weight") %>%
+  select(-Chick) %>%
+  as.matrix()
+```
+
+#### LME
+
+Generate an intercept for each subject
+
+```{r}
+require(nlme)
+fit <- lme(fixed = weight~Diet*factor(Time), 
+           random = ~1|Chick, data = ChickWeight)
+anova(fit)
+```
+
+
+## Session information
+
+<!-- Insert the session information into the document -->
+```{r session-info}
+```
