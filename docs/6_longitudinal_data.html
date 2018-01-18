@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+<meta name="author" content="Wouter van Amsterdam" />
+
+<meta name="date" content="2018-01-17" />
+
+<title>Analysis of longitudinal data</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/font-awesome-4.5.0/css/font-awesome.min.css" rel="stylesheet" />
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+
+<div class="container-fluid main-container">
+
+<!-- tabsets -->
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+</script>
+
+<!-- code folding -->
+
+
+
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+  padding-left: 25px;
+  text-indent: 0;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">epi_stats</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/jdblischak/workflowr">
+    <span class="fa fa-github"></span>
+     
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">Analysis of longitudinal data</h1>
+<h4 class="author"><em>Wouter van Amsterdam</em></h4>
+<h4 class="date"><em>2018-01-17</em></h4>
+
+</div>
+
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+<!-- Update knitr chunk options -->
+<!-- Insert the date the file was last updated -->
+<p><strong>Last updated:</strong> 2018-01-18</p>
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+<p><strong>Code version:</strong> cd02ad1</p>
+<!-- Add your analysis here -->
+<div id="intro" class="section level2">
+<h2>Intro</h2>
+<p>Tutor: Cas Kruitwagen</p>
+</div>
+<div id="independent-and-dependent-sources-of-variation" class="section level2">
+<h2>Independent and dependent sources of variation</h2>
+<p>E.g. multiple measurements in time for a single subject</p>
+<div id="paired-t-test" class="section level3">
+<h3>Paired T-test</h3>
+<p>For 2 time-points</p>
+</div>
+<div id="split-plot-anova" class="section level3">
+<h3>Split-plot ANOVA</h3>
+<p>Target: divide variation (sums of squares): e.g. time and persons</p>
+<p>Gives estimate of error between persons, and within persons over time</p>
+<p>Here there is not really an interaction between persons and time, it is used as a random effect.</p>
+<p><strong>Regression models ignoring the time dependency tend to overestimate the standard errors of time-varying covariates, and underestimate the standard errors of time-invariant covariates.</strong></p>
+<div id="assumptions" class="section level4">
+<h4>Assumptions</h4>
+<ol style="list-style-type: decimal">
+<li>Residuals are normally distributed</li>
+<li>Covariance matrices for different levels of between subject factors are equal. (extension of homoscedasticity, variances and covariances at different time points are assumed to be equal for all ‘cells’); sphericity</li>
+<li>Compound symmetry: variances are equal at all time points. Correlations are equal for any two time points</li>
+</ol>
+<p>For 3 timepoints, the covariance matrix of a single group is:</p>
+<p><span class="math display">\[
+\left(\begin{array}{ccc} 
+var_1 &amp; cov_{1,2} &amp; cov_{1,3}\\
+cov_{2,1} &amp; var_2 &amp; cov_{2,3}\\
+cov_{3,1} &amp; cov_{3,2} &amp; var_3
+\end{array}\right)
+\]</span></p>
+<p>Assumption 2: covariance matrix any form, but ‘symmetric positive definite’</p>
+<p>Robust to variance ratio &lt; 2, 3 between groups</p>
+<p>Assumption 3:</p>
+<p><span class="math display">\[
+\sigma^2\left(\begin{array}{ccc} 
+1 &amp; \rho &amp; \rho\\
+\rho &amp; 1 &amp; \rho\\
+\rho &amp; \rho &amp; 1
+\end{array}\right)
+\]</span></p>
+<p>Assumption 3 is strict, it assumes that the correlation between close-in-time observations is equal to the correlation between far-away-in-time observations</p>
+</div>
+</div>
+<div id="linear-mixed-effects-models-mle" class="section level3">
+<h3>Linear Mixed Effects models (MLE)</h3>
+<p>Use - fixed effects (like diet and time, what you can reproduce by design) - random effects (like participants), assumed to follow a known distribution</p>
+<p>Advantages over split-plot ANOVA</p>
+<ol style="list-style-type: decimal">
+<li>LME can handle missing value</li>
+<li>Variance need not be the same at each time point (can be modelled separately)</li>
+<li>Correlations between various time points may vary (can be modelled, e.g. correlation between observations decreases when time differences increases)</li>
+</ol>
+</div>
+<div id="with-data" class="section level3">
+<h3>With data</h3>
+<pre class="r"><code>require(dplyr)
+data(&quot;ChickWeight&quot;)
+str(ChickWeight)</code></pre>
+<pre><code>Classes &#39;nfnGroupedData&#39;, &#39;nfGroupedData&#39;, &#39;groupedData&#39; and &#39;data.frame&#39;:  578 obs. of  4 variables:
+ $ weight: num  42 51 59 64 76 93 106 125 149 171 ...
+ $ Time  : num  0 2 4 6 8 10 12 14 16 18 ...
+ $ Chick : Ord.factor w/ 50 levels &quot;18&quot;&lt;&quot;16&quot;&lt;&quot;15&quot;&lt;..: 15 15 15 15 15 15 15 15 15 15 ...
+ $ Diet  : Factor w/ 4 levels &quot;1&quot;,&quot;2&quot;,&quot;3&quot;,&quot;4&quot;: 1 1 1 1 1 1 1 1 1 1 ...
+ - attr(*, &quot;formula&quot;)=Class &#39;formula&#39;  language weight ~ Time | Chick
+  .. ..- attr(*, &quot;.Environment&quot;)=&lt;environment: R_EmptyEnv&gt; 
+ - attr(*, &quot;outer&quot;)=Class &#39;formula&#39;  language ~Diet
+  .. ..- attr(*, &quot;.Environment&quot;)=&lt;environment: R_EmptyEnv&gt; 
+ - attr(*, &quot;labels&quot;)=List of 2
+  ..$ x: chr &quot;Time&quot;
+  ..$ y: chr &quot;Body weight&quot;
+ - attr(*, &quot;units&quot;)=List of 2
+  ..$ x: chr &quot;(days)&quot;
+  ..$ y: chr &quot;(gm)&quot;</code></pre>
+<pre class="r"><code>length(unique(ChickWeight$Chick))</code></pre>
+<pre><code>[1] 50</code></pre>
+<pre class="r"><code>unique(ChickWeight$Time)</code></pre>
+<pre><code> [1]  0  2  4  6  8 10 12 14 16 18 20 21</code></pre>
+<div id="take-only-2-timepoints" class="section level4">
+<h4>Take only 2 timepoints</h4>
+<p>Get only 2 timepoints</p>
+<pre class="r"><code>chick &lt;- ChickWeight %&gt;% filter(Time %in% c(0, 2))
+head(chick)</code></pre>
+<pre><code>  weight Time Chick Diet
+1     42    0     1    1
+2     51    2     1    1
+3     40    0     2    1
+4     49    2     2    1
+5     43    0     3    1
+6     39    2     3    1</code></pre>
+<p>T-test with only time</p>
+<pre class="r"><code>t.test(weight~Time, data = chick)</code></pre>
+<pre><code>
+    Welch Two Sample t-test
+
+data:  weight by Time
+t = -14.955, df = 58.154, p-value &lt; 2.2e-16
+alternative hypothesis: true difference in means is not equal to 0
+95 percent confidence interval:
+ -9.252139 -7.067861
+sample estimates:
+mean in group 0 mean in group 2 
+          41.06           49.22 </code></pre>
+<pre class="r"><code>boxplot(weight~Diet+Time, data = chick)</code></pre>
+<p><img src="figure/6_longitudinal_data.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>require(ggplot2)
+chick %&gt;%
+  group_by(Time, Diet) %&gt;%
+  summarize(weight = mean(weight)) %&gt;%
+  ggplot(aes(x = Time, y = weight, col = Diet)) + geom_line()</code></pre>
+<p><img src="figure/6_longitudinal_data.Rmd/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Time * diet</p>
+<pre class="r"><code>summary(aov(weight~Time*Diet, data = chick))</code></pre>
+<pre><code>            Df Sum Sq Mean Sq F value  Pr(&gt;F)    
+Time         1 1664.6  1664.6 270.267 &lt; 2e-16 ***
+Diet         3   62.7    20.9   3.394 0.02121 *  
+Time:Diet    3  100.0    33.3   5.414 0.00179 ** 
+Residuals   92  566.7     6.2                    
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<p>Time * Diet and chicks</p>
+<pre class="r"><code>summary(aov(weight~Time*Diet + Error(Chick), data = chick))</code></pre>
+<pre><code>
+Error: Chick
+          Df Sum Sq Mean Sq F value Pr(&gt;F)  
+Diet       3   62.7  20.905   2.793 0.0508 .
+Residuals 46  344.3   7.485                 
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+Error: Within
+          Df Sum Sq Mean Sq F value   Pr(&gt;F)    
+Time       1 1664.6  1664.6 344.421  &lt; 2e-16 ***
+Time:Diet  3  100.0    33.3   6.899 0.000622 ***
+Residuals 46  222.3     4.8                     
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+</div>
+<div id="all-timepoints" class="section level4">
+<h4>All timepoints</h4>
+<pre class="r"><code>ChickWeight %&gt;%
+  group_by(Diet, Time) %&gt;%
+  summarize(weight = mean(weight)) %&gt;%
+  ggplot(aes(x = Time, col = Diet, y = weight)) + geom_line()</code></pre>
+<p><img src="figure/6_longitudinal_data.Rmd/unnamed-chunk-9-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>aov(weight~Time*Diet + Error(Chick), data = ChickWeight) %&gt;%
+  summary()</code></pre>
+<pre><code>
+Error: Chick
+          Df Sum Sq Mean Sq F value   Pr(&gt;F)    
+Time       1  89700   89700  12.467 0.000985 ***
+Diet       3 121337   40446   5.621 0.002372 ** 
+Time:Diet  1   2482    2482   0.345 0.559984    
+Residuals 44 316586    7195                     
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+Error: Within
+           Df  Sum Sq Mean Sq F value Pr(&gt;F)    
+Time        1 1962914 1962914 3049.28 &lt;2e-16 ***
+Time:Diet   3   84222   28074   43.61 &lt;2e-16 ***
+Residuals 524  337315     644                   
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<p>Use factor on time to eliminate linear assumption</p>
+<pre class="r"><code>aov(weight~factor(Time)*Diet + Error(Chick), data = ChickWeight) %&gt;%
+  summary()</code></pre>
+<pre><code>
+Error: Chick
+             Df Sum Sq Mean Sq F value  Pr(&gt;F)   
+factor(Time)  5 100207   20041   2.621 0.03804 * 
+Diet          3 116404   38801   5.075 0.00443 **
+Residuals    41 313495    7646                   
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+Error: Within
+                   Df  Sum Sq Mean Sq F value  Pr(&gt;F)    
+factor(Time)       11 1985929  180539 283.573 &lt; 2e-16 ***
+factor(Time):Diet  33   90379    2739   4.302 3.5e-13 ***
+Residuals         484  308142     637                    
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<pre class="r"><code>fit &lt;- lm(weight~Time*Diet, data = ChickWeight)
+summary(fit)</code></pre>
+<pre><code>
+Call:
+lm(formula = weight ~ Time * Diet, data = ChickWeight)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-135.425  -13.757   -1.311   11.069  130.391 
+
+Coefficients:
+            Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept)  30.9310     4.2468   7.283 1.09e-12 ***
+Time          6.8418     0.3408  20.076  &lt; 2e-16 ***
+Diet2        -2.2974     7.2672  -0.316  0.75202    
+Diet3       -12.6807     7.2672  -1.745  0.08154 .  
+Diet4        -0.1389     7.2865  -0.019  0.98480    
+Time:Diet2    1.7673     0.5717   3.092  0.00209 ** 
+Time:Diet3    4.5811     0.5717   8.014 6.33e-15 ***
+Time:Diet4    2.8726     0.5781   4.969 8.92e-07 ***
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+Residual standard error: 34.07 on 570 degrees of freedom
+Multiple R-squared:  0.773, Adjusted R-squared:  0.7702 
+F-statistic: 277.3 on 7 and 570 DF,  p-value: &lt; 2.2e-16</code></pre>
+<pre class="r"><code>require(tidyr)
+mat &lt;- ChickWeight %&gt;% 
+  filter(Diet == 1) %&gt;% 
+  data.table::dcast(Chick~Time, value.var = &quot;weight&quot;) %&gt;%
+  select(-Chick) %&gt;%
+  as.matrix()</code></pre>
+</div>
+<div id="lme" class="section level4">
+<h4>LME</h4>
+<p>Generate an intercept for each subject</p>
+<pre class="r"><code>require(nlme)
+fit &lt;- lme(fixed = weight~Diet*factor(Time), 
+           random = ~1|Chick, data = ChickWeight)
+anova(fit)</code></pre>
+<pre><code>                  numDF denDF   F-value p-value
+(Intercept)           1   484 1194.5312  &lt;.0001
+Diet                  3    46    8.9066   1e-04
+factor(Time)         11   484  285.0129  &lt;.0001
+Diet:factor(Time)    33   484    4.2807  &lt;.0001</code></pre>
+</div>
+</div>
+</div>
+<div id="session-information" class="section level2">
+<h2>Session information</h2>
+<!-- Insert the session information into the document -->
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 3.4.3 (2017-11-30)
+Platform: x86_64-apple-darwin15.6.0 (64-bit)
+Running under: macOS Sierra 10.12.6
+
+Matrix products: default
+BLAS: /Library/Frameworks/R.framework/Versions/3.4/Resources/lib/libRblas.0.dylib
+LAPACK: /Library/Frameworks/R.framework/Versions/3.4/Resources/lib/libRlapack.dylib
+
+locale:
+[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+[1] nlme_3.1-131  tidyr_0.7.2   ggplot2_2.2.1 bindrcpp_0.2  dplyr_0.7.4  
+
+loaded via a namespace (and not attached):
+ [1] Rcpp_0.12.14        knitr_1.18          bindr_0.1          
+ [4] magrittr_1.5        munsell_0.4.3       lattice_0.20-35    
+ [7] colorspace_1.3-2    R6_2.2.2            rlang_0.1.6        
+[10] plyr_1.8.4          stringr_1.2.0       tools_3.4.3        
+[13] grid_3.4.3          data.table_1.10.4-3 gtable_0.2.0       
+[16] git2r_0.20.0        htmltools_0.3.6     lazyeval_0.2.1     
+[19] yaml_2.1.16         rprojroot_1.2       digest_0.6.13      
+[22] assertthat_0.2.0    tibble_1.4.1        reshape2_1.4.3     
+[25] purrr_0.2.4         glue_1.2.0          evaluate_0.10.1    
+[28] rmarkdown_1.8       labeling_0.3        stringi_1.1.6      
+[31] compiler_3.4.3      pillar_1.1.0        scales_0.5.0       
+[34] backports_1.1.2     pkgconfig_2.0.1    </code></pre>
+</div>
+
+<hr>
+<p>
+    This <a href="http://rmarkdown.rstudio.com">R Markdown</a> site was created with <a href="https://github.com/jdblischak/workflowr">workflowr</a>
+</p>
+<hr>
+
+<!-- To enable disqus, uncomment the section below and provide your disqus_shortname -->
+
+<!-- disqus
+  <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+        var disqus_shortname = 'rmarkdown'; // required: replace example with your forum shortname
+
+        /* * * DON'T EDIT BELOW THIS LINE * * */
+        (function() {
+            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+-->
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

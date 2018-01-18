@@ -315,10 +315,10 @@ div.tocify {
 shared across the workflowr files. -->
 <!-- Update knitr chunk options -->
 <!-- Insert the date the file was last updated -->
-<p><strong>Last updated:</strong> 2018-01-17</p>
+<p><strong>Last updated:</strong> 2018-01-18</p>
 <!-- Insert the code version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
-<p><strong>Code version:</strong> 4ae1ef0</p>
+<p><strong>Code version:</strong> cd02ad1</p>
 <!-- Add your analysis here -->
 <div id="setup" class="section level2">
 <h2>Setup</h2>
@@ -690,6 +690,45 @@ odds ratio
 <p>Our manual calculation coincides with Fisher’s test and permTS method</p>
 <p>Internally, <code>permTS</code> does something similar as we did with the permutations It creates a ‘cm’ matrix with all possible combinations, the dimensions of this matrix is 352716x21. Check the code with:</p>
 <p><code>View(permute:::permTS.default)</code> which calls: <code>View(permute:::twosample.exact.ce)</code> which calls: <code>View(permute:::chooseMatrix)</code></p>
+<p>Now let’s do a more direct method, exploiting the fact that every combination of <span class="math inline">\(n\)</span> successes in the treatment group will yield the same results. Note: this only works when ‘success’ is a binary variable, it would not work in the more general case for continous outcomes.</p>
+<pre class="r"><code>n1 = 10
+n2 = 11
+ns = 10
+diffx</code></pre>
+<pre><code>[1] 0.2363636</code></pre>
+<pre class="r"><code>perm_twogroup &lt;- function(target, n1, n2, ns) {
+  
+  total_combinations &lt;- choose(n1+n2, ns)
+  combinations &lt;- integer(ns+1)
+  differences &lt;- numeric(ns+1)
+  
+  for (n in 0:ns) {
+    i = n+1
+    
+    difference = n / n1 - (ns-n) / n2
+    ncombinations = choose(n1, n)*choose(n2, ns-n)
+    
+    differences[i] = difference
+    combinations[i]= ncombinations
+  }
+  
+  sum(combinations[differences&gt;=target]) / total_combinations
+  
+}
+
+perm_twogroup(diffx, n1, n2, ns)</code></pre>
+<pre><code>[1] 0.2599428</code></pre>
+<p>Lets compare computation speed:</p>
+<pre class="r"><code>system.time(perm::permTS(calcium$success ~ calcium$treatment, alternative = &quot;less&quot;, method = &quot;exact.ce&quot;))</code></pre>
+<pre><code>   user  system elapsed 
+  2.797   0.106   2.937 </code></pre>
+<pre class="r"><code>system.time(fisher.test(calcium$success, calcium$treatment, alternative = &quot;greater&quot;))</code></pre>
+<pre><code>   user  system elapsed 
+  0.001   0.000   0.001 </code></pre>
+<pre class="r"><code>system.time(perm_twogroup(diffx, n1, n2, ns))</code></pre>
+<pre><code>   user  system elapsed 
+  0.001   0.000   0.000 </code></pre>
+<p>We can see that <code>permTS</code> is extremely slow, compared to <code>fisher.test</code> and the manual exact method.</p>
 </div>
 </div>
 <div id="survival-exercises" class="section level2">
@@ -867,7 +906,7 @@ str(neph)</code></pre>
 </ol>
 </blockquote>
 <pre class="r"><code>plot(survfit(Surv(survtime, status)~age, data = neph))</code></pre>
-<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-42-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-45-1.png" width="672" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>survdiff(Surv(survtime, status)~age, data = neph)</code></pre>
 <pre><code>Call:
 survdiff(formula = Surv(survtime, status) ~ age, data = neph)
@@ -927,7 +966,7 @@ Score (logrank) test = 8.4  on 2 df,   p=0.01498</code></pre>
 </ol>
 </blockquote>
 <pre class="r"><code>plot(survfit(Surv(survtime, status)~nephrect, data = neph))</code></pre>
-<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-46-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-49-1.png" width="672" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>survdiff(Surv(survtime, status)~nephrect, data = neph)</code></pre>
 <pre><code>Call:
 survdiff(formula = Surv(survtime, status) ~ nephrect, data = neph)
@@ -1047,7 +1086,7 @@ Wald test            = 5.87  on 1 df,   p=0.01543
 Score (logrank) test = 6.57  on 1 df,   p=0.01035</code></pre>
 <p>The fast way:</p>
 <pre class="r"><code>plot(survfit(fit3), col = c(&quot;red&quot;, &quot;blue&quot;, &quot;black&quot;), fun = &quot;cloglog&quot;)</code></pre>
-<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-52-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-55-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>The lines cross, so this vialates our assumption of proportional hazards</p>
 </div>
 <div id="myeloma" class="section level3">
@@ -1279,6 +1318,783 @@ Score (logrank) test = 19.54  on 2 df,   p=5.712e-05</code></pre>
 <p>This one was skipped</p>
 </div>
 </div>
+<div id="longitudinal-data" class="section level2">
+<h2>Longitudinal data</h2>
+<div id="exercise-1" class="section level3">
+<h3>Exercise 1:</h3>
+<blockquote>
+<p>We will start by reproducing the results of this morning’s lecture concerning the milk protein data: Start R, load the library nlme and access the data set Milk:</p>
+</blockquote>
+<pre class="r"><code>library(nlme)
+data(Milk)
+summary(Milk)</code></pre>
+<pre><code>    protein           Time             Cow                  Diet    
+ Min.   :2.450   Min.   : 1.000   B02    :  19   barley       :425  
+ 1st Qu.:3.200   1st Qu.: 5.000   B17    :  19   barley+lupins:459  
+ Median :3.410   Median : 9.000   B24    :  19   lupins       :453  
+ Mean   :3.422   Mean   : 9.185   B09    :  19                      
+ 3rd Qu.:3.630   3rd Qu.:13.000   B11    :  19                      
+ Max.   :4.590   Max.   :19.000   B05    :  19                      
+                                  (Other):1223                      </code></pre>
+<blockquote>
+<p>In our analysis we will at first confine ourselves to time points 1 and 2:</p>
+</blockquote>
+<pre class="r"><code>Milk12&lt;-Milk[Milk$Time&lt;3,]
+summary(Milk12)</code></pre>
+<pre><code>    protein           Time            Cow                 Diet   
+ Min.   :2.690   Min.   :1.000   B04    :  2   barley       :49  
+ 1st Qu.:3.380   1st Qu.:1.000   B14    :  2   barley+lupins:54  
+ Median :3.660   Median :1.000   B03    :  2   lupins       :54  
+ Mean   :3.684   Mean   :1.497   B02    :  2                     
+ 3rd Qu.:3.980   3rd Qu.:2.000   B16    :  2                     
+ Max.   :4.590   Max.   :2.000   B17    :  2                     
+                                 (Other):145                     </code></pre>
+<blockquote>
+<p>To calculate the mean for protein type the command</p>
+</blockquote>
+<blockquote>
+<p>If we want to calculate the mean for the different weeks we can make use of the tapply function</p>
+</blockquote>
+<p>Or use <code>dplyr</code></p>
+<pre class="r"><code>tapply(Milk12$protein,Milk12$Time,mean)</code></pre>
+<pre><code>       1        2 
+3.834051 3.532692 </code></pre>
+<pre class="r"><code>Milk12 %&gt;%
+  group_by(Time) %&gt;%
+  summarize(mean(protein))</code></pre>
+<pre><code># A tibble: 2 x 2
+   Time `mean(protein)`
+  &lt;dbl&gt;           &lt;dbl&gt;
+1  1.00            3.83
+2  2.00            3.53</code></pre>
+<blockquote>
+<p>To avoid that we have to include the name of the dataset every time we name a variable, we will attach the data set to the search list:</p>
+</blockquote>
+<p>Let’s not do this</p>
+<blockquote>
+<p>So now R will also look in the dataset Milk12 to look for objects that you use in your commands. So after attaching the dataset it will suffice to write</p>
+</blockquote>
+<blockquote>
+<p>Make a “spaghetti plot” of the protein data for weeks 1 and 2:</p>
+</blockquote>
+<pre class="r"><code>with(Milk12,
+     interaction.plot(x.factor=Time,trace.factor=Cow,response=protein))</code></pre>
+<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-66-1.png" width="672" style="display: block; margin: auto;" /></p>
+<blockquote>
+<p>We will now do a pooled T test and a paired T test on the data. Since cow “B20” has a missing protein value at time 2, we will delete this cow from the data set for now.</p>
+</blockquote>
+<pre class="r"><code>Milk12complete&lt;-Milk12 %&gt;% filter(Cow!=&quot;B20&quot;)
+str(Milk12complete)</code></pre>
+<pre><code>&#39;data.frame&#39;:   156 obs. of  4 variables:
+ $ protein: num  3.63 3.57 3.24 3.25 3.98 3.6 3.66 3.5 4.34 3.76 ...
+ $ Time   : num  1 2 1 2 1 2 1 2 1 2 ...
+ $ Cow    : Ord.factor w/ 79 levels &quot;B04&quot;&lt;&quot;B14&quot;&lt;&quot;B03&quot;&lt;..: 25 25 4 4 3 3 1 1 16 16 ...
+ $ Diet   : Factor w/ 3 levels &quot;barley&quot;,&quot;barley+lupins&quot;,..: 1 1 1 1 1 1 1 1 1 1 ...
+ - attr(*, &quot;formula&quot;)=Class &#39;formula&#39;  language protein ~ Time | Cow
+  .. ..- attr(*, &quot;.Environment&quot;)=&lt;environment: R_GlobalEnv&gt; 
+ - attr(*, &quot;units&quot;)=List of 2
+  ..$ x: chr &quot;(weeks)&quot;
+  ..$ y: chr &quot;(%)&quot;
+ - attr(*, &quot;outer&quot;)=Class &#39;formula&#39;  language ~Diet
+  .. ..- attr(*, &quot;.Environment&quot;)=&lt;environment: R_GlobalEnv&gt; 
+ - attr(*, &quot;FUN&quot;)=function (x)  
+ - attr(*, &quot;order.groups&quot;)= logi TRUE</code></pre>
+<blockquote>
+<p>(Note that dataset Milk12complete is added to the search list before Milk12, so R will look in Milk12Bcomplete first. Variables in Milk12 are “masked”.)</p>
+</blockquote>
+<pre class="r"><code>t.test(protein~Time,var.equal=T, data = Milk12complete)</code></pre>
+<pre><code>
+    Two Sample t-test
+
+data:  protein by Time
+t = 5.3923, df = 154, p-value = 2.568e-07
+alternative hypothesis: true difference in means is not equal to 0
+95 percent confidence interval:
+ 0.1910686 0.4120083
+sample estimates:
+mean in group 1 mean in group 2 
+       3.834231        3.532692 </code></pre>
+<pre class="r"><code>t.test(protein~Time,paired=T, data = Milk12complete)</code></pre>
+<pre><code>
+    Paired t-test
+
+data:  protein by Time
+t = 7.1354, df = 77, p-value = 4.601e-10
+alternative hypothesis: true difference in means is not equal to 0
+95 percent confidence interval:
+ 0.2173894 0.3856875
+sample estimates:
+mean of the differences 
+              0.3015385 </code></pre>
+<blockquote>
+<p>Note that both T tests give highly significant results but the p value from the paired T test is much smaller: 2.6<em>10-7 vs. 4.6</em>10-10.</p>
+</blockquote>
+<blockquote>
+<p>We can do equivalent analyses using ANOVA (Oneway and split-plot, respectively). This enables us to compare sums-of-squares of the ANOVA tables:</p>
+</blockquote>
+<pre class="r"><code>summary(aov(protein~Time, data = Milk12complete))</code></pre>
+<pre><code>             Df Sum Sq Mean Sq F value   Pr(&gt;F)    
+Time          1  3.546   3.546   29.08 2.57e-07 ***
+Residuals   154 18.781   0.122                     
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<pre class="r"><code>summary(aov(protein~Time+Error(Cow), data = Milk12complete))</code></pre>
+<pre><code>
+Error: Cow
+          Df Sum Sq Mean Sq F value Pr(&gt;F)
+Residuals 77  13.42  0.1743               
+
+Error: Within
+          Df Sum Sq Mean Sq F value  Pr(&gt;F)    
+Time       1  3.546   3.546   50.91 4.6e-10 ***
+Residuals 77  5.363   0.070                    
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<blockquote>
+<p>Note that SS(Residuals) of the One-way ANOVA is the same as the sum of the two SS residuals in the Split-plot ANOVA. It is split into a “between Cow” and “Within” part.</p>
+</blockquote>
+<blockquote>
+<p>To get an idea about the distribution of protein for week 1 and week 2, we can produce a scatter plot and a boxplot by executing:</p>
+</blockquote>
+<pre class="r"><code>plot(protein~Time, data = Milk12complete)</code></pre>
+<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-70-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>boxplot(protein~Time, data = Milk12complete)</code></pre>
+<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-70-2.png" width="672" style="display: block; margin: auto;" /></p>
+<blockquote>
+<p>If we want to calculate the mean protein per diet for every week and make a plot of them, we just have to execute the commands</p>
+</blockquote>
+<pre class="r"><code># tapply(protein,list(Diet,Time),mean)
+
+Milk12complete %&gt;%
+  group_by(Diet, Time) %&gt;%
+  summarize(mean(protein))</code></pre>
+<pre><code># A tibble: 6 x 3
+# Groups: Diet [?]
+  Diet           Time `mean(protein)`
+  &lt;fct&gt;         &lt;dbl&gt;           &lt;dbl&gt;
+1 barley         1.00            3.89
+2 barley         2.00            3.64
+3 barley+lupins  1.00            3.86
+4 barley+lupins  2.00            3.54
+5 lupins         1.00            3.76
+6 lupins         2.00            3.43</code></pre>
+<pre class="r"><code>with(Milk12complete,
+     interaction.plot(x.factor=Time,trace.factor=Diet,response=protein))</code></pre>
+<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-71-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code># tapply(protein,list(Diet,Time),var)
+Milk12complete %&gt;%
+  group_by(Time, Diet) %&gt;%
+  summarize(mean = mean(protein), var = var(protein))</code></pre>
+<pre><code># A tibble: 6 x 4
+# Groups: Time [?]
+   Time Diet           mean    var
+  &lt;dbl&gt; &lt;fct&gt;         &lt;dbl&gt;  &lt;dbl&gt;
+1  1.00 barley         3.89 0.149 
+2  1.00 barley+lupins  3.86 0.143 
+3  1.00 lupins         3.76 0.199 
+4  2.00 barley         3.64 0.0567
+5  2.00 barley+lupins  3.54 0.0774
+6  2.00 lupins         3.43 0.0890</code></pre>
+<blockquote>
+<p>shows that the variances per diet in week 1 are much larger than in week 2.</p>
+</blockquote>
+<blockquote>
+<p>To produce histograms for the protein observations per diet per week</p>
+</blockquote>
+<pre class="r"><code>library(lattice)        #Contains the function histogram
+histogram(~protein | Time*Diet, data = Milk12complete)</code></pre>
+<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-73-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>GGplot equivalent:</p>
+<pre class="r"><code>Milk12complete %&gt;%
+  ggplot(aes(x = protein)) +
+  geom_histogram() +
+  facet_grid(Diet~Time, scales = &quot;fixed&quot;)</code></pre>
+<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-74-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Comparing ggplot with lattice, we can see that the binwidth is pretty important</p>
+<p>Let’s do 10 bins</p>
+<pre class="r"><code>Milk12complete %&gt;%
+  ggplot(aes(x = protein)) +
+  geom_histogram(bins = 10) +
+  facet_grid(Diet~Time, scales = &quot;fixed&quot;)</code></pre>
+<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-75-1.png" width="672" style="display: block; margin: auto;" /></p>
+<blockquote>
+<p>You can see that the histograms are more spread out in week 1.</p>
+</blockquote>
+<blockquote>
+<p>We will now extend the analysis to the first 3 weeks, complete cases.</p>
+</blockquote>
+<pre class="r"><code># Milk123complete&lt;-Milk[Milk$Time&lt;4 &amp; Milk$Cow!=&quot;B20&quot;,]
+Milk123complete&lt;- Milk %&gt;%
+  filter(Time&lt;4 &amp; Cow!=&quot;B20&quot;)
+with(Milk123complete,
+     interaction.plot(x.factor=Time,trace.factor=Diet,response=protein))</code></pre>
+<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-76-1.png" width="672" style="display: block; margin: auto;" /></p>
+<blockquote>
+<p>Let’s first investigate the protein profiles per cow graphically. (Normally we would have to tell R that our observations are grouped. We could accomplish this by creating a new groupedData set, where cow is our grouping variable: d.gr &lt;-groupedData(protein~Time|Cow, data=Milk123complete) Here, the internal dataset Milk was already grouped.)</p>
+</blockquote>
+<blockquote>
+<p>For a plot of all cows together (like the spaghetti interaction.plot), run</p>
+</blockquote>
+<p><code>plot(Milk123complete,outer=~1,aspect=1,key=F)</code></p>
+<p>This command does not work for me, probably because some package makes some alteration to the plot function (it’s not <code>lattice</code>).</p>
+<p>Let’s do it ‘by hand’</p>
+<pre class="r"><code>Milk123complete %&gt;%
+  ggplot(aes(x = Time, y = protein, col = Cow)) + 
+  geom_line() + 
+  theme(legend.position = &quot;none&quot;)</code></pre>
+<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-77-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>(key=F suppresses the elaborate non-informative legend.) For the same plot, but now per diet group, run</p>
+<p><code>plot(Milk123complete,outer=~Diet,layout=c(3,1),aspect=1,key=F)</code></p>
+<p>Again this doesn’t work, but GGplot2 can do the job</p>
+<pre class="r"><code>Milk123complete %&gt;%
+  ggplot(aes(x = Time, y = protein, col = Cow)) + 
+  geom_line() + 
+  facet_grid(~Diet, scales = &quot;fixed&quot;) + 
+  theme(legend.position = &quot;none&quot;)</code></pre>
+<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-78-1.png" width="672" style="display: block; margin: auto;" /></p>
+<blockquote>
+<p>In the next part we will produce the slope as summary measure for each cow over the first three weeks of observation. To calculate our summary measure (the slope) for every cow we fit a linear model per cow. The “lmList” function (which works on groupedData objects) will calculate the slopes and intercepts for a linear regression model with protein as dependent variable and Time as predictor. This is done for each cow separately. The results are stored in the object “fits”. Typing “fits” then displays these results:</p>
+</blockquote>
+<pre class="r"><code>fits&lt;-lmList(protein~Time|Cow, data=Milk123complete)
+fits</code></pre>
+<pre><code>Call:
+  Model: protein ~ Time | Cow 
+   Data: Milk123complete 
+
+Coefficients:
+     (Intercept)          Time
+B04     4.013333 -3.050000e-01
+B14     4.143333 -3.250000e-01
+B03     4.220000 -2.750000e-01
+B02     3.210000  2.500000e-02
+B16     3.486667 -3.925231e-16
+B17     3.913333 -1.900000e-01
+B21     3.140000  1.850000e-01
+B25     3.463333 -3.500000e-02
+B15     4.033333 -1.200000e-01
+B24     3.333333  9.500000e-02
+B09     3.333333  5.500000e-02
+B13     4.173333 -1.450000e-01
+B07     4.413333 -3.250000e-01
+B11     4.430000 -3.250000e-01
+B05     4.586667 -3.300000e-01
+B23     4.050000 -1.250000e-01
+B10     3.863333 -5.000000e-02
+B12     4.213333 -2.100000e-01
+B18     4.836667 -4.450000e-01
+B19     4.343333 -2.050000e-01
+B06     4.770000 -4.700000e-01
+B22     5.020000 -5.650000e-01
+B08     4.780000 -4.200000e-01
+B01     3.716667 -8.000000e-02
+BL18    3.300000 -6.500000e-02
+BL16    3.366667 -1.550000e-01
+BL15    4.323333 -3.700000e-01
+BL05    4.203333 -2.550000e-01
+BL11    4.503333 -4.500000e-01
+BL24    4.060000 -3.050000e-01
+BL03    4.583333 -4.250000e-01
+BL08    3.870000 -2.350000e-01
+BL19    3.160000  1.150000e-01
+BL01    3.566667 -1.400000e-01
+BL21    3.393333 -3.500000e-02
+BL14    4.280000 -2.650000e-01
+BL22    4.483333 -4.900000e-01
+BL13    3.840000 -2.100000e-01
+BL23    3.916667 -9.000000e-02
+BL06    4.570000 -4.250000e-01
+BL12    4.293333 -2.700000e-01
+BL09    4.536667 -4.400000e-01
+BL20    4.160000 -2.350000e-01
+BL07    3.393333  2.000000e-02
+BL10    4.146667 -3.800000e-01
+BL17    4.483333 -2.850000e-01
+BL27    4.176667 -2.200000e-01
+BL02    4.110000 -3.050000e-01
+BL04    4.993333 -4.850000e-01
+BL26    4.666667 -3.000000e-01
+BL25    4.260000 -2.600000e-01
+L07     3.163333 -1.300000e-01
+L16     4.573333 -5.850000e-01
+L14     3.386667 -1.200000e-01
+L15     3.750000 -2.250000e-01
+L09     4.393333 -4.800000e-01
+L03     3.560000 -2.550000e-01
+L19     3.486667 -8.500000e-02
+L21     2.583333  2.550000e-01
+L25     4.086667 -2.850000e-01
+L02     4.470000 -4.150000e-01
+L20     4.220000 -2.600000e-01
+L04     3.060000  1.050000e-01
+L11     4.366667 -3.250000e-01
+L24     4.150000 -2.200000e-01
+L08     4.030000 -2.250000e-01
+L13     3.303333  8.500000e-02
+L18     3.910000 -1.850000e-01
+L06     4.580000 -3.500000e-01
+L10     4.386667 -1.700000e-01
+L05     3.630000  4.500000e-02
+L22     4.543333 -4.150000e-01
+L17     3.166667  1.100000e-01
+L26     3.746667 -1.600000e-01
+L12     4.316667 -2.900000e-01
+L01     4.046667 -3.450000e-01
+L27     4.443333 -2.100000e-01
+L23     4.076667 -6.500000e-02
+
+Degrees of freedom: 234 total; 78 residual
+Residual standard error: 0.2315855</code></pre>
+<blockquote>
+<p>Note that there is a substantial amount of variation in intercepts and slopes. (It might be worthwhile to try to take this into account. We’ll do that tomorrow.)</p>
+</blockquote>
+<blockquote>
+<p>And here is a “little trick” to extract the slopes for every cow (using the fact that the slope is the second coefficient of the first part of the output):</p>
+</blockquote>
+<pre class="r"><code>slopes&lt;-rep(0,78)
+for(i in 1:78)slopes[i]&lt;-fits[[i]][1]$coefficients[2]</code></pre>
+<blockquote>
+<p>(Note: the first of these two commands “initializes” slopes to be a vector consisting of 78 zeroes. The second command replaces these zeroes with the actual slopes.)</p>
+</blockquote>
+<p>Here’s another way of doing this with the function <code>map</code> from <code>purrr</code></p>
+<pre class="r"><code>slopes2 &lt;- fits %&gt;% 
+  map(&quot;coefficients&quot;) %&gt;% # grab coefficients
+  map_dbl(2)              # grab 2nd element
+
+cbind(slopes, slopes2)[1:10,]</code></pre>
+<pre><code>           slopes       slopes2
+B04 -3.050000e-01 -3.050000e-01
+B14 -3.250000e-01 -3.250000e-01
+B03 -2.750000e-01 -2.750000e-01
+B02  2.500000e-02  2.500000e-02
+B16 -3.925231e-16 -3.925231e-16
+B17 -1.900000e-01 -1.900000e-01
+B21  1.850000e-01  1.850000e-01
+B25 -3.500000e-02 -3.500000e-02
+B15 -1.200000e-01 -1.200000e-01
+B24  9.500000e-02  9.500000e-02</code></pre>
+<p>This gives the same result, but depending on personal preference, the syntax may be a easier to read</p>
+<blockquote>
+<p>From the output we see that the first 24 estimated lines belong to the cows on the Barley diet, the next 27 lines for the Mixed diet cows and the last 27 for cows on the Lupins diet. To link them to the diets, make a new variable:</p>
+</blockquote>
+<pre class="r"><code>DIET&lt;-factor(c(rep(0,24),rep(1,27),rep(2,27)),labels=c(&quot;B&quot;,&quot;BL&quot;,&quot;L&quot;))</code></pre>
+<blockquote>
+<p>To obtain the overall ANOVA table and estimates for the mean slope per diet:</p>
+</blockquote>
+<pre class="r"><code>summary(aov(slopes~DIET))</code></pre>
+<pre><code>            Df Sum Sq Mean Sq F value Pr(&gt;F)
+DIET         2 0.0767 0.03837   1.163  0.318
+Residuals   75 2.4733 0.03298               </code></pre>
+<pre class="r"><code>summary(lm(slopes~-1+DIET))</code></pre>
+<pre><code>
+Call:
+lm(formula = slopes ~ -1 + DIET)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-0.39241 -0.13357 -0.01309  0.11018  0.44759 
+
+Coefficients:
+       Estimate Std. Error t value Pr(&gt;|t|)    
+DIETB  -0.19104    0.03707  -5.154 2.00e-06 ***
+DIETBL -0.25778    0.03495  -7.376 1.82e-10 ***
+DIETL  -0.19259    0.03495  -5.511 4.82e-07 ***
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+Residual standard error: 0.1816 on 75 degrees of freedom
+Multiple R-squared:  0.5975,    Adjusted R-squared:  0.5814 
+F-statistic: 37.11 on 3 and 75 DF,  p-value: 8.21e-15</code></pre>
+<blockquote>
+<p>If we do not use the slope as a summary measure, but take the observations themselves, we can again calculate means and variances by:</p>
+</blockquote>
+<pre class="r"><code># tapply(protein, list(Diet,Time), mean)
+# tapply(protein, list(Diet,Time), var)
+
+Milk123complete %&gt;%
+  group_by(Time, Diet) %&gt;%
+  summarize(mean(protein), var(protein))</code></pre>
+<pre><code># A tibble: 9 x 4
+# Groups: Time [?]
+   Time Diet          `mean(protein)` `var(protein)`
+  &lt;dbl&gt; &lt;fct&gt;                   &lt;dbl&gt;          &lt;dbl&gt;
+1  1.00 barley                   3.89         0.149 
+2  1.00 barley+lupins            3.86         0.143 
+3  1.00 lupins                   3.76         0.199 
+4  2.00 barley                   3.64         0.0567
+5  2.00 barley+lupins            3.54         0.0774
+6  2.00 lupins                   3.43         0.0890
+7  3.00 barley                   3.51         0.0391
+8  3.00 barley+lupins            3.35         0.0624
+9  3.00 lupins                   3.37         0.0955</code></pre>
+<blockquote>
+<p>We can test the main effects and their interaction using ANOVA (either Twoway or split-plot) with diet and time as factors:</p>
+</blockquote>
+<pre class="r"><code>summary(aov(protein~Diet*factor(Time), data = Milk123complete))</code></pre>
+<pre><code>                   Df Sum Sq Mean Sq F value   Pr(&gt;F)    
+Diet                2  0.987   0.494   4.840  0.00875 ** 
+factor(Time)        2  7.582   3.791  37.166 1.13e-14 ***
+Diet:factor(Time)   4  0.225   0.056   0.552  0.69762    
+Residuals         225 22.950   0.102                     
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<pre class="r"><code>summary(aov(protein~Diet*factor(Time)+Error(Cow), data = Milk123complete))</code></pre>
+<pre><code>
+Error: Cow
+          Df Sum Sq Mean Sq F value Pr(&gt;F)  
+Diet       2  0.987  0.4937   2.592 0.0816 .
+Residuals 75 14.284  0.1905                 
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+Error: Within
+                   Df Sum Sq Mean Sq F value Pr(&gt;F)    
+factor(Time)        2  7.582   3.791  65.620 &lt;2e-16 ***
+Diet:factor(Time)   4  0.225   0.056   0.975  0.423    
+Residuals         150  8.666   0.058                   
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<blockquote>
+<p>And finally, to fit a linear mixed effects (LME) model with random intercept:</p>
+</blockquote>
+<pre class="r"><code>lme.fit&lt;-lme(fixed=protein~ Diet*factor(Time), random=~1|Cow, data = Milk123complete)
+anova(lme.fit)</code></pre>
+<pre><code>                  numDF denDF   F-value p-value
+(Intercept)           1   150 15839.928  &lt;.0001
+Diet                  2    75     2.592  0.0816
+factor(Time)          2   150    65.620  &lt;.0001
+Diet:factor(Time)     4   150     0.975  0.4231</code></pre>
+<pre class="r"><code>summary(lme.fit)</code></pre>
+<pre><code>Linear mixed-effects model fit by REML
+ Data: Milk123complete 
+       AIC      BIC    logLik
+  137.7676 175.3447 -57.88379
+
+Random effects:
+ Formula: ~1 | Cow
+        (Intercept)  Residual
+StdDev:   0.2103056 0.2403568
+
+Fixed effects: protein ~ Diet * factor(Time) 
+                                    Value  Std.Error  DF  t-value p-value
+(Intercept)                      3.889583 0.06519198 150 59.66353  0.0000
+Dietbarley+lupins               -0.028472 0.08959780  75 -0.31778  0.7515
+Dietlupins                      -0.131435 0.08959780  75 -1.46695  0.1466
+factor(Time)2                   -0.247083 0.06938505 150 -3.56105  0.0005
+factor(Time)3                   -0.382083 0.06938505 150 -5.50671  0.0000
+Dietbarley+lupins:factor(Time)2 -0.074028 0.09536062 150 -0.77629  0.4388
+Dietlupins:factor(Time)2        -0.083287 0.09536062 150 -0.87339  0.3838
+Dietbarley+lupins:factor(Time)3 -0.133472 0.09536062 150 -1.39966  0.1637
+Dietlupins:factor(Time)3        -0.003102 0.09536062 150 -0.03253  0.9741
+ Correlation: 
+                                (Intr) Dtbrl+ Dtlpns fc(T)2 fc(T)3 D+:(T)2
+Dietbarley+lupins               -0.728                                    
+Dietlupins                      -0.728  0.529                             
+factor(Time)2                   -0.532  0.387  0.387                      
+factor(Time)3                   -0.532  0.387  0.387  0.500               
+Dietbarley+lupins:factor(Time)2  0.387 -0.532 -0.282 -0.728 -0.364        
+Dietlupins:factor(Time)2         0.387 -0.282 -0.532 -0.728 -0.364  0.529 
+Dietbarley+lupins:factor(Time)3  0.387 -0.532 -0.282 -0.364 -0.728  0.500 
+Dietlupins:factor(Time)3         0.387 -0.282 -0.532 -0.364 -0.728  0.265 
+                                D:(T)2 D+:(T)3
+Dietbarley+lupins                             
+Dietlupins                                    
+factor(Time)2                                 
+factor(Time)3                                 
+Dietbarley+lupins:factor(Time)2               
+Dietlupins:factor(Time)2                      
+Dietbarley+lupins:factor(Time)3  0.265        
+Dietlupins:factor(Time)3         0.500  0.529 
+
+Standardized Within-Group Residuals:
+         Min           Q1          Med           Q3          Max 
+-3.208399150 -0.530625159 -0.006804944  0.523269323  2.125327364 
+
+Number of Observations: 234
+Number of Groups: 78 </code></pre>
+<blockquote>
+<p>From the estimates of the coefficient values, how can you calculate predictions for the protein values for each of the 3 diets, at each of the 3 time points? (Answer: add the appropriate coefficients to get: Time 1 Time 2 Time 3 Barley 3.889583 3.642500 3.507500 Barley + lupins 3.861111 3.540000 3.345556 Lupins 3.758148 3.427778 3.372963</p>
+</blockquote>
+<p>For each time-point add intercept the interaction terms. e.g. for lupins, time 3</p>
+<pre class="r"><code>3.889583+(-.131435)+(-.382083)+(-.003102)</code></pre>
+<pre><code>[1] 3.372963</code></pre>
+<p>To get them all in 2 (or 3 for pretty printing) lines of codes:</p>
+<pre class="r"><code>grid &lt;- expand.grid(Diet = unique(Milk123complete$Diet), 
+                    Time = unique(factor(Milk123complete$Time)))
+grid$predictions &lt;- predict(lme.fit, newdata = grid, level = 0)
+xtabs(predictions~Diet+Time, data = grid)</code></pre>
+<pre><code>               Time
+Diet                   1        2        3
+  barley        3.889583 3.642500 3.507500
+  barley+lupins 3.861111 3.540000 3.345556
+  lupins        3.758148 3.427778 3.372963</code></pre>
+<p>This works as follows:</p>
+<ul>
+<li><code>expand.grid</code> creates a data.frame of all possible combinations of the supplied vectors</li>
+<li><code>predict</code> will predict the protein based on the supplied model.
+<ul>
+<li><strong><code>level = 0</code></strong> is needed, which means ignore grouping (‘Cow’), otherwise the function will throw an error and ask for the grouping variable (so you will have to provide a Cow name)</li>
+</ul></li>
+<li><code>xtabs</code> is just to print it nicely</li>
+</ul>
+<blockquote>
+<p>Clean up, by detaching the appropriate milk data files from the search list.</p>
+</blockquote>
+<p>We didn’t attach, so no cleaning up required</p>
+</div>
+<div id="exercise-2" class="section level3">
+<h3>Exercise 2:</h3>
+<blockquote>
+<p>The file Twisk1.dat contains longitudinal data concerning cholesterol measurements on several occasions. Furthermore, information about baseline values as well as time varying covariates is collected. id : patient number chol: serum cholesterol fitness: max oxygen uptake (baseline) skinfold: sum of four skin folds (time varying) smoke: does the patient smoke? (time varying, 0=no, 1=yes) gender: gender (factor, 1=male, 2=female) time: time in weeks (1-6)</p>
+</blockquote>
+<blockquote>
+<p>Read the data into an R object and summarize it by</p>
+</blockquote>
+<pre class="r"><code>Twisk1&lt;-read.table(fromParentDir(&quot;data/Twisk1.dat&quot;),header=T)
+summary(Twisk1)</code></pre>
+<pre><code>       id             chol        fitness         skinfold     
+ Min.   :  1.0   Min.   :2.4   Min.   :1.460   Min.   : 1.570  
+ 1st Qu.: 81.0   1st Qu.:3.9   1st Qu.:1.830   1st Qu.: 2.530  
+ Median :270.0   Median :4.4   Median :1.970   Median : 3.370  
+ Mean   :228.8   Mean   :4.5   Mean   :1.976   Mean   : 3.743  
+ 3rd Qu.:367.0   3rd Qu.:5.0   3rd Qu.:2.140   3rd Qu.: 4.688  
+ Max.   :471.0   Max.   :7.5   Max.   :2.530   Max.   :12.210  
+     smoke            gender           time    
+ Min.   :0.0000   Min.   :1.000   Min.   :1.0  
+ 1st Qu.:0.0000   1st Qu.:1.000   1st Qu.:2.0  
+ Median :0.0000   Median :2.000   Median :3.5  
+ Mean   :0.1746   Mean   :1.531   Mean   :3.5  
+ 3rd Qu.:0.0000   3rd Qu.:2.000   3rd Qu.:5.0  
+ Max.   :1.0000   Max.   :2.000   Max.   :6.0  </code></pre>
+<blockquote>
+<p>Turn the variables id into a factor by <code>Twisk1$id&lt;-factor(Twisk1$id)</code> Do the same for smoke and gender, and attach Twisk1 to the search list.</p>
+</blockquote>
+<p>Let’s do this with <code>dplyr</code> for convenience</p>
+<pre class="r"><code>Twisk1 %&lt;&gt;% 
+  mutate_at(vars(id, smoke, gender), factor)</code></pre>
+<blockquote>
+<ol style="list-style-type: lower-alpha">
+<li>Give mean and variance of the continuous variables chol, fitness and skinfold for all time points combined.</li>
+</ol>
+</blockquote>
+<p>Here’s how to do this with dplyr</p>
+<pre class="r"><code>Twisk1 %&gt;%
+  summarize_at(vars(chol, fitness, skinfold), funs(mean, var))</code></pre>
+<pre><code>  chol_mean fitness_mean skinfold_mean  chol_var fitness_var skinfold_var
+1  4.499773     1.975714      3.743424 0.6607037  0.04790329     2.341117</code></pre>
+<p>Here with dplyr, purrr and data.table (admittably a little cumbersome, but this works for 30 variables and 20 functions too)</p>
+<pre class="r"><code>Twisk1 %&gt;%
+  select(chol, fitness, skinfold) %&gt;%
+  map(function(x) data.frame(mean(x), var(x))) %&gt;%
+  data.table::rbindlist(idcol = &quot;variable&quot;)</code></pre>
+<pre><code>   variable  mean.x.     var.x.
+1:     chol 4.499773 0.66070369
+2:  fitness 1.975714 0.04790329
+3: skinfold 3.743424 2.34111743</code></pre>
+<blockquote>
+<ol start="2" style="list-style-type: lower-alpha">
+<li>Calculate these means and variances for every time point separately.</li>
+</ol>
+</blockquote>
+<p>Just 1 extra line compared to a)</p>
+<pre class="r"><code>Twisk1 %&gt;%
+  group_by(time) %&gt;%
+  summarize_at(vars(chol, fitness, skinfold), funs(mean, var))</code></pre>
+<pre><code># A tibble: 6 x 7
+   time chol_mean fitness_mean skinfold_mean chol_var fitness_var
+  &lt;int&gt;     &lt;dbl&gt;        &lt;dbl&gt;         &lt;dbl&gt;    &lt;dbl&gt;       &lt;dbl&gt;
+1     1      4.43         1.98          3.26    0.454      0.0482
+2     2      4.32         1.98          3.36    0.443      0.0482
+3     3      4.27         1.98          3.57    0.499      0.0482
+4     4      4.17         1.98          3.76    0.493      0.0482
+5     5      4.68         1.98          4.35    0.619      0.0482
+6     6      5.13         1.98          4.16    0.856      0.0482
+# ... with 1 more variable: skinfold_var &lt;dbl&gt;</code></pre>
+<blockquote>
+<ol start="3" style="list-style-type: lower-alpha">
+<li>How many females are there in the sample? Use tapply with function table to obtain frequency tables at each time point..</li>
+</ol>
+</blockquote>
+<pre class="r"><code>table(Twisk1$time, Twisk1$gender)</code></pre>
+<pre><code>   
+     1  2
+  1 69 78
+  2 69 78
+  3 69 78
+  4 69 78
+  5 69 78
+  6 69 78</code></pre>
+<blockquote>
+<ol start="4" style="list-style-type: lower-alpha">
+<li>Use Twisk.gr&lt;-groupedData(chol~time|id,data=Twisk1) to create a grouped dataset. Investigate graphically the individual profiles, also try to produce a graph where the profiles are shown by gender (outer=~gender). Warning: on some computers this may take some time, if you get bored press the escape key (several times).</li>
+</ol>
+</blockquote>
+<pre class="r"><code>Twisk1 %&gt;%
+  ggplot(aes(x = time, y = chol, col = id)) + 
+  geom_line() + 
+  theme(legend.position = &quot;none&quot;)</code></pre>
+<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-95-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>Twisk1 %&gt;%
+  ggplot(aes(x = time, y = chol, col = id)) + 
+  geom_line() + 
+  facet_grid(~gender) + 
+  theme(legend.position = &quot;none&quot;)</code></pre>
+<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-96-1.png" width="672" style="display: block; margin: auto;" /></p>
+<blockquote>
+<ol start="5" style="list-style-type: lower-alpha">
+<li>Using a split plot ANOVA, test whether cholesterol levels change in time. (From question d, does a linear time effect seem feasible?)</li>
+</ol>
+</blockquote>
+<p>A linear time effect does not seem correct, based on the graph. We will use time as a factor variable</p>
+<pre class="r"><code>fit &lt;- aov(chol~factor(time)+Error(id), data = Twisk1)
+summary(fit)</code></pre>
+<pre><code>
+Error: id
+           Df Sum Sq Mean Sq F value Pr(&gt;F)
+Residuals 146  358.9   2.458               
+
+Error: Within
+              Df Sum Sq Mean Sq F value Pr(&gt;F)    
+factor(time)   5  91.06  18.211   100.6 &lt;2e-16 ***
+Residuals    730 132.11   0.181                   
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<blockquote>
+<ol start="6" style="list-style-type: lower-alpha">
+<li>Is the effect of time for females the same as for males? Investigate by making an interaction plot and using split plot ANOVA.</li>
+</ol>
+</blockquote>
+<p>We can already observe the ‘interaction’ from the faceted plot from ggplot. The slope seems equal for both sexes, which indicates no interaction</p>
+<pre class="r"><code>fit2 &lt;- aov(chol~factor(time)*factor(gender)+Error(id), data = Twisk1)
+summary(fit2)</code></pre>
+<pre><code>
+Error: id
+                Df Sum Sq Mean Sq F value Pr(&gt;F)  
+factor(gender)   1   15.2  15.159   6.394 0.0125 *
+Residuals      145  343.8   2.371                 
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+Error: Within
+                             Df Sum Sq Mean Sq F value   Pr(&gt;F)    
+factor(time)                  5  91.06  18.211  105.46  &lt; 2e-16 ***
+factor(time):factor(gender)   5   6.92   1.385    8.02 2.26e-07 ***
+Residuals                   725 125.19   0.173                     
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<p>Here it seems that there is an important interaction with gender. Maybe if we plot the means on each time point, this will become apparant</p>
+<pre class="r"><code>Twisk1 %&gt;% 
+  group_by(time, gender) %&gt;%
+  summarize(chol = mean(chol)) %&gt;%
+  ggplot(aes(x = time, y = chol, col = gender)) + 
+  geom_line()</code></pre>
+<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-99-1.png" width="672" style="display: block; margin: auto;" /></p>
+<blockquote>
+<ol start="7" style="list-style-type: lower-alpha">
+<li>Redo questions e and f using a linear mixed effect model with a random intercept. Compare the outputs and conclusions to those from e and f).</li>
+</ol>
+</blockquote>
+<p>First without interaction</p>
+<pre class="r"><code>fit.lme &lt;- lme(fixed = chol~factor(time), random = ~1|id, data = Twisk1)
+summary(fit.lme)</code></pre>
+<pre><code>Linear mixed-effects model fit by REML
+ Data: Twisk1 
+       AIC      BIC    logLik
+  1415.401 1453.604 -699.7004
+
+Random effects:
+ Formula: ~1 | id
+        (Intercept) Residual
+StdDev:   0.6160774 0.425416
+
+Fixed effects: chol ~ factor(time) 
+                  Value  Std.Error  DF  t-value p-value
+(Intercept)    4.434694 0.06175055 730 71.81626  0.0000
+factor(time)2 -0.111565 0.04962154 730 -2.24831  0.0249
+factor(time)3 -0.168707 0.04962154 730 -3.39988  0.0007
+factor(time)4 -0.261224 0.04962154 730 -5.26434  0.0000
+factor(time)5  0.240816 0.04962154 730  4.85306  0.0000
+factor(time)6  0.691156 0.04962154 730 13.92856  0.0000
+ Correlation: 
+              (Intr) fct()2 fct()3 fct()4 fct()5
+factor(time)2 -0.402                            
+factor(time)3 -0.402  0.500                     
+factor(time)4 -0.402  0.500  0.500              
+factor(time)5 -0.402  0.500  0.500  0.500       
+factor(time)6 -0.402  0.500  0.500  0.500  0.500
+
+Standardized Within-Group Residuals:
+        Min          Q1         Med          Q3         Max 
+-2.75247731 -0.58922213 -0.04251889  0.56513990  3.62717923 
+
+Number of Observations: 882
+Number of Groups: 147 </code></pre>
+<p>Now with interaction</p>
+<pre class="r"><code>fit.lme2 &lt;- lme(fixed = chol~factor(time)*gender, random = ~1|id, data = Twisk1)
+summary(fit.lme2)</code></pre>
+<pre><code>Linear mixed-effects model fit by REML
+ Data: Twisk1 
+       AIC      BIC    logLik
+  1400.317 1467.076 -686.1587
+
+Random effects:
+ Formula: ~1 | id
+        (Intercept)  Residual
+StdDev:   0.6052576 0.4155439
+
+Fixed effects: chol ~ factor(time) * gender 
+                          Value  Std.Error  DF  t-value p-value
+(Intercept)            4.463768 0.08838433 725 50.50407  0.0000
+factor(time)2         -0.204348 0.07074689 725 -2.88844  0.0040
+factor(time)3         -0.388406 0.07074689 725 -5.49008  0.0000
+factor(time)4         -0.513043 0.07074689 725 -7.25182  0.0000
+factor(time)5         -0.024638 0.07074689 725 -0.34825  0.7278
+factor(time)6          0.510145 0.07074689 725  7.21085  0.0000
+gender2               -0.054794 0.12133515 145 -0.45159  0.6522
+factor(time)2:gender2  0.174861 0.09712224 725  1.80042  0.0722
+factor(time)3:gender2  0.414047 0.09712224 725  4.26315  0.0000
+factor(time)4:gender2  0.474582 0.09712224 725  4.88644  0.0000
+factor(time)5:gender2  0.500279 0.09712224 725  5.15102  0.0000
+factor(time)6:gender2  0.341137 0.09712224 725  3.51245  0.0005
+ Correlation: 
+                      (Intr) fct()2 fct()3 fct()4 fct()5 fct()6 gendr2
+factor(time)2         -0.400                                          
+factor(time)3         -0.400  0.500                                   
+factor(time)4         -0.400  0.500  0.500                            
+factor(time)5         -0.400  0.500  0.500  0.500                     
+factor(time)6         -0.400  0.500  0.500  0.500  0.500              
+gender2               -0.728  0.292  0.292  0.292  0.292  0.292       
+factor(time)2:gender2  0.292 -0.728 -0.364 -0.364 -0.364 -0.364 -0.400
+factor(time)3:gender2  0.292 -0.364 -0.728 -0.364 -0.364 -0.364 -0.400
+factor(time)4:gender2  0.292 -0.364 -0.364 -0.728 -0.364 -0.364 -0.400
+factor(time)5:gender2  0.292 -0.364 -0.364 -0.364 -0.728 -0.364 -0.400
+factor(time)6:gender2  0.292 -0.364 -0.364 -0.364 -0.364 -0.728 -0.400
+                      f()2:2 f()3:2 f()4:2 f()5:2
+factor(time)2                                    
+factor(time)3                                    
+factor(time)4                                    
+factor(time)5                                    
+factor(time)6                                    
+gender2                                          
+factor(time)2:gender2                            
+factor(time)3:gender2  0.500                     
+factor(time)4:gender2  0.500  0.500              
+factor(time)5:gender2  0.500  0.500  0.500       
+factor(time)6:gender2  0.500  0.500  0.500  0.500
+
+Standardized Within-Group Residuals:
+        Min          Q1         Med          Q3         Max 
+-3.16206297 -0.59878274 -0.01013853  0.53084464  3.76792278 
+
+Number of Observations: 882
+Number of Groups: 147 </code></pre>
+<p>Again, we have an indication of significant interaction between time and gender.</p>
+<blockquote>
+<ol start="8" style="list-style-type: lower-alpha">
+<li>After day 2: Formally compare the two LME model from part g, using AIC or a Likelihood Ratio test. (Note: we need to use ML instead of REML to get a valid comparison.) Also investigate a model with time and gender as main effects, without interaction. What happens if we leave out weeks 1 and 2?</li>
+</ol>
+</blockquote>
+</div>
+</div>
 <div id="session-information" class="section level2">
 <h2>Session information</h2>
 <!-- Insert the session information into the document -->
@@ -1298,23 +2114,24 @@ attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
 other attached packages:
- [1] data.table_1.10.4-3 survival_2.41-3     bindrcpp_0.2       
- [4] simpleboot_1.1-3    boot_1.3-20         purrr_0.2.4        
- [7] stringr_1.2.0       ggplot2_2.2.1       dplyr_0.7.4        
-[10] magrittr_1.5        epistats_0.1.0     
+ [1] lattice_0.20-35     nlme_3.1-131        data.table_1.10.4-3
+ [4] survival_2.41-3     bindrcpp_0.2        simpleboot_1.1-3   
+ [7] boot_1.3-20         purrr_0.2.4         stringr_1.2.0      
+[10] ggplot2_2.2.1       dplyr_0.7.4         magrittr_1.5       
+[13] epistats_0.1.0     
 
 loaded via a namespace (and not attached):
  [1] Rcpp_0.12.14     pillar_1.1.0     compiler_3.4.3   git2r_0.20.0    
  [5] plyr_1.8.4       bindr_0.1        tools_3.4.3      digest_0.6.13   
- [9] nlme_3.1-131     lattice_0.20-35  evaluate_0.10.1  tibble_1.4.1    
-[13] gtable_0.2.0     pkgconfig_2.0.1  rlang_0.1.6      psych_1.7.8     
-[17] Matrix_1.2-12    cli_1.0.0        parallel_3.4.3   yaml_2.1.16     
-[21] perm_1.0-0.0     knitr_1.18       rprojroot_1.2    grid_3.4.3      
-[25] glue_1.2.0       R6_2.2.2         foreign_0.8-69   rmarkdown_1.8   
-[29] reshape2_1.4.3   tidyr_0.7.2      backports_1.1.2  scales_0.5.0    
-[33] htmltools_0.3.6  splines_3.4.3    mnormt_1.5-5     assertthat_0.2.0
-[37] colorspace_1.3-2 utf8_1.1.3       stringi_1.1.6    lazyeval_0.2.1  
-[41] munsell_0.4.3    broom_0.4.3      crayon_1.3.4    </code></pre>
+ [9] evaluate_0.10.1  tibble_1.4.1     gtable_0.2.0     pkgconfig_2.0.1 
+[13] rlang_0.1.6      psych_1.7.8      Matrix_1.2-12    cli_1.0.0       
+[17] parallel_3.4.3   yaml_2.1.16      perm_1.0-0.0     knitr_1.18      
+[21] rprojroot_1.2    grid_3.4.3       glue_1.2.0       R6_2.2.2        
+[25] foreign_0.8-69   rmarkdown_1.8    reshape2_1.4.3   tidyr_0.7.2     
+[29] backports_1.1.2  scales_0.5.0     htmltools_0.3.6  splines_3.4.3   
+[33] mnormt_1.5-5     assertthat_0.2.0 colorspace_1.3-2 labeling_0.3    
+[37] utf8_1.1.3       stringi_1.1.6    lazyeval_0.2.1   munsell_0.4.3   
+[41] broom_0.4.3      crayon_1.3.4    </code></pre>
 </div>
 
 <hr>
