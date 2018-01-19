@@ -190,7 +190,7 @@ df %>%
 
 > (c) Repeat step (b) 1000 times to get 1000 resamples and 1000 values of the statistic. (Obviously you will not do this 1000 times by hand. Do it a few times by hand until you understand the procedure, then proceed with R.) Make a table of the distribution of these 1000 values. This is the permutation distribution for your resamples.
 
-```{r}
+```{r, cache = T}
 npermutations = 1000
 set.seed(2)
 
@@ -285,7 +285,7 @@ choose(35+55, 55)
 
 Getting all permutations is clearly infeasible, so let's do 1000
 
-```{r}
+```{r, cache = T}
 nperm  = 1000
 ratios = numeric(nperm)
 set.seed(2)
@@ -421,7 +421,7 @@ mean(diffx <= diffs)
 
 Now check with pre-defined functions:
 
-```{r}
+```{r, cache = T}
 perm::permTS(calcium$success ~ calcium$treatment, alternative = "less", method = "exact.ce")
 fisher.test(calcium$success, calcium$treatment, alternative = "greater")
 ```
@@ -477,7 +477,7 @@ perm_twogroup(diffx, n1, n2, ns)
 
 Lets compare computation speed:
 
-```{r}
+```{r, cache = T}
 
 system.time(perm::permTS(calcium$success ~ calcium$treatment, alternative = "less", method = "exact.ce"))
 system.time(fisher.test(calcium$success, calcium$treatment, alternative = "greater"))
@@ -1207,6 +1207,276 @@ Again, we have an indication of significant interaction between time and gender.
 
 > h.	After day 2: Formally compare the two LME model from part g, using AIC or a Likelihood Ratio test. (Note: we need to use ML instead of REML to get a valid comparison.) Also investigate a model with time and gender as main effects, without interaction. What happens if we leave out weeks 1 and 2?
 
+First re-fit the model with package `lme4`, which supports the ANOVA method
+by re-fitting accordinging to REML
+
+```{r}
+
+fit1 <- lme4::lmer(chol~factor(time) + (1|id), data = Twisk1)
+fit2 <- lme4::lmer(chol~factor(time)*gender + (1|id), data = Twisk1)
+fit3 <- lme4::lmer(chol~factor(time)+gender + (1|id), data = Twisk1)
+fit4 <- lme4::lmer(chol~factor(time)+gender + (1|id), data = Twisk1 %>% filter(time > 2))
+```
+
+Compare with ANOVA (observe the message of refitting with ML)
+
+Fit 2 is best, including interaction
+
+```{r}
+anova(fit1, fit2, fit3)
+```
+
+
+## Dependent data 2
+
+### 1. Milk
+
+> 1.  In the protein example in the handout there where 4 timepoints. In
+    the actual dataset there were much points. To select 7 timepoints
+    from the data:
+
+```{r}
+library(nlme)
+milk<-Milk[Milk$Time<8,]
+str(milk)
+```
+
+
+    1.  Fit the model with Diet and time as grouping variables, and
+        their interaction. For the random part take random intercepts
+        and random slopes.
+        
+```{r}
+require(lme4)
+fit1 <- lmer(protein~Diet*factor(Time) + (Time | Cow), data = milk)
+summary(fit1)
+```
+
+    2.  See, by fitting different models, which random effects are
+        needed in the model. (Just like in the text.)
+
+```{r}
+fit2 <- lmer(protein~Diet*factor(Time) + (Time - 1 | Cow), data = milk)
+fit3 <- lmer(protein~Diet*factor(Time) + (1 | Cow), data = milk)
+
+anova(fit1, fit2, fit3)
+```
+
+Fit1 is best, so both random slope and intercept are needed
+
+    3.  See, by fitting different models, what the fixed part of the
+        model is.
+
+```{r}
+fit4 <- lmer(protein~Diet+factor(Time) + (Time | Cow), data = milk)
+fit5 <- lmer(protein~Diet+Diet:factor(Time) + (Time | Cow), data = milk)
+fit6 <- lmer(protein~Diet + (Time | Cow), data = milk)
+fit7 <- lmer(protein~factor(Time) + (Time | Cow), data = milk)
+
+anova(fit1, fit4, fit5, fit6, fit7)
+```
+
+Fit4 has the lowest AIC, without interaction between time and diet
+
+    4.  Discuss the difference with the analysis from the text and
+        explain this.
+
+```{r}
+length(unique(Milk$Time))
+length(unique(milk$Time))
+```
+
+In the full dataset there are 19 unique datapoints, in the dataset we 
+used, this was restricted to 7. This could explain why the interaction 
+is not significant when there are only few timepoint 
+(maybe the interesting interaction is at later time-points)
+
+Try a plot
+
+```{r}
+Milk %>%
+  group_by(Time, Diet) %>%
+  summarize(protein = mean(protein)) %>%
+  ggplot(aes(x = Time, y = protein, col = Diet)) + 
+  geom_line() +
+  theme(legend.position = "none")
+```
+
+We can more or less see that the slopes start to differ after timepoint 7.
+
+Notice that individual cows were left out here
+
+### 2. 
+> 2.  In the nlme library there is a dataset on the body weights of rats,
+    measured over 64 days. The body weights of the rats (in grams) are
+    measured on day 1 and every seven days thereafter until day64, with
+    an extra measurement on day 44. The experiment started several weeks
+    before “day 1.” There are three groups of rats, each on a different
+    diet. The dataset is named BodyWeight. In this dataset Diet is a
+    factor, the other variables are numeric covariates.
+
+    1.  Attach the BodyWeight dataset, get information about this
+        dataset (help(BodyWeight)) and make a plot like figure 1 of the
+        handout.
+
+```{r}
+data("BodyWeight")
+str(BodyWeight)
+```
+
+Spaghetti plot:
+
+```{r}
+BodyWeight %>%
+  ggplot(aes(x = Time, y = weight, col = Rat)) + 
+  geom_line() + 
+  facet_wrap(~Diet) + 
+  theme(legend.position = "none")
+```
+
+    2.  Which random effects are needed in the model? Take for the fixed
+        part a model with Diet and Time as grouping variables, and their
+        interaction.
+
+Intercepts seem to differ by rat, slopes not too much. 
+Intercepts are all pretty different for diets (remember that the rats 
+were already on a diet for sometime before Time = 0)
+
+```{r}
+library(lme4)
+fit1 <- lmer(weight~Diet*factor(Time) + (1|Rat), data = BodyWeight)
+fit2 <- lmer(weight~Diet*factor(Time) + (Time - 1|Rat), data = BodyWeight)
+fit3 <- lmer(weight~Diet*factor(Time) + (Time|Rat), data = BodyWeight)
+
+AIC(fit1, fit2, fit3)
+```
+
+Fit3 is best, including random intercept and slope
+
+    3.  Check which fixed parts are needed in the model.
+
+```{r}
+fit4 <- lmer(weight~Diet+factor(Time) + (Time|Rat), data = BodyWeight)
+fit5 <- lmer(weight~Diet+Diet:factor(Time) + (Time|Rat), data = BodyWeight)
+fit6 <- lmer(weight~Diet + (Time|Rat), data = BodyWeight)
+fit7 <- lmer(weight~factor(Time) + (Time|Rat), data = BodyWeight)
+
+anova(fit3, fit4, fit5, fit6, fit7)
+```
+
+Fit 4 is best, with fixed effects for time and diet but no interaction
+
+    4.  Determine the correlation between the observations on the
+        different time points and discuss these.
+
+Go back to package `nlme` for this
+
+
+
+```{r}
+fit <- nlme::lme(fixed = weight~Diet+factor(Time),
+                  random = (~Time|Rat), 
+                  data = BodyWeight)
+
+covmat <- nlme::getVarCov(fit, individual = 1, type = "marginal")
+covmat
+```
+
+We can see that covariance decreases with increasing time difference. 
+We can plot this nicely:
+
+```{r}
+image(covmat[[1]])
+```
+
+In the edges of the matrix, the color is more yellow, which indicates 
+lower covariance
+
+    5.  Describe the analysis you did, and the conclusions that can be
+        drawn.
+
+Left to reader
+
+### 3. Osteochon
+> Read in the data file osteochon.csv.
+
+```{r}
+ost <- read.csv(fromParentDir("data/osteochon.csv"))
+str(ost)
+```
+
+Make father and food factors
+
+```{r}
+ost %<>%
+  mutate(father = factor(father), ground = factor(ground))
+```
+
+
+    1.  Fit a logistic regression model with independent variables
+        father, ground and height. (Remember to use factor() for father
+        and ground.)
+
+```{r}
+fit <- glm(oc~father+ground+height, data = ost,
+           family = binomial)
+```
+
+
+    2.  Discuss the estimates and standard errors for the fathers.
+
+```{r}
+summary(fit)
+```
+
+
+There are many fathers, none are significant. Some have high values, but 
+also very high standard errors.
+
+    3.  Now fit a logistic regression model with random father effects.
+
+This model wouldn't converge and suggested scaling, so height was 
+centered (to mean 0, variance unchanged)
+
+```{r}
+ost %<>% 
+  mutate(height_centered = scale(height, center = T, scale = F))
+
+fit2 <- lme4::glmer(oc ~ height_centered+food + (1|father), 
+                    data = ost,
+                    family = binomial)
+
+fit3 <- lme4::glmer(oc ~ height_centered+food + 
+                      (height_centered|father), 
+                    data = ost,
+                    family = binomial)
+
+summary(fit2)
+```
+
+    4.  Compare the AIC’s of both models and discuss which model fits
+        best. Also compare the estimates of height.
+
+```{r}
+AIC(fit, fit2, fit3)
+```
+
+AIC is the lowest for fit2. 
+The estimates of beta for height are pretty similar in both 
+models, but even stronger in fit2
+
+    5.  Discuss the effect of using random father effects.
+
+```{r}
+list(fit, fit2) %>%
+  map(logLik)
+```
+
+When looking at the likelihood of the models, fit has a better likelihood,
+ however, it 'spends' many degrees of freedom on estimating fixed effects 
+ for each father. The model with random effects (fit2) has a lot less 
+ parameters to estimate, which gives it a better AIC and makes it 
+ preferable to the model without random effects.
 
 
 ## Session information
