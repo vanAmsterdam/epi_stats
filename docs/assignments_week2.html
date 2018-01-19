@@ -315,10 +315,10 @@ div.tocify {
 shared across the workflowr files. -->
 <!-- Update knitr chunk options -->
 <!-- Insert the date the file was last updated -->
-<p><strong>Last updated:</strong> 2018-01-18</p>
+<p><strong>Last updated:</strong> 2018-01-19</p>
 <!-- Insert the code version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
-<p><strong>Code version:</strong> cd02ad1</p>
+<p><strong>Code version:</strong> 9094f4b</p>
 <!-- Add your analysis here -->
 <div id="setup" class="section level2">
 <h2>Setup</h2>
@@ -721,13 +721,13 @@ perm_twogroup(diffx, n1, n2, ns)</code></pre>
 <p>Lets compare computation speed:</p>
 <pre class="r"><code>system.time(perm::permTS(calcium$success ~ calcium$treatment, alternative = &quot;less&quot;, method = &quot;exact.ce&quot;))</code></pre>
 <pre><code>   user  system elapsed 
-  2.797   0.106   2.937 </code></pre>
+  2.901   0.079   2.982 </code></pre>
 <pre class="r"><code>system.time(fisher.test(calcium$success, calcium$treatment, alternative = &quot;greater&quot;))</code></pre>
 <pre><code>   user  system elapsed 
-  0.001   0.000   0.001 </code></pre>
+  0.000   0.000   0.001 </code></pre>
 <pre class="r"><code>system.time(perm_twogroup(diffx, n1, n2, ns))</code></pre>
 <pre><code>   user  system elapsed 
-  0.001   0.000   0.000 </code></pre>
+      0       0       0 </code></pre>
 <p>We can see that <code>permTS</code> is extremely slow, compared to <code>fisher.test</code> and the manual exact method.</p>
 </div>
 </div>
@@ -2093,6 +2093,421 @@ Number of Groups: 147 </code></pre>
 <li>After day 2: Formally compare the two LME model from part g, using AIC or a Likelihood Ratio test. (Note: we need to use ML instead of REML to get a valid comparison.) Also investigate a model with time and gender as main effects, without interaction. What happens if we leave out weeks 1 and 2?</li>
 </ol>
 </blockquote>
+<p>First re-fit the model with package <code>lme4</code>, which supports the ANOVA method by re-fitting accordinging to REML</p>
+<pre class="r"><code>fit1 &lt;- lme4::lmer(chol~factor(time) + (1|id), data = Twisk1)
+fit2 &lt;- lme4::lmer(chol~factor(time)*gender + (1|id), data = Twisk1)
+fit3 &lt;- lme4::lmer(chol~factor(time)+gender + (1|id), data = Twisk1)
+fit4 &lt;- lme4::lmer(chol~factor(time)+gender + (1|id), data = Twisk1 %&gt;% filter(time &gt; 2))</code></pre>
+<p>Compare with ANOVA (observe the message of refitting with ML)</p>
+<p>Fit 2 is best, including interaction</p>
+<pre class="r"><code>anova(fit1, fit2, fit3)</code></pre>
+<pre><code>Data: Twisk1
+Models:
+fit1: chol ~ factor(time) + (1 | id)
+fit3: chol ~ factor(time) + gender + (1 | id)
+fit2: chol ~ factor(time) * gender + (1 | id)
+     Df    AIC    BIC  logLik deviance   Chisq Chi Df Pr(&gt;Chisq)    
+fit1  8 1388.8 1427.1 -686.41   1372.8                              
+fit3  9 1384.5 1427.5 -683.24   1366.5  6.3436      1    0.01178 *  
+fit2 14 1354.9 1421.9 -663.45   1326.9 39.5664      5  1.826e-07 ***
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+</div>
+</div>
+<div id="dependent-data-2" class="section level2">
+<h2>Dependent data 2</h2>
+<div id="milk" class="section level3">
+<h3>1. Milk</h3>
+<blockquote>
+<ol style="list-style-type: decimal">
+<li>In the protein example in the handout there where 4 timepoints. In the actual dataset there were much points. To select 7 timepoints from the data:</li>
+</ol>
+</blockquote>
+<pre class="r"><code>library(nlme)
+milk&lt;-Milk[Milk$Time&lt;8,]
+str(milk)</code></pre>
+<pre><code>Classes &#39;nfnGroupedData&#39;, &#39;nfGroupedData&#39;, &#39;groupedData&#39; and &#39;data.frame&#39;:  549 obs. of  4 variables:
+ $ protein: num  3.63 3.57 3.47 3.65 3.89 3.73 3.77 3.24 3.25 3.29 ...
+ $ Time   : num  1 2 3 4 5 6 7 1 2 3 ...
+ $ Cow    : Ord.factor w/ 79 levels &quot;B04&quot;&lt;&quot;B14&quot;&lt;&quot;B03&quot;&lt;..: 25 25 25 25 25 25 25 4 4 4 ...
+ $ Diet   : Factor w/ 3 levels &quot;barley&quot;,&quot;barley+lupins&quot;,..: 1 1 1 1 1 1 1 1 1 1 ...
+ - attr(*, &quot;formula&quot;)=Class &#39;formula&#39;  language protein ~ Time | Cow
+  .. ..- attr(*, &quot;.Environment&quot;)=&lt;environment: R_GlobalEnv&gt; 
+ - attr(*, &quot;labels&quot;)=List of 2
+  ..$ x: chr &quot;Time since calving&quot;
+  ..$ y: chr &quot;Protein content of milk sample&quot;
+ - attr(*, &quot;units&quot;)=List of 2
+  ..$ x: chr &quot;(weeks)&quot;
+  ..$ y: chr &quot;(%)&quot;
+ - attr(*, &quot;outer&quot;)=Class &#39;formula&#39;  language ~Diet
+  .. ..- attr(*, &quot;.Environment&quot;)=&lt;environment: R_GlobalEnv&gt; 
+ - attr(*, &quot;FUN&quot;)=function (x)  
+ - attr(*, &quot;order.groups&quot;)= logi TRUE</code></pre>
+<pre><code>1.  Fit the model with Diet and time as grouping variables, and
+    their interaction. For the random part take random intercepts
+    and random slopes.
+    </code></pre>
+<pre class="r"><code>require(lme4)
+fit1 &lt;- lmer(protein~Diet*factor(Time) + (Time | Cow), data = milk)
+summary(fit1)</code></pre>
+<pre><code>Linear mixed model fit by REML [&#39;lmerMod&#39;]
+Formula: protein ~ Diet * factor(Time) + (Time | Cow)
+   Data: milk
+
+REML criterion at convergence: 99.8
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-3.3577 -0.5317  0.0259  0.5411  3.1318 
+
+Random effects:
+ Groups   Name        Variance Std.Dev. Corr 
+ Cow      (Intercept) 0.081159 0.28488       
+          Time        0.001993 0.04465  -0.71
+ Residual             0.040877 0.20218       
+Number of obs: 549, groups:  Cow, 79
+
+Fixed effects:
+                                 Estimate Std. Error t value
+(Intercept)                      3.886800   0.065076   59.73
+Dietbarley+lupins               -0.025689   0.090310   -0.28
+Dietlupins                      -0.128652   0.090310   -1.42
+factor(Time)2                   -0.249561   0.058621   -4.26
+factor(Time)3                   -0.388800   0.059909   -6.49
+factor(Time)4                   -0.510400   0.063149   -8.08
+factor(Time)5                   -0.402400   0.067423   -5.97
+factor(Time)6                   -0.500400   0.072550   -6.90
+factor(Time)7                   -0.418000   0.078361   -5.33
+Dietbarley+lupins:factor(Time)2 -0.071550   0.080859   -0.88
+Dietlupins:factor(Time)2        -0.080809   0.080859   -1.00
+Dietbarley+lupins:factor(Time)3 -0.126756   0.083140   -1.52
+Dietlupins:factor(Time)3         0.003615   0.083140    0.04
+Dietbarley+lupins:factor(Time)4 -0.072933   0.087636   -0.83
+Dietlupins:factor(Time)4         0.046326   0.087636    0.53
+Dietbarley+lupins:factor(Time)5 -0.120933   0.093568   -1.29
+Dietlupins:factor(Time)5        -0.111324   0.093930   -1.19
+Dietbarley+lupins:factor(Time)6  0.031881   0.100683    0.32
+Dietlupins:factor(Time)6         0.022622   0.100683    0.22
+Dietbarley+lupins:factor(Time)7 -0.109778   0.108748   -1.01
+Dietlupins:factor(Time)7        -0.130901   0.109542   -1.19</code></pre>
+<pre><code>2.  See, by fitting different models, which random effects are
+    needed in the model. (Just like in the text.)</code></pre>
+<pre class="r"><code>fit2 &lt;- lmer(protein~Diet*factor(Time) + (Time - 1 | Cow), data = milk)
+fit3 &lt;- lmer(protein~Diet*factor(Time) + (1 | Cow), data = milk)
+
+anova(fit1, fit2, fit3)</code></pre>
+<pre><code>Data: milk
+Models:
+fit2: protein ~ Diet * factor(Time) + (Time - 1 | Cow)
+fit3: protein ~ Diet * factor(Time) + (1 | Cow)
+fit1: protein ~ Diet * factor(Time) + (Time | Cow)
+     Df     AIC    BIC  logLik deviance  Chisq Chi Df Pr(&gt;Chisq)    
+fit2 23 154.214 253.30 -54.107  108.214                             
+fit3 23  84.518 183.60 -19.259   38.518 69.697      0  &lt; 2.2e-16 ***
+fit1 25  61.123 168.82  -5.561   11.123 27.395      2  1.125e-06 ***
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<p>Fit1 is best, so both random slope and intercept are needed</p>
+<pre><code>3.  See, by fitting different models, what the fixed part of the
+    model is.</code></pre>
+<pre class="r"><code>fit4 &lt;- lmer(protein~Diet+factor(Time) + (Time | Cow), data = milk)
+fit5 &lt;- lmer(protein~Diet+Diet:factor(Time) + (Time | Cow), data = milk)
+fit6 &lt;- lmer(protein~Diet + (Time | Cow), data = milk)
+fit7 &lt;- lmer(protein~factor(Time) + (Time | Cow), data = milk)
+
+anova(fit1, fit4, fit5, fit6, fit7)</code></pre>
+<pre><code>Data: milk
+Models:
+fit6: protein ~ Diet + (Time | Cow)
+fit7: protein ~ factor(Time) + (Time | Cow)
+fit4: protein ~ Diet + factor(Time) + (Time | Cow)
+fit1: protein ~ Diet * factor(Time) + (Time | Cow)
+fit5: protein ~ Diet + Diet:factor(Time) + (Time | Cow)
+     Df     AIC    BIC   logLik deviance    Chisq Chi Df Pr(&gt;Chisq)    
+fit6  7 235.792 265.95 -110.896  221.792                               
+fit7 11  57.020 104.41  -17.510   35.020 186.7726      4    &lt; 2e-16 ***
+fit4 13  53.310 109.31  -13.655   27.310   7.7096      2    0.02118 *  
+fit1 25  61.123 168.82   -5.561   11.123  16.1876     12    0.18279    
+fit5 25  61.123 168.82   -5.561   11.123   0.0000      0    1.00000    
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<p>Fit4 has the lowest AIC, without interaction between time and diet</p>
+<pre><code>4.  Discuss the difference with the analysis from the text and
+    explain this.</code></pre>
+<pre class="r"><code>length(unique(Milk$Time))</code></pre>
+<pre><code>[1] 19</code></pre>
+<pre class="r"><code>length(unique(milk$Time))</code></pre>
+<pre><code>[1] 7</code></pre>
+<p>In the full dataset there are 19 unique datapoints, in the dataset we used, this was restricted to 7. This could explain why the interaction is not significant when there are only few timepoint (maybe the interesting interaction is at later time-points)</p>
+<p>Try a plot</p>
+<pre class="r"><code>Milk %&gt;%
+  group_by(Time, Diet) %&gt;%
+  summarize(protein = mean(protein)) %&gt;%
+  ggplot(aes(x = Time, y = protein, col = Diet)) + 
+  geom_line() +
+  theme(legend.position = &quot;none&quot;)</code></pre>
+<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-109-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>We can more or less see that the slopes start to differ after timepoint 7.</p>
+<p>Notice that individual cows were left out here</p>
+</div>
+<div id="section" class="section level3">
+<h3>2.</h3>
+<blockquote>
+<ol start="2" style="list-style-type: decimal">
+<li>In the nlme library there is a dataset on the body weights of rats, measured over 64 days. The body weights of the rats (in grams) are measured on day 1 and every seven days thereafter until day64, with an extra measurement on day 44. The experiment started several weeks before “day 1.” There are three groups of rats, each on a different diet. The dataset is named BodyWeight. In this dataset Diet is a factor, the other variables are numeric covariates.</li>
+</ol>
+</blockquote>
+<pre><code>1.  Attach the BodyWeight dataset, get information about this
+    dataset (help(BodyWeight)) and make a plot like figure 1 of the
+    handout.</code></pre>
+<pre class="r"><code>data(&quot;BodyWeight&quot;)
+str(BodyWeight)</code></pre>
+<pre><code>Classes &#39;nfnGroupedData&#39;, &#39;nfGroupedData&#39;, &#39;groupedData&#39; and &#39;data.frame&#39;:  176 obs. of  4 variables:
+ $ weight: num  240 250 255 260 262 258 266 266 265 272 ...
+ $ Time  : num  1 8 15 22 29 36 43 44 50 57 ...
+ $ Rat   : Ord.factor w/ 16 levels &quot;2&quot;&lt;&quot;3&quot;&lt;&quot;4&quot;&lt;&quot;1&quot;&lt;..: 4 4 4 4 4 4 4 4 4 4 ...
+ $ Diet  : Factor w/ 3 levels &quot;1&quot;,&quot;2&quot;,&quot;3&quot;: 1 1 1 1 1 1 1 1 1 1 ...
+ - attr(*, &quot;outer&quot;)=Class &#39;formula&#39;  language ~Diet
+  .. ..- attr(*, &quot;.Environment&quot;)=&lt;environment: R_GlobalEnv&gt; 
+ - attr(*, &quot;formula&quot;)=Class &#39;formula&#39;  language weight ~ Time | Rat
+  .. ..- attr(*, &quot;.Environment&quot;)=&lt;environment: R_GlobalEnv&gt; 
+ - attr(*, &quot;labels&quot;)=List of 2
+  ..$ x: chr &quot;Time&quot;
+  ..$ y: chr &quot;Body weight&quot;
+ - attr(*, &quot;units&quot;)=List of 2
+  ..$ x: chr &quot;(days)&quot;
+  ..$ y: chr &quot;(g)&quot;
+ - attr(*, &quot;FUN&quot;)=function (x)  
+  ..- attr(*, &quot;source&quot;)= chr &quot;function(x) max(x, na.rm = TRUE)&quot;
+ - attr(*, &quot;order.groups&quot;)= logi TRUE</code></pre>
+<p>Spaghetti plot:</p>
+<pre class="r"><code>BodyWeight %&gt;%
+  ggplot(aes(x = Time, y = weight, col = Rat)) + 
+  geom_line() + 
+  facet_wrap(~Diet) + 
+  theme(legend.position = &quot;none&quot;)</code></pre>
+<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-111-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre><code>2.  Which random effects are needed in the model? Take for the fixed
+    part a model with Diet and Time as grouping variables, and their
+    interaction.</code></pre>
+<p>Intercepts seem to differ by rat, slopes not too much. Intercepts are all pretty different for diets (remember that the rats were already on a diet for sometime before Time = 0)</p>
+<pre class="r"><code>library(lme4)
+fit1 &lt;- lmer(weight~Diet*factor(Time) + (1|Rat), data = BodyWeight)
+fit2 &lt;- lmer(weight~Diet*factor(Time) + (Time - 1|Rat), data = BodyWeight)
+fit3 &lt;- lmer(weight~Diet*factor(Time) + (Time|Rat), data = BodyWeight)
+
+AIC(fit1, fit2, fit3)</code></pre>
+<pre><code>     df      AIC
+fit1 35 1132.813
+fit2 35 1426.671
+fit3 37 1035.145</code></pre>
+<p>Fit3 is best, including random intercept and slope</p>
+<pre><code>3.  Check which fixed parts are needed in the model.</code></pre>
+<pre class="r"><code>fit4 &lt;- lmer(weight~Diet+factor(Time) + (Time|Rat), data = BodyWeight)
+fit5 &lt;- lmer(weight~Diet+Diet:factor(Time) + (Time|Rat), data = BodyWeight)
+fit6 &lt;- lmer(weight~Diet + (Time|Rat), data = BodyWeight)
+fit7 &lt;- lmer(weight~factor(Time) + (Time|Rat), data = BodyWeight)
+
+anova(fit3, fit4, fit5, fit6, fit7)</code></pre>
+<pre><code>Data: BodyWeight
+Models:
+fit6: weight ~ Diet + (Time | Rat)
+fit7: weight ~ factor(Time) + (Time | Rat)
+fit4: weight ~ Diet + factor(Time) + (Time | Rat)
+fit3: weight ~ Diet * factor(Time) + (Time | Rat)
+fit5: weight ~ Diet + Diet:factor(Time) + (Time | Rat)
+     Df    AIC    BIC  logLik deviance  Chisq Chi Df Pr(&gt;Chisq)    
+fit6  7 1214.1 1236.3 -600.07   1200.1                             
+fit7 15 1212.5 1260.1 -591.26   1182.5 17.610      8    0.02434 *  
+fit4 17 1181.0 1234.9 -573.52   1147.0 35.483      2  1.972e-08 ***
+fit3 37 1154.7 1272.0 -540.36   1080.7 66.326     20  7.163e-07 ***
+fit5 37 1154.7 1272.0 -540.36   1080.7  0.000      0    1.00000    
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<p>Fit 4 is best, with fixed effects for time and diet but no interaction</p>
+<pre><code>4.  Determine the correlation between the observations on the
+    different time points and discuss these.</code></pre>
+<p>Go back to package <code>nlme</code> for this</p>
+<pre class="r"><code>fit &lt;- nlme::lme(fixed = weight~Diet+factor(Time),
+                  random = (~Time|Rat), 
+                  data = BodyWeight)
+
+covmat &lt;- nlme::getVarCov(fit, individual = 1, type = &quot;marginal&quot;)
+covmat</code></pre>
+<pre><code>Rat 1 
+Marginal variance covariance matrix
+        1      2      3      4      5      6      7      8      9     10
+1  1407.9 1372.7 1354.4 1336.1 1317.9 1299.6 1281.4 1278.8 1263.1 1244.9
+2  1372.7 1377.3 1348.0 1335.6 1323.3 1310.9 1298.6 1296.8 1286.2 1273.9
+3  1354.4 1348.0 1358.5 1335.1 1328.7 1322.2 1315.8 1314.9 1309.4 1302.9
+4  1336.1 1335.6 1335.1 1351.5 1334.0 1333.5 1333.0 1332.9 1332.5 1331.9
+5  1317.9 1323.3 1328.7 1334.0 1356.4 1344.8 1350.2 1351.0 1355.6 1361.0
+6  1299.6 1310.9 1322.2 1333.5 1344.8 1373.1 1367.4 1369.0 1378.7 1390.0
+7  1281.4 1298.6 1315.8 1333.0 1350.2 1367.4 1401.6 1387.1 1401.8 1419.0
+8  1278.8 1296.8 1314.9 1332.9 1351.0 1369.0 1387.1 1406.6 1405.1 1423.2
+9  1263.1 1286.2 1309.4 1332.5 1355.6 1378.7 1401.8 1405.1 1441.9 1448.1
+10 1244.9 1273.9 1302.9 1331.9 1361.0 1390.0 1419.0 1423.2 1448.1 1494.0
+11 1226.6 1261.5 1296.5 1331.4 1366.4 1401.3 1436.2 1441.2 1471.2 1506.1
+       11
+1  1226.6
+2  1261.5
+3  1296.5
+4  1331.4
+5  1366.4
+6  1401.3
+7  1436.2
+8  1441.2
+9  1471.2
+10 1506.1
+11 1558.0
+  Standard Deviations: 37.522 37.112 36.858 36.763 36.829 37.055 37.438 37.505 37.972 38.653 39.472 </code></pre>
+<p>We can see that covariance decreases with increasing time difference. We can plot this nicely:</p>
+<pre class="r"><code>image(covmat[[1]])</code></pre>
+<p><img src="figure/assignments_week2.Rmd/unnamed-chunk-115-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>In the edges of the matrix, the color is more yellow, which indicates lower covariance</p>
+<pre><code>5.  Describe the analysis you did, and the conclusions that can be
+    drawn.</code></pre>
+<p>Left to reader</p>
+</div>
+<div id="osteochon" class="section level3">
+<h3>3. Osteochon</h3>
+<blockquote>
+<p>Read in the data file osteochon.csv.</p>
+</blockquote>
+<pre class="r"><code>ost &lt;- read.csv(fromParentDir(&quot;data/osteochon.csv&quot;))
+str(ost)</code></pre>
+<pre><code>&#39;data.frame&#39;:   440 obs. of  5 variables:
+ $ father: int  1 1 1 1 1 1 1 1 1 1 ...
+ $ food  : int  3 2 1 2 2 1 1 2 2 2 ...
+ $ ground: int  2 1 2 1 1 2 2 1 1 2 ...
+ $ height: int  166 165 160 163 161 155 162 166 162 164 ...
+ $ oc    : int  0 0 1 0 0 0 0 0 0 0 ...</code></pre>
+<p>Make father and food factors</p>
+<pre class="r"><code>ost %&lt;&gt;%
+  mutate(father = factor(father), ground = factor(ground))</code></pre>
+<pre><code>1.  Fit a logistic regression model with independent variables
+    father, ground and height. (Remember to use factor() for father
+    and ground.)</code></pre>
+<pre class="r"><code>fit &lt;- glm(oc~father+ground+height, data = ost,
+           family = binomial)</code></pre>
+<pre><code>2.  Discuss the estimates and standard errors for the fathers.</code></pre>
+<pre class="r"><code>summary(fit)</code></pre>
+<pre><code>
+Call:
+glm(formula = oc ~ father + ground + height, family = binomial, 
+    data = ost)
+
+Deviance Residuals: 
+     Min        1Q    Median        3Q       Max  
+-1.30706  -0.60192  -0.42928  -0.00014   2.64714  
+
+Coefficients:
+              Estimate Std. Error z value Pr(&gt;|z|)   
+(Intercept)  -21.05269    6.45772  -3.260  0.00111 **
+father2       -0.39502    1.07838  -0.366  0.71413   
+father3        0.27001    1.08908   0.248  0.80420   
+father4        1.24442    0.98298   1.266  0.20553   
+father5      -16.29436 1928.64557  -0.008  0.99326   
+father6       -0.47822    1.07903  -0.443  0.65763   
+father7        0.88621    0.94082   0.942  0.34622   
+father8        0.14027    1.08704   0.129  0.89732   
+father9       -0.36745    1.07149  -0.343  0.73165   
+father10       0.26745    1.00977   0.265  0.79111   
+father11       0.05222    1.09061   0.048  0.96181   
+father12     -17.04994 1641.37585  -0.010  0.99171   
+father13       0.96627    1.03021   0.938  0.34828   
+father14     -17.07564 1861.39065  -0.009  0.99268   
+father15     -16.69329 1607.14164  -0.010  0.99171   
+father16      -0.82301    1.28847  -0.639  0.52299   
+father17     -16.50985 1770.66337  -0.009  0.99256   
+father18       0.31936    1.01990   0.313  0.75418   
+father19       0.51245    1.02260   0.501  0.61628   
+father20       0.91762    1.02921   0.892  0.37262   
+father21      -0.98278    1.29515  -0.759  0.44796   
+father22      -0.29347    1.08335  -0.271  0.78648   
+father23      -1.47928    1.31366  -1.126  0.26013   
+father24       0.18565    0.99817   0.186  0.85245   
+father25       0.72438    0.95492   0.759  0.44810   
+father26       0.11776    1.07700   0.109  0.91293   
+father27       0.99152    1.00069   0.991  0.32176   
+father28      -0.26350    1.08649  -0.243  0.80838   
+father29       0.84449    0.99059   0.853  0.39393   
+father30     -16.71132 1952.56764  -0.009  0.99317   
+ground2        0.36450    0.32161   1.133  0.25706   
+height         0.11586    0.03913   2.961  0.00306 **
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+(Dispersion parameter for binomial family taken to be 1)
+
+    Null deviance: 361.41  on 439  degrees of freedom
+Residual deviance: 305.36  on 408  degrees of freedom
+AIC: 369.36
+
+Number of Fisher Scoring iterations: 17</code></pre>
+<p>There are many fathers, none are significant. Some have high values, but also very high standard errors.</p>
+<pre><code>3.  Now fit a logistic regression model with random father effects.</code></pre>
+<p>This model wouldn’t converge and suggested scaling, so height was centered (to mean 0, variance unchanged)</p>
+<pre class="r"><code>ost %&lt;&gt;% 
+  mutate(height_centered = scale(height, center = T, scale = F))
+
+fit2 &lt;- lme4::glmer(oc ~ height_centered+food + (1|father), 
+                    data = ost,
+                    family = binomial)
+
+fit3 &lt;- lme4::glmer(oc ~ height_centered+food + 
+                      (height_centered|father), 
+                    data = ost,
+                    family = binomial)
+
+summary(fit2)</code></pre>
+<pre><code>Generalized linear mixed model fit by maximum likelihood (Laplace
+  Approximation) [glmerMod]
+ Family: binomial  ( logit )
+Formula: oc ~ height_centered + food + (1 | father)
+   Data: ost
+
+     AIC      BIC   logLik deviance df.resid 
+   360.1    376.5   -176.1    352.1      436 
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-0.8435 -0.4278 -0.3674 -0.2926  4.4019 
+
+Random effects:
+ Groups Name        Variance Std.Dev.
+ father (Intercept) 0.1595   0.3994  
+Number of obs: 440, groups:  father, 30
+
+Fixed effects:
+                Estimate Std. Error z value Pr(&gt;|z|)    
+(Intercept)     -1.76975    0.52791  -3.352 0.000801 ***
+height_centered  0.09944    0.03480   2.857 0.004271 ** 
+food            -0.05959    0.23824  -0.250 0.802490    
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+Correlation of Fixed Effects:
+            (Intr) hght_c
+heght_cntrd  0.045       
+food        -0.944 -0.139</code></pre>
+<pre><code>4.  Compare the AIC’s of both models and discuss which model fits
+    best. Also compare the estimates of height.</code></pre>
+<pre class="r"><code>AIC(fit, fit2, fit3)</code></pre>
+<pre><code>     df      AIC
+fit  32 369.3610
+fit2  4 360.1499
+fit3  6 363.7779</code></pre>
+<p>AIC is the lowest for fit2. The estimates of beta for height are pretty similar in both models, but even stronger in fit2</p>
+<pre><code>5.  Discuss the effect of using random father effects.</code></pre>
+<pre class="r"><code>list(fit, fit2) %&gt;%
+  map(logLik)</code></pre>
+<pre><code>[[1]]
+&#39;log Lik.&#39; -152.6805 (df=32)
+
+[[2]]
+&#39;log Lik.&#39; -176.075 (df=4)</code></pre>
+<p>When looking at the likelihood of the models, fit has a better likelihood, however, it ‘spends’ many degrees of freedom on estimating fixed effects for each father. The model with random effects (fit2) has a lot less parameters to estimate, which gives it a better AIC and makes it preferable to the model without random effects.</p>
 </div>
 </div>
 <div id="session-information" class="section level2">
@@ -2114,24 +2529,24 @@ attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
 other attached packages:
- [1] lattice_0.20-35     nlme_3.1-131        data.table_1.10.4-3
- [4] survival_2.41-3     bindrcpp_0.2        simpleboot_1.1-3   
- [7] boot_1.3-20         purrr_0.2.4         stringr_1.2.0      
-[10] ggplot2_2.2.1       dplyr_0.7.4         magrittr_1.5       
-[13] epistats_0.1.0     
+ [1] lme4_1.1-15         Matrix_1.2-12       lattice_0.20-35    
+ [4] nlme_3.1-131        data.table_1.10.4-3 survival_2.41-3    
+ [7] bindrcpp_0.2        simpleboot_1.1-3    boot_1.3-20        
+[10] purrr_0.2.4         stringr_1.2.0       ggplot2_2.2.1      
+[13] dplyr_0.7.4         magrittr_1.5        epistats_0.1.0     
 
 loaded via a namespace (and not attached):
- [1] Rcpp_0.12.14     pillar_1.1.0     compiler_3.4.3   git2r_0.20.0    
- [5] plyr_1.8.4       bindr_0.1        tools_3.4.3      digest_0.6.13   
- [9] evaluate_0.10.1  tibble_1.4.1     gtable_0.2.0     pkgconfig_2.0.1 
-[13] rlang_0.1.6      psych_1.7.8      Matrix_1.2-12    cli_1.0.0       
-[17] parallel_3.4.3   yaml_2.1.16      perm_1.0-0.0     knitr_1.18      
-[21] rprojroot_1.2    grid_3.4.3       glue_1.2.0       R6_2.2.2        
-[25] foreign_0.8-69   rmarkdown_1.8    reshape2_1.4.3   tidyr_0.7.2     
-[29] backports_1.1.2  scales_0.5.0     htmltools_0.3.6  splines_3.4.3   
-[33] mnormt_1.5-5     assertthat_0.2.0 colorspace_1.3-2 labeling_0.3    
-[37] utf8_1.1.3       stringi_1.1.6    lazyeval_0.2.1   munsell_0.4.3   
-[41] broom_0.4.3      crayon_1.3.4    </code></pre>
+ [1] Rcpp_0.12.14     nloptr_1.0.4     pillar_1.1.0     compiler_3.4.3  
+ [5] git2r_0.20.0     plyr_1.8.4       bindr_0.1        tools_3.4.3     
+ [9] digest_0.6.13    evaluate_0.10.1  tibble_1.4.1     gtable_0.2.0    
+[13] pkgconfig_2.0.1  rlang_0.1.6      psych_1.7.8      cli_1.0.0       
+[17] parallel_3.4.3   yaml_2.1.16      knitr_1.18       rprojroot_1.2   
+[21] grid_3.4.3       glue_1.2.0       R6_2.2.2         foreign_0.8-69  
+[25] rmarkdown_1.8    minqa_1.2.4      reshape2_1.4.3   tidyr_0.7.2     
+[29] MASS_7.3-47      backports_1.1.2  scales_0.5.0     htmltools_0.3.6 
+[33] splines_3.4.3    mnormt_1.5-5     assertthat_0.2.0 colorspace_1.3-2
+[37] labeling_0.3     utf8_1.1.3       stringi_1.1.6    lazyeval_0.2.1  
+[41] munsell_0.4.3    broom_0.4.3      crayon_1.3.4    </code></pre>
 </div>
 
 <hr>
