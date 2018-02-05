@@ -98,6 +98,8 @@ circle0_labeled
 
 Let's pick random marks for each individual (excluding themselves)
 
+**NB improve code with 'by = "id"'
+
 ```{r}
 set.seed(1234)
 
@@ -221,7 +223,7 @@ get_target <- function(x0, y0, ma_x0, ma_y0, mb_x0, mb_y0) {
   data.frame(t(targets))
 }
   
-df[, c("tx", "ty"):=get_target(x0, y0, ma_x0, ma_y0, mb_x0, mb_y0)]
+df[, c("tx0", "ty0"):=get_target(x0, y0, ma_x0, ma_y0, mb_x0, mb_y0)]
 
 ```
 
@@ -230,8 +232,8 @@ Check correctness of solutions
 
 ```{r}
 df[, t_correct:={
-  da  = norm(matrix(c(tx - ma_x0, ty - ma_y0)), type = "F")
-  db  = norm(matrix(c(tx - mb_x0, ty - mb_y0)), type = "F")
+  da  = norm(matrix(c(tx0 - ma_x0, ty0 - ma_y0)), type = "F")
+  db  = norm(matrix(c(tx0 - mb_x0, ty0 - mb_y0)), type = "F")
   dab = norm(matrix(c(mb_x0 - ma_x0, mb_y0 - ma_y0)), type = "F")
   max(dist(c(da, db, dab)) < 0.001)
 }, by = "id"]
@@ -243,13 +245,13 @@ Visualize target positions for a few subjects
 samples = sample(1:npeople, size = 2)
 circle0 + 
   geom_segment(data = df[samples], 
-               aes(x = tx, xend = ma_x0, y = ty, yend = ma_y0)) +
+               aes(x = tx0, xend = ma_x0, y = ty0, yend = ma_y0)) +
   geom_segment(data = df[samples], 
-               aes(x = tx, xend = mb_x0, y = ty, yend = mb_y0)) +
+               aes(x = tx0, xend = mb_x0, y = ty0, yend = mb_y0)) +
   geom_segment(data = df[samples], 
                aes(x = ma_x0, xend = mb_x0, y = ma_y0, yend = mb_y0)) +
   geom_segment(data = df[samples], 
-               aes(x = x0, xend = tx, y = y0, yend = ty),
+               aes(x = x0, xend = tx0, y = y0, yend = ty0),
                arrow = arrow(), linetype = 2, alpha = .5)
 ```
 
@@ -258,9 +260,16 @@ circle0 +
 Create a function to define a step to the target position
 
 ```{r}
-take_step.single <- function(x0, y0, tx, ty, stride = .5) {
-  direction <- c(tx, ty) - c(x0, y0)
+take_step.single <- function(x, y, tx, ty, stride = .5) {
+  direction <- c(tx, ty) - c(x, y)
   direction_normalized <- direction / sqrt(sum(direction^2))
+  next_step = stride * direction_normalized
+  new_position = c(x, y) + next_step
+}
+take_step <- function(x, y, tx, ty, stride = .5) {
+  data = cbind(x, y, tx, ty)
+  as.data.frame(t(apply(data, 1, function(row) 
+    take_step.single(row[1], row[2], row[3], row[4], stride = stride))))
 }
 ```
 
@@ -278,18 +287,138 @@ data structure.
 
 
 ```{r}
-nsteps = 2
-
-positions <- array(dim = c(nsteps, npeople, 2), 
-                   dimnames = list(paste0("step-",1:nsteps),
+nsteps = 100
+stride = 0.5
+positions <- array(dim = c(nsteps+1, npeople, 2), 
+                   dimnames = list(paste0("step-",0:nsteps),
                                    paste0("id-", 1:npeople), 
                                    c("x", "y")))
 
-# for (i in 1:nsteps) {
-  # positions[i,,] = 
-# }
+positions[1,,1] <- df$x0
+positions[1,,2] <- df$y0
+
+## Set initial positions
+df[, c("x", "y"):=list(x0, y0)]
+
+for (i in 1:nsteps) {
+  df[, c("ma_x", "ma_y"):= .SD[as.character(mark_a), list(x, y)]]
+  df[, c("mb_x", "mb_y"):= .SD[as.character(mark_b), list(x, y)]]
+  df[, c("tx", "ty")    := get_target(x, y, ma_x, ma_y, mb_x, mb_y)]
+  df[, c("x", "y")      := take_step(x, y, tx, ty, stride = stride)]
+  positions[i+1,,1] = df$x
+  positions[i+1,,2] = df$y
+}
+
 ```
 
+Plot x-coordinate of a subject, to see if this process converges
+
+```{r}
+plot(positions[,1,1])
+```
+
+
+Let's try decreasing the step size after some time
+
+```{r}
+nsteps = 100
+stride = 0.5
+strides= ((nsteps - 1:nsteps) / nsteps) * stride
+positions <- array(dim = c(nsteps+1, npeople, 2), 
+                   dimnames = list(paste0("step-",0:nsteps),
+                                   paste0("id-", 1:npeople), 
+                                   c("x", "y")))
+
+positions[1,,1] <- df$x0
+positions[1,,2] <- df$y0
+
+## Set initial positions
+df[, c("x", "y"):=list(x0, y0)]
+
+for (i in 1:nsteps) {
+  stride = strides[i]
+  df[, c("ma_x", "ma_y"):= .SD[as.character(mark_a), list(x, y)]]
+  df[, c("mb_x", "mb_y"):= .SD[as.character(mark_b), list(x, y)]]
+  df[, c("tx", "ty")    := get_target(x, y, ma_x, ma_y, mb_x, mb_y)]
+  df[, c("x", "y")      := take_step(x, y, tx, ty, stride = stride)]
+  positions[i+1,,1] = df$x
+  positions[i+1,,2] = df$y
+}
+
+```
+
+Plot x-coordinate of a subject, to see if this process converges, 
+but now weighted for the stride size
+
+```{r}
+plot(positions[,1,1] / c(1,strides))
+```
+
+
+## Define how good a solution is
+
+We can say that for each person, the cost is the sum of the differences 
+between the distance between their marks and the distance of the subject 
+to each mark.
+
+$$cost = |d_{subject, mark_a} - d_{mark_a, mark_b}| + |d_{subject, mark_b} - d_{mark_a, mark_b}|$$
+
+```{r}
+cost_function <- function(x, y, ma_x, ma_y, mb_x, mb_y) {
+  d_ab <- sqrt(sum((ma_x - mb_x)^2, (ma_y - mb_y)^2))
+  d_a <- sqrt(sum((x - ma_x)^2, (y - ma_y)^2))
+  d_b <- sqrt(sum((x - mb_x)^2, (y - mb_y)^2))
+  abs(d_a - d_ab) + abs(d_b - d_ab)
+}
+```
+
+
+Re run the simulation, keeping track of the cost (for each subject)
+
+```{r}
+nsteps = 100
+stride = 0.5
+strides= ((nsteps - 1:nsteps) / nsteps) * stride
+positions <- array(dim = c(nsteps+1, npeople, 2), 
+                   dimnames = list(paste0("step-",0:nsteps),
+                                   paste0("id-", 1:npeople), 
+                                   c("x", "y")))
+costs <- array(dim = c(nsteps+1, npeople, 1))
+
+positions[1,,1] <- df$x0
+positions[1,,2] <- df$y0
+costs[1,,1] <- df[, list(cost = cost_function(x0, y0, ma_x0, ma_y0, mb_x0, ma_y0)), by = "id"]$cost
+
+## Set initial positions
+df[, c("x", "y"):=list(x0, y0)]
+
+for (i in 1:nsteps) {
+  stride = strides[i]
+  df[, c("ma_x", "ma_y"):= .SD[as.character(mark_a), list(x, y)]]
+  df[, c("mb_x", "mb_y"):= .SD[as.character(mark_b), list(x, y)]]
+  df[, c("tx", "ty")    := get_target(x, y, ma_x, ma_y, mb_x, mb_y)]
+  df[, c("x", "y")      := take_step(x, y, tx, ty, stride = stride)]
+  positions[i+1,,1] = df$x
+  positions[i+1,,2] = df$y
+  costs[i+1,,1] <- df[, list(cost = cost_function(x, y, ma_x, ma_y, mb_x, ma_y)), by = "id"]$cost
+}
+
+```
+
+Gather costs in a convenient data.table format, 
+and plot the costs per subject over time
+
+```{r}
+cost_df <- as.data.table(costs)
+cost_df[, id:=factor(rep(1:npeople, each = nsteps + 1))]
+cost_df[, step:=rep(0:nsteps, times = npeople)]
+
+cost_df %>%
+  ggplot(aes(x = step, y = costs, col = id)) + 
+  geom_line()
+```
+
+As we see, the cost decreases, but it never saturates.
 
 ## Session information
 
