@@ -1,0 +1,298 @@
+---
+title: "Positioning as traingles with equal sides"
+author: "Wouter van Amsterdam"
+date: 2018-02-03
+output: html_document
+---
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+```
+
+<!-- Update knitr chunk options -->
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+<!-- Insert the date the file was last updated -->
+```{r last-updated, echo=FALSE, results='asis'}
+```
+
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+```{r code-version, echo=FALSE, results='asis'}
+```
+
+<!-- Add your analysis here -->
+
+# Setup
+
+## Game definition
+
+Consider the following challenge: a group of 50 people stands in a circle,
+each one is told to secretly pick two other persons ('marks'). The objective for 
+everyone is to move to such a position that they form a triangle with 
+equal sides with respect to their two marks.
+
+To add some details, say they are standing in a room with dimensions 
+20 by 20 meters. 
+For starters, we will assume that people's positions may coincide. 
+If this is not the case, it is immediately clear that there does not always 
+exist a solution: if 3 persons happen to choose the same 2 marks, since 
+when 2 marks are chosen, exactly 2 points exist that form a traingle of 
+equal sides with them (given that they the 2 marks don't happen to stand 
+on the same position). However, the chance of this happening is very small,
+the probability for 2 out of $n$ people to have chosen the same two marks is
+$(n-1) * \frac{1}{n\choose{2}}$, the chance for 3 persons to have chosen the 
+same 2 marks is even lower.
+Assume that the stride length is the same for everyone: 0.5 meters per step.
+People pick their marks randomly (you could pick other strategies,
+ but this adds some nice randomness to the process)
+
+## R equivalent
+
+Let's put in in a picture
+
+Initialize parameters, and load needed R-packages
+```{r, message = F}
+library(data.table)
+library(ggplot2)
+library(magrittr)
+
+npeople = 8
+room_dims = c(20,20)
+stride = 0.5
+pspace = 0.3
+```
+
+Initialize circle
+
+```{r}
+r0 = 3 # radius of initial circle
+
+df <- data.table(
+  id = 1:npeople
+)
+
+df[, c("x0", "y0"):=
+     list(r0 * cos(2*pi*(id-1)/npeople),
+          r0 * sin(2*pi*(id-1)/npeople))]
+
+df[, id:=as.factor(id)]
+
+circle0 <- df %>%
+  ggplot(aes(x = x0, y = y0, col = id)) + 
+  geom_point() + 
+  lims(x = c(-1,1)*room_dims[1]/2, y = c(-1,1)*room_dims[2]/2) +
+  coord_fixed() + 
+  theme_minimal() +
+  theme(legend.position = "none")
+
+circle0_labeled <- 
+  circle0 + 
+  geom_label(aes(label = id))
+
+circle0_labeled
+```
+
+Let's pick random marks for each individual (excluding themselves)
+
+```{r}
+set.seed(1234)
+
+df[, c("mark_a", "mark_b"):=data.frame(t(apply(.SD, 1, function(row) 
+  sample(setdiff(factor(1:npeople), row[["id"]]), size = 2, replace = F))))]
+
+setkey(df, id)
+
+df[1:10, list(id, mark_a, mark_b)]
+```
+
+
+
+Visualize a few subject and mark pairs
+
+```{r}
+df[, c("ma_x0", "ma_y0"):=.SD[as.character(mark_a), list(x0, y0)]]
+df[, c("mb_x0", "mb_y0"):=.SD[as.character(mark_b), list(x0, y0)]]
+```
+
+
+```{r}
+circle0 +
+  geom_segment(data = df[c(1)], 
+               aes(x = x0, xend = ma_x0, y = y0, yend = ma_y0), 
+               linetype = 2) + 
+  geom_segment(data = df[c(1)], 
+               aes(x = x0, xend = mb_x0, y = y0, yend = mb_y0),
+               linetype = 2)
+```
+
+
+
+
+# Model behaviour
+
+Now let's see if we can converge to a solution where everyone get's to a position
+ in which they are in a equal side triangle with their two targets.
+
+## Solution 1: single step towards goal
+
+Say everyone has a keen eye for where they should stand, given that 
+their targets stand at points $x_{target_1},y_{target_1}$ and 
+$x_{target_2}, y_{target_2}$.
+With some math, we can see that the subject should move to one of 2 positions.
+
+The target point for each subject lies on the circle with as center one of
+the marks (let's take mark 'a' for simplicity), with a radius of the distance 
+between mark a and mark b, and at a position of 60 degrees more or less than 
+the angle between mark a and b.
+
+Some restritions apply to this target point:
+
+* it must be within the room
+* when there are two options, choose the one that's nearest by
+
+### Set target position
+
+Let's create a function to determine the target point for a subject
+
+```{r}
+get_target.single <- function(x0, y0, ma_x0, ma_y0, mb_x0, mb_y0,
+                              if_none = "original") {
+  
+  p0  = c(x0, y0)
+  ma = c(ma_x0, ma_y0)
+  mb = c(mb_x0, mb_y0)
+  m_center = (ma + mb) / 2
+  
+  # calculate distance between mark a and b, and the angles between them
+  theta_a  = atan2(ma_y0, ma_x0)
+  theta_b  = atan2(mb_y0, mb_x0)
+  theta_ab = theta_b - theta_a
+
+  d_ab     = sqrt(sum((mb - ma) ^ 2))
+  
+  # target points are determined by taking a step from the middle between 
+  # the marks
+  stride   = (.5*d_ab) / tan(.5 * (1/6) * 2 * pi)
+
+  # calculate candidate target points
+  tx1 = m_center[1] + stride * cos(theta_a + theta_ab / 2)
+  ty1 = m_center[2] + stride * sin(theta_a + theta_ab / 2)
+  tx2 = m_center[1] - stride * cos(theta_a + theta_ab / 2)
+  ty2 = m_center[2] - stride * sin(theta_a + theta_ab / 2)
+  # ty1 = ma_y0 + radius * sin(angle_ab + 2*pi*60/360)
+  # tx2 = ma_x0 + radius * cos(angle_ab - 2*pi*60/360)
+  # ty2 = ma_y0 + radius * sin(angle_ab - 2*pi*60/360)
+
+  # check if both target points are within the room
+  t1_ok = abs(tx1) < room_dims[1] / 2 & abs(ty1) < room_dims[2] / 2
+  t2_ok = abs(tx2) < room_dims[1] / 2 & abs(ty2) < room_dims[2] / 2
+  
+  # if 1 of both is ok, take that point
+  if (sum(c(t1_ok, t2_ok)) == 1) {
+    if (t1_ok) return(c(tx1, ty1))
+    return(c(tx2, tx2))
+  } 
+  
+  # if none are ok, return NA's or the original position
+  if (sum(c(t1_ok, t2_ok)) == 0) {
+    if (if_none == "original") return(c(x0,y0))
+    return(c(NA,NA))
+  }
+  
+  # if both are ok, take the one that's closest by, or the first one
+  d1 = sqrt(sum((c(tx1, ty1) - p0) ^ 2))
+  d2 = sqrt(sum((c(tx2, ty2) - p0) ^ 2))
+  
+  if (d1 <= d2) {
+    return(c(tx1, ty1))
+  }
+  return(c(tx2, ty2))
+}
+
+get_target <- function(x0, y0, ma_x0, ma_y0, mb_x0, mb_y0) {
+  df <- cbind(x0, y0, ma_x0, ma_y0, mb_x0, mb_y0)
+  targets <- apply(df, 1, function(x) {
+    get_target.single(x[[1]], x[[2]], x[[3]], x[[4]], x[[5]], x[[6]])
+  })
+  data.frame(t(targets))
+}
+  
+df[, c("tx", "ty"):=get_target(x0, y0, ma_x0, ma_y0, mb_x0, mb_y0)]
+
+```
+
+
+Check correctness of solutions
+
+```{r}
+df[, t_correct:={
+  da  = norm(matrix(c(tx - ma_x0, ty - ma_y0)), type = "F")
+  db  = norm(matrix(c(tx - mb_x0, ty - mb_y0)), type = "F")
+  dab = norm(matrix(c(mb_x0 - ma_x0, mb_y0 - ma_y0)), type = "F")
+  max(dist(c(da, db, dab)) < 0.001)
+}, by = "id"]
+```
+
+Visualize target positions for a few subjects
+
+```{r}
+samples = sample(1:npeople, size = 2)
+circle0 + 
+  geom_segment(data = df[samples], 
+               aes(x = tx, xend = ma_x0, y = ty, yend = ma_y0)) +
+  geom_segment(data = df[samples], 
+               aes(x = tx, xend = mb_x0, y = ty, yend = mb_y0)) +
+  geom_segment(data = df[samples], 
+               aes(x = ma_x0, xend = mb_x0, y = ma_y0, yend = mb_y0)) +
+  geom_segment(data = df[samples], 
+               aes(x = x0, xend = tx, y = y0, yend = ty),
+               arrow = arrow(), linetype = 2, alpha = .5)
+```
+
+### Take step to target position
+
+Create a function to define a step to the target position
+
+```{r}
+take_step.single <- function(x0, y0, tx, ty, stride = .5) {
+  direction <- c(tx, ty) - c(x0, y0)
+  direction_normalized <- direction / sqrt(sum(direction^2))
+}
+```
+
+
+To track the positions for each participants, let's create a new 
+data structure.
+
+```{r, message=F, eval = F}
+# library(tibbletime)
+# nsteps = 100
+# 
+# positions <- create_series('00:00:00' ~ '00:05:00', 'second', class = "hms")
+
+```
+
+
+```{r}
+nsteps = 2
+
+positions <- array(dim = c(nsteps, npeople, 2), 
+                   dimnames = list(paste0("step-",1:nsteps),
+                                   paste0("id-", 1:npeople), 
+                                   c("x", "y")))
+
+# for (i in 1:nsteps) {
+  # positions[i,,] = 
+# }
+```
+
+
+## Session information
+
+<!-- Insert the session information into the document -->
+```{r session-info}
+```
