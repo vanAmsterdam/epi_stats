@@ -159,6 +159,7 @@ Some restritions apply to this target point:
 ### Set target position
 
 Let's create a function to determine the target point for a subject
+(this took a piece of paper and some fiddling with the trigonometric functions)
 
 ```{r}
 get_target.single <- function(x0, y0, ma_x0, ma_y0, mb_x0, mb_y0,
@@ -419,6 +420,32 @@ cost_df %>%
 ```
 
 As we see, the cost decreases, but it never saturates.
+
+Let's now gather all the positions in a table, see if  we can visualize this nicely
+
+```{r}
+position_df <- as.data.table(positions)
+position_df[, step:=rep(0:nsteps, times = npeople * 2)]
+position_df[, coordinate:=rep(c("x", "y"), each = (nsteps + 1) * npeople)]
+position_df[, id:=factor(rep(1:npeople, each = nsteps + 1, times = 2))]
+position_df <- dcast.data.table(position_df, step + id ~ coordinate, value.var = "positions")
+```
+
+Animate using `gganimate` (available on github)
+
+```{r}
+library(gganimate)
+p <- position_df %>%
+  ggplot(aes(x = x, y = y, col = id, frame = step)) + 
+  geom_point() + 
+  lims(x = c(-1,1)*room_dims[1]/2, y = c(-1,1)*room_dims[2]/2) +
+  coord_fixed() + 
+  theme_minimal() +
+  theme(legend.position = "none")
+
+gganimate(p)
+```
+
 
 ## Session information
 

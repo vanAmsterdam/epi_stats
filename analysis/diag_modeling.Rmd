@@ -1,0 +1,468 @@
+---
+title: "Assignment in multivariable diagnostic modeling"
+author: "Wouter van Amsterdam"
+date: 2018-02-07
+output: html_document
+---
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+```
+
+<!-- Update knitr chunk options -->
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+<!-- Insert the date the file was last updated -->
+```{r last-updated, echo=FALSE, results='asis'}
+```
+
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+```{r code-version, echo=FALSE, results='asis'}
+```
+
+<!-- Add your analysis here -->
+
+# Intro
+
+## Setup
+
+```{r}
+library(dplyr)
+library(data.table)
+library(magrittr)
+library(epistats)
+library(haven)
+```
+
+### Data import
+
+Get data
+
+```{r}
+pe <- haven::read_spss(fromParentDir("data/dataspss_final.sav"))
+```
+
+View summary
+
+```{r}
+str(pe)
+```
+
+### Data curation
+
+From the provided data dictionary, it's clear that all 
+variables are logical variables with 1 = true, 0 = false, except 
+for age, which is continuous. Let's set all variables to logical 
+so R handles them correctly internally in the modeling.
+
+```{r}
+logical_vars <- setdiff(colnames(pe), "lft")
+pe %<>%
+  mutate_at(vars(logical_vars), funs(as.logical))
+```
+
+## Descriptives 
+
+```{r}
+summary(pe)
+```
+
+## Univariable modeling
+
+Let's create a null model
+
+```{r}
+fit0 <- glm(emboly ~ 1, family = binomial, data = pe)
+```
+
+Create univariate models for each predictor
+
+```{r}
+library(purrr)
+
+fits <- pe %>% 
+  select(-emboly) %>%
+  map(function(x) glm(pe$emboly ~ x, family = binomial))
+```
+
+Look at univariate predictors, grab coefficients table from the fits
+
+```{r}
+coefs <- fits %>% 
+  map(summary) %>%
+  map("coefficients")
+coefs[[1]]
+```
+
+```{r}
+betas <- fits %>% 
+  map("coefficients") %>%
+  map_dbl(2)
+cbind(beta = betas, OR = exp(betas))
+```
+
+
+Some have missing values for their beta's.
+
+If we look at their distributions, we see that for each of 
+these variables there is only 1 unique value in the dataset,
+so obviously we can't create a model with these variables.
+
+For simplicity, we can drop these from the data
+
+```{r}
+pe %<>% select(-c(tachp1, pco2, po2))
+```
+
+And from the betas, fits and coefs
+
+```{r}
+betas <- betas[setdiff(names(fits), c("tachp1", "pco2", "po2"))]
+fits  <- fits[setdiff(names(fits), c("tachp1", "pco2", "po2"))]
+coefs <- coefs[setdiff(names(fits), c("tachp1", "pco2", "po2"))]
+```
+
+From the coefficient matrix we see that 
+p-values are in row 2, column 4 (which 9s the 8th value of the matrix)
+
+```{r}
+pvalues <- coefs %>%
+  map_dbl(8)
+
+cbind(beta = betas, OR = exp(betas), pvalue = pvalues)
+```
+
+
+## Multivariable modeling
+
+Now we should start thinking a little. 
+
+We want our modeling strategy to mimick clinical practice, so we 
+start out with the variables that are part of the first step in 
+clinical practice: history taking
+
+### Step 1: history
+
+Define history variables:
+
+```{r}
+hist_vars_all <- c("lft", "man", "mal1", "ok3m", "famdvt", "pdvt", "ppe", 
+               "dys", "pleurchp", "hoe", "whee", "bnpij", "coll",
+               "palp", "rok")
+```
+
+Create a model with all history variables
+
+```{r}
+fith0 <- glm(reformulate(termlabels = hist_vars_all, response = "emboly"),
+              data = pe, family = "binomial")
+summary(fith0)
+```
+
+Some are significant predictors, others aren't.
+
+Let's compare likelihood ratio with the original model
+
+```{r}
+anova(fit0, fith0, test = "Chisq")
+```
+
+That is a big difference. Let's set the likelihood of this model as 
+a refence value, and try to reduce the number of determinants in the model
+
+```{r}
+lh_history0 <- logLik(fith0)
+```
+
+We'll remove variables one by one, each time comparing the likelihood 
+of the reduced model with this reference likelihood of the full 
+history model
+
+```{r}
+drop1(fith0, test = "Chisq")
+```
+
+Kick out palp, as it has the highest p-value
+
+```{r}
+hist_vars <- setdiff(hist_vars_all, "palp")
+fith1 <- glm(reformulate(termlabels = hist_vars, response = "emboly"),
+              data = pe, family = "binomial")
+logLik(fith1)
+lh_diff <- logLik(fith1) - logLik(fith0)
+lh_diff
+```
+
+The difference in log likelihoods is very small. 
+Let's look up the critical value for the chi-squared test on 1 
+degree of freedom, at a p-level of 0.10
+
+```{r}
+qchisq(p = 0.9, df = 1)
+```
+
+The difference between our reduced model is far less than this critical
+value, so we can safely go further with our reduced model.
+
+For the next step, we will use the anova function in R, which will 
+give us the p-value for the chi-squared test.
+
+```{r}
+drop1(fith1, test = "Chisq")
+hist_vars <- setdiff(hist_vars, "ppe")
+fith2 <- glm(reformulate(termlabels = hist_vars, response = "emboly"),
+              data = pe, family = "binomial")
+anova(fith2, fith0, test = "Chisq")
+```
+
+Keep going
+
+```{r}
+drop1(fith2, test = "Chisq")
+hist_vars <- setdiff(hist_vars, "man")
+fith3 <- glm(reformulate(termlabels = hist_vars, response = "emboly"),
+              data = pe, family = "binomial")
+anova(fith3, fith0, test = "Chisq")
+```
+
+Keep going
+
+```{r}
+drop1(fith3, test = "Chisq")
+hist_vars <- setdiff(hist_vars, "pleurchp")
+fith4 <- glm(reformulate(termlabels = hist_vars, response = "emboly"),
+              data = pe, family = "binomial")
+anova(fith4, fith0, test = "Chisq")
+```
+
+Keep going
+
+```{r}
+drop1(fith4, test = "Chisq")
+hist_vars <- setdiff(hist_vars, "famdvt")
+fith5 <- glm(reformulate(termlabels = hist_vars, response = "emboly"),
+              data = pe, family = "binomial")
+anova(fith5, fith0, test = "Chisq")
+```
+
+Keep going
+
+```{r}
+drop1(fith5, test = "Chisq")
+hist_vars <- setdiff(hist_vars, "mal1")
+fith6 <- glm(reformulate(termlabels = hist_vars, response = "emboly"),
+              data = pe, family = "binomial")
+anova(fith6, fith0, test = "Chisq")
+```
+
+Keep going
+
+```{r}
+drop1(fith6, test = "Chisq")
+hist_vars <- setdiff(hist_vars, "rok")
+fith7 <- glm(reformulate(termlabels = hist_vars, response = "emboly"),
+    data = pe, family = "binomial")
+fith7 %>% anova(., fith0, test = "Chisq")
+```
+
+Keep going
+
+```{r}
+drop1(fith7, test = "Chisq")
+hist_vars <- setdiff(hist_vars, "pdvt")
+fith8 <- glm(reformulate(termlabels = hist_vars, response = "emboly"),
+    data = pe, family = "binomial")
+fith8 %>% anova(., fith0, test = "Chisq")
+```
+
+Keep going
+
+```{r}
+drop1(fith8, test = "Chisq")
+hist_vars <- setdiff(hist_vars, "dys")
+fith9 <- glm(reformulate(termlabels = hist_vars, response = "emboly"),
+    data = pe, family = "binomial")
+fith9 %>% anova(., fith0, test = "Chisq")
+```
+
+Keep going
+
+```{r}
+drop1(fith9, test = "Chisq")
+hist_vars <- setdiff(hist_vars, "whee")
+fith10 <- glm(reformulate(termlabels = hist_vars, response = "emboly"),
+    data = pe, family = "binomial")
+fith10 %>% anova(., fith0, test = "Chisq")
+```
+
+Now the model is worse than the model with all history variables 
+at a level of 0.056. Keeping 0.10 as a cut-off, we will stick with 
+fith9
+
+```{r}
+fith <- fith9
+hist_vars <- union(hist_vars, "whee")
+```
+
+#### Evaluate model
+
+Lets see how wel this model fits the data
+
+To do this, we will use the package `rms` from Frank Harrell, 
+we must re-fit the model to use the functions from this package
+
+```{r, message = F}
+library(rms)
+fith_rms <- lrm(formula = fith$formula, data = pe, x = T, y = T)
+fith_rms
+```
+
+As we see, the C-index (AUC) is 0.709
+
+Validate with bootstrapping
+
+```{r}
+fith_valid <- validate(fith_rms)
+fith_valid
+```
+
+The corrected AUC is
+
+```{r}
+(1+fith_valid["Dxy", "index.corrected"]) / 2
+```
+
+A little lower
+
+Get calibration plot (this also uses bootstrapping to get a bias-corrected calibration curve)
+
+```{r}
+fith_calib <- calibrate(fith_rms)
+plot(fith_calib)
+```
+
+Calibration is not perfect, with a some underprediction in the higher 
+predicted risk range
+
+### Step 2: add physical examination
+
+Define physical examination variables
+
+```{r}
+pe_vars_all <- c("wrij", "crep", "oed", "dvts")
+pe_vars <- union(hist_vars, pe_vars_all)
+fitp0 <- glm(reformulate(pe_vars, "emboly"), data = pe, family = "binomial")
+summary(fitp0)
+anova(fith, fitp0, test = "Chisq")
+```
+
+This model is not much better than the model with only variables from history
+
+Maybe if we reduce the number of included physical examination variables, 
+we can get a significant improvement of the likelihood (as the degrees 
+of freedom for the chi-square distribution will go down) 
+
+If the fit with all physical examination variables were preferrable 
+over the parsimonious history model, we would compare each reduced 
+physical examination model with the model with all physical examination 
+variables. However, now we will keep comparing with the final history model.
+
+```{r}
+drop1(fitp0, test = "Chisq")
+pe_vars <- setdiff(pe_vars, "dvts")
+fitp1 <- glm(reformulate(termlabels = pe_vars, response = "emboly"),
+    data = pe, family = "binomial")
+fitp1 %>% anova(., fith, test = "Chisq")
+
+```
+
+
+
+```{r}
+drop1(fitp1, test = "Chisq")
+pe_vars <- setdiff(pe_vars, "oed")
+fitp2 <- glm(reformulate(termlabels = pe_vars, response = "emboly"),
+    data = pe, family = "binomial")
+fitp2 %>% anova(., fith, test = "Chisq")
+```
+
+
+```{r}
+drop1(fitp2, test = "Chisq")
+pe_vars <- setdiff(pe_vars, "crep")
+fitp3 <- glm(reformulate(termlabels = pe_vars, response = "emboly"),
+    data = pe, family = "binomial")
+fitp3 %>% anova(., fith, test = "Chisq")
+```
+
+So we keep 2 variables from physical examination, put `crep` back in
+
+```{r}
+fitp <- fitp2
+pe_vars <- union(pe_vars, "crep")
+```
+
+
+#### Model check
+
+Do validation and calibration as for the history only model
+
+```{r}
+fitp_rms <- lrm(fitp$formula, data = pe, x = T, y = T)
+fitp_rms
+
+fitp_valid <- validate(fitp_rms)
+fitp_valid
+(1+fitp_valid["Dxy", "index.corrected"]) / 2
+
+
+fitp_calib <- calibrate(fitp_rms)
+plot(fitp_calib)
+```
+
+The bias-corrected AUC is actually worse than that of the fit with only 
+history variables
+
+### Step 3: add imaging
+
+Let's add these one by one, since there are only two
+
+```{r}
+fitxray <- glm(reformulate(c(pe_vars, "xrayafw"), "emboly"), data = pe,
+               family = "binomial")
+fitus <- glm(reformulate(c(pe_vars, "echoafw"), "emboly"), data = pe,
+               family = "binomial")
+
+anova(fitxray, fitus, test = "Chisq")
+```
+
+If we model them separately, we can no longer use the likelihood ratio 
+test to compare them, since the models are not nested.
+
+Let's create a model with both of them.
+
+```{r}
+fitr0 <- glm(reformulate(c(pe_vars, "xrayafw", "echoafw"), "emboly"),
+             data = pe, family = "binomial")
+
+anova(fitr0, fitxray, fitus, test = "Chisq")
+```
+
+```{r}
+logLik(fitr0)
+logLik(fitxray)
+logLik(fitus)
+```
+
+The model with only history and physical examination in it seems 
+to perform best. So that will be our final model.
+
+## Session information
+
+<!-- Insert the session information into the document -->
+```{r session-info}
+```
