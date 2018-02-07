@@ -1,0 +1,1357 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+<meta name="author" content="Wouter van Amsterdam" />
+
+<meta name="date" content="2018-02-07" />
+
+<title>Assignment in multivariable diagnostic modeling</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/font-awesome-4.5.0/css/font-awesome.min.css" rel="stylesheet" />
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+
+<div class="container-fluid main-container">
+
+<!-- tabsets -->
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+</script>
+
+<!-- code folding -->
+
+
+
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+  padding-left: 25px;
+  text-indent: 0;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">epi_stats</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/jdblischak/workflowr">
+    <span class="fa fa-github"></span>
+     
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">Assignment in multivariable diagnostic modeling</h1>
+<h4 class="author"><em>Wouter van Amsterdam</em></h4>
+<h4 class="date"><em>2018-02-07</em></h4>
+
+</div>
+
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+<!-- Update knitr chunk options -->
+<!-- Insert the date the file was last updated -->
+<p><strong>Last updated:</strong> 2018-02-07</p>
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+<p><strong>Code version:</strong> 8122e6c</p>
+<!-- Add your analysis here -->
+<div id="intro" class="section level1">
+<h1>Intro</h1>
+<div id="setup" class="section level2">
+<h2>Setup</h2>
+<pre class="r"><code>library(dplyr)
+library(data.table)
+library(magrittr)
+library(epistats)
+library(haven)</code></pre>
+<div id="data-import" class="section level3">
+<h3>Data import</h3>
+<p>Get data</p>
+<pre class="r"><code>pe &lt;- haven::read_spss(fromParentDir(&quot;data/dataspss_final.sav&quot;))</code></pre>
+<p>View summary</p>
+<pre class="r"><code>str(pe)</code></pre>
+<pre><code>Classes &#39;tbl_df&#39;, &#39;tbl&#39; and &#39;data.frame&#39;:   398 obs. of  26 variables:
+ $ lft     : atomic  73 30 28 66 68 82 58 38 84 85 ...
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F8.2&quot;
+ $ man     : atomic  1 1 0 0 1 1 1 0 0 0 ...
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F8.2&quot;
+ $ mal1    : atomic  1 0 0 0 0 0 1 1 0 0 ...
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F8.2&quot;
+ $ ok3m    : atomic  0 0 0 0 0 0 0 0 0 0 ...
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F8.2&quot;
+ $ bnpare  : atomic  0 0 0 0 0 0 0 0 0 0 ...
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F8.2&quot;
+ $ famdvt  : atomic  0 0 0 0 0 0 0 1 1 0 ...
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F8.2&quot;
+ $ pdvt    : atomic  0 0 0 0 0 0 0 0 0 0 ...
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F8.2&quot;
+ $ ppe     : atomic  0 0 1 0 0 0 0 0 0 0 ...
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F8.2&quot;
+ $ dys     : atomic  1 0 1 1 0 1 0 1 1 1 ...
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F8.2&quot;
+ $ pleurchp: atomic  1 1 1 1 1 0 1 1 1 0 ...
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F8.2&quot;
+ $ hoe     : atomic  1 0 1 0 0 0 1 1 0 0 ...
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F8.2&quot;
+ $ whee    : atomic  0 0 0 0 0 0 0 0 0 0 ...
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F8.2&quot;
+ $ bnpij   : atomic  0 0 0 0 0 0 0 1 0 0 ...
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F8.2&quot;
+ $ coll    : atomic  0 0 0 0 0 0 0 0 0 0 ...
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F8.2&quot;
+ $ palp    : atomic  0 0 0 0 1 1 1 0 0 1 ...
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F8.2&quot;
+ $ rok     : atomic  1 0 1 0 0 0 1 0 0 0 ...
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F8.2&quot;
+ $ tachp1  : atomic  20 16 24 18 14 28 14 14 36 20 ...
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F8.2&quot;
+ $ wrij    : atomic  0 0 0 0 0 0 0 0 0 0 ...
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F8.2&quot;
+ $ crep    : atomic  0 0 0 0 0 0 1 0 1 1 ...
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F8.2&quot;
+ $ oed     : atomic  0 0 0 0 0 1 0 0 0 1 ...
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F8.2&quot;
+ $ dvts    : atomic  0 0 0 0 0 0 0 0 0 0 ...
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F8.2&quot;
+ $ echoafw : atomic  0 0 0 0 1 0 0 0 0 1 ...
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F8.2&quot;
+ $ pco2    : atomic  34 41 40 25 29 ...
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F8.2&quot;
+ $ po2     : atomic  24.8 22 23 24 26 ...
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F8.2&quot;
+ $ emboly  : atomic  0 0 0 0 0 0 0 0 0 0 ...
+  ..- attr(*, &quot;label&quot;)= chr &quot;embolism present yes/no&quot;
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F8.2&quot;
+ $ xrayafw : atomic  0 1 0 0 0 1 0 0 1 1 ...
+  ..- attr(*, &quot;label&quot;)= chr &quot;x-ray zoals gebruikt in artikel&quot;
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F8.2&quot;</code></pre>
+</div>
+<div id="data-curation" class="section level3">
+<h3>Data curation</h3>
+<p>From the provided data dictionary, it’s clear that all variables are logical variables with 1 = true, 0 = false, except for age, which is continuous. Let’s set all variables to logical so R handles them correctly internally in the modeling.</p>
+<pre class="r"><code>logical_vars &lt;- setdiff(colnames(pe), &quot;lft&quot;)
+pe %&lt;&gt;%
+  mutate_at(vars(logical_vars), funs(as.logical))</code></pre>
+</div>
+</div>
+<div id="descriptives" class="section level2">
+<h2>Descriptives</h2>
+<pre class="r"><code>summary(pe)</code></pre>
+<pre><code>      lft           man             mal1            ok3m        
+ Min.   :18.00   Mode :logical   Mode :logical   Mode :logical  
+ 1st Qu.:42.00   FALSE:225       FALSE:305       FALSE:314      
+ Median :57.00   TRUE :173       TRUE :93        TRUE :84       
+ Mean   :55.72                                                  
+ 3rd Qu.:70.00                                                  
+ Max.   :92.00                                                  
+   bnpare          famdvt           pdvt            ppe         
+ Mode :logical   Mode :logical   Mode :logical   Mode :logical  
+ FALSE:376       FALSE:357       FALSE:368       FALSE:367      
+ TRUE :22        TRUE :41        TRUE :30        TRUE :31       
+                                                                
+                                                                
+                                                                
+    dys           pleurchp          hoe             whee        
+ Mode :logical   Mode :logical   Mode :logical   Mode :logical  
+ FALSE:100       FALSE:97        FALSE:237       FALSE:338      
+ TRUE :298       TRUE :301       TRUE :161       TRUE :60       
+                                                                
+                                                                
+                                                                
+   bnpij            coll            palp            rok         
+ Mode :logical   Mode :logical   Mode :logical   Mode :logical  
+ FALSE:340       FALSE:367       FALSE:331       FALSE:270      
+ TRUE :58        TRUE :31        TRUE :67        TRUE :128      
+                                                                
+                                                                
+                                                                
+  tachp1           wrij            crep            oed         
+ Mode:logical   Mode :logical   Mode :logical   Mode :logical  
+ TRUE:398       FALSE:335       FALSE:283       FALSE:341      
+                TRUE :63        TRUE :115       TRUE :57       
+                                                               
+                                                               
+                                                               
+    dvts          echoafw          pco2           po2         
+ Mode :logical   Mode :logical   Mode:logical   Mode:logical  
+ FALSE:361       FALSE:306       TRUE:398       TRUE:398      
+ TRUE :37        TRUE :92                                     
+                                                              
+                                                              
+                                                              
+   emboly         xrayafw       
+ Mode :logical   Mode :logical  
+ FALSE:228       FALSE:239      
+ TRUE :170       TRUE :159      
+                                
+                                
+                                </code></pre>
+</div>
+<div id="univariable-modeling" class="section level2">
+<h2>Univariable modeling</h2>
+<p>Let’s create a null model</p>
+<pre class="r"><code>fit0 &lt;- glm(emboly ~ 1, family = binomial, data = pe)</code></pre>
+<p>Create univariate models for each predictor</p>
+<pre class="r"><code>library(purrr)
+
+fits &lt;- pe %&gt;% 
+  select(-emboly) %&gt;%
+  map(function(x) glm(pe$emboly ~ x, family = binomial))</code></pre>
+<p>Look at univariate predictors, grab coefficients table from the fits</p>
+<pre class="r"><code>coefs &lt;- fits %&gt;% 
+  map(summary) %&gt;%
+  map(&quot;coefficients&quot;)
+coefs[[1]]</code></pre>
+<pre><code>               Estimate  Std. Error   z value     Pr(&gt;|z|)
+(Intercept) -1.51132464 0.358054110 -4.220939 2.432865e-05
+x            0.02166026 0.006042937  3.584393 3.378634e-04</code></pre>
+<pre class="r"><code>betas &lt;- fits %&gt;% 
+  map(&quot;coefficients&quot;) %&gt;%
+  map_dbl(2)
+cbind(beta = betas, OR = exp(betas))</code></pre>
+<pre><code>                beta        OR
+lft       0.02166026 1.0218965
+man       0.12965966 1.1384409
+mal1      0.58368697 1.7926357
+ok3m      0.74115640 2.0983607
+bnpare    0.70055070 2.0148620
+famdvt   -0.17003373 0.8436364
+pdvt      0.90916122 2.4822396
+ppe       0.10784611 1.1138763
+dys       0.66568903 1.9458308
+pleurchp -0.52806743 0.5897436
+hoe       0.30763193 1.3602003
+whee     -0.46734051 0.6266667
+bnpij     0.75377180 2.1250000
+coll      1.28567733 3.6171171
+palp      0.17348970 1.1894484
+rok       0.06234313 1.0643275
+tachp1            NA        NA
+wrij      0.53971463 1.7155172
+crep      0.04389419 1.0448718
+oed       0.05452084 1.0560345
+dvts      0.62457368 1.8674497
+echoafw   1.02300558 2.7815424
+pco2              NA        NA
+po2               NA        NA
+xrayafw   0.77649617 2.1738421</code></pre>
+<p>Some have missing values for their beta’s.</p>
+<p>If we look at their distributions, we see that for each of these variables there is only 1 unique value in the dataset, so obviously we can’t create a model with these variables.</p>
+<p>For simplicity, we can drop these from the data</p>
+<pre class="r"><code>pe %&lt;&gt;% select(-c(tachp1, pco2, po2))</code></pre>
+<p>And from the betas, fits and coefs</p>
+<pre class="r"><code>betas &lt;- betas[setdiff(names(fits), c(&quot;tachp1&quot;, &quot;pco2&quot;, &quot;po2&quot;))]
+fits  &lt;- fits[setdiff(names(fits), c(&quot;tachp1&quot;, &quot;pco2&quot;, &quot;po2&quot;))]
+coefs &lt;- coefs[setdiff(names(fits), c(&quot;tachp1&quot;, &quot;pco2&quot;, &quot;po2&quot;))]</code></pre>
+<p>From the coefficient matrix we see that p-values are in row 2, column 4 (which 9s the 8th value of the matrix)</p>
+<pre class="r"><code>pvalues &lt;- coefs %&gt;%
+  map_dbl(8)
+
+cbind(beta = betas, OR = exp(betas), pvalue = pvalues)</code></pre>
+<pre><code>                beta        OR       pvalue
+lft       0.02166026 1.0218965 3.378634e-04
+man       0.12965966 1.1384409 5.256230e-01
+mal1      0.58368697 1.7926357 1.448873e-02
+ok3m      0.74115640 2.0983607 2.918751e-03
+bnpare    0.70055070 2.0148620 1.162921e-01
+famdvt   -0.17003373 0.8436364 6.144201e-01
+pdvt      0.90916122 2.4822396 2.083418e-02
+ppe       0.10784611 1.1138763 7.742665e-01
+dys       0.66568903 1.9458308 6.680347e-03
+pleurchp -0.52806743 0.5897436 2.465972e-02
+hoe       0.30763193 1.3602003 1.358857e-01
+whee     -0.46734051 0.6266667 1.130658e-01
+bnpij     0.75377180 2.1250000 9.024038e-03
+coll      1.28567733 3.6171171 1.702364e-03
+palp      0.17348970 1.1894484 5.191875e-01
+rok       0.06234313 1.0643275 7.735096e-01
+wrij      0.53971463 1.7155172 5.067175e-02
+crep      0.04389419 1.0448718 8.441483e-01
+oed       0.05452084 1.0560345 8.501227e-01
+dvts      0.62457368 1.8674497 7.321709e-02
+echoafw   1.02300558 2.7815424 3.028347e-05
+xrayafw   0.77649617 2.1738421 2.030338e-04</code></pre>
+</div>
+<div id="multivariable-modeling" class="section level2">
+<h2>Multivariable modeling</h2>
+<p>Now we should start thinking a little.</p>
+<p>We want our modeling strategy to mimick clinical practice, so we start out with the variables that are part of the first step in clinical practice: history taking</p>
+<div id="step-1-history" class="section level3">
+<h3>Step 1: history</h3>
+<p>Define history variables:</p>
+<pre class="r"><code>hist_vars_all &lt;- c(&quot;lft&quot;, &quot;man&quot;, &quot;mal1&quot;, &quot;ok3m&quot;, &quot;famdvt&quot;, &quot;pdvt&quot;, &quot;ppe&quot;, 
+               &quot;dys&quot;, &quot;pleurchp&quot;, &quot;hoe&quot;, &quot;whee&quot;, &quot;bnpij&quot;, &quot;coll&quot;,
+               &quot;palp&quot;, &quot;rok&quot;)</code></pre>
+<p>Create a model with all history variables</p>
+<pre class="r"><code>fith0 &lt;- glm(reformulate(termlabels = hist_vars_all, response = &quot;emboly&quot;),
+              data = pe, family = &quot;binomial&quot;)
+summary(fith0)</code></pre>
+<pre><code>
+Call:
+glm(formula = reformulate(termlabels = hist_vars_all, response = &quot;emboly&quot;), 
+    family = &quot;binomial&quot;, data = pe)
+
+Deviance Residuals: 
+    Min       1Q   Median       3Q      Max  
+-2.1617  -0.9493  -0.6099   1.0865   2.0212  
+
+Coefficients:
+              Estimate Std. Error z value Pr(&gt;|z|)    
+(Intercept)  -2.448237   0.583236  -4.198  2.7e-05 ***
+lft           0.021741   0.007173   3.031  0.00244 ** 
+manTRUE       0.043112   0.226395   0.190  0.84897    
+mal1TRUE      0.233504   0.266774   0.875  0.38142    
+ok3mTRUE      0.860345   0.278909   3.085  0.00204 ** 
+famdvtTRUE   -0.282996   0.384485  -0.736  0.46171    
+pdvtTRUE      0.769263   0.453371   1.697  0.08974 .  
+ppeTRUE      -0.044066   0.434789  -0.101  0.91927    
+dysTRUE       0.489834   0.276799   1.770  0.07679 .  
+pleurchpTRUE -0.150931   0.270171  -0.559  0.57640    
+hoeTRUE       0.560680   0.245028   2.288  0.02212 *  
+wheeTRUE     -1.006436   0.346050  -2.908  0.00363 ** 
+bnpijTRUE     0.740169   0.319452   2.317  0.02050 *  
+collTRUE      1.264872   0.454603   2.782  0.00540 ** 
+palpTRUE      0.031778   0.309560   0.103  0.91824    
+rokTRUE       0.264305   0.250841   1.054  0.29203    
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+(Dispersion parameter for binomial family taken to be 1)
+
+    Null deviance: 543.26  on 397  degrees of freedom
+Residual deviance: 481.12  on 382  degrees of freedom
+AIC: 513.12
+
+Number of Fisher Scoring iterations: 4</code></pre>
+<p>Some are significant predictors, others aren’t.</p>
+<p>Let’s compare likelihood ratio with the original model</p>
+<pre class="r"><code>anova(fit0, fith0, test = &quot;Chisq&quot;)</code></pre>
+<pre><code>Analysis of Deviance Table
+
+Model 1: emboly ~ 1
+Model 2: emboly ~ lft + man + mal1 + ok3m + famdvt + pdvt + ppe + dys + 
+    pleurchp + hoe + whee + bnpij + coll + palp + rok
+  Resid. Df Resid. Dev Df Deviance  Pr(&gt;Chi)    
+1       397     543.26                          
+2       382     481.12 15   62.143 1.076e-07 ***
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<p>That is a big difference. Let’s set the likelihood of this model as a refence value, and try to reduce the number of determinants in the model</p>
+<pre class="r"><code>lh_history0 &lt;- logLik(fith0)</code></pre>
+<p>We’ll remove variables one by one, each time comparing the likelihood of the reduced model with this reference likelihood of the full history model</p>
+<pre class="r"><code>drop1(fith0, test = &quot;Chisq&quot;)</code></pre>
+<pre><code>Single term deletions
+
+Model:
+emboly ~ lft + man + mal1 + ok3m + famdvt + pdvt + ppe + dys + 
+    pleurchp + hoe + whee + bnpij + coll + palp + rok
+         Df Deviance    AIC    LRT Pr(&gt;Chi)   
+&lt;none&gt;        481.12 513.12                   
+lft       1   490.57 520.57 9.4457 0.002116 **
+man       1   481.16 511.16 0.0363 0.848999   
+mal1      1   481.88 511.88 0.7641 0.382049   
+ok3m      1   490.84 520.84 9.7236 0.001819 **
+famdvt    1   481.67 511.67 0.5487 0.458844   
+pdvt      1   484.08 514.08 2.9565 0.085534 . 
+ppe       1   481.13 511.13 0.0103 0.919196   
+dys       1   484.30 514.30 3.1835 0.074384 . 
+pleurchp  1   481.43 511.43 0.3116 0.576726   
+hoe       1   486.43 516.43 5.3133 0.021164 * 
+whee      1   490.09 520.09 8.9669 0.002749 **
+bnpij     1   486.55 516.55 5.4308 0.019784 * 
+coll      1   489.50 519.50 8.3839 0.003786 **
+palp      1   481.13 511.13 0.0105 0.918269   
+rok       1   482.23 512.23 1.1113 0.291803   
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<p>Kick out palp, as it has the highest p-value</p>
+<pre class="r"><code>hist_vars &lt;- setdiff(hist_vars_all, &quot;palp&quot;)
+fith1 &lt;- glm(reformulate(termlabels = hist_vars, response = &quot;emboly&quot;),
+              data = pe, family = &quot;binomial&quot;)
+logLik(fith1)</code></pre>
+<pre><code>&#39;log Lik.&#39; -240.5651 (df=15)</code></pre>
+<pre class="r"><code>lh_diff &lt;- logLik(fith1) - logLik(fith0)
+lh_diff</code></pre>
+<pre><code>&#39;log Lik.&#39; -0.005264824 (df=15)</code></pre>
+<p>The difference in log likelihoods is very small. Let’s look up the critical value for the chi-squared test on 1 degree of freedom, at a p-level of 0.10</p>
+<pre class="r"><code>qchisq(p = 0.9, df = 1)</code></pre>
+<pre><code>[1] 2.705543</code></pre>
+<p>The difference between our reduced model is far less than this critical value, so we can safely go further with our reduced model.</p>
+<p>For the next step, we will use the anova function in R, which will give us the p-value for the chi-squared test.</p>
+<pre class="r"><code>drop1(fith1, test = &quot;Chisq&quot;)</code></pre>
+<pre><code>Single term deletions
+
+Model:
+emboly ~ lft + man + mal1 + ok3m + famdvt + pdvt + ppe + dys + 
+    pleurchp + hoe + whee + bnpij + coll + rok
+         Df Deviance    AIC    LRT Pr(&gt;Chi)   
+&lt;none&gt;        481.13 511.13                   
+lft       1   490.74 518.74 9.6132 0.001932 **
+man       1   481.16 509.16 0.0337 0.854394   
+mal1      1   481.89 509.89 0.7626 0.382513   
+ok3m      1   490.86 518.86 9.7279 0.001815 **
+famdvt    1   481.67 509.67 0.5393 0.462702   
+pdvt      1   484.08 512.08 2.9544 0.085644 . 
+ppe       1   481.14 509.14 0.0110 0.916640   
+dys       1   484.33 512.33 3.1963 0.073807 . 
+pleurchp  1   481.44 509.44 0.3110 0.577054   
+hoe       1   486.43 514.43 5.3030 0.021288 * 
+whee      1   490.14 518.14 9.0104 0.002684 **
+bnpij     1   486.56 514.56 5.4294 0.019800 * 
+coll      1   490.03 518.03 8.8955 0.002859 **
+rok       1   482.25 510.25 1.1180 0.290356   
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<pre class="r"><code>hist_vars &lt;- setdiff(hist_vars, &quot;ppe&quot;)
+fith2 &lt;- glm(reformulate(termlabels = hist_vars, response = &quot;emboly&quot;),
+              data = pe, family = &quot;binomial&quot;)
+anova(fith2, fith0, test = &quot;Chisq&quot;)</code></pre>
+<pre><code>Analysis of Deviance Table
+
+Model 1: emboly ~ lft + man + mal1 + ok3m + famdvt + pdvt + dys + pleurchp + 
+    hoe + whee + bnpij + coll + rok
+Model 2: emboly ~ lft + man + mal1 + ok3m + famdvt + pdvt + ppe + dys + 
+    pleurchp + hoe + whee + bnpij + coll + palp + rok
+  Resid. Df Resid. Dev Df Deviance Pr(&gt;Chi)
+1       384     481.14                     
+2       382     481.12  2 0.021485   0.9893</code></pre>
+<p>Keep going</p>
+<pre class="r"><code>drop1(fith2, test = &quot;Chisq&quot;)</code></pre>
+<pre><code>Single term deletions
+
+Model:
+emboly ~ lft + man + mal1 + ok3m + famdvt + pdvt + dys + pleurchp + 
+    hoe + whee + bnpij + coll + rok
+         Df Deviance    AIC    LRT Pr(&gt;Chi)   
+&lt;none&gt;        481.14 509.14                   
+lft       1   490.75 516.75 9.6110 0.001934 **
+man       1   481.18 507.18 0.0347 0.852309   
+mal1      1   481.95 507.95 0.8041 0.369874   
+ok3m      1   490.87 516.87 9.7274 0.001815 **
+famdvt    1   481.70 507.70 0.5617 0.453558   
+pdvt      1   484.16 510.16 3.0232 0.082080 . 
+dys       1   484.33 510.33 3.1855 0.074296 . 
+pleurchp  1   481.46 507.46 0.3157 0.574215   
+hoe       1   486.51 512.51 5.3676 0.020514 * 
+whee      1   490.15 516.15 9.0084 0.002687 **
+bnpij     1   486.63 512.63 5.4896 0.019130 * 
+coll      1   490.08 516.08 8.9407 0.002789 **
+rok       1   482.25 508.25 1.1074 0.292644   
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<pre class="r"><code>hist_vars &lt;- setdiff(hist_vars, &quot;man&quot;)
+fith3 &lt;- glm(reformulate(termlabels = hist_vars, response = &quot;emboly&quot;),
+              data = pe, family = &quot;binomial&quot;)
+anova(fith3, fith0, test = &quot;Chisq&quot;)</code></pre>
+<pre><code>Analysis of Deviance Table
+
+Model 1: emboly ~ lft + mal1 + ok3m + famdvt + pdvt + dys + pleurchp + 
+    hoe + whee + bnpij + coll + rok
+Model 2: emboly ~ lft + man + mal1 + ok3m + famdvt + pdvt + ppe + dys + 
+    pleurchp + hoe + whee + bnpij + coll + palp + rok
+  Resid. Df Resid. Dev Df Deviance Pr(&gt;Chi)
+1       385     481.18                     
+2       382     481.12  3 0.056145   0.9965</code></pre>
+<p>Keep going</p>
+<pre class="r"><code>drop1(fith3, test = &quot;Chisq&quot;)</code></pre>
+<pre><code>Single term deletions
+
+Model:
+emboly ~ lft + mal1 + ok3m + famdvt + pdvt + dys + pleurchp + 
+    hoe + whee + bnpij + coll + rok
+         Df Deviance    AIC    LRT Pr(&gt;Chi)   
+&lt;none&gt;        481.18 507.18                   
+lft       1   490.77 514.77 9.5988 0.001947 **
+mal1      1   482.01 506.01 0.8360 0.360537   
+ok3m      1   490.90 514.90 9.7207 0.001822 **
+famdvt    1   481.77 505.77 0.5971 0.439673   
+pdvt      1   484.24 508.24 3.0675 0.079870 . 
+dys       1   484.37 508.37 3.1987 0.073698 . 
+pleurchp  1   481.49 505.49 0.3116 0.576708   
+hoe       1   486.53 510.53 5.3508 0.020713 * 
+whee      1   490.15 514.15 8.9742 0.002738 **
+bnpij     1   486.69 510.69 5.5178 0.018824 * 
+coll      1   490.20 514.20 9.0264 0.002661 **
+rok       1   482.36 506.36 1.1873 0.275869   
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<pre class="r"><code>hist_vars &lt;- setdiff(hist_vars, &quot;pleurchp&quot;)
+fith4 &lt;- glm(reformulate(termlabels = hist_vars, response = &quot;emboly&quot;),
+              data = pe, family = &quot;binomial&quot;)
+anova(fith4, fith0, test = &quot;Chisq&quot;)</code></pre>
+<pre><code>Analysis of Deviance Table
+
+Model 1: emboly ~ lft + mal1 + ok3m + famdvt + pdvt + dys + hoe + whee + 
+    bnpij + coll + rok
+Model 2: emboly ~ lft + man + mal1 + ok3m + famdvt + pdvt + ppe + dys + 
+    pleurchp + hoe + whee + bnpij + coll + palp + rok
+  Resid. Df Resid. Dev Df Deviance Pr(&gt;Chi)
+1       386     481.49                     
+2       382     481.12  4  0.36773    0.985</code></pre>
+<p>Keep going</p>
+<pre class="r"><code>drop1(fith4, test = &quot;Chisq&quot;)</code></pre>
+<pre><code>Single term deletions
+
+Model:
+emboly ~ lft + mal1 + ok3m + famdvt + pdvt + dys + hoe + whee + 
+    bnpij + coll + rok
+       Df Deviance    AIC     LRT  Pr(&gt;Chi)    
+&lt;none&gt;      481.49 505.49                      
+lft     1   492.74 514.74 11.2501 0.0007962 ***
+mal1    1   482.37 504.37  0.8828 0.3474319    
+ok3m    1   491.15 513.15  9.6665 0.0018766 ** 
+famdvt  1   482.09 504.09  0.6000 0.4385722    
+pdvt    1   484.46 506.46  2.9745 0.0845859 .  
+dys     1   485.02 507.02  3.5375 0.0599960 .  
+hoe     1   486.98 508.98  5.4913 0.0191108 *  
+whee    1   490.57 512.57  9.0840 0.0025785 ** 
+bnpij   1   487.05 509.05  5.5617 0.0183579 *  
+coll    1   490.98 512.98  9.4943 0.0020611 ** 
+rok     1   482.61 504.61  1.1194 0.2900478    
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<pre class="r"><code>hist_vars &lt;- setdiff(hist_vars, &quot;famdvt&quot;)
+fith5 &lt;- glm(reformulate(termlabels = hist_vars, response = &quot;emboly&quot;),
+              data = pe, family = &quot;binomial&quot;)
+anova(fith5, fith0, test = &quot;Chisq&quot;)</code></pre>
+<pre><code>Analysis of Deviance Table
+
+Model 1: emboly ~ lft + mal1 + ok3m + pdvt + dys + hoe + whee + bnpij + 
+    coll + rok
+Model 2: emboly ~ lft + man + mal1 + ok3m + famdvt + pdvt + ppe + dys + 
+    pleurchp + hoe + whee + bnpij + coll + palp + rok
+  Resid. Df Resid. Dev Df Deviance Pr(&gt;Chi)
+1       387     482.09                     
+2       382     481.12  5  0.96775   0.9651</code></pre>
+<p>Keep going</p>
+<pre class="r"><code>drop1(fith5, test = &quot;Chisq&quot;)</code></pre>
+<pre><code>Single term deletions
+
+Model:
+emboly ~ lft + mal1 + ok3m + pdvt + dys + hoe + whee + bnpij + 
+    coll + rok
+       Df Deviance    AIC     LRT  Pr(&gt;Chi)    
+&lt;none&gt;      482.09 504.09                      
+lft     1   493.60 513.60 11.5123 0.0006914 ***
+mal1    1   482.91 502.91  0.8240 0.3640123    
+ok3m    1   491.95 511.95  9.8653 0.0016842 ** 
+pdvt    1   484.83 504.83  2.7409 0.0978112 .  
+dys     1   485.60 505.60  3.5119 0.0609307 .  
+hoe     1   487.46 507.46  5.3711 0.0204734 *  
+whee    1   491.63 511.63  9.5427 0.0020075 ** 
+bnpij   1   487.32 507.32  5.2360 0.0221239 *  
+coll    1   491.69 511.69  9.6037 0.0019419 ** 
+rok     1   483.07 503.07  0.9849 0.3210038    
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<pre class="r"><code>hist_vars &lt;- setdiff(hist_vars, &quot;mal1&quot;)
+fith6 &lt;- glm(reformulate(termlabels = hist_vars, response = &quot;emboly&quot;),
+              data = pe, family = &quot;binomial&quot;)
+anova(fith6, fith0, test = &quot;Chisq&quot;)</code></pre>
+<pre><code>Analysis of Deviance Table
+
+Model 1: emboly ~ lft + ok3m + pdvt + dys + hoe + whee + bnpij + coll + 
+    rok
+Model 2: emboly ~ lft + man + mal1 + ok3m + famdvt + pdvt + ppe + dys + 
+    pleurchp + hoe + whee + bnpij + coll + palp + rok
+  Resid. Df Resid. Dev Df Deviance Pr(&gt;Chi)
+1       388     482.91                     
+2       382     481.12  6   1.7917   0.9378</code></pre>
+<p>Keep going</p>
+<pre class="r"><code>drop1(fith6, test = &quot;Chisq&quot;)</code></pre>
+<pre><code>Single term deletions
+
+Model:
+emboly ~ lft + ok3m + pdvt + dys + hoe + whee + bnpij + coll + 
+    rok
+       Df Deviance    AIC     LRT  Pr(&gt;Chi)    
+&lt;none&gt;      482.91 502.91                      
+lft     1   495.25 513.25 12.3402 0.0004433 ***
+ok3m    1   494.13 512.13 11.2178 0.0008102 ***
+pdvt    1   485.62 503.62  2.7069 0.0999165 .  
+dys     1   486.57 504.57  3.6625 0.0556503 .  
+hoe     1   489.09 507.09  6.1819 0.0129067 *  
+whee    1   492.90 510.90  9.9864 0.0015770 ** 
+bnpij   1   488.21 506.21  5.2987 0.0213412 *  
+coll    1   492.82 510.82  9.9086 0.0016451 ** 
+rok     1   483.85 501.85  0.9374 0.3329442    
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<pre class="r"><code>hist_vars &lt;- setdiff(hist_vars, &quot;rok&quot;)
+fith7 &lt;- glm(reformulate(termlabels = hist_vars, response = &quot;emboly&quot;),
+    data = pe, family = &quot;binomial&quot;)
+fith7 %&gt;% anova(., fith0, test = &quot;Chisq&quot;)</code></pre>
+<pre><code>Analysis of Deviance Table
+
+Model 1: emboly ~ lft + ok3m + pdvt + dys + hoe + whee + bnpij + coll
+Model 2: emboly ~ lft + man + mal1 + ok3m + famdvt + pdvt + ppe + dys + 
+    pleurchp + hoe + whee + bnpij + coll + palp + rok
+  Resid. Df Resid. Dev Df Deviance Pr(&gt;Chi)
+1       389     483.85                     
+2       382     481.12  7   2.7292   0.9089</code></pre>
+<p>Keep going</p>
+<pre class="r"><code>drop1(fith7, test = &quot;Chisq&quot;)</code></pre>
+<pre><code>Single term deletions
+
+Model:
+emboly ~ lft + ok3m + pdvt + dys + hoe + whee + bnpij + coll
+       Df Deviance    AIC     LRT  Pr(&gt;Chi)    
+&lt;none&gt;      483.85 501.85                      
+lft     1   495.35 511.35 11.5001 0.0006959 ***
+ok3m    1   495.06 511.06 11.2072 0.0008148 ***
+pdvt    1   486.73 502.73  2.8768 0.0898646 .  
+dys     1   487.36 503.36  3.5137 0.0608624 .  
+hoe     1   490.90 506.90  7.0504 0.0079249 ** 
+whee    1   494.41 510.41 10.5574 0.0011572 ** 
+bnpij   1   489.18 505.18  5.3267 0.0210012 *  
+coll    1   493.37 509.37  9.5201 0.0020324 ** 
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<pre class="r"><code>hist_vars &lt;- setdiff(hist_vars, &quot;pdvt&quot;)
+fith8 &lt;- glm(reformulate(termlabels = hist_vars, response = &quot;emboly&quot;),
+    data = pe, family = &quot;binomial&quot;)
+fith8 %&gt;% anova(., fith0, test = &quot;Chisq&quot;)</code></pre>
+<pre><code>Analysis of Deviance Table
+
+Model 1: emboly ~ lft + ok3m + dys + hoe + whee + bnpij + coll
+Model 2: emboly ~ lft + man + mal1 + ok3m + famdvt + pdvt + ppe + dys + 
+    pleurchp + hoe + whee + bnpij + coll + palp + rok
+  Resid. Df Resid. Dev Df Deviance Pr(&gt;Chi)
+1       390     486.73                     
+2       382     481.12  8    5.606   0.6913</code></pre>
+<p>Keep going</p>
+<pre class="r"><code>drop1(fith8, test = &quot;Chisq&quot;)</code></pre>
+<pre><code>Single term deletions
+
+Model:
+emboly ~ lft + ok3m + dys + hoe + whee + bnpij + coll
+       Df Deviance    AIC     LRT  Pr(&gt;Chi)    
+&lt;none&gt;      486.73 502.73                      
+lft     1   498.66 512.66 11.9373 0.0005502 ***
+ok3m    1   497.96 511.96 11.2371 0.0008018 ***
+dys     1   490.47 504.47  3.7438 0.0530033 .  
+hoe     1   493.94 507.94  7.2161 0.0072252 ** 
+whee    1   496.45 510.45  9.7262 0.0018166 ** 
+bnpij   1   494.67 508.67  7.9414 0.0048317 ** 
+coll    1   496.27 510.27  9.5437 0.0020064 ** 
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<pre class="r"><code>hist_vars &lt;- setdiff(hist_vars, &quot;dys&quot;)
+fith9 &lt;- glm(reformulate(termlabels = hist_vars, response = &quot;emboly&quot;),
+    data = pe, family = &quot;binomial&quot;)
+fith9 %&gt;% anova(., fith0, test = &quot;Chisq&quot;)</code></pre>
+<pre><code>Analysis of Deviance Table
+
+Model 1: emboly ~ lft + ok3m + hoe + whee + bnpij + coll
+Model 2: emboly ~ lft + man + mal1 + ok3m + famdvt + pdvt + ppe + dys + 
+    pleurchp + hoe + whee + bnpij + coll + palp + rok
+  Resid. Df Resid. Dev Df Deviance Pr(&gt;Chi)
+1       391     490.47                     
+2       382     481.12  9   9.3498   0.4056</code></pre>
+<p>Keep going</p>
+<pre class="r"><code>drop1(fith9, test = &quot;Chisq&quot;)</code></pre>
+<pre><code>Single term deletions
+
+Model:
+emboly ~ lft + ok3m + hoe + whee + bnpij + coll
+       Df Deviance    AIC     LRT  Pr(&gt;Chi)    
+&lt;none&gt;      490.47 504.47                      
+lft     1   504.72 516.72 14.2493 0.0001601 ***
+ok3m    1   500.78 512.78 10.3073 0.0013250 ** 
+hoe     1   499.61 511.61  9.1416 0.0024986 ** 
+whee    1   499.03 511.03  8.5556 0.0034446 ** 
+bnpij   1   499.19 511.19  8.7196 0.0031480 ** 
+coll    1   501.44 513.44 10.9686 0.0009267 ***
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<pre class="r"><code>hist_vars &lt;- setdiff(hist_vars, &quot;whee&quot;)
+fith10 &lt;- glm(reformulate(termlabels = hist_vars, response = &quot;emboly&quot;),
+    data = pe, family = &quot;binomial&quot;)
+fith10 %&gt;% anova(., fith0, test = &quot;Chisq&quot;)</code></pre>
+<pre><code>Analysis of Deviance Table
+
+Model 1: emboly ~ lft + ok3m + hoe + bnpij + coll
+Model 2: emboly ~ lft + man + mal1 + ok3m + famdvt + pdvt + ppe + dys + 
+    pleurchp + hoe + whee + bnpij + coll + palp + rok
+  Resid. Df Resid. Dev Df Deviance Pr(&gt;Chi)  
+1       392     499.03                       
+2       382     481.12 10   17.905  0.05658 .
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<p>Now the model is worse than the model with all history variables at a level of 0.056. Keeping 0.10 as a cut-off, we will stick with fith9</p>
+<pre class="r"><code>fith &lt;- fith9
+hist_vars &lt;- union(hist_vars, &quot;whee&quot;)</code></pre>
+<div id="evaluate-model" class="section level4">
+<h4>Evaluate model</h4>
+<p>Lets see how wel this model fits the data</p>
+<p>To do this, we will use the package <code>rms</code> from Frank Harrell, we must re-fit the model to use the functions from this package</p>
+<pre class="r"><code>library(rms)
+fith_rms &lt;- lrm(formula = fith$formula, data = pe, x = T, y = T)
+fith_rms</code></pre>
+<pre><code>Logistic Regression Model
+ 
+ lrm(formula = fith$formula, data = pe, x = T, y = T)
+ 
+                       Model Likelihood     Discrimination    Rank Discrim.    
+                          Ratio Test           Indexes           Indexes       
+ Obs           398    LR chi2      52.79    R2       0.167    C       0.709    
+  FALSE        228    d.f.             6    g        0.907    Dxy     0.418    
+  TRUE         170    Pr(&gt; chi2) &lt;0.0001    gr       2.478    gamma   0.419    
+ max |deriv| 1e-09                          gp       0.200    tau-a   0.205    
+                                            Brier    0.214                     
+ 
+           Coef    S.E.   Wald Z Pr(&gt;|Z|)
+ Intercept -2.2323 0.4083 -5.47  &lt;0.0001 
+ lft        0.0243 0.0066  3.70  0.0002  
+ ok3m       0.8589 0.2702  3.18  0.0015  
+ hoe        0.6988 0.2341  2.99  0.0028  
+ whee      -0.9486 0.3339 -2.84  0.0045  
+ bnpij      0.8846 0.3028  2.92  0.0035  
+ coll       1.3659 0.4333  3.15  0.0016  
+ </code></pre>
+<p>As we see, the C-index (AUC) is 0.709</p>
+<p>Validate with bootstrapping</p>
+<pre class="r"><code>fith_valid &lt;- validate(fith_rms)
+fith_valid</code></pre>
+<pre><code>          index.orig training    test optimism index.corrected  n
+Dxy           0.4183   0.4526  0.3998   0.0528          0.3655 40
+R2            0.1668   0.1984  0.1525   0.0459          0.1210 40
+Intercept     0.0000   0.0000 -0.0452   0.0452         -0.0452 40
+Slope         1.0000   1.0000  0.8456   0.1544          0.8456 40
+Emax          0.0000   0.0000  0.0450   0.0450          0.0450 40
+D             0.1301   0.1576  0.1181   0.0395          0.0906 40
+U            -0.0050  -0.0050  0.0032  -0.0082          0.0032 40
+Q             0.1352   0.1626  0.1148   0.0478          0.0874 40
+B             0.2143   0.2075  0.2184  -0.0109          0.2253 40
+g             0.9073   1.0153  0.8560   0.1593          0.7480 40
+gp            0.2004   0.2170  0.1908   0.0262          0.1742 40</code></pre>
+<p>The corrected AUC is</p>
+<pre class="r"><code>(1+fith_valid[&quot;Dxy&quot;, &quot;index.corrected&quot;]) / 2</code></pre>
+<pre><code>[1] 0.6827409</code></pre>
+<p>A little lower</p>
+<p>Get calibration plot (this also uses bootstrapping to get a bias-corrected calibration curve)</p>
+<pre class="r"><code>fith_calib &lt;- calibrate(fith_rms)
+plot(fith_calib)</code></pre>
+<p><img src="figure/diag_modeling.Rmd/unnamed-chunk-33-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre><code>
+n=398   Mean absolute error=0.034   Mean squared error=0.00176
+0.9 Quantile of absolute error=0.056</code></pre>
+<p>Calibration is not perfect, with a some underprediction in the higher predicted risk range</p>
+</div>
+</div>
+<div id="step-2-add-physical-examination" class="section level3">
+<h3>Step 2: add physical examination</h3>
+<p>Define physical examination variables</p>
+<pre class="r"><code>pe_vars_all &lt;- c(&quot;wrij&quot;, &quot;crep&quot;, &quot;oed&quot;, &quot;dvts&quot;)
+pe_vars &lt;- union(hist_vars, pe_vars_all)
+fitp0 &lt;- glm(reformulate(pe_vars, &quot;emboly&quot;), data = pe, family = &quot;binomial&quot;)
+summary(fitp0)</code></pre>
+<pre><code>
+Call:
+glm(formula = reformulate(pe_vars, &quot;emboly&quot;), family = &quot;binomial&quot;, 
+    data = pe)
+
+Deviance Residuals: 
+    Min       1Q   Median       3Q      Max  
+-1.9360  -0.9455  -0.6612   1.1007   1.8825  
+
+Coefficients:
+             Estimate Std. Error z value Pr(&gt;|z|)    
+(Intercept) -2.338290   0.414420  -5.642 1.68e-08 ***
+lft          0.025538   0.006939   3.680 0.000233 ***
+ok3mTRUE     0.820520   0.274385   2.990 0.002786 ** 
+hoeTRUE      0.716895   0.236270   3.034 0.002412 ** 
+bnpijTRUE    0.845933   0.336866   2.511 0.012033 *  
+collTRUE     1.432531   0.440018   3.256 0.001131 ** 
+wheeTRUE    -0.886702   0.337017  -2.631 0.008513 ** 
+wrijTRUE     0.516631   0.299877   1.723 0.084923 .  
+crepTRUE    -0.141142   0.254704  -0.554 0.579483    
+oedTRUE     -0.233460   0.346450  -0.674 0.500398    
+dvtsTRUE     0.219226   0.445129   0.493 0.622366    
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+(Dispersion parameter for binomial family taken to be 1)
+
+    Null deviance: 543.26  on 397  degrees of freedom
+Residual deviance: 486.13  on 387  degrees of freedom
+AIC: 508.13
+
+Number of Fisher Scoring iterations: 4</code></pre>
+<pre class="r"><code>anova(fith, fitp0, test = &quot;Chisq&quot;)</code></pre>
+<pre><code>Analysis of Deviance Table
+
+Model 1: emboly ~ lft + ok3m + hoe + whee + bnpij + coll
+Model 2: emboly ~ lft + ok3m + hoe + bnpij + coll + whee + wrij + crep + 
+    oed + dvts
+  Resid. Df Resid. Dev Df Deviance Pr(&gt;Chi)
+1       391     490.47                     
+2       387     486.13  4   4.3348   0.3626</code></pre>
+<p>This model is not much better than the model with only variables from history</p>
+<p>Maybe if we reduce the number of included physical examination variables, we can get a significant improvement of the likelihood (as the degrees of freedom for the chi-square distribution will go down)</p>
+<p>If the fit with all physical examination variables were preferrable over the parsimonious history model, we would compare each reduced physical examination model with the model with all physical examination variables. However, now we will keep comparing with the final history model.</p>
+<pre class="r"><code>drop1(fitp0, test = &quot;Chisq&quot;)</code></pre>
+<pre><code>Single term deletions
+
+Model:
+emboly ~ lft + ok3m + hoe + bnpij + coll + whee + wrij + crep + 
+    oed + dvts
+       Df Deviance    AIC     LRT  Pr(&gt;Chi)    
+&lt;none&gt;      486.13 508.13                      
+lft     1   500.26 520.26 14.1234 0.0001712 ***
+ok3m    1   495.20 515.20  9.0690 0.0025998 ** 
+hoe     1   495.59 515.59  9.4578 0.0021025 ** 
+bnpij   1   492.49 512.49  6.3541 0.0117110 *  
+coll    1   497.81 517.81 11.6729 0.0006342 ***
+whee    1   493.44 513.44  7.3063 0.0068711 ** 
+wrij    1   489.10 509.10  2.9699 0.0848256 .  
+crep    1   486.44 506.44  0.3081 0.5788696    
+oed     1   486.59 506.59  0.4579 0.4986292    
+dvts    1   486.38 506.38  0.2423 0.6225341    
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<pre class="r"><code>pe_vars &lt;- setdiff(pe_vars, &quot;dvts&quot;)
+fitp1 &lt;- glm(reformulate(termlabels = pe_vars, response = &quot;emboly&quot;),
+    data = pe, family = &quot;binomial&quot;)
+fitp1 %&gt;% anova(., fith, test = &quot;Chisq&quot;)</code></pre>
+<pre><code>Analysis of Deviance Table
+
+Model 1: emboly ~ lft + ok3m + hoe + bnpij + coll + whee + wrij + crep + 
+    oed
+Model 2: emboly ~ lft + ok3m + hoe + whee + bnpij + coll
+  Resid. Df Resid. Dev Df Deviance Pr(&gt;Chi)
+1       388     486.38                     
+2       391     490.47 -3  -4.0925   0.2516</code></pre>
+<pre class="r"><code>drop1(fitp1, test = &quot;Chisq&quot;)</code></pre>
+<pre><code>Single term deletions
+
+Model:
+emboly ~ lft + ok3m + hoe + bnpij + coll + whee + wrij + crep + 
+    oed
+       Df Deviance    AIC     LRT  Pr(&gt;Chi)    
+&lt;none&gt;      486.38 506.38                      
+lft     1   500.85 518.85 14.4761 0.0001419 ***
+ok3m    1   495.68 513.68  9.3021 0.0022889 ** 
+hoe     1   495.67 513.67  9.2956 0.0022971 ** 
+bnpij   1   495.07 513.07  8.6922 0.0031958 ** 
+coll    1   498.07 516.07 11.6918 0.0006278 ***
+whee    1   493.74 511.74  7.3616 0.0066630 ** 
+wrij    1   489.36 507.36  2.9868 0.0839444 .  
+crep    1   486.76 504.76  0.3825 0.5362512    
+oed     1   486.67 504.67  0.2963 0.5861831    
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<pre class="r"><code>pe_vars &lt;- setdiff(pe_vars, &quot;oed&quot;)
+fitp2 &lt;- glm(reformulate(termlabels = pe_vars, response = &quot;emboly&quot;),
+    data = pe, family = &quot;binomial&quot;)
+fitp2 %&gt;% anova(., fith, test = &quot;Chisq&quot;)</code></pre>
+<pre><code>Analysis of Deviance Table
+
+Model 1: emboly ~ lft + ok3m + hoe + bnpij + coll + whee + wrij + crep
+Model 2: emboly ~ lft + ok3m + hoe + whee + bnpij + coll
+  Resid. Df Resid. Dev Df Deviance Pr(&gt;Chi)
+1       389     486.67                     
+2       391     490.47 -2  -3.7962   0.1499</code></pre>
+<pre class="r"><code>drop1(fitp2, test = &quot;Chisq&quot;)</code></pre>
+<pre><code>Single term deletions
+
+Model:
+emboly ~ lft + ok3m + hoe + bnpij + coll + whee + wrij + crep
+       Df Deviance    AIC     LRT  Pr(&gt;Chi)    
+&lt;none&gt;      486.67 504.67                      
+lft     1   500.86 516.86 14.1894 0.0001653 ***
+ok3m    1   496.15 512.15  9.4805 0.0020767 ** 
+hoe     1   495.93 511.93  9.2595 0.0023428 ** 
+bnpij   1   495.07 511.07  8.4013 0.0037495 ** 
+coll    1   498.59 514.59 11.9182 0.0005559 ***
+whee    1   494.20 510.20  7.5271 0.0060779 ** 
+wrij    1   489.83 505.83  3.1530 0.0757887 .  
+crep    1   487.14 503.14  0.4693 0.4933272    
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<pre class="r"><code>pe_vars &lt;- setdiff(pe_vars, &quot;crep&quot;)
+fitp3 &lt;- glm(reformulate(termlabels = pe_vars, response = &quot;emboly&quot;),
+    data = pe, family = &quot;binomial&quot;)
+fitp3 %&gt;% anova(., fith, test = &quot;Chisq&quot;)</code></pre>
+<pre><code>Analysis of Deviance Table
+
+Model 1: emboly ~ lft + ok3m + hoe + bnpij + coll + whee + wrij
+Model 2: emboly ~ lft + ok3m + hoe + whee + bnpij + coll
+  Resid. Df Resid. Dev Df Deviance Pr(&gt;Chi)  
+1       390     487.14                       
+2       391     490.47 -1  -3.3269  0.06816 .
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<p>So we keep 2 variables from physical examination, put <code>crep</code> back in</p>
+<pre class="r"><code>fitp &lt;- fitp2
+pe_vars &lt;- union(pe_vars, &quot;crep&quot;)</code></pre>
+<div id="model-check" class="section level4">
+<h4>Model check</h4>
+<p>Do validation and calibration as for the history only model</p>
+<pre class="r"><code>fitp_rms &lt;- lrm(fitp$formula, data = pe, x = T, y = T)
+fitp_rms</code></pre>
+<pre><code>Logistic Regression Model
+ 
+ lrm(formula = fitp$formula, data = pe, x = T, y = T)
+ 
+                       Model Likelihood     Discrimination    Rank Discrim.    
+                          Ratio Test           Indexes           Indexes       
+ Obs           398    LR chi2      56.59    R2       0.178    C       0.716    
+  FALSE        228    d.f.             8    g        0.944    Dxy     0.432    
+  TRUE         170    Pr(&gt; chi2) &lt;0.0001    gr       2.571    gamma   0.432    
+ max |deriv| 3e-09                          gp       0.207    tau-a   0.212    
+                                            Brier    0.212                     
+ 
+           Coef    S.E.   Wald Z Pr(&gt;|Z|)
+ Intercept -2.3273 0.4130 -5.64  &lt;0.0001 
+ lft        0.0252 0.0068  3.69  0.0002  
+ ok3m       0.8340 0.2731  3.05  0.0023  
+ hoe        0.7068 0.2353  3.00  0.0027  
+ bnpij      0.8741 0.3046  2.87  0.0041  
+ coll       1.4381 0.4378  3.29  0.0010  
+ whee      -0.8985 0.3366 -2.67  0.0076  
+ wrij       0.5311 0.2992  1.78  0.0759  
+ crep      -0.1716 0.2510 -0.68  0.4943  
+ </code></pre>
+<pre class="r"><code>fitp_valid &lt;- validate(fitp_rms)
+fitp_valid</code></pre>
+<pre><code>          index.orig training    test optimism index.corrected  n
+Dxy           0.4317   0.4634  0.4064   0.0570          0.3747 40
+R2            0.1780   0.2110  0.1581   0.0529          0.1251 40
+Intercept     0.0000   0.0000 -0.0165   0.0165         -0.0165 40
+Slope         1.0000   1.0000  0.8453   0.1547          0.8453 40
+Emax          0.0000   0.0000  0.0402   0.0402          0.0402 40
+D             0.1397   0.1689  0.1228   0.0461          0.0936 40
+U            -0.0050  -0.0050  0.0051  -0.0101          0.0051 40
+Q             0.1447   0.1739  0.1177   0.0562          0.0885 40
+B             0.2118   0.2045  0.2172  -0.0127          0.2245 40
+g             0.9441   1.0566  0.8719   0.1847          0.7595 40
+gp            0.2075   0.2230  0.1936   0.0294          0.1781 40</code></pre>
+<pre class="r"><code>(1+fitp_valid[&quot;Dxy&quot;, &quot;index.corrected&quot;]) / 2</code></pre>
+<pre><code>[1] 0.6873485</code></pre>
+<pre class="r"><code>fitp_calib &lt;- calibrate(fitp_rms)
+plot(fitp_calib)</code></pre>
+<p><img src="figure/diag_modeling.Rmd/unnamed-chunk-39-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre><code>
+n=398   Mean absolute error=0.025   Mean squared error=0.00108
+0.9 Quantile of absolute error=0.05</code></pre>
+<p>The bias-corrected AUC is actually worse than that of the fit with only history variables</p>
+</div>
+</div>
+<div id="step-3-add-imaging" class="section level3">
+<h3>Step 3: add imaging</h3>
+<p>Let’s add these one by one, since there are only two</p>
+<pre class="r"><code>fitxray &lt;- glm(reformulate(c(pe_vars, &quot;xrayafw&quot;), &quot;emboly&quot;), data = pe,
+               family = &quot;binomial&quot;)
+fitus &lt;- glm(reformulate(c(pe_vars, &quot;echoafw&quot;), &quot;emboly&quot;), data = pe,
+               family = &quot;binomial&quot;)
+
+anova(fitxray, fitus, test = &quot;Chisq&quot;)</code></pre>
+<pre><code>Analysis of Deviance Table
+
+Model 1: emboly ~ lft + ok3m + hoe + bnpij + coll + whee + wrij + crep + 
+    xrayafw
+Model 2: emboly ~ lft + ok3m + hoe + bnpij + coll + whee + wrij + crep + 
+    echoafw
+  Resid. Df Resid. Dev Df Deviance Pr(&gt;Chi)
+1       388     476.47                     
+2       388     474.14  0   2.3317         </code></pre>
+<p>If we model them separately, we can no longer use the likelihood ratio test to compare them, since the models are not nested.</p>
+<p>Let’s create a model with both of them.</p>
+<pre class="r"><code>fitr0 &lt;- glm(reformulate(c(pe_vars, &quot;xrayafw&quot;, &quot;echoafw&quot;), &quot;emboly&quot;),
+             data = pe, family = &quot;binomial&quot;)
+
+anova(fitr0, fitxray, fitus, test = &quot;Chisq&quot;)</code></pre>
+<pre><code>Analysis of Deviance Table
+
+Model 1: emboly ~ lft + ok3m + hoe + bnpij + coll + whee + wrij + crep + 
+    xrayafw + echoafw
+Model 2: emboly ~ lft + ok3m + hoe + bnpij + coll + whee + wrij + crep + 
+    xrayafw
+Model 3: emboly ~ lft + ok3m + hoe + bnpij + coll + whee + wrij + crep + 
+    echoafw
+  Resid. Df Resid. Dev Df Deviance  Pr(&gt;Chi)    
+1       387     464.49                          
+2       388     476.47 -1 -11.9801 0.0005377 ***
+3       388     474.14  0   2.3317              
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<pre class="r"><code>logLik(fitr0)</code></pre>
+<pre><code>&#39;log Lik.&#39; -232.2463 (df=11)</code></pre>
+<pre class="r"><code>logLik(fitxray)</code></pre>
+<pre><code>&#39;log Lik.&#39; -238.2363 (df=10)</code></pre>
+<pre class="r"><code>logLik(fitus)</code></pre>
+<pre><code>&#39;log Lik.&#39; -237.0705 (df=10)</code></pre>
+<p>The model with only history and physical examination in it seems to perform best. So that will be our final model.</p>
+</div>
+</div>
+<div id="session-information" class="section level2">
+<h2>Session information</h2>
+<!-- Insert the session information into the document -->
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 3.4.3 (2017-11-30)
+Platform: x86_64-apple-darwin15.6.0 (64-bit)
+Running under: macOS Sierra 10.12.6
+
+Matrix products: default
+BLAS: /Library/Frameworks/R.framework/Versions/3.4/Resources/lib/libRblas.0.dylib
+LAPACK: /Library/Frameworks/R.framework/Versions/3.4/Resources/lib/libRlapack.dylib
+
+locale:
+[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+ [1] rms_5.1-2           SparseM_1.77        Hmisc_4.1-1        
+ [4] ggplot2_2.2.1       Formula_1.2-2       survival_2.41-3    
+ [7] lattice_0.20-35     purrr_0.2.4         bindrcpp_0.2       
+[10] haven_1.1.1         epistats_0.1.0      magrittr_1.5       
+[13] data.table_1.10.4-3 dplyr_0.7.4        
+
+loaded via a namespace (and not attached):
+ [1] zoo_1.8-1           splines_3.4.3       colorspace_1.3-2   
+ [4] htmltools_0.3.6     yaml_2.1.16         base64enc_0.1-3    
+ [7] rlang_0.1.6         pillar_1.1.0        foreign_0.8-69     
+[10] glue_1.2.0          RColorBrewer_1.1-2  multcomp_1.4-8     
+[13] bindr_0.1           plyr_1.8.4          stringr_1.2.0      
+[16] MatrixModels_0.4-1  munsell_0.4.3       gtable_0.2.0       
+[19] mvtnorm_1.0-6       htmlwidgets_0.9     codetools_0.2-15   
+[22] evaluate_0.10.1     latticeExtra_0.6-28 knitr_1.18         
+[25] forcats_0.2.0       quantreg_5.34       htmlTable_1.11.2   
+[28] TH.data_1.0-8       Rcpp_0.12.14        acepack_1.4.1      
+[31] readr_1.1.1         scales_0.5.0        backports_1.1.2    
+[34] checkmate_1.8.5     gridExtra_2.3       hms_0.4.0          
+[37] digest_0.6.14       polspline_1.1.12    stringi_1.1.6      
+[40] grid_3.4.3          rprojroot_1.2       tools_3.4.3        
+[43] sandwich_2.4-0      lazyeval_0.2.1      tibble_1.4.1       
+[46] cluster_2.0.6       pkgconfig_2.0.1     MASS_7.3-47        
+[49] Matrix_1.2-12       assertthat_0.2.0    rmarkdown_1.8      
+[52] rstudioapi_0.7      R6_2.2.2            rpart_4.1-11       
+[55] nlme_3.1-131        nnet_7.3-12         git2r_0.20.0       
+[58] compiler_3.4.3     </code></pre>
+</div>
+</div>
+
+<hr>
+<p>
+    This <a href="http://rmarkdown.rstudio.com">R Markdown</a> site was created with <a href="https://github.com/jdblischak/workflowr">workflowr</a>
+</p>
+<hr>
+
+<!-- To enable disqus, uncomment the section below and provide your disqus_shortname -->
+
+<!-- disqus
+  <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+        var disqus_shortname = 'rmarkdown'; // required: replace example with your forum shortname
+
+        /* * * DON'T EDIT BELOW THIS LINE * * */
+        (function() {
+            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+-->
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
