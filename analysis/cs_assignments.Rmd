@@ -1,0 +1,669 @@
+---
+title: "Assignments Computational Statistics"
+author: "Wouter van Amsterdam"
+date: 2018-02-12
+output: html_document
+---
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+```
+
+<!-- Update knitr chunk options -->
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+<!-- Insert the date the file was last updated -->
+```{r last-updated, echo=FALSE, results='asis'}
+```
+
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+```{r code-version, echo=FALSE, results='asis'}
+```
+
+<!-- Add your analysis here -->
+
+# Setup
+
+```{r}
+library(dplyr)
+library(data.table)
+library(magrittr)
+library(purrr)
+library(here) # for tracking working directory
+```
+
+
+# Day 1 advanced-R
+
+## Excercise 1, A Coinflip function
+
+### A custom dice roll function
+
+```{r}
+coinflip <- function(num){
+  sample(x = c(1,2), size = num, replace = TRUE)
+  }
+```
+
+Make dice roll function
+
+```{r}
+diceroll <- function(num) {
+  sample(x = 1:6, size = num, replace = TRUE)
+}
+
+diceroll(4)
+```
+
+
+### B Dice roll with arbitrary number of sides
+
+```{r}
+diceroll2 <- function(num, sides) {
+  sample(x = 1:sides, size = num, replace = TRUE)
+}
+
+diceroll2(num = 4, sides = 4)
+```
+
+
+### C Averages of dice roll
+
+Take dice with 6 sides, which was `diceroll`
+
+Let's roll the dice 1, 10, 100, 1000 and 10000 times, calculate the mean,
+and do this 1000 times
+
+We will use the package `purrr` to map functions to the list of number of 
+throws
+
+```{r}
+require(magrittr)
+require(purrr)
+nsim = 1000
+
+nthrow = 10^(0:4)
+
+nthrows <- rep(nthrow, times = nsim)
+
+nthrow %>%
+  map(diceroll) %>%
+  map_dbl(mean)
+
+means <- list(nthrows) %>%
+  pmap(diceroll) %>% # apply diceroll to each row of nthrows, returns a list
+  map_dbl(mean)      # apply mean to each element of the list, return a double vector
+
+df <- data.frame(nthrows, means)
+
+```
+
+Visualize results
+
+```{r}
+require(ggplot2)
+
+df %>%
+  ggplot(aes(x = nthrows, y = means)) +
+  geom_point(alpha = .1) + 
+  scale_x_log10() + theme_minimal() + 
+  ggtitle("Means of 1000 simulations of n-dice throws") + 
+  labs(x = "Number of throws")
+```
+
+
+Now with uniform sampling on logarithmic scale
+
+
+```{r}
+nthrows <- round(10^runif(min = 0, max = 4, n = nsim))
+means <- list(nthrows) %>%
+  pmap(diceroll) %>% # apply diceroll to each row of nthrows, returns a list
+  map_dbl(mean)      # apply mean to each element of the list, return a double vector
+
+df <- data.frame(nthrows, means)
+
+df %>%
+  ggplot(aes(x = nthrows, y = means)) +
+  geom_point(alpha = .1) + 
+  scale_x_log10() + theme_minimal() + 
+  ggtitle("Means of 1000 simulations of n-dice throws") + 
+  labs(x = "Number of throws")
+```
+
+Or with base-R plot
+
+```{r}
+plot(means~nthrows, data = df, log = "x")
+```
+
+
+## 2 tables
+
+Get data
+
+```{r}
+smokedat <- data.frame(
+  id = 1:20,
+  smoking.status = c(NA, "never smoked", "never smoked", "never smoked", "never smoked", "never smoked", "never smoked", "has smoked", "has smoked", "has smoked", "has smoked", "has smoked", "has smoked", "currently smoking", "currently smoking", "currently smoking", "currently smoking", "currently smoking", "currently smoking", "currently smoking"),
+  outcome = c("no hart infarction", NA, "no hart infarction", "no hart infarction", "no hart infarction", "no hart infarction", "hart infarction", "no hart infarction", "no hart infarction", "no hart infarction", "no hart infarction", "hart infarction", "hart infarction", "hart infarction", "no hart infarction", "no hart infarction", "no hart infarction", "hart infarction", "hart infarction", "hart infarction")
+    )
+```
+
+View
+
+```{r}
+smokedat
+```
+
+
+### A Get help
+
+```{r}
+?table
+```
+
+### B cross table
+
+```{r}
+table(smokedat$smoking.status, smokedat$outcome)
+```
+
+### C with missings
+
+> Modify the previous command, to also display the numbers of missing.
+
+```{r}
+table(smokedat$smoking.status, smokedat$outcome, useNA = "always")
+```
+
+> These tables are rather simple, we would like to add row and column totals as well as proportions.
+
+### D Add margins
+
+> Assign the table created in C) to an object called smoketab. Use the book, R forum, Google, etc. to find the commands to calculate row and column sums. In the same way, find the commands to bind rows and columns. Apply the above commands to create smoketab2, with the row totals added to smoketab as a new column. In addition, create smoketab3 with the column totals added to smoketab2 as a new row.
+
+```{r}
+smoketab <- table(smokedat$smoking.status, smokedat$outcome, useNA = "always")
+
+smoketab2 <- cbind(smoketab, total = rowSums(smoketab))
+smoketab3 <- rbind(smoketab2, total = colSums(smoketab2))
+smoketab3
+```
+
+### E: Proportions
+
+> Calculate row proportions for smoketab3 (hint: You can divide smoketab3 by the row totals). Store the new table in an object called  smoketab3.RP.
+
+
+Each row get's multiplied with 1 divided by the sum of the columns
+
+We can create a matrix with 1 over the column totals, and do element-wise 
+product
+
+```{r}
+totals <- tail(smoketab3, 1)
+total_matrix <- matrix(rep(1/totals, nrow(smoketab3)), 
+                       nrow = nrow(smoketab3), byrow = T)
+total_matrix
+
+smoketab3.RP <- smoketab3 * total_matrix
+smoketab3.RP
+```
+
+### F column proportions
+
+> Calculate columns proportions as well, in the same manner (note: you will need to transpose the table, and then transpose back afterwards). Store the new table in an object called smoketab3.CP.
+
+```{r}
+col_totals <- smoketab3[, "total"]
+col_total_matrix <- matrix(rep(1/col_totals, each = ncol(smoketab3)),
+                           nrow = nrow(smoketab3), byrow = T)
+col_total_matrix
+
+smoketab3.CP <- smoketab3 * col_total_matrix
+smoketab3.CP
+
+```
+
+
+### G list of matrices
+
+>using the list() command, produce a list containing smoketab3, smoketab3.RP and smoketab3.CP. Name these three components “tab”, “rowprop” and “colprop”, respectively.
+
+```{r}
+tab_list <- list(tab = smoketab3, rowprop = smoketab3.RP, colprop = smoketab3.CP)
+```
+
+
+### H improved tablefunction
+
+> Now make an improved table function yourself. Note: build a function that uses the arguments variable1, variable2 and dat, to produce a list such as you made in A) - G). variable1 and variable2 should be character values (containing text between quotes). Note that selection of columns or rows can also be done e.g. using smokedat[,"smoking.status"] (try it).
+
+```{r}
+
+table2 <- function(data, variable1, variable2) {
+  x <- data[[variable1]]
+  y <- data[[variable2]]
+  
+  # use dnn to preserve variable names
+  tab <- table(x, y, dnn = c(variable1, variable2), useNA = "always")
+  
+  row_totals <- rowSums(tab)
+  tab2 <- cbind(tab, total = row_totals)
+  
+  col_totals <- colSums(tab2)
+  tab3 <- rbind(tab2, total = col_totals)
+  
+  # update col and row totals
+  row_totals <- rowSums(tab3) / 2
+  col_totals <- colSums(tab3) / 2
+
+  row_total_matrix <- matrix(rep(row_totals, each = ncol(tab3)), 
+                       nrow = nrow(tab3), byrow = T)
+  col_total_matrix <- matrix(rep(col_totals, each = nrow(tab3)), 
+                       nrow = nrow(tab3), byrow = F)
+  
+  tab3.RP <- tab3 / row_total_matrix
+  tab3.CP <- tab3 / col_total_matrix
+  
+  tabs <- list(tab = tab3, rowprop = tab3.RP, colprop = tab3.CP)
+
+  return(tabs)
+  
+}
+
+table2(smokedat, "smoking.status", "outcome")
+
+```
+
+### I find updated table function
+
+> In the book, R forum, internet or elsewhere, can you find a crosstable function that provides similar functionality (row and column totals and proportions)?
+
+I googled for 'r package table with proportions and margins'
+
+Found: gmodels on the website Quick-R
+
+Works like:
+
+```{r}
+gmodels::CrossTable(smokedat$smoking.status, smokedat$outcome)
+```
+
+
+### J add rounding
+
+> If you still have time, make an improved version of the function that you made in H) that includes rounding of the decimals in rowprop and colprop.
+
+```{r}
+
+
+table3 <- function(data, variable1, variable2, ndigits = NULL) {
+  x <- data[[variable1]]
+  y <- data[[variable2]]
+  
+  # use dnn to preserve variable names
+  tab <- table(x, y, dnn = c(variable1, variable2), useNA = "always")
+  
+  row_totals <- rowSums(tab)
+  tab2 <- cbind(tab, total = row_totals)
+  
+  col_totals <- colSums(tab2)
+  tab3 <- rbind(tab2, total = col_totals)
+  
+  # update col and row totals
+  row_totals <- rowSums(tab3) / 2
+  col_totals <- colSums(tab3) / 2
+
+  row_total_matrix <- matrix(rep(row_totals, each = ncol(tab3)), 
+                       nrow = nrow(tab3), byrow = T)
+  col_total_matrix <- matrix(rep(col_totals, each = nrow(tab3)), 
+                       nrow = nrow(tab3), byrow = F)
+  
+  tab3.RP <- tab3 / row_total_matrix
+  tab3.CP <- tab3 / col_total_matrix
+  
+  tabs <- list(tab = tab3, rowprop = tab3.RP, colprop = tab3.CP)
+  
+  # no rounding
+  if (is.null(ndigits)) return(tabs)
+
+  # rounding
+  tabs_rounded <- tabs %>%
+    purrr::map(round, ndigits)
+  return(tabs_rounded)
+  
+  
+}
+
+table3(smokedat, "smoking.status", "outcome")
+table3(smokedat, "smoking.status", "outcome", ndigits = 2)
+
+
+```
+
+## 3 split and unsplit
+
+### A load data
+
+> Load and examine the haartdat dataset. Note: This can be done using the function load().
+
+```{r}
+load(here("data", "haartdat.rda"))
+str(haartdat)
+```
+
+### B Split
+
+>Try out the split() command in the following manner: * Split haartdat into a list of individual datasets, based on the patient ID * Name this list datlist * Look at some components in this list, e.g. the first, second or 20th component
+
+```{r}
+uniqueN(haartdat$patient)
+datlist <- base::split(haartdat, haartdat$patient)
+datlist[[1]]
+datlist[[10]]
+length(datlist)
+```
+
+### C unsplit
+
+> Reverse the splitting operation by unsplit(), name the resulting object haartdat2. Are haartdat and haartdat2 identical? (Hint: take a summary of haartdat - haartdat2).
+
+```{r}
+haartdat2 <- unsplit(datlist, haartdat$patient)
+summary(haartdat2 - haartdat)
+```
+
+All zeros, so equal, check dimensions
+
+```{r}
+dim(haartdat)
+dim(haartdat2)
+```
+
+### D Minimum by patient
+
+> Suppose we want to determine the minimum of the CD4 counts for each patient. Make an individual dataset inddat, containing one row for each patient, with only the patient ID (HINT: use unique()). Split the CD4 measurements in haartdat per individual, name this object  cd4.split. Using sapply(), take the minimum of CD4 count for each individual, and add the resulting vector to inddat.
+
+```{r}
+inddat <- unique(haartdat$patient)
+
+cd4.split <- split(haartdat$cd4.sqrt, haartdat$patient)
+
+cd4s <- sapply(cd4.split, min)
+
+inddat <- data.frame(patient = inddat, min_cd4 = cd4s)
+head(inddat)
+```
+
+We can do this we fewer lines of code using `dplyr`
+
+```{r}
+haartdat %>%
+  group_by(patient) %>%
+  summarize(min_cd4 = min(cd4.sqrt))
+```
+
+Or using `data.table`
+
+```{r}
+setDT(haartdat) # make data.table (only need to do this once)
+haartdat[, list(min_cd4 = min(cd4.sqrt)), by = "patient"]
+```
+
+
+### E max per patient
+
+> Similarly to D), calculate for each patient the maximum of haartind, indicating if somewhere during the follow-up HAART was given. Add the resulting vector to inddat.
+
+Let's use `data.table`
+
+```{r}
+inddat <- haartdat[, list(
+  min_cd4 = min(cd4.sqrt), 
+  haart = max(haartind)
+), by = "patient"]
+
+head(inddat)
+
+table(inddat$haart)
+```
+
+### F cumulative HAART
+
+> We would also like to compute for each patient the cumulative amount of HAART treatment at each time point. Hint: to transform a list object (e.g. listname) to a single numeric vector, you can use the command do.call(c, listname) (of course, this only works when the list only contains numeric values).
+
+We can get this by sorting on timepoint, and then calculating a cumulative sum 
+of haart for each patient
+
+```{r}
+haartdat[order(tstart), cum_haart:=cumsum(haartind), by = "patient"]
+haartdat[order(patient, tstart)][patient %in% unique(patient)[1:2]]
+```
+
+## 4 Simulating longitudinal patient data
+
+> The goal of this exercise is to simulate longitudinal patient data (n = 100). As an example, we use the development of CD4 count in HIV positive individuals. We consider development since the moment of HIV seroconversion (= t0). Typically, CD4 count decreases over time after seroconversion. For now, we assume that the square root of CD4 count decrease linearly over time. We further assume each patient has a different intercept and slope for sqrt(CD4).
+
+### A
+
+> Build a data frame called basdat, containing patient IDs 1, 2, …, 100.
+
+```{r}
+basdat <- data.frame(id = 1:100)
+```
+
+### B
+
+> From a bivariate normal distribution with means (26, -2), variances (5, 0.25) and covariance -0.5, draw 100 samples. These represent the patient-level intercepts and slopes. Paste the values to basdat. Make sure the column names in basdat are informative. Also make sure that the class of basdat remains “data.frame”.
+
+The covariance of $<0$ means that we model that patients with higher intercepts 
+('baseline CD4 count'), the slope is more negative, so the CD4 count goes 
+down faster.
+
+```{r}
+require(mvtnorm)
+means <- c(26, -2)
+variances <- c(5, 0.25)
+covariance <- -0.5
+
+cov_mat <- matrix(c(variances[1], covariance, covariance, variances[2]), 
+                  nrow = 2, byrow = T)
+
+set.seed(2)
+samp1 <-rmvnorm(n = nrow(basdat), mean = means, sigma = cov_mat)
+
+str(samp1)
+
+```
+
+Check means, variances and covariance
+
+```{r}
+mean(samp1[, 1]); var(samp1[, 1])
+mean(samp1[, 2]); var(samp1[, 2])
+cov(samp1[, 1], samp1[, 2])
+```
+
+Plot
+
+```{r}
+plot(samp1[,1], samp1[, 2])
+```
+
+
+Add to data.frame
+
+```{r}
+basdat %<>% 
+  mutate(intercept = samp1[, 1], slope = samp1[, 2])
+head(basdat)
+```
+
+
+### C add follow-up
+
+> We (simply) assume these patients are all followed for 10 years. However, the number of CD4 measurements differs between patients. From a Poisson distribution, draw a vector of numbers of measurements, with a mean of 5 (= lambda). Make sure these draws will be a new column of basdat. Call the column nmeas.
+
+```{r}
+basdat %<>% 
+  mutate(nmeas = rpois(nrow(basdat), lambda = 5))
+```
+
+### D Validity check
+
+> Check for zeros in nmeas, convert these all to 1 for simplicity. Note that in reality, allowing for the zeros will be more realistic.
+
+Use data.table
+
+```{r}
+setDT(basdat)
+basdat[nmeas == 0, .N]
+```
+
+Change to 1
+
+```{r}
+basdat[nmeas == 0, nmeas:=1]
+```
+
+
+### E simulate single patient
+
+> Now we will simulate and plot longitudinal data for the first patient (we will repeat the process for the patients 2-100 later). Make a dataframe “longdat”, which will contain the simulated CD4 measurements. At first put in this dataframe the patient ID, repeated according to the value of  nmeas for patient 1. Hint: you can use rep(). Also put in the individual slope and intercept for patient 1.
+
+```{r}
+longdat <- basdat[id == 1, {
+  .SD %>%             # take the columns as specified by .SDcols
+    map(rep, nmeas)   # repeat each one nmeas times
+}, .SDcols = c("id", "intercept", "slope")]
+```
+
+### F simulate measure times
+
+> In longdat, simulate the measurement times, drawn from the uniform distribution on (0, 10).
+
+For readibility, sort on time
+
+```{r}
+longdat[, times:=runif(n = .N, min = 0, max = 10)]
+setorder(longdat, times)
+print(longdat)
+```
+
+### G Simulate measurements
+
+>In longdat, compute the “true” square root of CD4, based on the intercept, slope and time. To this “true” value, add normally distributed noise with mean = 0 and SD = 1. This will give the simulated CD4 measurements (on the square root scale). Now compute measured CD4 count itself by squaring.
+
+With dplyr, we can nicely mutate variables after each other
+
+```{r}
+longdat %<>%
+  mutate(true_CD4 = intercept + slope * times,
+         CD4_sqrt = true_CD4 + rnorm(nrow(longdat), mean = 0, sd = 1),
+         CD4      = CD4_sqrt^2) %>% data.table()
+head(longdat)
+```
+
+### H Plot
+
+> Try to make a pretty plot of measured CD4 count against follow-up time for patient 1. Suggestion: use xlim and ylim, to at least display 0 for both axes.
+
+```{r}
+longdat %>%
+  ggplot(aes(x = times, y = CD4)) + 
+  geom_line() + 
+  lims(x = c(0, max(longdat$times)), y = c(0, max(longdat$CD4))) + 
+  theme_minimal()
+```
+
+
+### I for all patients
+
+> Some more fun: put together all the code used to simulate and plot the data for patient 1. Now replace the number 1, indicating patient 1, by the letter i. Try: with first defining i <- 1, the same plot as before will be produced. In the main title of the plot, make sure that the patient ID (based on i) is plotted. (HINT: find out how to use paste()). Try it also with i <- 2. Now put your syntax within a “loop” with i ranging from 1 to 100. (Hint: place for (i in 1:100){ before and } after your code). Final step, make sure the output of the loop is send to a PDF plot. Look at the plot, scroll through. Be proud.
+
+By writing the code with data.table, it is now easy to do this for each patient
+
+```{r}
+longdat2 <- basdat[, {
+  .SD %>%             # take the columns as specified by .SDcols
+    map(rep, nmeas)   # repeat each one nmeas times
+}, .SDcols = c("intercept", "slope"), by = "id"]
+print(longdat2)
+```
+
+Simulate times. Note that it does not matter whether we do this for each 
+patient separately or all at the same time.
+
+```{r}
+longdat2[, times:=runif(n = .N, min = 0, max = 10)]
+setorder(longdat2, times)
+```
+
+Add simulated CD4 counts, also not needed to do this by patient,
+since for each line we have a time, intercept and slope
+
+```{r}
+longdat2 %<>%
+  mutate(true_CD4 = intercept + slope * times,
+         CD4_sqrt = true_CD4 + rnorm(n(), mean = 0, sd = 1), # n() counts the number of rows
+         CD4      = CD4_sqrt^2) %>% 
+  data.table()
+```
+
+Create a plot of all patients at the same time
+
+```{r}
+
+longdat2 %>%
+  mutate(id = factor(id)) %>%
+  ggplot(aes(x = times, y = CD4, col = id)) + 
+  geom_line() + 
+  lims(x = c(0, max(longdat2$times)), y = c(0, max(longdat2$CD4))) + 
+  theme_minimal()
+
+```
+
+Create a plot for each patient separately (only 4 are shown here)
+
+```{r}
+
+longdat2[id %in% unique(id)[1:4]] %>%
+  mutate(id = factor(id)) %>%
+  ggplot(aes(x = times, y = CD4)) + 
+  geom_line() + 
+  lims(x = c(0, max(longdat2$times)), y = c(0, max(longdat2$CD4))) + 
+  theme_minimal() + 
+  facet_wrap(~id, scales = "fixed")
+
+```
+
+To create pdfs separately for each patient, we indeed need looping.
+
+Let's only use 3 patients here
+
+```{r}
+for (i in 1:3) {
+  longdat2[id == i] %>%
+  ggplot(aes(x = times, y = CD4)) + 
+    geom_line() + 
+    lims(x = c(0, max(longdat2$times)), y = c(0, max(longdat2$CD4))) + 
+    theme_minimal() + 
+    ggtitle("CD4 number over time", paste0("patient ", i))
+  ggsave(filename = here("figs", paste0("patient_", i, ".pdf")), device = "pdf")
+}
+```
+
+
+Now be proud ;)
+
+## Session information
+
+<!-- Insert the session information into the document -->
+```{r session-info}
+```

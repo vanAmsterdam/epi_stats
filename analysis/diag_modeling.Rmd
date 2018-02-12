@@ -461,6 +461,50 @@ logLik(fitus)
 The model with only history and physical examination in it seems 
 to perform best. So that will be our final model.
 
+## Automatic modeling
+
+Now we will formalize this way of working into a function
+
+(work in progress)
+
+```{r, eval = F}
+backward_selection.glm <- function(reference_fit, minimal_fit = NULL,
+                               test = "Chisq") {
+  data = reference_fit$data
+  all_terms = attr(reference_fit$terms, "term.labels")
+  response_label = names(attr(reference_fit$terms, "dataClasses"))[1]
+  family = reference_fit$family
+  ref_likelihood = logLik(reference_fit)
+  ref_df = attr(ref_likelihood, "df")
+  
+  minimal_terms = attr(minimal_fit$terms, "term.labels")
+  
+  steps = 0
+  fits <- list()
+  converged = F
+  c_fit = reference_fit
+  c_terms = all_terms
+  
+  while (!converged) {
+    drop_results <- drop1(fit, test = test)
+    
+    # kick out terms from minimal fit
+    candidate_terms <- setdiff(c_terms, minimal_terms)
+    drop_results <- drop_results[candidate_terms]
+    
+    to_drop <- which.max(drop_results$`Pr(>Chi)`)
+    to_drop <- rownames(drop_results)[to_drop]
+    
+    p_value <- to_drop$`Pr(>Chi)`
+    
+    converged = T
+    
+  }
+  
+                               }
+```
+
+
 ## Session information
 
 <!-- Insert the session information into the document -->

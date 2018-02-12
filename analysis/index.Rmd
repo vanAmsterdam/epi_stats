@@ -26,11 +26,21 @@ statistic courses in the Epidemiology Graduate Program of the Julius Center, Utr
 
 [assignments week 2](assignments_week2.html)
 
+## Computational Statistics
+
+[assignments week 1](cs_assignments.html)
+
+
+### Assignments
+
 ## Notes
 Due to how this website was made, the R-code 'thinks' it is in the `analysis` 
 subdirectory, while the data sits in the `data` directory, which is found from 
-the parent directory. To circumvent changing directory all the time, these 
-files use the function `fromParentDir`, which allows you to call files from 
+the parent directory. Working with Rmarkdown and keeping track of the 
+directory is not too easy at all. After modern methods, I switched to using
+the package `here`, which is specifically designed to target such problems.
+
+Before that I used the function `fromParentDir`, which allows you to call files from 
 the parent directory. The function can be found in the package `epistats`, 
 which can be installed with `devtools::install_github("vanAmsterdam/epistats")`
 
@@ -44,4 +54,4 @@ For example, `read_spss` exists in both `foreign` and `heaven`.
 
 To make sure you use the intended function 
 (and to circumvent using `library(package)`), use `<package>::<function>` 
-to use `<function>` from package `<package>`
+to use `<function>` from package `<package>`, like `epistats::fromParentdir`
