@@ -315,10 +315,10 @@ div.tocify {
 shared across the workflowr files. -->
 <!-- Update knitr chunk options -->
 <!-- Insert the date the file was last updated -->
-<p><strong>Last updated:</strong> 2018-02-07</p>
+<p><strong>Last updated:</strong> 2018-02-12</p>
 <!-- Insert the code version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
-<p><strong>Code version:</strong> 8122e6c</p>
+<p><strong>Code version:</strong> 221fea2</p>
 <!-- Add your analysis here -->
 <div id="intro" class="section level1">
 <h1>Intro</h1>
@@ -1250,6 +1250,45 @@ Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&
 <p>The model with only history and physical examination in it seems to perform best. So that will be our final model.</p>
 </div>
 </div>
+<div id="automatic-modeling" class="section level2">
+<h2>Automatic modeling</h2>
+<p>Now we will formalize this way of working into a function</p>
+<p>(work in progress)</p>
+<pre class="r"><code>backward_selection.glm &lt;- function(reference_fit, minimal_fit = NULL,
+                               test = &quot;Chisq&quot;) {
+  data = reference_fit$data
+  all_terms = attr(reference_fit$terms, &quot;term.labels&quot;)
+  response_label = names(attr(reference_fit$terms, &quot;dataClasses&quot;))[1]
+  family = reference_fit$family
+  ref_likelihood = logLik(reference_fit)
+  ref_df = attr(ref_likelihood, &quot;df&quot;)
+  
+  minimal_terms = attr(minimal_fit$terms, &quot;term.labels&quot;)
+  
+  steps = 0
+  fits &lt;- list()
+  converged = F
+  c_fit = reference_fit
+  c_terms = all_terms
+  
+  while (!converged) {
+    drop_results &lt;- drop1(fit, test = test)
+    
+    # kick out terms from minimal fit
+    candidate_terms &lt;- setdiff(c_terms, minimal_terms)
+    drop_results &lt;- drop_results[candidate_terms]
+    
+    to_drop &lt;- which.max(drop_results$`Pr(&gt;Chi)`)
+    to_drop &lt;- rownames(drop_results)[to_drop]
+    
+    p_value &lt;- to_drop$`Pr(&gt;Chi)`
+    
+    converged = T
+    
+  }
+  
+                               }</code></pre>
+</div>
 <div id="session-information" class="section level2">
 <h2>Session information</h2>
 <!-- Insert the session information into the document -->
@@ -1282,7 +1321,7 @@ loaded via a namespace (and not attached):
 [10] glue_1.2.0          RColorBrewer_1.1-2  multcomp_1.4-8     
 [13] bindr_0.1           plyr_1.8.4          stringr_1.2.0      
 [16] MatrixModels_0.4-1  munsell_0.4.3       gtable_0.2.0       
-[19] mvtnorm_1.0-6       htmlwidgets_0.9     codetools_0.2-15   
+[19] mvtnorm_1.0-7       htmlwidgets_0.9     codetools_0.2-15   
 [22] evaluate_0.10.1     latticeExtra_0.6-28 knitr_1.18         
 [25] forcats_0.2.0       quantreg_5.34       htmlTable_1.11.2   
 [28] TH.data_1.0-8       Rcpp_0.12.14        acepack_1.4.1      
