@@ -28,7 +28,7 @@ statistic courses in the Epidemiology Graduate Program of the Julius Center, Utr
 
 ## Computational Statistics
 
-[assignments week 1](cs_assignments.html)
+[assignments](cs_assignments.html)
 
 
 ### Assignments

@@ -643,7 +643,7 @@ longdat2[id %in% unique(id)[1:4]] %>%
 
 ```
 
-To create pdfs separately for each patient, we indeed need looping.
+To create pdfs separately for each patient, we will use looping.
 
 Let's only use 3 patients here
 
@@ -657,6 +657,35 @@ for (i in 1:3) {
     ggtitle("CD4 number over time", paste0("patient ", i))
   ggsave(filename = here("figs", paste0("patient_", i, ".pdf")), device = "pdf")
 }
+```
+
+Or to put them all in one file
+
+```{r}
+plots <- vector("list", nrow(basdat))
+for (i in 1:nrow(basdat)) {
+  plots[[i]] <- 
+    longdat2[id == i] %>%
+    ggplot(aes(x = times, y = CD4)) + 
+      geom_line() + 
+      lims(x = c(0, max(longdat2$times)), y = c(0, max(longdat2$CD4))) + 
+      theme_minimal() + 
+      ggtitle("CD4 number over time", paste0("patient ", i))
+}
+```
+
+To save them in a single pdf with one page per patient (this takes some time)
+
+```{r, cache = T}
+require(gridExtra)
+
+pdf(here("figs", "cd4_vs_time.pdf"), onefile = T)
+for (i in seq(length(plots))) {
+  grid.arrange(plots[[i]])  
+}
+dev.off()
+
+
 ```
 
 
