@@ -318,7 +318,7 @@ shared across the workflowr files. -->
 <p><strong>Last updated:</strong> 2018-02-12</p>
 <!-- Insert the code version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
-<p><strong>Code version:</strong> 221fea2</p>
+<p><strong>Code version:</strong> 31e7b15</p>
 <!-- Add your analysis here -->
 <div id="setup" class="section level1">
 <h1>Setup</h1>
@@ -1270,7 +1270,7 @@ setorder(longdat2, times)</code></pre>
   theme_minimal() + 
   facet_wrap(~id, scales = &quot;fixed&quot;)</code></pre>
 <p><img src="figure/cs_assignments.Rmd/unnamed-chunk-46-1.png" width="672" style="display: block; margin: auto;" /></p>
-<p>To create pdfs separately for each patient, we indeed need looping.</p>
+<p>To create pdfs separately for each patient, we will use looping.</p>
 <p>Let’s only use 3 patients here</p>
 <pre class="r"><code>for (i in 1:3) {
   longdat2[id == i] %&gt;%
@@ -1281,6 +1281,27 @@ setorder(longdat2, times)</code></pre>
     ggtitle(&quot;CD4 number over time&quot;, paste0(&quot;patient &quot;, i))
   ggsave(filename = here(&quot;figs&quot;, paste0(&quot;patient_&quot;, i, &quot;.pdf&quot;)), device = &quot;pdf&quot;)
 }</code></pre>
+<p>Or to put them all in one file</p>
+<pre class="r"><code>plots &lt;- vector(&quot;list&quot;, nrow(basdat))
+for (i in 1:nrow(basdat)) {
+  plots[[i]] &lt;- 
+    longdat2[id == i] %&gt;%
+    ggplot(aes(x = times, y = CD4)) + 
+      geom_line() + 
+      lims(x = c(0, max(longdat2$times)), y = c(0, max(longdat2$CD4))) + 
+      theme_minimal() + 
+      ggtitle(&quot;CD4 number over time&quot;, paste0(&quot;patient &quot;, i))
+}</code></pre>
+<p>To save them in a single pdf with one page per patient (this takes some time)</p>
+<pre class="r"><code>require(gridExtra)
+
+pdf(here(&quot;figs&quot;, &quot;cd4_vs_time.pdf&quot;), onefile = T)
+for (i in seq(length(plots))) {
+  grid.arrange(plots[[i]])  
+}
+dev.off()</code></pre>
+<pre><code>quartz_off_screen 
+                2 </code></pre>
 <p>Now be proud ;)</p>
 </div>
 </div>
@@ -1303,9 +1324,9 @@ attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
 other attached packages:
-[1] bindrcpp_0.2        mvtnorm_1.0-7       ggplot2_2.2.1      
-[4] here_0.1            purrr_0.2.4         magrittr_1.5       
-[7] data.table_1.10.4-3 dplyr_0.7.4        
+[1] gridExtra_2.3       bindrcpp_0.2        mvtnorm_1.0-7      
+[4] ggplot2_2.2.1       here_0.1            purrr_0.2.4        
+[7] magrittr_1.5        data.table_1.10.4-3 dplyr_0.7.4        
 
 loaded via a namespace (and not attached):
  [1] Rcpp_0.12.14     pillar_1.1.0     compiler_3.4.3   git2r_0.20.0    
@@ -1314,10 +1335,10 @@ loaded via a namespace (and not attached):
 [13] rlang_0.1.6      cli_1.0.0        yaml_2.1.16      stringr_1.2.0   
 [17] knitr_1.18       gtools_3.5.0     rprojroot_1.2    grid_3.4.3      
 [21] glue_1.2.0       R6_2.2.2         rmarkdown_1.8    gdata_2.18.0    
-[25] backports_1.1.2  scales_0.5.0     htmltools_0.3.6  gmodels_2.16.2  
-[29] MASS_7.3-47      assertthat_0.2.0 colorspace_1.3-2 labeling_0.3    
-[33] utf8_1.1.3       stringi_1.1.6    lazyeval_0.2.1   munsell_0.4.3   
-[37] crayon_1.3.4    </code></pre>
+[25] codetools_0.2-15 backports_1.1.2  scales_0.5.0     htmltools_0.3.6 
+[29] gmodels_2.16.2   MASS_7.3-47      assertthat_0.2.0 colorspace_1.3-2
+[33] labeling_0.3     utf8_1.1.3       stringi_1.1.6    lazyeval_0.2.1  
+[37] munsell_0.4.3    crayon_1.3.4    </code></pre>
 </div>
 </div>
 
