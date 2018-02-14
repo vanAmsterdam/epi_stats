@@ -1,0 +1,1363 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+<meta name="author" content="Wouter van Amsterdam" />
+
+<meta name="date" content="2018-02-13" />
+
+<title>Assignments Computational Statistics Day 2, simulation studies</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/font-awesome-4.5.0/css/font-awesome.min.css" rel="stylesheet" />
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+
+<div class="container-fluid main-container">
+
+<!-- tabsets -->
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+</script>
+
+<!-- code folding -->
+
+
+
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+  padding-left: 25px;
+  text-indent: 0;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">epi_stats</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/jdblischak/workflowr">
+    <span class="fa fa-github"></span>
+     
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">Assignments Computational Statistics Day 2, simulation studies</h1>
+<h4 class="author"><em>Wouter van Amsterdam</em></h4>
+<h4 class="date"><em>2018-02-13</em></h4>
+
+</div>
+
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+<!-- Update knitr chunk options -->
+<!-- Insert the date the file was last updated -->
+<p><strong>Last updated:</strong> 2018-02-14</p>
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+<p><strong>Code version:</strong> 4a4abb1</p>
+<!-- Add your analysis here -->
+<div id="day-2-simulations" class="section level1">
+<h1>Day 2 simulations</h1>
+<div id="excercise-1-measures-of-spread" class="section level2">
+<h2>Excercise 1 measures of spread</h2>
+<p>Setup as asked</p>
+<pre class="r"><code>## Install and load robustbase
+# install.packages(&#39;robustbase&#39;)
+library(&#39;robustbase&#39;)
+
+## Simulation of 25 samples from normal population
+simdat &lt;- rnorm(n = 25, mean = 0, sd = 1)   
+
+## Estimate the population sd by the sample sd, MAD and Qn
+est1 &lt;- sd(simdat)
+est2 &lt;- mad(simdat)
+est3 &lt;- Qn(simdat)</code></pre>
+<p>Do this many times</p>
+<pre class="r"><code>## Specify the number of simulations
+numsim &lt;- 10000
+
+## Create empty lists of size numsim
+simdat &lt;- vector(mode = &quot;list&quot;, length = numsim)
+est1 &lt;- vector(mode = &quot;list&quot;, length = numsim)
+est2 &lt;- vector(mode = &quot;list&quot;, length = numsim)
+est3 &lt;- vector(mode = &quot;list&quot;, length = numsim)
+
+## Start for() loop
+for(i in 1:numsim){
+
+  ## Simulation of 25 samples from normal population
+  simdat[[i]] &lt;- rnorm(n = 25, mean = 0, sd = 1)    
+
+  ## Estimate the population sd by the sample sd, MAD and Qn
+  est1[[i]] &lt;- sd(simdat[[i]])
+  est2[[i]] &lt;- mad(simdat[[i]])
+  est3[[i]] &lt;- Qn(simdat[[i]])
+
+  ## End for() loop
+  }</code></pre>
+<p>Transform workflow in to a function</p>
+<pre class="r"><code>## Start function
+simfun1 &lt;- function(
+
+  ## Function parameters
+  numsim,
+  n = 25,
+  pop.mean = 0,
+  pop.sd = 1
+  ){
+
+    ## Create empty lists of size numsim
+    simdat &lt;- vector(mode = &quot;list&quot;, length = numsim)
+    est1 &lt;- vector(mode = &quot;list&quot;, length = numsim)
+    est2 &lt;- vector(mode = &quot;list&quot;, length = numsim)
+    est3 &lt;- vector(mode = &quot;list&quot;, length = numsim)
+
+    ## Start for() loop
+    for(i in 1:numsim){
+
+      ## Simulation of 25 samples from normal population
+      simdat[[i]] &lt;- rnorm(n = n, mean = pop.mean, sd = pop.sd) 
+
+      ## Estimate the population sd by the sample sd, MAD and Qn
+      est1[[i]] &lt;- sd(simdat[[i]])
+      est2[[i]] &lt;- mad(simdat[[i]])
+      est3[[i]] &lt;- Qn(simdat[[i]])
+
+      ## End for() loop
+      }
+
+    ## Save parameter specifications
+    pars.spec &lt;- data.frame(numsim, n, pop.mean, pop.sd)
+
+    ## Return the lists
+    list(pars.spec = pars.spec, simdat = simdat, est1 = est1, est2 = est2, est3 = est3)
+
+    ## End function
+    }</code></pre>
+<p>To run</p>
+<pre class="r"><code>## Set random seed and run the function
+set.seed(234878)
+res1 &lt;- simfun1(numsim = 10000)</code></pre>
+<p>Transform output lists to vectors</p>
+<pre class="r"><code>## Transform results from lists to vectors
+est1.v &lt;- unlist(res1$est1)
+est2.v &lt;- unlist(res1$est2)
+est3.v &lt;- unlist(res1$est3)</code></pre>
+<p>Visualize results</p>
+<pre class="r"><code>## Kernel-Density plots
+plot(density(est1.v), xlim = c(0,2), ylim = c(0,3), main = &#39;Results simfun1&#39;)
+lines(density(est2.v), col = &#39;blue&#39;)
+lines(density(est3.v), col = &#39;green&#39;)
+
+## Add means
+abline(v = mean(est1.v))    
+abline(v = mean(est2.v), col = &#39;blue&#39;)  
+abline(v = mean(est3.v), col = &#39;green&#39;) 
+
+## Add true value
+abline(v = res1$pars.spec$pop.sd, col = &#39;red&#39;)  
+
+## Add legend
+legend(&#39;topright&#39;, c(&#39;Sample SD&#39;, &#39;MAD&#39;, &#39;Qn&#39;, &#39;True value&#39;), 
+  col = c(&#39;black&#39;, &#39;blue&#39;, &#39;green&#39;, &#39;red&#39;), lty = 1)</code></pre>
+<p><img src="figure/cs_assignments_sim.Rmd/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;" /></p>
+<div id="best-estimator" class="section level3">
+<h3>1.1 Best estimator</h3>
+<p>Both SD and Qn seem to be centered at the true value, sample SD is more peaked so this is the most efficient of the three.</p>
+<p>In numbers:</p>
+<pre class="r"><code>## Bias (= mean(estimates) - the true population value)
+mean(est1.v) - res1$pars.spec$pop.sd</code></pre>
+<pre><code>[1] -0.01315561</code></pre>
+<pre class="r"><code>mean(est2.v) - res1$pars.spec$pop.sd</code></pre>
+<pre><code>[1] -0.02903609</code></pre>
+<pre class="r"><code>mean(est3.v) - res1$pars.spec$pop.sd</code></pre>
+<pre><code>[1] -0.000401699</code></pre>
+<pre class="r"><code>## Standard error (= standard deviation of estimates)
+sd(est1.v)  </code></pre>
+<pre><code>[1] 0.144101</code></pre>
+<pre class="r"><code>sd(est2.v)      </code></pre>
+<pre><code>[1] 0.2326601</code></pre>
+<pre class="r"><code>sd(est3.v)  </code></pre>
+<pre><code>[1] 0.1769283</code></pre>
+<pre class="r"><code>## Mean squared error (= bias^2 + standard error^2)
+(mean(est1.v) - res1$pars.spec$pop.sd)^2 + sd(est1.v)^2</code></pre>
+<pre><code>[1] 0.02093816</code></pre>
+<pre class="r"><code>(mean(est2.v) - res1$pars.spec$pop.sd)^2 + sd(est2.v)^2</code></pre>
+<pre><code>[1] 0.05497381</code></pre>
+<pre class="r"><code>(mean(est3.v) - res1$pars.spec$pop.sd)^2 + sd(est3.v)^2</code></pre>
+<pre><code>[1] 0.03130377</code></pre>
+<p>Looks like eye-balling was not perfect. Qn is closest to the true value (lowest biast), SD is second. SD has the lowest variance, as we saw. Mean squared error (including bias and variance) is best for SD</p>
+</div>
+<div id="best-mse" class="section level3">
+<h3>1.2 Best MSE</h3>
+<p>Mean squared error (including bias and variance) is best for SD</p>
+</div>
+<div id="number-of-simulations" class="section level3">
+<h3>1.3 Number of simulations</h3>
+<p>No, they do not chance much.</p>
+</div>
+<div id="robustness" class="section level3">
+<h3>1.4 Robustness</h3>
+<pre class="r"><code>## Start function
+simfun1_outlier &lt;- function(
+
+  ## Function parameters
+  numsim,
+  n = 25,
+  pop.mean = 0,
+  pop.sd = 1
+  ){
+
+    ## Create empty lists of size numsim
+    simdat &lt;- vector(mode = &quot;list&quot;, length = numsim)
+    est1 &lt;- vector(mode = &quot;list&quot;, length = numsim)
+    est2 &lt;- vector(mode = &quot;list&quot;, length = numsim)
+    est3 &lt;- vector(mode = &quot;list&quot;, length = numsim)
+
+    ## Start for() loop
+    for(i in 1:numsim){
+
+      ## Simulation of 25 samples from normal population
+      simdat[[i]] &lt;- rnorm(n = n, mean = pop.mean, sd = pop.sd) 
+      
+      ## generate an outlier that is 10 times as big as expected
+      simdat[[i]][1] &lt;- 10*simdat[[i]][1]
+
+      ## Estimate the population sd by the sample sd, MAD and Qn
+      est1[[i]] &lt;- sd(simdat[[i]])
+      est2[[i]] &lt;- mad(simdat[[i]])
+      est3[[i]] &lt;- Qn(simdat[[i]])
+
+      ## End for() loop
+      }
+
+    ## Save parameter specifications
+    pars.spec &lt;- data.frame(numsim, n, pop.mean, pop.sd)
+
+    ## Return the lists
+    list(pars.spec = pars.spec, simdat = simdat, est1 = est1, est2 = est2, est3 = est3)
+
+    ## End function
+    }</code></pre>
+<p>Run simulations</p>
+<pre class="r"><code>## Set random seed and run the function
+set.seed(23487)
+res1 &lt;- simfun1_outlier(numsim = 10000)
+
+## Transform results from lists to vectors
+est1.v &lt;- unlist(res1$est1)
+est2.v &lt;- unlist(res1$est2)
+est3.v &lt;- unlist(res1$est3)</code></pre>
+<p>Evaluate estimators</p>
+<pre class="r"><code>## Bias (= mean(estimates) - the true population value)
+mean(est1.v) - res1$pars.spec$pop.sd</code></pre>
+<pre><code>[1] 0.9749472</code></pre>
+<pre class="r"><code>mean(est2.v) - res1$pars.spec$pop.sd</code></pre>
+<pre><code>[1] 0.01192038</code></pre>
+<pre class="r"><code>mean(est3.v) - res1$pars.spec$pop.sd</code></pre>
+<pre><code>[1] 0.07743757</code></pre>
+<pre class="r"><code>## Standard error (= standard deviation of estimates)
+sd(est1.v)  </code></pre>
+<pre><code>[1] 1.025812</code></pre>
+<pre class="r"><code>sd(est2.v)      </code></pre>
+<pre><code>[1] 0.2396044</code></pre>
+<pre class="r"><code>sd(est3.v)  </code></pre>
+<pre><code>[1] 0.1911491</code></pre>
+<pre class="r"><code>## Mean squared error (= bias^2 + standard error^2)
+(mean(est1.v) - res1$pars.spec$pop.sd)^2 + sd(est1.v)^2</code></pre>
+<pre><code>[1] 2.002813</code></pre>
+<pre class="r"><code>(mean(est2.v) - res1$pars.spec$pop.sd)^2 + sd(est2.v)^2</code></pre>
+<pre><code>[1] 0.05755238</code></pre>
+<pre class="r"><code>(mean(est3.v) - res1$pars.spec$pop.sd)^2 + sd(est3.v)^2</code></pre>
+<pre><code>[1] 0.04253454</code></pre>
+<p>Now both Qn and MAD are clearly preferable to SD.</p>
+<p>Qn seems best in terms of bias and variance</p>
+</div>
+</div>
+<div id="excercise-2-t-test-vs-wilcoxon-mann-whitney-test" class="section level2">
+<h2>Excercise 2: T-test vs Wilcoxon-Mann-Whitney test</h2>
+<blockquote>
+<p>The Student’s t-test is used to compare the locations of two samples. One of the assumptions of this test is that the samples come from normal distributions. If this assumption is thought to be violated, the Wilcoxon-Mann-Whitney (WMW) test is often used as an alternative, since this test does not assume a specific distribution. In this simulation exercise, we will assess the performance (in terms of the power) of both tests when used for normal and non-normal data.</p>
+</blockquote>
+<div id="question-2.1" class="section level3">
+<h3>Question 2.1</h3>
+<blockquote>
+<p>Start by writing a function that draws a sample of size n.s1 from a normal population distribution with mean equal to mean.s1 and standard deviation equal to sd.s1. Then, draw a second sample of size n.s2 from a normal population distribution with mean equal to mean.s2 and standard deviation equal to sd.s2. Compare the two samples using t.test(x = s1, y = s2, var.equal = TRUE). Specify that the function repeats these steps numsim times, each time storing the data and the t-test results in a list. Let the function return these lists. If you want, you can use the same general function structure as was used in simfun1().</p>
+</blockquote>
+<pre class="r"><code>simfun_2.1 &lt;- function(
+  n.s1, n.s2, mean.s1, mean.s2, sd.s1, sd.s2,
+  nsim = 10000
+) {
+  
+  dat &lt;- vector(mode = &quot;list&quot;, length = nsim)
+  t_results &lt;- vector(mode = &quot;list&quot;, length = nsim)
+  
+  for (i in seq(nsim)) {
+    s1 &lt;- rnorm(n = n.s1, mean = mean.s1, sd = sd.s1)
+    s2 &lt;- rnorm(n = n.s2, mean = mean.s2, sd = sd.s2)
+    
+    dat[[i]] &lt;- data.frame(s1, s2)
+    t_results[[i]] &lt;- t.test(s1, s2, var.equal = T)
+
+  }
+  
+  params &lt;- data.frame(n.s1, n.s2, mean.s1, mean.s2, sd.s1, sd.s2, nsim)
+  
+  list(parameters = params, simdat = dat, t.test = t_results)
+  
+}</code></pre>
+</div>
+<div id="question-2.2" class="section level3">
+<h3>Question 2.2</h3>
+<blockquote>
+<p>Specify the function’s parameters as n.s1 = 10, n.s2 = 10, mean.s1 = 0, mean.s2 = 0.5, sd.s1 = 1, sd.s2 = 1 and numsim = 10000. Run the function. From the results (i.e. the list of t-test objects), extract the p-values (see the hint below), and calculate the power of the test (using α=0.05). Note that the power of a test is the probability that the test will reject the null hypothesis when the null hypothesis is false. Here, the null hypothesis is false (since the population means of s1 and s2 differ). The power is then calculated as the proportion of results that were significant.</p>
+</blockquote>
+<blockquote>
+<p>Hint: One way to extract the p-values from the list of t-test objects is by using the sapply() function: for example, for a list named listname, sapply(1:length(listname), FUN = function(i) listname[[i]]$p.value) will return a vector of p values.</p>
+</blockquote>
+<p>Run simulation</p>
+<pre class="r"><code>set.seed(12345)
+simres &lt;- simfun_2.1(n.s1 = 10, n.s2 = 10, mean.s1 = 0, mean.s2 = 0.5, 
+                     sd.s1 = 1, sd.s2 = 1, nsim = 10000)</code></pre>
+<p>Grab p-values. Note that there is a handy package called <code>broom</code> that helps grabbing important coefficients from a model fit and puts them in a data.frame. Use the <code>map</code> function from <code>purrr</code> to apply <code>broom::tidy</code> to each element of a list. Use <code>map_df</code> to give back a data.frame</p>
+<pre class="r"><code>require(broom)
+require(purrr)
+
+simres_df &lt;- simres$t.test %&gt;%
+  map_df(tidy)
+head(simres_df)</code></pre>
+<pre><code>    estimate1 estimate2  statistic    p.value parameter  conf.low
+1 -0.13294415 0.7859778 -2.4820583 0.02315475        18 -1.696737
+2  0.08338741 1.2243200 -2.1344299 0.04681359        18 -2.263954
+3 -0.06290978 0.7732625 -1.4158291 0.17389675        18 -2.076952
+4  0.02338804 0.9408656 -1.7655418 0.09443027        18 -2.009238
+5  0.84250712 0.4741175  0.7989617 0.43472903        18 -0.600315
+6 -0.11120045 0.7128092 -1.8482949 0.08105760        18 -1.760646
+    conf.high             method alternative
+1 -0.14110645  Two Sample t-test   two.sided
+2 -0.01791121  Two Sample t-test   two.sided
+3  0.40460791  Two Sample t-test   two.sided
+4  0.17428296  Two Sample t-test   two.sided
+5  1.33709431  Two Sample t-test   two.sided
+6  0.11262663  Two Sample t-test   two.sided</code></pre>
+<pre class="r"><code>dim(simres_df)</code></pre>
+<pre><code>[1] 10000     9</code></pre>
+<p>Now see how many times the p-value is below 0.05</p>
+<pre class="r"><code>table(simres_df$p.value &lt; 0.05)</code></pre>
+<pre><code>
+FALSE  TRUE 
+ 8150  1850 </code></pre>
+<p>So the t-test found a significant group difference in 1850 out of 10000 simulations, this means a power of 18.5%</p>
+</div>
+<div id="question-2.3" class="section level3">
+<h3>Question 2.3</h3>
+<blockquote>
+<p>Include the WMW-test (see ?wilcox.test) in your simulation function. Would you perform the two tests on the same data in each run or would you draw new data before each test? Using the function, perform a simulation study investigating the power of both tests for n = 10, 20, 40 and 80 in each group. Use numsim = 10000. Do not adjust the other parameters, and make the simulation replicable. From the output, create a table like the one below. Furthermore, generate a plot of the results, with the sample size on the x-axis and the power on the y-axis. Is numsim sufficiently large?</p>
+</blockquote>
+<p>Yes you would evaluate both tests on each simulated datasets, to reduce variance</p>
+<p>Write function</p>
+<pre class="r"><code>simfun_2.3 &lt;- function(
+  n.s1, n.s2, mean.s1, mean.s2, sd.s1, sd.s2,
+  nsim = 10000
+) {
+  
+  dat &lt;- vector(mode = &quot;list&quot;, length = nsim)
+  t_results &lt;- vector(mode = &quot;list&quot;, length = nsim)
+  w_results &lt;- vector(mode = &quot;list&quot;, length = nsim)
+  
+  for (i in seq(nsim)) {
+    s1 &lt;- rnorm(n = n.s1, mean = mean.s1, sd = sd.s1)
+    s2 &lt;- rnorm(n = n.s2, mean = mean.s2, sd = sd.s2)
+    
+    dat[[i]] &lt;- data.frame(s1, s2)
+    t_results[[i]] &lt;- t.test(s1, s2, var.equal = T)
+    w_results[[i]] &lt;- wilcox.test(x = s1, y = s2)
+
+  }
+  
+  params &lt;- data.frame(n.s1, n.s2, mean.s1, mean.s2, sd.s1, sd.s2, nsim)
+  
+  list(parameters = params, simdat = dat, t.test = t_results, w.test = w_results)
+  
+}</code></pre>
+<p>Use function on a range of values</p>
+<pre class="r"><code>set.seed(123456)
+sim_10 &lt;- simfun_2.3(n.s1 = 10, n.s2 = 10, mean.s1 = 0, mean.s2 = 0.5, 
+                     sd.s1 = 1, sd.s2 = 1, nsim = 10000)
+sim_20 &lt;- simfun_2.3(n.s1 = 20, n.s2 = 20, mean.s1 = 0, mean.s2 = 0.5, 
+                     sd.s1 = 1, sd.s2 = 1, nsim = 10000)
+sim_40 &lt;- simfun_2.3(n.s1 = 40, n.s2 = 40, mean.s1 = 0, mean.s2 = 0.5, 
+                     sd.s1 = 1, sd.s2 = 1, nsim = 10000)
+sim_80 &lt;- simfun_2.3(n.s1 = 80, n.s2 = 80, mean.s1 = 0, mean.s2 = 0.5, 
+                     sd.s1 = 1, sd.s2 = 1, nsim = 10000)</code></pre>
+<p>Get p-values</p>
+<p>Let’s only grab the p-values now, we can also do this with map.</p>
+<p>Use <code>map_dbl</code> to return a double vector (which is computer language for ‘numeric with double precision’, where double stands for the number of digits that are recorded)</p>
+<pre class="r"><code>df_10_t &lt;- sim_10$t.test %&gt;% map_dbl(&quot;p.value&quot;)
+df_10_w &lt;- sim_10$w.test %&gt;% map_dbl(&quot;p.value&quot;)
+df_20_t &lt;- sim_20$t.test %&gt;% map_dbl(&quot;p.value&quot;)
+df_20_w &lt;- sim_20$w.test %&gt;% map_dbl(&quot;p.value&quot;)
+df_40_t &lt;- sim_40$t.test %&gt;% map_dbl(&quot;p.value&quot;)
+df_40_w &lt;- sim_40$w.test %&gt;% map_dbl(&quot;p.value&quot;)
+df_80_t &lt;- sim_80$t.test %&gt;% map_dbl(&quot;p.value&quot;)
+df_80_w &lt;- sim_80$w.test %&gt;% map_dbl(&quot;p.value&quot;)</code></pre>
+<p>Calculate power</p>
+<pre class="r"><code>df &lt;- data.frame(
+  test = rep(c(&quot;t&quot;, &quot;w&quot;), 4),
+  sample_size = rep(c(10, 20, 40, 80), each = 2),
+  power = map_dbl(list(df_10_t, df_10_w, df_20_t, df_20_w, df_40_t, df_40_w, 
+                   df_80_t, df_80_w), function(x) mean(x &lt; 0.05))
+)
+
+df</code></pre>
+<pre><code>  test sample_size  power
+1    t          10 0.1832
+2    w          10 0.1627
+3    t          20 0.3348
+4    w          20 0.3206
+5    t          40 0.5931
+6    w          40 0.5743
+7    t          80 0.8829
+8    w          80 0.8641</code></pre>
+<p>Put in a table</p>
+<pre class="r"><code>xtabs(power~sample_size+test, data = df)</code></pre>
+<pre><code>           test
+sample_size      t      w
+         10 0.1832 0.1627
+         20 0.3348 0.3206
+         40 0.5931 0.5743
+         80 0.8829 0.8641</code></pre>
+<p>The result for sample size 10 for the t-test is consistent with our previous simulation, so it seems that nsim is large enough</p>
+<p>Plot it</p>
+<pre class="r"><code>require(ggplot2)
+df %&gt;%
+  ggplot(aes(x = sample_size, y = power, col = test)) + 
+  geom_line()</code></pre>
+<p><img src="figure/cs_assignments_sim.Rmd/unnamed-chunk-20-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>The t-test seems to have a consistently higher power for these normal distributed data.</p>
+</div>
+<div id="question-2.4" class="section level3">
+<h3>Question 2.4</h3>
+<blockquote>
+<p>Perform the same simulations on non-normal data using rlnorm(). Use meanlog = 0 and sdlog = 1 for s1 and meanlog = 0.5 and sdlog = 1 for s2.</p>
+</blockquote>
+<p>This is a generic function for simulating data from any distribution built in to R that takes a location and spread parameter, and returning alongside the data, the results of a t-test and a wilcoxon-mann-whitney test.</p>
+<p>This only works because many of the functions <code>r..</code> where <code>..</code> is the distribution work with the same argument order (n, mean, sd). (like <code>rnorm</code> and <code>rlnorm</code>)</p>
+<pre class="r"><code>two_group_location_sim &lt;- function(
+  n.s1, n.s2, mean.s1, mean.s2, sd.s1, sd.s2,
+  nsim = 10000,
+  distribution_function = &quot;rnorm&quot;
+) {
+  
+  dat &lt;- vector(mode = &quot;list&quot;, length = nsim)
+  t_results &lt;- vector(mode = &quot;list&quot;, length = nsim)
+  w_results &lt;- vector(mode = &quot;list&quot;, length = nsim)
+  
+  for (i in seq(nsim)) {
+    s1 &lt;- do.call(distribution_function, list(n.s1, mean.s1, sd.s1))
+    s2 &lt;- do.call(distribution_function, list(n.s2, mean.s2, sd.s2))
+
+    dat[[i]] &lt;- data.frame(s1, s2)
+    t_results[[i]] &lt;- t.test(s1, s2, var.equal = T)
+    w_results[[i]] &lt;- wilcox.test(x = s1, y = s2)
+
+  }
+  
+  params &lt;- data.frame(n.s1, n.s2, mean.s1, mean.s2, sd.s1, sd.s2, 
+                       nsim, distribution_function)
+  
+  list(parameters = params, simdat = dat, t.test = t_results, w.test = w_results)
+  
+}</code></pre>
+<p>Now let’s try to evaluate this function a little more systematically</p>
+<pre class="r"><code>sample_sizes &lt;- list(10, 20, 40, 80)
+
+set.seed(12345678)
+sims &lt;- map(sample_sizes, function(n) {
+  two_group_location_sim(n.s1 = n, n.s2 = n, mean.s1 = 0, mean.s2 = 0.5, 
+                     sd.s1 = 1, sd.s2 = 1, nsim = 10000,
+                     distribution_function = &quot;rlnorm&quot;)
+})</code></pre>
+<p>Grab t-tests and w-tests for each sample size setting</p>
+<p>This gets a little complicated since we’re mapping on different levels of the list (remember this is now a list of 4 sample sizes, each consisting of 4 lists (“parameters”, “simdat”, “t.test”, “w.test”)), of which the last two are lists of length 10000, containing the test results</p>
+<pre class="r"><code>pvals_t &lt;- sims %&gt;%
+  map(&quot;t.test&quot;) %&gt;% 
+  map(~map_dbl(.x, &quot;p.value&quot;))
+pvals_w &lt;- sims %&gt;%
+  map(&quot;w.test&quot;) %&gt;% 
+  map(~map_dbl(.x, &quot;p.value&quot;))</code></pre>
+<p>Calculate powers</p>
+<pre class="r"><code>df &lt;- data.frame(
+  test = rep(c(&quot;t.test&quot;, &quot;wilcox.test&quot;), each = 4),
+  sample_size = rep(unlist(sample_sizes), 2),
+  power = c(map_dbl(pvals_t, function(x) mean(x&lt;0.05)),
+            map_dbl(pvals_w, function(x) mean(x&lt;0.05)))
+)</code></pre>
+<p>Create table</p>
+<pre class="r"><code>xtabs(power~sample_size+test, data = df)</code></pre>
+<pre><code>           test
+sample_size t.test wilcox.test
+         10 0.1237      0.1673
+         20 0.2343      0.3240
+         40 0.4303      0.5813
+         80 0.7032      0.8712</code></pre>
+<p>Plot</p>
+<pre class="r"><code>require(ggplot2)
+df %&gt;%
+  ggplot(aes(x = sample_size, y = power, col = test)) + 
+  geom_line()</code></pre>
+<p><img src="figure/cs_assignments_sim.Rmd/unnamed-chunk-26-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Now it looks like the wilcox.test is the clear winner.</p>
+</div>
+<div id="question-2.5" class="section level3">
+<h3>Question 2.5</h3>
+<blockquote>
+<p>Briefly discuss your findings.</p>
+</blockquote>
+<p>So for the log-normal distribution, the wilcoxon-mann-whitney test seems to have better power than the t-test, whereas for normally distributed samples, the t-test has more power.</p>
+</div>
+</div>
+<div id="excercise-3-handling-missing-data" class="section level2">
+<h2>Excercise 3: Handling missing data</h2>
+<p>This will be skipped, since it is the graded quiz question</p>
+</div>
+<div id="excercise-4-sample-size-and-cluster-size-in-clust-randomized-trial" class="section level2">
+<h2>Excercise 4: Sample size and cluster size in clust-randomized trial</h2>
+<blockquote>
+<p>In cluster randomized trials, randomization is performed on clusters of patients (e.g. hospitals or GP’s), instead of on individual patients. There are multiple possible reasons for choosing such a design, but important ones are (1) logistic efficiency and (2) avoiding treatment group contamination.</p>
+</blockquote>
+<blockquote>
+<p>Suppose that we aim to perform a randomized trial to study the effect of a certain (dichotomous) intervention X on a continuous outcome Y, and to avoid treatment group contamination we will randomize hospitals, not individual patients. Further suppose that two strategies are considered:</p>
+</blockquote>
+<blockquote>
+<p>including 10 hospitals, with 10 patients each including 50 hospitals, with 2 patients each Perform a simulation study in which you compare these strategies. More specifically, focus on the bias, the standard error, and the MSE of the estimate of the effect of X. In order to deal with the clustering in the data, fit a random intercept model using lmer() (from the lme4 package). Let the true model equal</p>
+</blockquote>
+<p><span class="math display">\[E(Y_{ij})=2+η_i−3X_{ij}+ϵ_{ij}\]</span></p>
+<blockquote>
+<p>where <span class="math inline">\(η_i∼N(mean=0,sd=0.5)\)</span> and <span class="math inline">\(ϵ_{ij}∼N(mean=0,sd=1)\)</span> for patient <span class="math inline">\(j\)</span> in hospital <span class="math inline">\(i\)</span>.</p>
+</blockquote>
+<blockquote>
+<p>Note that, due to the complexity of the model, convergence may not be reached in every simulation run. A convenient function to use in such cases is tryCatch.W.E() from the package simsalapar. This function, which can be ‘wrapped’ around a model specification (e.g. fit1 &lt;- tryCatch.W.E(lm(Y~X))), produces a list with objects value and warning. fit1<span class="math inline">\(value contains the fitted model, if no error occurred. Warnings or errors, if they occurred, are stored in fit1\)</span>warning. This is convenient in a for loop, since it enables us to retrospectively see where exactly something went wrong (as opposed to only seeing warning messages after running the loop, or errors causing the loop to stop).</p>
+</blockquote>
+<blockquote>
+<p>Make sure that the data and fitted models are stored, and that the results are replicable. Use system.time() to estimate how many simulations can be performed given the time you have, but make sure you performed enough runs so that replicating the simulations does not affect your conclusions.</p>
+</blockquote>
+<p>Create simulation function</p>
+<pre class="r"><code>sim_clust_rand &lt;- function(
+  nhospital = 10,
+  npatients = 100 / nhospital,
+  nsim = 10000,
+  true_intercept = 2,
+  true_effect = -3,
+  random_intercept_sd = 0.5,
+  residual_sd = 1
+) {
+  # grab parameters
+  params = c(as.list(environment())) # grabs all function parameters
+  
+  # check validity
+  if (nhospital %% 2 &gt; 0) stop(&quot;please provide an even number of participating hospitals&quot;)
+  
+  # initialize lists
+  simdat = vector(mode = &quot;list&quot;, length = nsim)
+  fits   = vector(mode = &quot;list&quot;, length = nsim)
+  
+  # create progress indicator to preserve sanity
+  progress_times &lt;- round(seq(from = 1, to = nsim, length.out = 100))
+  
+  for (i in seq(nsim)) {
+    if (i %in% progress_times) cat(i, &quot;\r&quot;)
+    
+    hospital = rep(1:nhospital, each = npatients)
+    x = rep(c(1,0), each = (nhospital / 2) * npatients)
+    random_intercept = rep(rnorm(n = nhospital, 0, random_intercept_sd), 
+                           each = npatients)
+    y = true_intercept + random_intercept + true_effect * x + 
+      rnorm(nhospital * npatients, 0, residual_sd)
+    
+    simdat[[i]] &lt;- data.frame(hospital, x, random_intercept, y)
+    
+    fits[[i]] &lt;- simsalapar::tryCatch.W.E(
+      lme4::lmer(y~x + (1|hospital))
+      )
+  }
+  
+  list(parameters = as.data.frame(params), 
+       simdat = simdat,
+       fits = fits)
+}</code></pre>
+<p>Generate 100 simulations to estimate time per simulation</p>
+<pre class="r"><code>system.time({
+sims_1 &lt;- sim_clust_rand(nhospital = 10, nsim = 100)
+})</code></pre>
+<pre><code>1 
+2 
+3 
+4 
+5 
+6 
+7 
+8 
+9 
+10 
+11 
+12 
+13 
+14 
+15 
+16 
+17 
+18 
+19 
+20 
+21 
+22 
+23 
+24 
+25 
+26 
+27 
+28 
+29 
+30 
+31 
+32 
+33 
+34 
+35 
+36 
+37 
+38 
+39 
+40 
+41 
+42 
+43 
+44 
+45 
+46 
+47 
+48 
+49 
+50 
+51 
+52 
+53 
+54 
+55 
+56 
+57 
+58 
+59 
+60 
+61 
+62 
+63 
+64 
+65 
+66 
+67 
+68 
+69 
+70 
+71 
+72 
+73 
+74 
+75 
+76 
+77 
+78 
+79 
+80 
+81 
+82 
+83 
+84 
+85 
+86 
+87 
+88 
+89 
+90 
+91 
+92 
+93 
+94 
+95 
+96 
+97 
+98 
+99 
+100 </code></pre>
+<pre><code>   user  system elapsed 
+  3.389   0.035   3.429 </code></pre>
+<p>So about 1.8 second per 100 simulations. 10000 should take 3 around minutes.</p>
+<pre class="r"><code>nsim = 10000
+nhospital = 10
+npatients = 100 / nhospital
+true_intercept = 2
+true_effect = -3
+random_intercept_sd = 0.5
+residual_sd = 1
+
+
+set.seed(345678)
+
+system.time({
+sims_1 &lt;- sim_clust_rand(nhospital = 10, nsim = nsim)
+sims_2 &lt;- sim_clust_rand(nhospital = 50, nsim = nsim)
+})</code></pre>
+<pre><code>1 
+102 
+203 
+304 
+405 
+506 
+607 
+708 
+809 
+910 
+1011 
+1112 
+1213 
+1314 
+1415 
+1516 
+1617 
+1718 
+1819 
+1920 
+2021 
+2122 
+2223 
+2324 
+2425 
+2526 
+2627 
+2728 
+2829 
+2930 
+3031 
+3132 
+3233 
+3334 
+3435 
+3536 
+3637 
+3738 
+3839 
+3940 
+4041 
+4142 
+4243 
+4344 
+4445 
+4546 
+4647 
+4748 
+4849 
+4950 
+5051 
+5152 
+5253 
+5354 
+5455 
+5556 
+5657 
+5758 
+5859 
+5960 
+6061 
+6162 
+6263 
+6364 
+6465 
+6566 
+6667 
+6768 
+6869 
+6970 
+7071 
+7172 
+7273 
+7374 
+7475 
+7576 
+7677 
+7778 
+7879 
+7980 
+8081 
+8182 
+8283 
+8384 
+8485 
+8586 
+8687 
+8788 
+8889 
+8990 
+9091 
+9192 
+9293 
+9394 
+9495 
+9596 
+9697 
+9798 
+9899 
+10000 
+1 
+102 
+203 
+304 
+405 
+506 
+607 
+708 
+809 
+910 
+1011 
+1112 
+1213 
+1314 
+1415 
+1516 
+1617 
+1718 
+1819 
+1920 
+2021 
+2122 
+2223 
+2324 
+2425 
+2526 
+2627 
+2728 
+2829 
+2930 
+3031 
+3132 
+3233 
+3334 
+3435 
+3536 
+3637 
+3738 
+3839 
+3940 
+4041 
+4142 
+4243 
+4344 
+4445 
+4546 
+4647 
+4748 
+4849 
+4950 
+5051 
+5152 
+5253 
+5354 
+5455 
+5556 
+5657 
+5758 
+5859 
+5960 
+6061 
+6162 
+6263 
+6364 
+6465 
+6566 
+6667 
+6768 
+6869 
+6970 
+7071 
+7172 
+7273 
+7374 
+7475 
+7576 
+7677 
+7778 
+7879 
+7980 
+8081 
+8182 
+8283 
+8384 
+8485 
+8586 
+8687 
+8788 
+8889 
+8990 
+9091 
+9192 
+9293 
+9394 
+9495 
+9596 
+9697 
+9798 
+9899 
+10000 </code></pre>
+<pre><code>   user  system elapsed 
+390.394   1.400 392.147 </code></pre>
+<p>(actually it took 6-7 minutes for 10000)</p>
+<p>We want to grab the estimate of the effect of <span class="math inline">\(X\)</span>.</p>
+<p>Let’s see what the result of a single fit looks like</p>
+<pre class="r"><code>fit1 &lt;- sims_1$fits[[1]]
+fit1</code></pre>
+<pre><code>$value
+Linear mixed model fit by REML [&#39;lmerMod&#39;]
+Formula: y ~ x + (1 | hospital)
+REML criterion at convergence: 299.5013
+Random effects:
+ Groups   Name        Std.Dev.
+ hospital (Intercept) 0.665   
+ Residual             1.000   
+Number of obs: 100, groups:  hospital, 10
+Fixed Effects:
+(Intercept)            x  
+      1.764       -2.964  
+
+$warning
+NULL</code></pre>
+<p>Since we used the function <code>simsalapar::tryCatch.W.E()</code>, the actual fit is put in an element called value</p>
+<p>See if we can get effects easily</p>
+<pre class="r"><code>coef(sims_1$fits[[1]]$value)</code></pre>
+<pre><code>$hospital
+   (Intercept)         x
+1    0.9180298 -2.964095
+2    2.0255223 -2.964095
+3    2.6275698 -2.964095
+4    1.9457281 -2.964095
+5    1.3049497 -2.964095
+6    1.6636971 -2.964095
+7    2.5211763 -2.964095
+8    1.5520048 -2.964095
+9    1.1036267 -2.964095
+10   1.9812948 -2.964095
+
+attr(,&quot;class&quot;)
+[1] &quot;coef.mer&quot;</code></pre>
+<p>No, this gives us the random effects</p>
+<p>What if we try <code>broom</code></p>
+<pre class="r"><code>broom::tidy(fit1$value)</code></pre>
+<pre><code>                     term   estimate std.error statistic    group
+1             (Intercept)  1.7643599 0.3293271  5.357470    fixed
+2                       x -2.9640955 0.4657388 -6.364287    fixed
+3 sd_(Intercept).hospital  0.6650088        NA        NA hospital
+4 sd_Observation.Residual  1.0002244        NA        NA Residual</code></pre>
+<p>Yes! Someone made sure there is a method for the function <code>lmer</code> for <code>broom::tidy</code> Now all we have to do is create a vectorized way of grabbing the coefficients Since we want to know the effect of x, we will focus on that.</p>
+<pre class="r"><code>broom::tidy(fit1$value) %&gt;% .[.$term == &quot;x&quot;, &quot;estimate&quot;]</code></pre>
+<pre><code>[1] -2.964095</code></pre>
+<p>or</p>
+<pre class="r"><code>require(broom)
+x_hats_1 &lt;- sims_1$fits %&gt;%
+  map(&quot;value&quot;) %&gt;%
+  map(tidy) %&gt;%
+  map(&quot;estimate&quot;) %&gt;%
+  map_dbl(2)
+
+x_hats_2 &lt;- sims_2$fits %&gt;%
+  map(&quot;value&quot;) %&gt;%
+  map(tidy) %&gt;%
+  map(&quot;estimate&quot;) %&gt;%
+  map_dbl(2)</code></pre>
+<p>We can create a data.frame to store the estimated effects</p>
+<pre class="r"><code>require(dplyr)
+
+df &lt;- data.frame(
+  x_estimate = c(x_hats_1, x_hats_2),
+  nhospitals = rep(c(10, 50), each = nsim)
+)
+
+df %&gt;%
+  group_by(nhospitals) %&gt;%  
+  # calculate bias, standard error and coverage for both situations
+  summarize(
+    bias = mean(x_estimate) - true_effect,
+    se   = sd(x_estimate)
+  ) %&gt;%
+  ungroup() %&gt;%
+  # from these, calculate z-score and MSE
+  mutate(
+    se_bias = se / sqrt(nsim),
+    z_score_bias = bias / se_bias,
+    mse = bias^2 + se^2
+    )</code></pre>
+<pre><code># A tibble: 2 x 6
+  nhospitals      bias    se se_bias z_score_bias    mse
+       &lt;dbl&gt;     &lt;dbl&gt; &lt;dbl&gt;   &lt;dbl&gt;        &lt;dbl&gt;  &lt;dbl&gt;
+1       10.0  0.00141  0.381 0.00381        0.370 0.145 
+2       50.0 -0.000481 0.242 0.00242       -0.198 0.0587</code></pre>
+<p>We observe that both methods have low bias. Bias is lowest for 50 hospitals, and the variance too MSE is best for 50 hospitals.</p>
+<p>50 hospitals seems preferable</p>
+</div>
+<div id="session-information" class="section level2">
+<h2>Session information</h2>
+<!-- Insert the session information into the document -->
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 3.4.3 (2017-11-30)
+Platform: x86_64-apple-darwin15.6.0 (64-bit)
+Running under: macOS Sierra 10.12.6
+
+Matrix products: default
+BLAS: /Library/Frameworks/R.framework/Versions/3.4/Resources/lib/libRblas.0.dylib
+LAPACK: /Library/Frameworks/R.framework/Versions/3.4/Resources/lib/libRlapack.dylib
+
+locale:
+[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+[1] bindrcpp_0.2      dplyr_0.7.4       ggplot2_2.2.1     purrr_0.2.4      
+[5] broom_0.4.3       robustbase_0.92-8
+
+loaded via a namespace (and not attached):
+ [1] Rcpp_0.12.14     nloptr_1.0.4     DEoptimR_1.0-8   compiler_3.4.3  
+ [5] pillar_1.1.0     git2r_0.20.0     plyr_1.8.4       bindr_0.1       
+ [9] tools_3.4.3      lme4_1.1-15      digest_0.6.14    evaluate_0.10.1 
+[13] tibble_1.4.1     nlme_3.1-131     gtable_0.2.0     lattice_0.20-35 
+[17] pkgconfig_2.0.1  rlang_0.1.6      Matrix_1.2-12    psych_1.7.8     
+[21] cli_1.0.0        yaml_2.1.16      parallel_3.4.3   stringr_1.2.0   
+[25] knitr_1.18       rprojroot_1.2    grid_3.4.3       glue_1.2.0      
+[29] R6_2.2.2         foreign_0.8-69   rmarkdown_1.8    minqa_1.2.4     
+[33] tidyr_0.7.2      reshape2_1.4.3   magrittr_1.5     MASS_7.3-47     
+[37] splines_3.4.3    backports_1.1.2  scales_0.5.0     htmltools_0.3.6 
+[41] assertthat_0.2.0 mnormt_1.5-5     colorspace_1.3-2 labeling_0.3    
+[45] utf8_1.1.3       stringi_1.1.6    lazyeval_0.2.1   munsell_0.4.3   
+[49] crayon_1.3.4    </code></pre>
+</div>
+</div>
+
+<hr>
+<p>
+    This <a href="http://rmarkdown.rstudio.com">R Markdown</a> site was created with <a href="https://github.com/jdblischak/workflowr">workflowr</a>
+</p>
+<hr>
+
+<!-- To enable disqus, uncomment the section below and provide your disqus_shortname -->
+
+<!-- disqus
+  <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+        var disqus_shortname = 'rmarkdown'; // required: replace example with your forum shortname
+
+        /* * * DON'T EDIT BELOW THIS LINE * * */
+        (function() {
+            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+-->
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
