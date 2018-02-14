@@ -1,0 +1,1216 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+<meta name="author" content="Wouter van Amsterdam" />
+
+<meta name="date" content="2018-02-14" />
+
+<title>Numerical methods for estimation</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/font-awesome-4.5.0/css/font-awesome.min.css" rel="stylesheet" />
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+
+<div class="container-fluid main-container">
+
+<!-- tabsets -->
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+</script>
+
+<!-- code folding -->
+
+
+
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+  padding-left: 25px;
+  text-indent: 0;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">epi_stats</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/jdblischak/workflowr">
+    <span class="fa fa-github"></span>
+     
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">Numerical methods for estimation</h1>
+<h4 class="author"><em>Wouter van Amsterdam</em></h4>
+<h4 class="date"><em>2018-02-14</em></h4>
+
+</div>
+
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+<!-- Update knitr chunk options -->
+<!-- Insert the date the file was last updated -->
+<p><strong>Last updated:</strong> 2018-02-14</p>
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+<p><strong>Code version:</strong> 7d55e1e</p>
+<!-- Add your analysis here -->
+<div id="intro" class="section level1">
+<h1>Intro</h1>
+<p>Tutor: Rene Eijkemans</p>
+<div id="overview" class="section level2">
+<h2>Overview</h2>
+<p>Likelihood</p>
+<ul>
+<li>maximum likelihood principle</li>
+<li>parameter estimation</li>
+<li>inference on model parameters</li>
+</ul>
+<p>Numerical methods for ML parameter estimation</p>
+<ul>
+<li>root finding of score equations</li>
+<li>direct optimization of the likelihood</li>
+</ul>
+<p>Methods for complicated likelihoods</p>
+<ul>
+<li>EM algorithm</li>
+<li>MCMC approach</li>
+</ul>
+</div>
+</div>
+<div id="likelihood-approach" class="section level1">
+<h1>Likelihood approach</h1>
+<p>Probability of finding the data we have, given the model It is reversed probability theory</p>
+<p>Parameter estimation -&gt; solve score equations (= first derivatives)</p>
+<p>Hessian matrix -&gt; Fisher information (needs to be positive definite) Covariance matrix and tandard error (se)</p>
+<p><span class="math display">\[L(\theta) = \prod_i^n{f(x_i|\theta)}\]</span></p>
+<p><span class="math inline">\(f(x_i|\theta)\)</span> is probability of finding an observation, given the model</p>
+<p>Usually: take the log. Briggs: 1600s. Converts products to sums.</p>
+<p>Fisher’s information is negative Hessian Inverse of negative Hessian gives covariance matrix</p>
+<p>(high covariance will result in lower information)</p>
+<p>When solving equations will not work, use direct maximization of the likelihood (optimization methods)</p>
+</div>
+<div id="numerical-root-finding" class="section level1">
+<h1>Numerical root finding</h1>
+<p>Bracketing methods (search within 2 limits)</p>
+<ul>
+<li>Bisection and Brent’s methods (<code>uniroot</code>)</li>
+<li>Slow but guaranteed convergence</li>
+</ul>
+<p>Gradient methods (direct optimization)</p>
+<ul>
+<li>Newton Raphson and variants</li>
+<li>More rapid, but not guaranteed convergence</li>
+<li>Not dealt wih in the course</li>
+</ul>
+<p>Unimodal = only 1 maximum</p>
+<div id="bisection-method" class="section level2">
+<h2>Bisection method</h2>
+<p>Take a continous function, and two points <span class="math inline">\(a\)</span> and <span class="math inline">\(b\)</span> for which <span class="math inline">\(f(x)\)</span> has opposite sign.</p>
+<p>Take midpoint <span class="math inline">\(m\)</span> of <span class="math inline">\(a\)</span> and <span class="math inline">\(b\)</span>. Evaluate sign of function there.</p>
+<p>When sign <span class="math inline">\(f(a)\)</span> and <span class="math inline">\(f(m)\)</span> are opposite, replace interval by <span class="math inline">\(a,m\)</span>. Otherwise, replace with <span class="math inline">\(b,m\)</span>.</p>
+<p>Iterate, stop when precision is reached.</p>
+<p>Guaranteed to converge, at a linear rate</p>
+<div id="with-code" class="section level3">
+<h3>With code</h3>
+<pre class="r"><code>f &lt;- function(y, a, n) {
+  a^2 + y^2 + 2*a*y/(n-1) - (n-2)
+}</code></pre>
+<p>Probram bisection method</p>
+<pre class="r"><code>a &lt;- .5
+n &lt;- 20
+y0 &lt;- 0
+y1 &lt;- n
+
+
+
+# solve iteratively
+max_iteration &lt;- 1000
+it &lt;- 0
+eps &lt;- .Machine$double.eps^.25
+
+y &lt;- seq(y0, y1, length.out = 3)
+fy &lt;- f(y, a, n)
+if (fy[1]*fy[3] &gt; 0) stop(&quot;provide y0 and y1 such that the signs of f(y) are 
+                          different&quot;)
+
+while(it &lt; 1000 &amp;&amp; abs(fy[2]) &gt; eps) {
+  it &lt;- it + 1
+  if (fy[1]*fy[2] &lt; 0) {
+    y[3] &lt;- y[2]
+    fy[3] &lt;- fy[2]
+  } else {
+    y[1] &lt;- y[2]
+    fy[1] &lt;- fy[2]
+  }
+  y[2] &lt;- (y[1] + y[3]) / 2
+  fy[2] &lt;- f(y[2], a, n)
+}
+
+it</code></pre>
+<pre><code>[1] 19</code></pre>
+<pre class="r"><code>y</code></pre>
+<pre><code>[1] 4.186821 4.186840 4.186859</code></pre>
+<pre class="r"><code>fy</code></pre>
+<pre><code>[1] -1.710497e-04 -1.033096e-05  1.503885e-04</code></pre>
+<pre class="r"><code>ys &lt;- seq(y0, y1, length.out = 1000)
+plot(ys, f(ys, a, n))
+abline(h = 0, lty = 2)</code></pre>
+<p><img src="figure/cs_3_numerical_methods.Rmd/unnamed-chunk-2-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Stopping criteria can be vertical or horizontal</p>
+<ul>
+<li>function close enough to 0</li>
+<li>differences in estimates close enough to each other</li>
+</ul>
+</div>
+</div>
+<div id="brents-method" class="section level2">
+<h2>Brent’s method</h2>
+<p>Use 3 points (or 2 points and the midpoint)</p>
+<ul>
+<li>Fit quadratic function through the 3 points {(a,f(a)), (b,f(b)), (c,f(c))}</li>
+<li>Find roots of this function</li>
+<li><p>Replace values of a, b, or c, depending on the sign of <span class="math inline">\(f(x)\)</span></p></li>
+<li><p>Guaranteed convergence, usually faster than bisection</p></li>
+</ul>
+<p>Program Brents method</p>
+<pre class="r"><code>f &lt;- function(y, a, n) {
+  a^2 + y^2 + 2*a*y/(n-1) - (n-2)
+}
+
+a &lt;- .5
+n &lt;- 20
+y0 &lt;- 0
+y1 &lt;- n
+maxit &lt;- 1000
+
+uniroot(function(x) f(x, a, n), interval = c(y0, y1))</code></pre>
+<pre><code>$root
+[1] 4.18682
+
+$f.root
+[1] -0.0001757371
+
+$iter
+[1] 9
+
+$init.it
+[1] NA
+
+$estim.prec
+[1] 6.103516e-05</code></pre>
+<pre class="r"><code>uniroot(function(x) f(x, a, n), interval = c(y0, -y1))</code></pre>
+<pre><code>$root
+[1] -4.239451
+
+$f.root
+[1] -0.0001818414
+
+$iter
+[1] 9
+
+$init.it
+[1] NA
+
+$estim.prec
+[1] 6.103516e-05</code></pre>
+<p>Make a function to fit a quadratic function to three points</p>
+<pre class="r"><code>require(matlib)
+
+x &lt;- c(0, 1, 2)
+y &lt;- c(-1, 2, 1)
+
+A &lt;- matrix(c(
+  x^2, x, rep(1, 3)
+), byrow = F, nrow = 3)
+A</code></pre>
+<pre><code>     [,1] [,2] [,3]
+[1,]    0    0    1
+[2,]    1    1    1
+[3,]    4    2    1</code></pre>
+<pre class="r"><code>b &lt;- y
+
+colnames(A) &lt;- c(&quot;a&quot;, &quot;b&quot;, &quot;c&quot;)
+
+showEqn(A, b)</code></pre>
+<pre><code>0*x1 + 0*x2 + 1*x3  =  -1 
+1*x1 + 1*x2 + 1*x3  =   2 
+4*x1 + 2*x2 + 1*x3  =   1 </code></pre>
+<pre class="r"><code>solve(A, b)</code></pre>
+<pre><code> a  b  c 
+-2  5 -1 </code></pre>
+<pre class="r"><code>find_parabola &lt;- function(x, y) {
+  if (length(x) != 3 | length(y) != 3) stop(&quot;please provide 3 x and y values&quot;)
+  A &lt;- matrix(c(
+    x^2, x, rep(1,3)
+  ), nrow = 3, byrow = F)
+  b &lt;- y
+  solve(A, b)
+}
+
+find_parabola(x, y)</code></pre>
+<pre><code>[1] -2  5 -1</code></pre>
+<p>Make function to find roots for parabola</p>
+<pre class="r"><code>parabola_roots &lt;- function(a, b, c) {
+  d &lt;- b^2 - 4*a*c
+  if (d &lt; 0) {
+    warning(&quot;no roots&quot;)
+    return(NA)
+  }
+  c((-b - sqrt(d))/(2*a), (-b + sqrt(d))/(2*a))
+}</code></pre>
+<p>Implement Brent solver</p>
+<pre class="r"><code>f &lt;- function(y, a, n) {
+  a^2 + y^2 + 2*a*y/(n-1) - (n-2)
+}
+
+a &lt;- .5
+n &lt;- 20
+y0 &lt;- 0
+y1 &lt;- n
+maxit &lt;- 1000
+
+it &lt;- 0
+y &lt;- seq(y0, y1, length.out = 3)
+fy &lt;- f(y, a, n)
+
+while (it &lt; maxit) {
+  it &lt;- it + 1
+  
+  # fit parabola through supplied points
+  parabola &lt;- find_parabola(y, fy)
+  # find root of parabola
+  roots    &lt;- parabola_roots(parabola[1], parabola[2], parabola[3])
+  root     &lt;- roots[roots &gt; y[1] &amp; roots &lt; y[3]]
+  # check if only a single root is within the interval
+  if (length(root) &gt; 1) stop(&quot;provide starting points with opposite sign&quot;)
+  
+  
+}</code></pre>
+</div>
+<div id="optimization-mothods-for-ml-parameter-estimation" class="section level2">
+<h2>Optimization mothods for ML parameter estimation</h2>
+<p>Problems with root finding</p>
+<ul>
+<li>derivatives of likelihood may not exist, or only in part of the parameter space</li>
+<li>Maximum likelihood may lie at boundary of parameter space, (e.g. Variance estimates in Mixed effects models, may be at 0)</li>
+<li>Difficult in higher dimensions</li>
+</ul>
+<p>Direct maximization may be better</p>
+<div id="in-r" class="section level3">
+<h3>in R</h3>
+<p>1 dimension:</p>
+<ul>
+<li><code>nlm</code>, Newton type, fast convergence, not gauranteed</li>
+<li><code>optimize</code>, like Brent’s method, slower but more robust</li>
+</ul>
+<p>Multidimensional: <code>optim</code></p>
+<ul>
+<li>Nelder Mead: search with fixed steps uphill, without gradient information, guaranteed to find an optimal solution; with some adaptation on step size; (amoebe)</li>
+<li>Quasi Newton: uses gradient (steepness) and curvature information; can overshoot;</li>
+<li>Conjugated gradients: clever use of only gradients, to approximate the curvature by keeping track of gradients</li>
+</ul>
+<p>For ML estimation, R has special <code>stats4::mle</code> function, uses <code>optim</code> function internally</p>
+</div>
+<div id="example-exponential-distribution" class="section level3">
+<h3>Example exponential distribution</h3>
+<p>Survival with no censoring.</p>
+<p>Survival function: <span class="math inline">\(s(y) = e^{-\theta y}\)</span></p>
+<p>Density function</p>
+<p><span class="math display">\[f(y) = \theta e^{-\theta y}\]</span></p>
+<p><span class="math display">\[l(\theta) = \sum_i{\log(\theta e^{-\theta y_i})}\]</span></p>
+<p>Solve analytically will give</p>
+<p><span class="math display">\[\hat{\theta} = \frac{n}{\sum{y_i}}\]</span></p>
+<p>Which is the incidence density</p>
+<p>To use <code>mle</code>, we need to define a function for the negative log lokelihood</p>
+<p><code>formals</code> will return default values of a function</p>
+<pre class="r"><code>################################################################################
+## optimization example (Example 11.10)
+################################################################################
+## ML estimation as in Example 11.10 is done using function mle from the stats4 library
+## the example is fitting an exponential distribution to a sample of size 2.
+## the observed sample:
+y &lt;- c(0.04304550,0.50263474)
+## function for the minus log likelihood
+mlogL &lt;- function(theta=1){
+  #minus logliklihood of exp. density
+  return(-sum(log(theta)-theta*y))
+}
+
+mlogL(1)</code></pre>
+<pre><code>[1] 0.5456802</code></pre>
+<pre class="r"><code>mlogL(1.5)</code></pre>
+<pre><code>[1] 0.007590144</code></pre>
+<pre class="r"><code>library(stats4)
+fit &lt;- mle(mlogL)
+summary(fit)</code></pre>
+<pre><code>Maximum likelihood estimation
+
+Call:
+mle(minuslogl = mlogL)
+
+Coefficients:
+      Estimate Std. Error
+theta  3.66515   2.591652
+
+-2 log L: -1.195477 </code></pre>
+<pre class="r"><code>## note that the result contains not only the ML parameter estimate, but also an estimate 
+## of the standard error
+
+## We can get the covariance (matrix) by
+vcov(fit)</code></pre>
+<pre><code>         theta
+theta 6.716662</code></pre>
+<pre class="r"><code>sqrt(diag(vcov(fit))) #standard error of the estimate</code></pre>
+<pre><code>   theta 
+2.591652 </code></pre>
+<pre class="r"><code># we can get details of the fitting by:
+fit@details</code></pre>
+<pre><code>$par
+  theta 
+3.66515 
+
+$value
+[1] -0.5977386
+
+$counts
+function gradient 
+      13        9 
+
+$convergence
+[1] 0
+
+$message
+NULL
+
+$hessian
+          theta
+theta 0.1488835</code></pre>
+</div>
+</div>
+</div>
+<div id="complicated-likelihoods" class="section level1">
+<h1>Complicated likelihoods</h1>
+<p>Example of complicated likelihoods</p>
+<ul>
+<li>Mixture model: likelihood is combination of 2 (simple) distributions; probability to be in 1 or the other is unobservable (latent class)</li>
+<li>Missing data or measurement error models: likelihood contains unobserved values; latent factors</li>
+<li>Survival model with censoring: likelihood contribution of censored data may be analytically intractable</li>
+<li>Non-linear mixed model: likelihood conaints expectation of random effect (distribution); We only estimate random effect distribution, not all individual random effects. Integral over random effect distribution, analytical integral does not exist</li>
+</ul>
+<p>Answer: split likelihood in parts</p>
+<p>Expectation Maximization (EM): suited for problems with latent factors. (e.g. mixed distributions with latent factors, censored survival, missing data (iterative missing prediction, starting with initial parameters, fit model, re-predict missing prediction, re-fit, re-predict, iterate)) Markov Chain Monte Carlo (MCMC): generally for difficult likelihood problems (using Bayesian framework); use (uninformative) prior distribution</p>
+<div id="expectation-maximization" class="section level2">
+<h2>Expectation maximization</h2>
+<p>Slow algorithm. Requires knowledge of the distribution; You require an expected value for the missing (/ latent) values</p>
+<pre class="r"><code>################################################################################
+## EM algoritm: censored survival
+################################################################################
+## create a sample of censored exponentially distributed survival times
+set.seed(52934867)
+survtime &lt;- rexp(1000,rate=0.5)
+censtime &lt;- rexp(1000,rate=0.2)
+y &lt;- ifelse(survtime &lt; censtime,survtime,censtime)
+d &lt;- ifelse(survtime &lt; censtime,1,0)
+summary(y)</code></pre>
+<pre><code>     Min.   1st Qu.    Median      Mean   3rd Qu.      Max. 
+ 0.000476  0.419751  0.917144  1.381938  1.851822 11.780986 </code></pre>
+<pre class="r"><code>table(d)</code></pre>
+<pre><code>d
+  0   1 
+298 702 </code></pre>
+<pre class="r"><code># Kaplan Meier estimate of the survival curve:
+require(survival)
+KM &lt;- survfit(Surv(y,d)~1)
+plot(KM,xlab=&quot;Time&quot;,ylab=&quot;Proportion surviving&quot;)</code></pre>
+<p><img src="figure/cs_3_numerical_methods.Rmd/unnamed-chunk-8-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>## analytical estimate of the rate:
+sum(d)/sum(y) # = events / person-time; which is valid for censored data</code></pre>
+<pre><code>[1] 0.5079823</code></pre>
+<pre class="r"><code># Now use the EM algorithm
+N &lt;- 100 #max number of iterations
+theta &lt;- 1 #initial guesses for theta (=rate)
+theta.old &lt;- theta #set old par to the current inital guess, needed further down 
+tol &lt;- .Machine$double.eps^0.5 #set tolerance (=precision)
+## create a matrix that will store the iteration history of the parameters
+theta.mat &lt;- matrix(NA,nrow=N,ncol=1)
+theta.mat[1,] &lt;- theta #fill the first element with the initial guess
+## the EM iterations:
+for (i in 1:N){
+  #The E step: calculate the expected survival times for censored subjects
+    #note: the expected (=mean) survival time for an exponential distribution = 1/theta 
+    #censored subjects have already survived until their censoring time y
+    #because of the memorylessness of the exponential distribution, their expected
+    #total survival time = y + 1/theta
+  Etimes &lt;- ifelse(d==0,y+1/theta,y) # y + 1/theta, since E(theta) = 1/theta for exponential distribution
+  #the M step: compute the new parameter estimate:
+  # is the mean survival time = 1/theta, the estimate of theta = 1/mean
+  theta &lt;- 1/mean(Etimes)
+  theta.mat[i+1,] &lt;- theta
+  #determine convergence  
+  if (sum(abs(theta-theta.old)/theta.old) &lt; tol) break
+  theta.old &lt;- theta
+}
+
+## final solution:
+theta</code></pre>
+<pre><code>[1] 0.5079823</code></pre>
+<pre class="r"><code>## how many iteration till convergence?
+i</code></pre>
+<pre><code>[1] 16</code></pre>
+<pre class="r"><code># iteration history:
+# theta.mat[1:i,]
+# note that the first steps approach the final value very fast, but convergens slows down after that</code></pre>
+<div id="em-for-mixture-models" class="section level3">
+<h3>EM for mixture models</h3>
+<p>Formalism</p>
+<p><span class="math display">\[Y_1 \sim N(\mu_1, \sigma_1^2)\]</span> <span class="math display">\[Y_2 \sim N(\mu_2, \sigma_2^2)\]</span> <span class="math display">\[Y \sim (1-\Delta)Y_1+\Delta Y_2\]</span></p>
+<p>With <span class="math inline">\(\Delta \in \{0,1\}\)</span>, and <span class="math inline">\(Pr\{\Delta = 1\} = \pi\)</span></p>
+<p>Likelihood of 5 parameters</p>
+<div id="expected-value-step" class="section level4">
+<h4>Expected value step</h4>
+<p>Determine a probability density value for group membership <span class="math inline">\(\Delta_i\)</span>, depending on <span class="math inline">\(y_i\)</span> and <span class="math inline">\(\pi\)</span>. Use this as a weight in the first and second group membership.</p>
+<p>From Bayes rule. Probability to be in second group</p>
+<p><span class="math display">\[\gamma_i = \frac{\hat{\pi} \phi_{\theta_2}(y_i)}{(1-\hat{\pi})\phi_{\theta_1}(y_i) + \hat{\pi} \phi_{\theta_2}(y_i)}\]</span></p>
+</div>
+<div id="maximization-step" class="section level4">
+<h4>Maximization step</h4>
+<p><span class="math display">\[\hat{\mu}_1 = \frac{\sum_i{(1-\hat{\gamma}_i)y_i}}{\sum_i{\hat{\gamma}_i}}\]</span></p>
+<p>Etc.</p>
+<p><span class="math display">\[\hat{\pi}_i = \frac{1}{N}\sum{\gamma_i}\]</span></p>
+<pre class="r"><code>################################################################################
+## EM algoritm: mixture example
+################################################################################
+
+## the data: 
+## Source: Hastie, Tibshirani, Friedman: the Elements of Statistical Learning, 
+## 2nd ed., chapter 8.5
+y &lt;- c(-.39,.12,.94,1.67,.76,2.44,3.72,4.28,4.92,5.53,
+       .06,.48,1.01,.168,1.8,3.25,4.12,4.6,5.28,6.22)
+
+## look at histogram of the data
+h &lt;- hist(y,freq=FALSE)
+
+## EM algorithm
+N &lt;- 100 ## max number of iterations
+## initial guesses for the parameters
+mu1 &lt;- 1
+var1 &lt;- var(y)/2
+mu2 &lt;- 5
+var2 &lt;- var(y)/2
+p &lt;- 0.5
+## concatenate the parameters into one vector par
+par &lt;- c(mu1=mu1,var1=var1,mu2=mu2,var2=var2,p=p)
+## set old par to the current inital guess, needed further down 
+par.old &lt;- par
+## set tolerance
+tol &lt;- .Machine$double.eps^0.25
+## create a matrix that will store the iteration history of the parameters
+par.mat &lt;- matrix(NA,nrow=N,ncol=5)
+par.mat[1,] &lt;- par
+## the EM iterations
+for (i in 1:N){
+## The E step: calculate g, the probability to belong to the second group in the mixture,
+## as the expected values for each subject of Delta
+  p &lt;- par[5]
+  g &lt;- p*dnorm(y,mean=par[3],sd=sqrt(par[4]))/
+    ((1-p)*dnorm(y,mean=par[1],sd=sqrt(par[2]))+p*dnorm(y,mean=par[3],sd=sqrt(par[4])))
+## the M step: compute the new parameter estimates as weighted mean, var and proportion
+## using g from the E step as weights
+  mu1 &lt;-weighted.mean(y,w=1-g)
+  mu2 &lt;-weighted.mean(y,w=g)
+  var1 &lt;- sum((1-g)*(y-mu1)^2)/(sum(1-g))
+  var2 &lt;- sum(g*(y-mu2)^2)/(sum(g))
+  p &lt;- sum(g)/length(y)
+  par &lt;- c(mu1,var1,mu2,var2,p)
+  par.mat[i+1,] &lt;- par
+## determine convergence  
+  if (sum(abs(par-par.old)/par.old) &lt; tol) break
+  par.old &lt;- par
+}
+
+## final solution:
+par</code></pre>
+<pre><code>[1] 0.7409840 0.5808704 4.5163394 1.0408867 0.4788731</code></pre>
+<pre class="r"><code>par.mat[1:i,]</code></pre>
+<pre><code>           [,1]      [,2]     [,3]      [,4]      [,5]
+ [1,] 1.0000000 2.2937500 5.000000 2.2937500 0.5000000
+ [2,] 1.0206618 1.3098706 4.565360 1.2324526 0.4311335
+ [3,] 0.8951434 0.9059921 4.632636 0.9198693 0.4424775
+ [4,] 0.8358536 0.7371579 4.630949 0.8575005 0.4513843
+ [5,] 0.8087638 0.6787595 4.611782 0.8747298 0.4575671
+ [6,] 0.7935028 0.6531462 4.593785 0.9029619 0.4619123
+ [7,] 0.7830483 0.6376812 4.579382 0.9277254 0.4651466
+ [8,] 0.7752075 0.6266462 4.568032 0.9477426 0.4676442
+ [9,] 0.7690882 0.6182298 4.558994 0.9638410 0.4696190
+[10,] 0.7642087 0.6116077 4.551709 0.9768878 0.4712056
+[11,] 0.7602632 0.6063016 4.545776 0.9875495 0.4724953
+[12,] 0.7570419 0.6019978 4.540907 0.9963221 0.4735523
+[13,] 0.7543926 0.5984760 4.536887 1.0035797 0.4744243
+[14,] 0.7522020 0.5955754 4.533553 1.0096094 0.4751471
+[15,] 0.7503830 0.5931742 4.530778 1.0146358 0.4757485
+[16,] 0.7488674 0.5911788 4.528461 1.0188368 0.4762503
+[17,] 0.7476014 0.5895154 4.526522 1.0223554 0.4766701
+[18,] 0.7465416 0.5881254 4.524897 1.0253074 0.4770220
+[19,] 0.7456529 0.5869614 4.523532 1.0277874 0.4773173
+[20,] 0.7449066 0.5859851 4.522385 1.0298733 0.4775655
+[21,] 0.7442793 0.5851651 4.521420 1.0316291 0.4777743
+[22,] 0.7437513 0.5844757 4.520608 1.0331083 0.4779501
+[23,] 0.7433067 0.5838955 4.519923 1.0343552 0.4780982
+[24,] 0.7429320 0.5834068 4.519345 1.0354068 0.4782231
+[25,] 0.7426161 0.5829950 4.518858 1.0362940 0.4783284
+[26,] 0.7423496 0.5826478 4.518447 1.0370429 0.4784173
+[27,] 0.7421247 0.5823549 4.518101 1.0376751 0.4784923
+[28,] 0.7419349 0.5821077 4.517808 1.0382090 0.4785556
+[29,] 0.7417746 0.5818990 4.517560 1.0386600 0.4786091
+[30,] 0.7416393 0.5817228 4.517351 1.0390410 0.4786543
+[31,] 0.7415249 0.5815740 4.517175 1.0393629 0.4786924
+[32,] 0.7414283 0.5814483 4.517026 1.0396348 0.4787247
+[33,] 0.7413467 0.5813422 4.516900 1.0398647 0.4787519
+[34,] 0.7412777 0.5812524 4.516793 1.0400590 0.4787750
+[35,] 0.7412195 0.5811766 4.516703 1.0402232 0.4787944
+[36,] 0.7411702 0.5811125 4.516627 1.0403620 0.4788109
+[37,] 0.7411285 0.5810584 4.516563 1.0404793 0.4788248
+[38,] 0.7410933 0.5810126 4.516508 1.0405785 0.4788365
+[39,] 0.7410636 0.5809739 4.516462 1.0406623 0.4788465
+[40,] 0.7410384 0.5809412 4.516424 1.0407332 0.4788549
+[41,] 0.7410172 0.5809135 4.516391 1.0407932 0.4788620
+[42,] 0.7409992 0.5808902 4.516363 1.0408438 0.4788680</code></pre>
+<pre class="r"><code>## how many iterations till convergence?
+i</code></pre>
+<pre><code>[1] 42</code></pre>
+<pre class="r"><code>## Superpose plot of fitted mixture on histogram
+yrange &lt;- -1+(1:100)/100*8
+lines(yrange,(1-p)*dnorm(yrange,mean=mu1,sd=sqrt(var1))+p*dnorm(yrange,mean=mu2,sd=sqrt(var2)))</code></pre>
+<p><img src="figure/cs_3_numerical_methods.Rmd/unnamed-chunk-10-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Look at conversion of with log-likelihood for each step</p>
+<pre class="r"><code>## see how fast the iterations converged
+## compute the loglikelihood after each iteration, using par.mat
+loglik.iter &lt;- apply(par.mat,MARGIN=1,FUN=function(pa){
+  p &lt;- pa[5]
+  sum(log((1-p)*dnorm(y,mean=pa[1],sd=sqrt(pa[2]))+p*dnorm(y,mean=pa[3],sd=sqrt(pa[4]))))
+})
+plot(0:20,loglik.iter[1:(20+1)],type=&quot;l&quot;)</code></pre>
+<p><img src="figure/cs_3_numerical_methods.Rmd/unnamed-chunk-11-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Now with MLE</p>
+<pre class="r"><code>## this can also be done by the mle function
+y &lt;- matrix(c(-.39,.12,.94,1.67,.76,2.44,3.72,4.28,4.92,5.53,
+       .06,.48,1.01,.168,1.8,3.25,4.12,4.6,5.28,6.22),ncol=1)
+mlogL &lt;- function(p=0.5,m1=1,v1=1,m2=5,v2=1){
+  #minus logliklihood of mixturedensity
+  return(-sum(log((1-p)*dnorm(y,mean=m1, sd=sqrt(v1))+p*dnorm(y,mean=m2, sd=sqrt(v2)))))
+}
+mlogL()</code></pre>
+<pre><code>[1] 39.63144</code></pre>
+<pre class="r"><code>mle_fit &lt;- stats4::mle(mlogL)</code></pre>
+<pre><code>Warning in log((1 - p) * dnorm(y, mean = m1, sd = sqrt(v1)) + p *
+dnorm(y, : NaNs produced
+
+Warning in log((1 - p) * dnorm(y, mean = m1, sd = sqrt(v1)) + p *
+dnorm(y, : NaNs produced</code></pre>
+<pre><code>Warning in sqrt(v1): NaNs produced</code></pre>
+<pre class="r"><code>print(mle_fit)</code></pre>
+<pre><code>
+Call:
+stats4::mle(minuslogl = mlogL)
+
+Coefficients:
+        p        m1        v1        m2        v2 
+0.4788994 0.7409023 0.5807666 4.5162144 1.0410948 </code></pre>
+<pre class="r"><code>summary(mle_fit)</code></pre>
+<pre><code>Maximum likelihood estimation
+
+Call:
+stats4::mle(minuslogl = mlogL)
+
+Coefficients:
+    Estimate Std. Error
+p  0.4788994  0.1342774
+m1 0.7409023  0.3257030
+v1 0.5807666  0.3919844
+m2 4.5162144  0.4776201
+v2 1.0410948  0.7971774
+
+-2 log L: 76.89161 </code></pre>
+<pre class="r"><code>vcov(mle_fit)</code></pre>
+<pre><code>             p          m1          v1          m2          v2
+p   0.01803043 -0.01662912 -0.02159195 -0.02568018  0.04679375
+m1 -0.01662912  0.10608243  0.06626607  0.07629859 -0.13729916
+v1 -0.02159195  0.06626607  0.15365181  0.09811164 -0.17418167
+m2 -0.02568018  0.07629859  0.09811164  0.22812093 -0.21949520
+v2  0.04679375 -0.13729916 -0.17418167 -0.21949520  0.63549184</code></pre>
+<pre class="r"><code>xpts &lt;- seq(from=1,to=6,length.out=100)
+ypts &lt;- seq(from=40,to=100,length.out=100)
+
+
+## now programmed more generally, defining separate functions for the 
+# Estep and the Mstep. 
+# In addition, plots per iteration and animation are used to illustrate
+# the resulting fits of the iterative process
+
+
+#function E step: 
+# calculates the conditional probabilities for the latent variable, g, the 
+# probability to be in class 2, given the data value y.
+# Here, it is more convenient to have the paramters in a list, rather than a 
+# vector
+# Output Value: vector with the individual probabilities (=g)
+E.step &lt;- function(theta,y){
+  g &lt;- with(theta, p * dnorm(y,mean=mu2,sd=sigma2) / 
+     ((1-p) * dnorm(y,mean=mu1,sd=sigma1) + p * dnorm(y,mean=mu2,sd=sigma2) ) )
+  g
+}
+#function M step: 
+# calculates the updated parameter estimates by weighting with g from the Estep
+# value: list of updated parameter values
+M.step &lt;- function(g,y) 
+  list(
+  p= mean(g),
+  mu1= weighted.mean(y,w=1-g),
+  mu2= weighted.mean(y,w=g),
+  sigma1= sqrt(cov.wt(matrix(y,ncol=1),wt=1-g)$cov),
+  sigma2= sqrt(cov.wt(matrix(y,ncol=1),wt=g)$cov)
+  )
+
+#function plot.em
+# plots the model fit from the list theta
+plot.em &lt;- function(theta,data){
+  histdata &lt;- hist(data,freq=FALSE)  # plot histogram and store the key data
+  datarange &lt;- seq(min(histdata$breaks), # sequence of 100 values for plotting 
+                max(histdata$breaks), # the model curve on the range of the
+                length.out = 100)     # histogram
+  modelcurve &lt;- with(theta,(1-p)*dnorm(datarange,mean=mu1,sd=sigma1)+
+                               p*dnorm(datarange,mean=mu2,sd=sigma2))
+  lines(datarange,modelcurve)
+}
+
+#initial parameter estimates, in a list
+theta0 &lt;- list(
+  p=0.5,
+  mu1=2,
+  mu2=4,
+  sigma1=sqrt(var(y)),
+  sigma2=sqrt(var(y))
+)
+
+library(animation) # load libary to animate plots
+
+iterMax &lt;- 30 ## max number of iterations
+iter &lt;- 1
+theta &lt;- theta0  # set current parameters equal to the initial parameters
+
+# create empty matrix to contain the parameter estimates
+theta.mat &lt;- matrix(NA,nrow=iterMax,ncol=length(theta))
+theta.mat[1,] &lt;- unlist(theta)  # fill the first row
+
+#run EM and plot per iteration, simultaneously recording it for animation lateron
+
+par(bg = &quot;white&quot;)  # ensure the background color is white
+ani.record(reset = TRUE)  # clear history before animation recording
+
+for (iter in 2:iterMax){
+  
+  g &lt;- E.step(theta,y)   # E step
+  
+  theta &lt;- M.step(g,y)   # M step and storing new parameter values
+  theta.mat[iter,] &lt;- unlist(theta)
+  
+  plot.em(theta,data=y)
+  text(x=4,y=0.3,paste(&#39;iter:&#39;,iter))
+
+  ani.record()  # record the current graphics frame  
+}</code></pre>
+<p><img src="figure/cs_3_numerical_methods.Rmd/unnamed-chunk-13-1.png" width="672" style="display: block; margin: auto;" /><img src="figure/cs_3_numerical_methods.Rmd/unnamed-chunk-13-2.png" width="672" style="display: block; margin: auto;" /><img src="figure/cs_3_numerical_methods.Rmd/unnamed-chunk-13-3.png" width="672" style="display: block; margin: auto;" /><img src="figure/cs_3_numerical_methods.Rmd/unnamed-chunk-13-4.png" width="672" style="display: block; margin: auto;" /><img src="figure/cs_3_numerical_methods.Rmd/unnamed-chunk-13-5.png" width="672" style="display: block; margin: auto;" /><img src="figure/cs_3_numerical_methods.Rmd/unnamed-chunk-13-6.png" width="672" style="display: block; margin: auto;" /><img src="figure/cs_3_numerical_methods.Rmd/unnamed-chunk-13-7.png" width="672" style="display: block; margin: auto;" /><img src="figure/cs_3_numerical_methods.Rmd/unnamed-chunk-13-8.png" width="672" style="display: block; margin: auto;" /><img src="figure/cs_3_numerical_methods.Rmd/unnamed-chunk-13-9.png" width="672" style="display: block; margin: auto;" /><img src="figure/cs_3_numerical_methods.Rmd/unnamed-chunk-13-10.png" width="672" style="display: block; margin: auto;" /><img src="figure/cs_3_numerical_methods.Rmd/unnamed-chunk-13-11.png" width="672" style="display: block; margin: auto;" /><img src="figure/cs_3_numerical_methods.Rmd/unnamed-chunk-13-12.png" width="672" style="display: block; margin: auto;" /><img src="figure/cs_3_numerical_methods.Rmd/unnamed-chunk-13-13.png" width="672" style="display: block; margin: auto;" /><img src="figure/cs_3_numerical_methods.Rmd/unnamed-chunk-13-14.png" width="672" style="display: block; margin: auto;" /><img src="figure/cs_3_numerical_methods.Rmd/unnamed-chunk-13-15.png" width="672" style="display: block; margin: auto;" /><img src="figure/cs_3_numerical_methods.Rmd/unnamed-chunk-13-16.png" width="672" style="display: block; margin: auto;" /><img src="figure/cs_3_numerical_methods.Rmd/unnamed-chunk-13-17.png" width="672" style="display: block; margin: auto;" /><img src="figure/cs_3_numerical_methods.Rmd/unnamed-chunk-13-18.png" width="672" style="display: block; margin: auto;" /><img src="figure/cs_3_numerical_methods.Rmd/unnamed-chunk-13-19.png" width="672" style="display: block; margin: auto;" /><img src="figure/cs_3_numerical_methods.Rmd/unnamed-chunk-13-20.png" width="672" style="display: block; margin: auto;" /><img src="figure/cs_3_numerical_methods.Rmd/unnamed-chunk-13-21.png" width="672" style="display: block; margin: auto;" /><img src="figure/cs_3_numerical_methods.Rmd/unnamed-chunk-13-22.png" width="672" style="display: block; margin: auto;" /><img src="figure/cs_3_numerical_methods.Rmd/unnamed-chunk-13-23.png" width="672" style="display: block; margin: auto;" /><img src="figure/cs_3_numerical_methods.Rmd/unnamed-chunk-13-24.png" width="672" style="display: block; margin: auto;" /><img src="figure/cs_3_numerical_methods.Rmd/unnamed-chunk-13-25.png" width="672" style="display: block; margin: auto;" /><img src="figure/cs_3_numerical_methods.Rmd/unnamed-chunk-13-26.png" width="672" style="display: block; margin: auto;" /><img src="figure/cs_3_numerical_methods.Rmd/unnamed-chunk-13-27.png" width="672" style="display: block; margin: auto;" /><img src="figure/cs_3_numerical_methods.Rmd/unnamed-chunk-13-28.png" width="672" style="display: block; margin: auto;" /><img src="figure/cs_3_numerical_methods.Rmd/unnamed-chunk-13-29.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>## now replay it, with half a second pauses between frames
+oopts &lt;- ani.options(interval = 0.5)
+ani.replay()</code></pre>
+<p>With Old Faithful data</p>
+<pre class="r"><code>par(mfrow=c(1,1))
+## bivariate normal mixture: Old Faithful data
+#load library for multivariate normal
+library(mvtnorm)
+
+#load Old Faithful data frame
+data(faithful)
+plot(faithful)</code></pre>
+<p><img src="figure/cs_3_numerical_methods.Rmd/unnamed-chunk-14-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>#E step: calculates conditional probabilities for g
+E.step &lt;- function(theta,data)
+    with(theta,    p * dmvnorm(data,mean=mu2,sigma=sigma2)/
+           ((1-p) * dmvnorm(data,mean=mu1,sigma=sigma1) + 
+                p * dmvnorm(data,mean=mu2,sigma=sigma2))
+    )
+
+#M step: calculates the parameter estimates weighted by g from the Estep
+M.step &lt;- function(g,data) list(
+  p= mean(g),
+  mu1= apply(data,2,weighted.mean,1-g),
+  mu2= apply(data,2,weighted.mean,g),
+  sigma1= cov.wt(data,1-g)$cov,
+  sigma2= cov.wt(data,g)$cov)
+
+#function to plot current data and contourplot of the bivariate mixture distribution
+plot.em.contour &lt;- function(theta,data){
+  #setup grid for plotting
+  xpts &lt;- seq(from=min(data[[1]]),to=max(data[[1]]),length.out=100)
+  ypts &lt;- seq(from=min(data[[2]]),to=max(data[[2]]),length.out=100)
+  # compute the bivariate density values of the model specified in theata,
+  # on the xy grid just defined
+  mixture.contour &lt;- outer(xpts,ypts,function(x,y)  with(theta,  
+      (1-p)*dmvnorm(cbind(x,y),mean=mu1,sigma=sigma1) + p*dmvnorm(cbind(x,y),mean=mu2,sigma=sigma2)
+         ))
+  # plot the contourplot
+  contour(xpts,ypts,mixture.contour,nlevels=6,drawlabel=FALSE,col=&quot;red&quot;,xlab=&quot;Eruption time (mins)&quot;,ylab=&quot;Waiting time (mins)&quot;,main=&quot;Waiting time vs Eruption time of the Old Faithful geyser&quot;)
+  
+  # now add the data points to the plot:
+  points(data)
+}
+
+#initial parameter estimates (chosen to be deliberately bad)
+theta0 &lt;- list(
+  p=0.5,
+  mu1=c(2.8,75),
+  mu2=c(3.6,58),
+  sigma1=matrix(c(0.8,7,7,70),ncol=2),
+  sigma2=matrix(c(0.8,7,7,70),ncol=2)
+)
+
+iterMax &lt;- 30 ## max number of iterations
+iter &lt;- 1
+theta &lt;- theta0  # set current parameters equal to the initial parameters
+
+#run EM and plot per iteration, simultaneously recording it for animation lateron
+
+par(bg = &quot;white&quot;)  # ensure the background color is white
+ani.record(reset = TRUE)  # clear history before animation recording
+
+for (iter in 2:iterMax){
+
+  g &lt;- E.step(theta,faithful)
+  
+  theta &lt;- M.step(g,faithful)
+
+  plot.em.contour(theta,data=faithful)
+  text(x=2,y=90,paste(&#39;iter:&#39;,iter))
+  
+  ani.record()  # record the current graphics frame  
+  
+}</code></pre>
+<p><img src="figure/cs_3_numerical_methods.Rmd/unnamed-chunk-14-2.png" width="672" style="display: block; margin: auto;" /><img src="figure/cs_3_numerical_methods.Rmd/unnamed-chunk-14-3.png" width="672" style="display: block; margin: auto;" /><img src="figure/cs_3_numerical_methods.Rmd/unnamed-chunk-14-4.png" width="672" style="display: block; margin: auto;" /><img src="figure/cs_3_numerical_methods.Rmd/unnamed-chunk-14-5.png" width="672" style="display: block; margin: auto;" /><img src="figure/cs_3_numerical_methods.Rmd/unnamed-chunk-14-6.png" width="672" style="display: block; margin: auto;" /><img src="figure/cs_3_numerical_methods.Rmd/unnamed-chunk-14-7.png" width="672" style="display: block; margin: auto;" /><img src="figure/cs_3_numerical_methods.Rmd/unnamed-chunk-14-8.png" width="672" style="display: block; margin: auto;" /><img src="figure/cs_3_numerical_methods.Rmd/unnamed-chunk-14-9.png" width="672" style="display: block; margin: auto;" /><img src="figure/cs_3_numerical_methods.Rmd/unnamed-chunk-14-10.png" width="672" style="display: block; margin: auto;" /><img src="figure/cs_3_numerical_methods.Rmd/unnamed-chunk-14-11.png" width="672" style="display: block; margin: auto;" /><img src="figure/cs_3_numerical_methods.Rmd/unnamed-chunk-14-12.png" width="672" style="display: block; margin: auto;" /><img src="figure/cs_3_numerical_methods.Rmd/unnamed-chunk-14-13.png" width="672" style="display: block; margin: auto;" /><img src="figure/cs_3_numerical_methods.Rmd/unnamed-chunk-14-14.png" width="672" style="display: block; margin: auto;" /><img src="figure/cs_3_numerical_methods.Rmd/unnamed-chunk-14-15.png" width="672" style="display: block; margin: auto;" /><img src="figure/cs_3_numerical_methods.Rmd/unnamed-chunk-14-16.png" width="672" style="display: block; margin: auto;" /><img src="figure/cs_3_numerical_methods.Rmd/unnamed-chunk-14-17.png" width="672" style="display: block; margin: auto;" /><img src="figure/cs_3_numerical_methods.Rmd/unnamed-chunk-14-18.png" width="672" style="display: block; margin: auto;" /><img src="figure/cs_3_numerical_methods.Rmd/unnamed-chunk-14-19.png" width="672" style="display: block; margin: auto;" /><img src="figure/cs_3_numerical_methods.Rmd/unnamed-chunk-14-20.png" width="672" style="display: block; margin: auto;" /><img src="figure/cs_3_numerical_methods.Rmd/unnamed-chunk-14-21.png" width="672" style="display: block; margin: auto;" /><img src="figure/cs_3_numerical_methods.Rmd/unnamed-chunk-14-22.png" width="672" style="display: block; margin: auto;" /><img src="figure/cs_3_numerical_methods.Rmd/unnamed-chunk-14-23.png" width="672" style="display: block; margin: auto;" /><img src="figure/cs_3_numerical_methods.Rmd/unnamed-chunk-14-24.png" width="672" style="display: block; margin: auto;" /><img src="figure/cs_3_numerical_methods.Rmd/unnamed-chunk-14-25.png" width="672" style="display: block; margin: auto;" /><img src="figure/cs_3_numerical_methods.Rmd/unnamed-chunk-14-26.png" width="672" style="display: block; margin: auto;" /><img src="figure/cs_3_numerical_methods.Rmd/unnamed-chunk-14-27.png" width="672" style="display: block; margin: auto;" /><img src="figure/cs_3_numerical_methods.Rmd/unnamed-chunk-14-28.png" width="672" style="display: block; margin: auto;" /><img src="figure/cs_3_numerical_methods.Rmd/unnamed-chunk-14-29.png" width="672" style="display: block; margin: auto;" /><img src="figure/cs_3_numerical_methods.Rmd/unnamed-chunk-14-30.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>## now replay it, with half a second pauses between frames
+oopts &lt;- ani.options(interval = 0.5)
+ani.replay()</code></pre>
+</div>
+</div>
+<div id="markov-chain-monte-carlo-approach" class="section level3">
+<h3>Markov Chain Monte Carlo approach</h3>
+<p>When calculating conditional expectation in EM is too complicated</p>
+<p>Dangerous: always give results, even if you don’t think about your problem and data</p>
+<ul>
+<li>Monte Carlo = random sampling</li>
+</ul>
+<p>Sequence can be used to sample whole distribution (of parameters)</p>
+<p>Markov chain has no memory. Each step in chain, only depends on current state.</p>
+<p>Goes through dimensions, step by step</p>
+<p>In a Bayesian model:</p>
+<ul>
+<li>one postulates prior distributions for the values of the model parameters</li>
+<li>given the prio parameter distributions, the ilkelihood of the data is calculated</li>
+<li>from prior and likelihood, using Bayes Theorem, the posterior distribution of the parameters is obtained.</li>
+</ul>
+<p>Using ‘flat’ or ‘uninformative’ priors, maximum likelihood equivalent estimates can also be obtained. (posterior does not depend on belief on prior)</p>
+<p>Gibbs sampler: joint distribution as a product of all conditional distributions</p>
+<p>Metropolis-Hastings algorithm: draw sample from known distribution, and a decision rule to include or reject the sample (based on another draw from the known distribution)</p>
+<div id="gibbs-sampler" class="section level4">
+<h4>Gibbs sampler</h4>
+<p><span class="math display">\[f(x_1, x_2) = g(x_2|x_1)h(x_1)\]</span></p>
+<p>Random sample <span class="math inline">\(x_1\)</span> from it’s distribution. Then, given this value, draw <span class="math inline">\(x_2\)</span> from it’s conditional distribution.</p>
+<p>Say we want <span class="math inline">\(K\)</span> samples of <span class="math inline">\(X = (x_1, ..., x_p)\)</span> from a joint distribution $f(x_1, …,x_p)</p>
+<p>Denote the <span class="math inline">\(i\)</span>-th sample by <span class="math inline">\(X^{(i)} = (x_1^{(i)}, ..., x_p^{(i)})\)</span></p>
+<ul>
+<li>begin with some initial value <span class="math inline">\(X^{(0)}\)</span></li>
+<li>for each sample <span class="math inline">\(i\)</span>, get variable <span class="math inline">\(j\)</span> with:</li>
+</ul>
+<p><span class="math display">\[f(x_j|x_1^{(i)}, ..., x_{j-1}^{(i)}, x_{j+1}^{(i-1)}, ..., x_{p}^{(i-1)})\]</span></p>
+</div>
+<div id="some-distributions" class="section level4">
+<h4>Some distributions</h4>
+<p>For rate in Poisson, prior gamma(a,b), then posterior gamma(a + sum(y), b + n)</p>
+<p>Special case of Gamma: chisq(v) = gamma(1/2, v/2); is convenient, only has 1 parameter.</p>
+<p>Instead of specifying a fixed value for v, one can incorporate uncertainty by using a hyper-prior for v</p>
+<p>If the sampling distribution for g is gamma(a, b) with a known, and the prior distribution on b is gamma(a0, b0), the posterior distribution for b is gamma(a0 + n, b0 + sum(xi))</p>
+<p>With uniform prior for step in rate:</p>
+<p><span class="math display">\[L = e^{k(\lambda - \mu)}(\frac{\lambda}{\mu})^{S_k}\]</span></p>
+<p>With <span class="math inline">\(S_k = \sum_{i=1}^k{y_i}\)</span></p>
+<p>Requires normalization to be a proper distribution function</p>
+<p>Poor mixing: parameter updates not randomly drawn, but incremental, because of correlations. You can inspect this in the traceplot. This brakes the assumption of the Markov chain of independence of states.</p>
+<p>In Bayesian terms: percentiles of estimated parameters gives (e.g. 95%) credible intervals</p>
+<p>Checking convergence</p>
+<ul>
+<li>look for auto-correlation (lag-plots, lag-1, lag-2, lag-3, …)</li>
+<li>inspect traceplots</li>
+</ul>
+</div>
+</div>
+</div>
+<div id="session-information" class="section level2">
+<h2>Session information</h2>
+<!-- Insert the session information into the document -->
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 3.4.3 (2017-11-30)
+Platform: x86_64-apple-darwin15.6.0 (64-bit)
+Running under: macOS Sierra 10.12.6
+
+Matrix products: default
+BLAS: /Library/Frameworks/R.framework/Versions/3.4/Resources/lib/libRblas.0.dylib
+LAPACK: /Library/Frameworks/R.framework/Versions/3.4/Resources/lib/libRlapack.dylib
+
+locale:
+[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+
+attached base packages:
+[1] stats4    stats     graphics  grDevices utils     datasets  methods  
+[8] base     
+
+other attached packages:
+[1] mvtnorm_1.0-7   animation_2.5   survival_2.41-3 matlib_0.8.1   
+
+loaded via a namespace (and not attached):
+ [1] Rcpp_0.12.14       compiler_3.4.3     nloptr_1.0.4      
+ [4] git2r_0.20.0       tools_3.4.3        digest_0.6.14     
+ [7] lme4_1.1-15        jsonlite_1.5       evaluate_0.10.1   
+[10] nlme_3.1-131       lattice_0.20-35    mgcv_1.8-22       
+[13] Matrix_1.2-12      shiny_1.0.5        crosstalk_1.0.0   
+[16] yaml_2.1.16        parallel_3.4.3     SparseM_1.77      
+[19] stringr_1.2.0      knitr_1.18         htmlwidgets_0.9   
+[22] MatrixModels_0.4-1 rprojroot_1.2      nnet_7.3-12       
+[25] grid_3.4.3         R6_2.2.2           rgl_0.99.9        
+[28] rmarkdown_1.8      minqa_1.2.4        car_2.1-6         
+[31] magrittr_1.5       backports_1.1.2    htmltools_0.3.6   
+[34] MASS_7.3-47        splines_3.4.3      pbkrtest_0.4-7    
+[37] mime_0.5           xtable_1.8-2       httpuv_1.3.5      
+[40] quantreg_5.34      stringi_1.1.6     </code></pre>
+</div>
+</div>
+
+<hr>
+<p>
+    This <a href="http://rmarkdown.rstudio.com">R Markdown</a> site was created with <a href="https://github.com/jdblischak/workflowr">workflowr</a>
+</p>
+<hr>
+
+<!-- To enable disqus, uncomment the section below and provide your disqus_shortname -->
+
+<!-- disqus
+  <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+        var disqus_shortname = 'rmarkdown'; // required: replace example with your forum shortname
+
+        /* * * DON'T EDIT BELOW THIS LINE * * */
+        (function() {
+            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+-->
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
