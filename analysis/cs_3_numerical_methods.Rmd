@@ -1,0 +1,830 @@
+---
+title: "Numerical methods for estimation"
+author: "Wouter van Amsterdam"
+date: 2018-02-14
+output: html_document
+---
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+```
+
+<!-- Update knitr chunk options -->
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+<!-- Insert the date the file was last updated -->
+```{r last-updated, echo=FALSE, results='asis'}
+```
+
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+```{r code-version, echo=FALSE, results='asis'}
+```
+
+<!-- Add your analysis here -->
+
+# Intro
+
+Tutor: Rene Eijkemans
+
+## Overview
+
+Likelihood 
+
+* maximum likelihood principle
+* parameter estimation
+* inference on model parameters
+
+Numerical methods for ML parameter estimation
+
+* root finding of score equations
+* direct optimization of the likelihood
+
+Methods for complicated likelihoods
+
+* EM algorithm
+* MCMC approach
+
+# Likelihood approach
+
+Probability of finding the data we have, given the model
+It is reversed probability theory
+
+Parameter estimation -> solve score equations (= first derivatives)
+
+Hessian matrix -> Fisher information (needs to be positive definite)
+Covariance matrix and tandard error (se)
+
+$$L(\theta) = \prod_i^n{f(x_i|\theta)}$$
+
+$f(x_i|\theta)$ is probability of finding an observation, given the model
+
+Usually: take the log. Briggs: 1600s. Converts products to sums.
+
+Fisher's information is negative Hessian
+Inverse of negative Hessian gives covariance matrix
+
+(high covariance will result in lower information)
+
+When solving equations will not work, use direct maximization of the likelihood 
+(optimization methods)
+
+
+# Numerical root finding
+
+Bracketing methods (search within 2 limits)
+
+* Bisection and Brent's methods (`uniroot`)
+* Slow but guaranteed convergence
+
+Gradient methods (direct optimization)
+
+* Newton Raphson and variants
+* More rapid, but not guaranteed convergence
+* Not dealt wih in the course
+
+Unimodal = only 1 maximum
+
+## Bisection method
+
+Take a continous function, 
+and two points $a$ and $b$ for which $f(x)$ has opposite 
+sign.
+
+Take midpoint $m$ of $a$ and $b$. Evaluate sign of function there.
+
+When sign $f(a)$ and $f(m)$ are opposite, replace interval by $a,m$.
+Otherwise, replace with $b,m$. 
+
+Iterate, stop when precision is reached.
+
+Guaranteed to converge, at a linear rate
+
+
+### With code
+
+```{r}
+f <- function(y, a, n) {
+  a^2 + y^2 + 2*a*y/(n-1) - (n-2)
+}
+```
+
+Probram bisection method
+
+```{r}
+a <- .5
+n <- 20
+y0 <- 0
+y1 <- n
+
+
+
+# solve iteratively
+max_iteration <- 1000
+it <- 0
+eps <- .Machine$double.eps^.25
+
+y <- seq(y0, y1, length.out = 3)
+fy <- f(y, a, n)
+if (fy[1]*fy[3] > 0) stop("provide y0 and y1 such that the signs of f(y) are 
+                          different")
+
+while(it < 1000 && abs(fy[2]) > eps) {
+  it <- it + 1
+  if (fy[1]*fy[2] < 0) {
+    y[3] <- y[2]
+    fy[3] <- fy[2]
+  } else {
+    y[1] <- y[2]
+    fy[1] <- fy[2]
+  }
+  y[2] <- (y[1] + y[3]) / 2
+  fy[2] <- f(y[2], a, n)
+}
+
+it
+y
+fy
+
+ys <- seq(y0, y1, length.out = 1000)
+plot(ys, f(ys, a, n))
+abline(h = 0, lty = 2)
+
+```
+
+Stopping criteria can be vertical or horizontal
+
+* function close enough to 0
+* differences in estimates close enough to each other
+
+## Brent's method
+
+Use 3 points (or 2 points and the midpoint)
+
+* Fit quadratic function through the 3 points {(a,f(a)), (b,f(b)), (c,f(c))}
+* Find roots of this function
+* Replace values of a, b, or c, depending on the sign of $f(x)$
+
+
+* Guaranteed convergence, usually faster than bisection
+
+
+
+Program Brents method
+
+```{r}
+f <- function(y, a, n) {
+  a^2 + y^2 + 2*a*y/(n-1) - (n-2)
+}
+
+a <- .5
+n <- 20
+y0 <- 0
+y1 <- n
+maxit <- 1000
+
+uniroot(function(x) f(x, a, n), interval = c(y0, y1))
+uniroot(function(x) f(x, a, n), interval = c(y0, -y1))
+```
+
+Make a function to fit a quadratic function to three points
+
+```{r}
+require(matlib)
+
+x <- c(0, 1, 2)
+y <- c(-1, 2, 1)
+
+A <- matrix(c(
+  x^2, x, rep(1, 3)
+), byrow = F, nrow = 3)
+A
+
+b <- y
+
+colnames(A) <- c("a", "b", "c")
+
+showEqn(A, b)
+
+solve(A, b)
+
+find_parabola <- function(x, y) {
+  if (length(x) != 3 | length(y) != 3) stop("please provide 3 x and y values")
+  A <- matrix(c(
+    x^2, x, rep(1,3)
+  ), nrow = 3, byrow = F)
+  b <- y
+  solve(A, b)
+}
+
+find_parabola(x, y)
+```
+
+Make function to find roots for parabola
+
+```{r}
+parabola_roots <- function(a, b, c) {
+  d <- b^2 - 4*a*c
+  if (d < 0) {
+    warning("no roots")
+    return(NA)
+  }
+  c((-b - sqrt(d))/(2*a), (-b + sqrt(d))/(2*a))
+}
+```
+
+
+Implement Brent solver
+
+```{r}
+
+f <- function(y, a, n) {
+  a^2 + y^2 + 2*a*y/(n-1) - (n-2)
+}
+
+a <- .5
+n <- 20
+y0 <- 0
+y1 <- n
+maxit <- 1000
+
+it <- 0
+y <- seq(y0, y1, length.out = 3)
+fy <- f(y, a, n)
+
+while (it < maxit) {
+  it <- it + 1
+  
+  # fit parabola through supplied points
+  parabola <- find_parabola(y, fy)
+  # find root of parabola
+  roots    <- parabola_roots(parabola[1], parabola[2], parabola[3])
+  root     <- roots[roots > y[1] & roots < y[3]]
+  # check if only a single root is within the interval
+  if (length(root) > 1) stop("provide starting points with opposite sign")
+  
+  
+}
+
+```
+
+## Optimization mothods for ML parameter estimation
+
+Problems with root finding
+
+* derivatives of likelihood may not exist, or only in part of the parameter space
+* Maximum likelihood may lie at boundary of parameter space, 
+(e.g. Variance estimates in Mixed effects models, may be at 0)
+* Difficult in higher dimensions
+
+Direct maximization may be better
+
+### in R
+
+1 dimension: 
+
+* `nlm`, Newton type, fast convergence, not gauranteed
+* `optimize`, like Brent's method, slower but more robust
+
+Multidimensional: `optim`
+
+* Nelder Mead: search with fixed steps uphill, without gradient information, 
+guaranteed to find an optimal solution; with some adaptation on step size; (amoebe)
+* Quasi Newton: uses gradient (steepness) and curvature information; can overshoot;
+* Conjugated gradients: clever use of only gradients, to approximate the 
+curvature by keeping track of gradients
+
+For ML estimation, R has special `stats4::mle` function, 
+uses `optim` function internally
+
+### Example exponential distribution
+
+Survival with no censoring.
+
+Survival function: $s(y) = e^{-\theta y}$
+
+Density function
+
+$$f(y) = \theta e^{-\theta y}$$
+
+$$l(\theta) = \sum_i{\log(\theta e^{-\theta y_i})}$$
+
+Solve analytically will give
+
+$$\hat{\theta} = \frac{n}{\sum{y_i}}$$
+
+Which is the incidence density
+
+
+To use `mle`, we need to define a function for the negative log lokelihood
+
+`formals` will return default values of a function
+
+```{r}
+################################################################################
+## optimization example (Example 11.10)
+################################################################################
+## ML estimation as in Example 11.10 is done using function mle from the stats4 library
+## the example is fitting an exponential distribution to a sample of size 2.
+## the observed sample:
+y <- c(0.04304550,0.50263474)
+## function for the minus log likelihood
+mlogL <- function(theta=1){
+  #minus logliklihood of exp. density
+  return(-sum(log(theta)-theta*y))
+}
+
+mlogL(1)
+mlogL(1.5)
+library(stats4)
+fit <- mle(mlogL)
+summary(fit)
+## note that the result contains not only the ML parameter estimate, but also an estimate 
+## of the standard error
+
+## We can get the covariance (matrix) by
+vcov(fit)
+sqrt(diag(vcov(fit))) #standard error of the estimate
+# we can get details of the fitting by:
+fit@details
+
+```
+
+# Complicated likelihoods
+
+Example of complicated likelihoods
+
+* Mixture model: likelihood is combination of 2 (simple) distributions; 
+probability to be in 1 or the other is unobservable (latent class)
+* Missing data or measurement error models: likelihood contains unobserved values;
+latent factors
+* Survival model with censoring: likelihood contribution of censored data 
+may be analytically intractable
+* Non-linear mixed model: likelihood conaints expectation of random effect (distribution);
+We only estimate random effect distribution, not all individual random effects.
+Integral over random effect distribution, analytical integral does not exist
+
+
+Answer: split likelihood in parts
+
+Expectation Maximization (EM): suited for problems with latent factors. (e.g.
+mixed distributions with latent factors, censored survival, 
+missing data (iterative missing prediction, starting with initial parameters,
+fit model, re-predict missing prediction, re-fit, re-predict, iterate))
+Markov Chain Monte Carlo (MCMC): generally for difficult likelihood problems 
+(using Bayesian framework); use (uninformative) prior distribution
+
+## Expectation maximization
+
+Slow algorithm. 
+Requires knowledge of the distribution;
+You require an expected value for the missing (/ latent) values
+
+```{r}
+################################################################################
+## EM algoritm: censored survival
+################################################################################
+## create a sample of censored exponentially distributed survival times
+set.seed(52934867)
+survtime <- rexp(1000,rate=0.5)
+censtime <- rexp(1000,rate=0.2)
+y <- ifelse(survtime < censtime,survtime,censtime)
+d <- ifelse(survtime < censtime,1,0)
+summary(y)
+table(d)
+
+# Kaplan Meier estimate of the survival curve:
+require(survival)
+KM <- survfit(Surv(y,d)~1)
+plot(KM,xlab="Time",ylab="Proportion surviving")
+
+## analytical estimate of the rate:
+sum(d)/sum(y) # = events / person-time; which is valid for censored data
+```
+
+```{r}
+# Now use the EM algorithm
+N <- 100 #max number of iterations
+theta <- 1 #initial guesses for theta (=rate)
+theta.old <- theta #set old par to the current inital guess, needed further down 
+tol <- .Machine$double.eps^0.5 #set tolerance (=precision)
+## create a matrix that will store the iteration history of the parameters
+theta.mat <- matrix(NA,nrow=N,ncol=1)
+theta.mat[1,] <- theta #fill the first element with the initial guess
+## the EM iterations:
+for (i in 1:N){
+  #The E step: calculate the expected survival times for censored subjects
+    #note: the expected (=mean) survival time for an exponential distribution = 1/theta 
+    #censored subjects have already survived until their censoring time y
+    #because of the memorylessness of the exponential distribution, their expected
+    #total survival time = y + 1/theta
+  Etimes <- ifelse(d==0,y+1/theta,y) # y + 1/theta, since E(theta) = 1/theta for exponential distribution
+  #the M step: compute the new parameter estimate:
+  # is the mean survival time = 1/theta, the estimate of theta = 1/mean
+  theta <- 1/mean(Etimes)
+  theta.mat[i+1,] <- theta
+  #determine convergence  
+  if (sum(abs(theta-theta.old)/theta.old) < tol) break
+  theta.old <- theta
+}
+
+## final solution:
+theta
+## how many iteration till convergence?
+i
+# iteration history:
+# theta.mat[1:i,]
+# note that the first steps approach the final value very fast, but convergens slows down after that
+```
+
+### EM for mixture models
+
+Formalism
+
+$$Y_1 \sim N(\mu_1, \sigma_1^2)$$
+$$Y_2 \sim N(\mu_2, \sigma_2^2)$$
+$$Y \sim (1-\Delta)Y_1+\Delta Y_2$$
+
+With $\Delta \in \{0,1\}$, and $Pr\{\Delta = 1\} = \pi$
+
+Likelihood of 5 parameters
+
+#### Expected value step
+Determine a probability density value for group membership $\Delta_i$, 
+depending on $y_i$ and $\pi$. Use this as a weight in the first and second group 
+membership.
+
+From Bayes rule. 
+Probability to be in second group
+
+$$\gamma_i = \frac{\hat{\pi} \phi_{\theta_2}(y_i)}{(1-\hat{\pi})\phi_{\theta_1}(y_i) + \hat{\pi} \phi_{\theta_2}(y_i)}$$
+
+#### Maximization step
+
+$$\hat{\mu}_1 = \frac{\sum_i{(1-\hat{\gamma}_i)y_i}}{\sum_i{\hat{\gamma}_i}}$$
+
+Etc.
+
+$$\hat{\pi}_i = \frac{1}{N}\sum{\gamma_i}$$
+
+```{r}
+################################################################################
+## EM algoritm: mixture example
+################################################################################
+
+## the data: 
+## Source: Hastie, Tibshirani, Friedman: the Elements of Statistical Learning, 
+## 2nd ed., chapter 8.5
+y <- c(-.39,.12,.94,1.67,.76,2.44,3.72,4.28,4.92,5.53,
+       .06,.48,1.01,.168,1.8,3.25,4.12,4.6,5.28,6.22)
+
+## look at histogram of the data
+h <- hist(y,freq=FALSE)
+
+## EM algorithm
+N <- 100 ## max number of iterations
+## initial guesses for the parameters
+mu1 <- 1
+var1 <- var(y)/2
+mu2 <- 5
+var2 <- var(y)/2
+p <- 0.5
+## concatenate the parameters into one vector par
+par <- c(mu1=mu1,var1=var1,mu2=mu2,var2=var2,p=p)
+## set old par to the current inital guess, needed further down 
+par.old <- par
+## set tolerance
+tol <- .Machine$double.eps^0.25
+## create a matrix that will store the iteration history of the parameters
+par.mat <- matrix(NA,nrow=N,ncol=5)
+par.mat[1,] <- par
+## the EM iterations
+for (i in 1:N){
+## The E step: calculate g, the probability to belong to the second group in the mixture,
+## as the expected values for each subject of Delta
+  p <- par[5]
+  g <- p*dnorm(y,mean=par[3],sd=sqrt(par[4]))/
+    ((1-p)*dnorm(y,mean=par[1],sd=sqrt(par[2]))+p*dnorm(y,mean=par[3],sd=sqrt(par[4])))
+## the M step: compute the new parameter estimates as weighted mean, var and proportion
+## using g from the E step as weights
+  mu1 <-weighted.mean(y,w=1-g)
+  mu2 <-weighted.mean(y,w=g)
+  var1 <- sum((1-g)*(y-mu1)^2)/(sum(1-g))
+  var2 <- sum(g*(y-mu2)^2)/(sum(g))
+  p <- sum(g)/length(y)
+  par <- c(mu1,var1,mu2,var2,p)
+  par.mat[i+1,] <- par
+## determine convergence  
+  if (sum(abs(par-par.old)/par.old) < tol) break
+  par.old <- par
+}
+
+## final solution:
+par
+par.mat[1:i,]
+## how many iterations till convergence?
+i
+
+## Superpose plot of fitted mixture on histogram
+yrange <- -1+(1:100)/100*8
+lines(yrange,(1-p)*dnorm(yrange,mean=mu1,sd=sqrt(var1))+p*dnorm(yrange,mean=mu2,sd=sqrt(var2)))
+```
+
+Look at conversion of with log-likelihood for each step
+
+```{r}
+## see how fast the iterations converged
+## compute the loglikelihood after each iteration, using par.mat
+loglik.iter <- apply(par.mat,MARGIN=1,FUN=function(pa){
+  p <- pa[5]
+  sum(log((1-p)*dnorm(y,mean=pa[1],sd=sqrt(pa[2]))+p*dnorm(y,mean=pa[3],sd=sqrt(pa[4]))))
+})
+plot(0:20,loglik.iter[1:(20+1)],type="l")
+```
+
+Now with MLE
+
+```{r}
+## this can also be done by the mle function
+y <- matrix(c(-.39,.12,.94,1.67,.76,2.44,3.72,4.28,4.92,5.53,
+       .06,.48,1.01,.168,1.8,3.25,4.12,4.6,5.28,6.22),ncol=1)
+mlogL <- function(p=0.5,m1=1,v1=1,m2=5,v2=1){
+  #minus logliklihood of mixturedensity
+  return(-sum(log((1-p)*dnorm(y,mean=m1, sd=sqrt(v1))+p*dnorm(y,mean=m2, sd=sqrt(v2)))))
+}
+mlogL()
+
+
+mle_fit <- stats4::mle(mlogL)
+print(mle_fit)
+summary(mle_fit)
+vcov(mle_fit)
+```
+
+
+
+
+```{r}
+
+xpts <- seq(from=1,to=6,length.out=100)
+ypts <- seq(from=40,to=100,length.out=100)
+
+
+## now programmed more generally, defining separate functions for the 
+# Estep and the Mstep. 
+# In addition, plots per iteration and animation are used to illustrate
+# the resulting fits of the iterative process
+
+
+#function E step: 
+# calculates the conditional probabilities for the latent variable, g, the 
+# probability to be in class 2, given the data value y.
+# Here, it is more convenient to have the paramters in a list, rather than a 
+# vector
+# Output Value: vector with the individual probabilities (=g)
+E.step <- function(theta,y){
+  g <- with(theta, p * dnorm(y,mean=mu2,sd=sigma2) / 
+     ((1-p) * dnorm(y,mean=mu1,sd=sigma1) + p * dnorm(y,mean=mu2,sd=sigma2) ) )
+  g
+}
+#function M step: 
+# calculates the updated parameter estimates by weighting with g from the Estep
+# value: list of updated parameter values
+M.step <- function(g,y) 
+  list(
+  p= mean(g),
+  mu1= weighted.mean(y,w=1-g),
+  mu2= weighted.mean(y,w=g),
+  sigma1= sqrt(cov.wt(matrix(y,ncol=1),wt=1-g)$cov),
+  sigma2= sqrt(cov.wt(matrix(y,ncol=1),wt=g)$cov)
+  )
+
+#function plot.em
+# plots the model fit from the list theta
+plot.em <- function(theta,data){
+  histdata <- hist(data,freq=FALSE)  # plot histogram and store the key data
+  datarange <- seq(min(histdata$breaks), # sequence of 100 values for plotting 
+                max(histdata$breaks), # the model curve on the range of the
+                length.out = 100)     # histogram
+  modelcurve <- with(theta,(1-p)*dnorm(datarange,mean=mu1,sd=sigma1)+
+                               p*dnorm(datarange,mean=mu2,sd=sigma2))
+  lines(datarange,modelcurve)
+}
+
+#initial parameter estimates, in a list
+theta0 <- list(
+  p=0.5,
+  mu1=2,
+  mu2=4,
+  sigma1=sqrt(var(y)),
+  sigma2=sqrt(var(y))
+)
+
+library(animation) # load libary to animate plots
+
+iterMax <- 30 ## max number of iterations
+iter <- 1
+theta <- theta0  # set current parameters equal to the initial parameters
+
+# create empty matrix to contain the parameter estimates
+theta.mat <- matrix(NA,nrow=iterMax,ncol=length(theta))
+theta.mat[1,] <- unlist(theta)  # fill the first row
+
+#run EM and plot per iteration, simultaneously recording it for animation lateron
+
+par(bg = "white")  # ensure the background color is white
+ani.record(reset = TRUE)  # clear history before animation recording
+
+for (iter in 2:iterMax){
+  
+  g <- E.step(theta,y)   # E step
+  
+  theta <- M.step(g,y)   # M step and storing new parameter values
+  theta.mat[iter,] <- unlist(theta)
+  
+  plot.em(theta,data=y)
+  text(x=4,y=0.3,paste('iter:',iter))
+
+  ani.record()  # record the current graphics frame  
+}
+
+## now replay it, with half a second pauses between frames
+oopts <- ani.options(interval = 0.5)
+ani.replay()
+```
+
+With Old Faithful data
+
+```{r}
+par(mfrow=c(1,1))
+## bivariate normal mixture: Old Faithful data
+#load library for multivariate normal
+library(mvtnorm)
+
+#load Old Faithful data frame
+data(faithful)
+plot(faithful)
+
+#E step: calculates conditional probabilities for g
+E.step <- function(theta,data)
+    with(theta,    p * dmvnorm(data,mean=mu2,sigma=sigma2)/
+           ((1-p) * dmvnorm(data,mean=mu1,sigma=sigma1) + 
+                p * dmvnorm(data,mean=mu2,sigma=sigma2))
+    )
+
+#M step: calculates the parameter estimates weighted by g from the Estep
+M.step <- function(g,data) list(
+  p= mean(g),
+  mu1= apply(data,2,weighted.mean,1-g),
+  mu2= apply(data,2,weighted.mean,g),
+  sigma1= cov.wt(data,1-g)$cov,
+  sigma2= cov.wt(data,g)$cov)
+
+#function to plot current data and contourplot of the bivariate mixture distribution
+plot.em.contour <- function(theta,data){
+  #setup grid for plotting
+  xpts <- seq(from=min(data[[1]]),to=max(data[[1]]),length.out=100)
+  ypts <- seq(from=min(data[[2]]),to=max(data[[2]]),length.out=100)
+  # compute the bivariate density values of the model specified in theata,
+  # on the xy grid just defined
+  mixture.contour <- outer(xpts,ypts,function(x,y)  with(theta,  
+      (1-p)*dmvnorm(cbind(x,y),mean=mu1,sigma=sigma1) + p*dmvnorm(cbind(x,y),mean=mu2,sigma=sigma2)
+         ))
+  # plot the contourplot
+  contour(xpts,ypts,mixture.contour,nlevels=6,drawlabel=FALSE,col="red",xlab="Eruption time (mins)",ylab="Waiting time (mins)",main="Waiting time vs Eruption time of the Old Faithful geyser")
+  
+  # now add the data points to the plot:
+  points(data)
+}
+
+#initial parameter estimates (chosen to be deliberately bad)
+theta0 <- list(
+  p=0.5,
+  mu1=c(2.8,75),
+  mu2=c(3.6,58),
+  sigma1=matrix(c(0.8,7,7,70),ncol=2),
+  sigma2=matrix(c(0.8,7,7,70),ncol=2)
+)
+
+iterMax <- 30 ## max number of iterations
+iter <- 1
+theta <- theta0  # set current parameters equal to the initial parameters
+
+#run EM and plot per iteration, simultaneously recording it for animation lateron
+
+par(bg = "white")  # ensure the background color is white
+ani.record(reset = TRUE)  # clear history before animation recording
+
+for (iter in 2:iterMax){
+
+  g <- E.step(theta,faithful)
+  
+  theta <- M.step(g,faithful)
+
+  plot.em.contour(theta,data=faithful)
+  text(x=2,y=90,paste('iter:',iter))
+  
+  ani.record()  # record the current graphics frame  
+  
+}
+
+## now replay it, with half a second pauses between frames
+oopts <- ani.options(interval = 0.5)
+ani.replay()
+
+```
+
+### Markov Chain Monte Carlo approach
+
+When calculating conditional expectation in EM is too complicated
+
+Dangerous: always give results, even if you don't think about your problem and data
+
+* Monte Carlo = random sampling
+
+Sequence can be used to sample whole distribution (of parameters)
+
+Markov chain has no memory. Each step in chain, only depends on current state.
+
+Goes through dimensions, step by step
+
+
+In a Bayesian model:
+
+* one postulates prior distributions for the values of the model parameters
+* given the prio parameter distributions, the ilkelihood of the data is 
+calculated
+* from prior and likelihood, using Bayes Theorem, the posterior distribution
+of the parameters is obtained.
+
+Using 'flat' or 'uninformative' priors, maximum likelihood equivalent 
+estimates can also be obtained. (posterior does not depend on belief on prior)
+
+Gibbs sampler: joint distribution as a product of all conditional distributions
+
+Metropolis-Hastings algorithm: draw sample from known distribution, 
+and a decision rule to include or reject the sample (based on another 
+draw from the known distribution)
+
+#### Gibbs sampler
+
+$$f(x_1, x_2) = g(x_2|x_1)h(x_1)$$
+
+Random sample $x_1$ from it's distribution. Then, given this value,
+draw $x_2$ from it's conditional distribution.
+
+Say we want $K$ samples of $X = (x_1, ..., x_p)$ from a joint distribution
+$f(x_1, ...,x_p)
+
+Denote the $i$-th sample by $X^{(i)} = (x_1^{(i)}, ..., x_p^{(i)})$
+
+* begin with some initial value $X^{(0)}$
+* for each sample $i$, get variable $j$ with:
+
+$$f(x_j|x_1^{(i)}, ..., x_{j-1}^{(i)}, x_{j+1}^{(i-1)}, ..., x_{p}^{(i-1)})$$
+
+#### Some distributions
+
+For rate in Poisson, prior gamma(a,b), then posterior gamma(a + sum(y), b + n)
+
+Special case of Gamma: chisq(v) = gamma(1/2, v/2); is convenient, only has 
+1 parameter.
+
+Instead of specifying a fixed value for v, one can incorporate uncertainty 
+by using a hyper-prior for v
+
+If the sampling distribution for g is gamma(a, b) with a known, 
+and the prior distribution on b is gamma(a0, b0), 
+the posterior distribution for b is gamma(a0 + n, b0 + sum(xi))
+
+
+With uniform prior for step in rate:
+
+$$L = e^{k(\lambda - \mu)}(\frac{\lambda}{\mu})^{S_k}$$
+
+With $S_k = \sum_{i=1}^k{y_i}$
+
+Requires normalization to be a proper distribution function
+
+
+Poor mixing: parameter updates not randomly drawn, but incremental, because 
+of correlations. You can inspect this in the traceplot. This brakes the 
+assumption of the Markov chain of independence of states.
+
+
+In Bayesian terms: percentiles of estimated parameters gives (e.g. 95%) 
+credible intervals
+
+Checking convergence
+
+* look for auto-correlation (lag-plots, lag-1, lag-2, lag-3, ...) 
+* inspect traceplots
+
+## Session information
+
+<!-- Insert the session information into the document -->
+```{r session-info}
+```
