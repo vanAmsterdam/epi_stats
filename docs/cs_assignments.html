@@ -315,10 +315,10 @@ div.tocify {
 shared across the workflowr files. -->
 <!-- Update knitr chunk options -->
 <!-- Insert the date the file was last updated -->
-<p><strong>Last updated:</strong> 2018-02-14</p>
+<p><strong>Last updated:</strong> 2018-02-22</p>
 <!-- Insert the code version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
-<p><strong>Code version:</strong> 4a4abb1</p>
+<p><strong>Code version:</strong> d3c2fe9</p>
 <!-- Add your analysis here -->
 <div id="setup" class="section level1">
 <h1>Setup</h1>
@@ -1303,6 +1303,81 @@ dev.off()</code></pre>
 <p>Now be proud ;)</p>
 </div>
 </div>
+</div>
+<div id="day-2-simulation-studies" class="section level1">
+<h1>Day 2 simulation studies</h1>
+<p>These cost a lot of time to render and are put in a separate file. Find them here: <a href="cs_assignments_sim.html">assignments Simulation Studies</a></p>
+</div>
+<div id="day-3-numerical-methods" class="section level1">
+<h1>Day 3 numerical methods</h1>
+</div>
+<div id="day-4-inference" class="section level1">
+<h1>Day 4 Inference</h1>
+<div id="problem-8.2-rizzo" class="section level2">
+<h2>Problem 8.2 (Rizzo)</h2>
+<div id="a.-get-data-from-spss-into-r" class="section level3">
+<h3>A. get data from SPSS into R</h3>
+<pre class="r"><code>require(haven)
+rtsbp &lt;- haven::read_spss(here::here(&quot;data&quot;, &quot;RTSBP.sav&quot;))
+rtsbp</code></pre>
+<pre><code># A tibble: 33 x 3
+   groep       SBP    RT
+   &lt;dbl+lbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+ 1 1          66.0  7.00
+ 2 1          52.0 10.0 
+ 3 1          72.0 18.0 
+ 4 1          67.0  4.00
+ 5 1          69.0 10.0 
+ 6 1          71.0 13.0 
+ 7 1          88.0 21.0 
+ 8 1          68.0 12.0 
+ 9 1          59.0  9.00
+10 1          73.0 65.0 
+# ... with 23 more rows</code></pre>
+</div>
+<div id="b.-make-boxplot-by-group" class="section level3">
+<h3>B. Make boxplot by group</h3>
+<pre class="r"><code>require(magrittr)
+rtsbp %&gt;%
+  boxplot(RT~groep, data = .)</code></pre>
+<p><img src="figure/cs_assignments.Rmd/unnamed-chunk-51-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="c.-compare-distributions" class="section level3">
+<h3>C. Compare distributions</h3>
+<p>With K-S test</p>
+<pre class="r"><code>ks.test(rtsbp$RT[rtsbp$groep==1], rtsbp$RT[rtsbp$groep==2])</code></pre>
+<pre><code>Warning in ks.test(rtsbp$RT[rtsbp$groep == 1], rtsbp$RT[rtsbp$groep == 2]):
+cannot compute exact p-value with ties</code></pre>
+<pre><code>
+    Two-sample Kolmogorov-Smirnov test
+
+data:  rtsbp$RT[rtsbp$groep == 1] and rtsbp$RT[rtsbp$groep == 2]
+D = 0.54231, p-value = 0.01943
+alternative hypothesis: two-sided</code></pre>
+<div id="d.-compare-distributions-with-permutation-test" class="section level4">
+<h4>D. Compare distributions with permutation test</h4>
+<pre class="r"><code>ks0 &lt;- ks.test(rtsbp$RT[rtsbp$groep==1], rtsbp$RT[rtsbp$groep==2])
+n  &lt;- nrow(rtsbp)
+n1 &lt;- min(table(rtsbp$groep))
+
+y &lt;- rtsbp$RT
+nperm &lt;- 999
+ks &lt;- numeric(nperm)
+
+for (i in 1:nperm) {
+  g &lt;- sample(n, n1, replace = F)
+  ks[i] &lt;- ks.test(y[g], y[-g], exact = F)$statistic
+}
+
+# two-sided permutation p-value
+(1 + sum(abs(ks) &gt;= abs(ks0$statistic)))/(nperm+1)</code></pre>
+<pre><code>[1] 0.006</code></pre>
+<pre class="r"><code>hist(ks)
+abline(v = ks0$statistic, lty = 2)</code></pre>
+<p><img src="figure/cs_assignments.Rmd/unnamed-chunk-53-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+</div>
+</div>
 <div id="session-information" class="section level2">
 <h2>Session information</h2>
 <!-- Insert the session information into the document -->
@@ -1322,21 +1397,21 @@ attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
 other attached packages:
-[1] bindrcpp_0.2        mvtnorm_1.0-7       ggplot2_2.2.1      
-[4] here_0.1            purrr_0.2.4         magrittr_1.5       
-[7] data.table_1.10.4-3 dplyr_0.7.4        
+[1] haven_1.1.1         bindrcpp_0.2        mvtnorm_1.0-7      
+[4] ggplot2_2.2.1       here_0.1            purrr_0.2.4        
+[7] magrittr_1.5        data.table_1.10.4-3 dplyr_0.7.4        
 
 loaded via a namespace (and not attached):
- [1] Rcpp_0.12.14     pillar_1.1.0     compiler_3.4.3   git2r_0.20.0    
- [5] plyr_1.8.4       bindr_0.1        tools_3.4.3      digest_0.6.14   
- [9] evaluate_0.10.1  tibble_1.4.1     gtable_0.2.0     pkgconfig_2.0.1 
-[13] rlang_0.1.6      cli_1.0.0        yaml_2.1.16      stringr_1.2.0   
-[17] knitr_1.18       gtools_3.5.0     rprojroot_1.2    grid_3.4.3      
-[21] glue_1.2.0       R6_2.2.2         rmarkdown_1.8    gdata_2.18.0    
-[25] backports_1.1.2  scales_0.5.0     htmltools_0.3.6  gmodels_2.16.2  
-[29] MASS_7.3-47      assertthat_0.2.0 colorspace_1.3-2 labeling_0.3    
-[33] utf8_1.1.3       stringi_1.1.6    lazyeval_0.2.1   munsell_0.4.3   
-[37] crayon_1.3.4    </code></pre>
+ [1] Rcpp_0.12.15     pillar_1.1.0     compiler_3.4.3   git2r_0.21.0    
+ [5] plyr_1.8.4       bindr_0.1        forcats_0.2.0    tools_3.4.3     
+ [9] digest_0.6.15    evaluate_0.10.1  tibble_1.4.2     gtable_0.2.0    
+[13] pkgconfig_2.0.1  rlang_0.1.6      cli_1.0.0        yaml_2.1.16     
+[17] stringr_1.2.0    knitr_1.19       hms_0.4.1        gtools_3.5.0    
+[21] rprojroot_1.3-2  grid_3.4.3       glue_1.2.0       R6_2.2.2        
+[25] rmarkdown_1.8    gdata_2.18.0     readr_1.1.1      backports_1.1.2 
+[29] scales_0.5.0     htmltools_0.3.6  gmodels_2.16.2   MASS_7.3-48     
+[33] assertthat_0.2.0 colorspace_1.3-2 labeling_0.3     utf8_1.1.3      
+[37] stringi_1.1.6    lazyeval_0.2.1   munsell_0.4.3    crayon_1.3.4    </code></pre>
 </div>
 </div>
 

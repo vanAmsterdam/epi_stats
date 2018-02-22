@@ -1,0 +1,2756 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+<meta name="author" content="Wouter van Amsterdam" />
+
+<meta name="date" content="2018-02-19" />
+
+<title>Assignments for Advanced Methods for Causal Research, Confounding and Effect modification</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<script src="site_libs/htmlwidgets-1.0/htmlwidgets.js"></script>
+<script src="site_libs/viz-0.3/viz.js"></script>
+<link href="site_libs/DiagrammeR-styles-0.2/styles.css" rel="stylesheet" />
+<script src="site_libs/grViz-binding-0.9.2/grViz.js"></script>
+<link href="site_libs/font-awesome-4.5.0/css/font-awesome.min.css" rel="stylesheet" />
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+
+<div class="container-fluid main-container">
+
+<!-- tabsets -->
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+</script>
+
+<!-- code folding -->
+
+
+
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+  padding-left: 25px;
+  text-indent: 0;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">epi_stats</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/jdblischak/workflowr">
+    <span class="fa fa-github"></span>
+     
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">Assignments for Advanced Methods for Causal Research, Confounding and Effect modification</h1>
+<h4 class="author"><em>Wouter van Amsterdam</em></h4>
+<h4 class="date"><em>2018-02-19</em></h4>
+
+</div>
+
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+<!-- Update knitr chunk options -->
+<!-- Insert the date the file was last updated -->
+<p><strong>Last updated:</strong> 2018-02-22</p>
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+<p><strong>Code version:</strong> d3c2fe9</p>
+<!-- Add your analysis here -->
+<div id="setup" class="section level1">
+<h1>Setup</h1>
+<p>Load some handy packages</p>
+<pre class="r"><code>require(broom)
+require(purrr)
+require(dplyr)
+require(data.table)
+require(ggplot2)
+require(epistats)
+require(here) # for managing working directory
+require(magrittr)
+require(haven) # for importing from spss</code></pre>
+</div>
+<div id="day-1-dag-propensity-score-inverse-probability-weighing" class="section level1">
+<h1>Day 1 DAG, Propensity score, inverse probability weighing</h1>
+<div id="directed-acyclic-graphs-dag" class="section level2">
+<h2>1. Directed acyclic graphs (DAG)</h2>
+<div id="confounding" class="section level3">
+<h3>1. Confounding</h3>
+<blockquote>
+<p>The aim of this exercise is to illustrate the causal structure of confounding using simulated data.</p>
+</blockquote>
+<div id="section" class="section level4">
+<h4>1.</h4>
+<blockquote>
+<p>Draw a DAG of confounding. Indicate the confounder as ‘C’, the exposure as ‘X’, and the outcome as ‘Y’. Furthermore, name the arrows as follows: βYX is the arrow from X to Y, βXC is the arrow from C to X, and βYC is the arrow from C to Y.</p>
+</blockquote>
+<pre class="r"><code>require(DiagrammeR)
+dag1 &lt;- &quot;digraph dag1 {
+  graph [layout = dot]
+  
+  node[shape = circle]
+  X; Y; C;
+  
+  X -&gt; Y [label = &#39;Byx&#39;]
+  C -&gt; X [label = &#39;Bxc&#39;]
+  C -&gt; Y [label = &#39;Byc&#39;]
+  
+  subgraph {
+    rank = same; X; Y
+  }
+}&quot;
+
+DiagrammeR(dag1, type = &quot;grViz&quot;)</code></pre>
+<div id="htmlwidget-b8e0c2e2742a5382bafd" style="width:672px;height:480px;" class="grViz html-widget"></div>
+<script type="application/json" data-for="htmlwidget-b8e0c2e2742a5382bafd">{"x":{"diagram":"digraph dag1 {\n  graph [layout = dot]\n  \n  node[shape = circle]\n  X; Y; C;\n  \n  X -> Y [label = \"Byx\"]\n  C -> X [label = \"Bxc\"]\n  C -> Y [label = \"Byc\"]\n  \n  subgraph {\n    rank = same; X; Y\n  }\n}","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script>
+</div>
+<div id="section-1" class="section level4">
+<h4>2.</h4>
+<blockquote>
+<p>Let’s make some assumptions about the relations between the different variables, i.e., make assumptions about the values of βYX, βXC, and βYC.</p>
+</blockquote>
+<pre class="r"><code>byx = 1.5
+bxc = 1.1
+byc = 1.3</code></pre>
+</div>
+<div id="section-2" class="section level4">
+<h4>3.</h4>
+<blockquote>
+<p>Now, let’s simulate some data to illustrate confounding, and confounding adjustment. The illustrated data will resemble the DAG you just drew. Let’s assume all data are normally distributed.</p>
+</blockquote>
+<div id="a." class="section level5">
+<h5>a.</h5>
+<blockquote>
+<p>Sample C (e.g., 100,000 observations) from a normal distribution, with mean 0 and standard deviation 1:</p>
+</blockquote>
+<pre class="r"><code>set.seed(12345)
+C &lt;- rnorm(100000, 0, 1)</code></pre>
+</div>
+<div id="b." class="section level5">
+<h5>b.</h5>
+<blockquote>
+<p>Define the relation between C and X (based on your DAG), e.g., βXC = 2:</p>
+</blockquote>
+<p>See 2.</p>
+</div>
+<div id="c.-generate-x-based-on-c-plus-some-random-error" class="section level5">
+<h5>c. Generate X, based on C plus some random error:</h5>
+<pre class="r"><code>X &lt;- bxc * C + rnorm(100000, 0, 1)</code></pre>
+</div>
+<div id="d." class="section level5">
+<h5>d.</h5>
+<blockquote>
+<p>Define the relation between C and Y, and C and X (based on your DAG), e.g., βYC = 1.5 and βYX = 1.0: Beta.yc &lt;- 1.5 Beta.yx &lt;- 1</p>
+</blockquote>
+<p>See 2.</p>
+<blockquote>
+<ol start="5" style="list-style-type: lower-alpha">
+<li>Generate Y, based on C and X plus some random error:</li>
+</ol>
+</blockquote>
+<pre class="r"><code>Y &lt;- byx * X + byc * C + rnorm(100000, 0, 1)</code></pre>
+</div>
+</div>
+<div id="section-3" class="section level4">
+<h4>4.</h4>
+<blockquote>
+<p>Now, you can fit a linear model, regressing Y on X (‘unadjusted’) or regressing Y on X and C (‘adjusted’):</p>
+</blockquote>
+<pre class="r"><code>fit0 &lt;- lm(Y~X)
+fit1 &lt;- lm(Y~X + C)
+
+list(unadjusted = fit0, adjusted = fit1) %&gt;% map_df(tidy, .id = &quot;model&quot;)</code></pre>
+<pre><code>       model        term      estimate   std.error    statistic   p.value
+1 unadjusted (Intercept) -0.0002552413 0.004197753  -0.06080426 0.9515152
+2 unadjusted           X  2.1483268085 0.002820318 761.73217488 0.0000000
+3   adjusted (Intercept)  0.0015838455 0.003159298   0.50132823 0.6161412
+4   adjusted           X  1.5026955136 0.003154558 476.35689813 0.0000000
+5   adjusted           C  1.2985982410 0.004693741 276.66595192 0.0000000</code></pre>
+</div>
+<div id="section-4" class="section level4">
+<h4>5.</h4>
+<blockquote>
+<p>Look at the estimates of the effect of X on Y from the two linear models. How do these relate to the DAG?</p>
+</blockquote>
+<p>The unadjusted model has overestimated the coefficient for X, since all lines are positive.</p>
+<p>The adjusted model found the true values</p>
+</div>
+<div id="section-5" class="section level4">
+<h4>6.</h4>
+<blockquote>
+<p>Take different values for βYX, βXC, and βYC (including zero, or negative values) and evaluate the impact in terms of discrepancy between the 2 models from step 4. Can you explain what you observe?</p>
+</blockquote>
+<pre class="r"><code>byx = 1.5
+bxc = -1.1
+byc = 1.3
+
+set.seed(12345)
+C &lt;- rnorm(100000, 0, 1)
+
+X &lt;- bxc * C + rnorm(100000, 0, 1)
+Y &lt;- byx * X + byc * C + rnorm(100000, 0, 1)
+
+fit0 &lt;- lm(Y~X)
+fit1 &lt;- lm(Y~X + C)
+
+list(unadjusted = fit0, adjusted = fit1) %&gt;% map_df(tidy, .id = &quot;model&quot;)</code></pre>
+<pre><code>       model        term    estimate   std.error   statistic   p.value
+1 unadjusted (Intercept) 0.004397018 0.004207348   1.0450806 0.2959882
+2 unadjusted           X 0.854037887 0.002828755 301.9130022 0.0000000
+3   adjusted (Intercept) 0.001583845 0.003159298   0.5013282 0.6161412
+4   adjusted           X 1.502695514 0.003154558 476.3568981 0.0000000
+5   adjusted           C 1.304528371 0.004690452 278.1242430 0.0000000</code></pre>
+<p>Now the effect of X on Y was underestimated in the unadjusted model, since one of the arrows was negative (and the other ones positive, so the sign of the product is negative)</p>
+</div>
+</div>
+<div id="conditioning-on-an-intermediate" class="section level3">
+<h3>2. Conditioning on an intermediate</h3>
+<blockquote>
+<p>The aim of this exercise is to illustrate the bias due to conditioning on an intermediate.</p>
+</blockquote>
+<div id="section-6" class="section level4">
+<h4>1.</h4>
+<blockquote>
+<p>Draw a DAG of an exposure (‘X’), an outcome (‘Y’), and an intermediate (‘M’) of the relation between X and Y. Name the arrows as follows: βYX is the direct arrow from X to Y, βMX is the arrow from X to M, and βYM is the arrow from M to Y.</p>
+</blockquote>
+<pre class="r"><code>require(DiagrammeR)
+dag2 &lt;- &quot;digraph dag2 {
+  graph [layout = dot]
+  
+  node[shape = circle]
+  X; M; Y;
+  
+  X -&gt; Y [label = &#39;Byx&#39;]
+  X -&gt; M [label = &#39;Bmx&#39;]
+  M -&gt; Y [label = &#39;Bym&#39;]
+  
+  subgraph {
+    rank = same; X; Y; M
+  }
+}&quot;
+
+DiagrammeR(dag2, type = &quot;grViz&quot;)</code></pre>
+<div id="htmlwidget-0827bc00647663672df3" style="width:672px;height:480px;" class="grViz html-widget"></div>
+<script type="application/json" data-for="htmlwidget-0827bc00647663672df3">{"x":{"diagram":"digraph dag2 {\n  graph [layout = dot]\n  \n  node[shape = circle]\n  X; M; Y;\n  \n  X -> Y [label = \"Byx\"]\n  X -> M [label = \"Bmx\"]\n  M -> Y [label = \"Bym\"]\n  \n  subgraph {\n    rank = same; X; Y; M\n  }\n}","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script>
+</div>
+<div id="section-7" class="section level4">
+<h4>2.</h4>
+<blockquote>
+<p>Make some assumptions about the relations between the different variables, i.e., make assumptions about the values of βYX, βMX, and βYM.</p>
+</blockquote>
+<pre class="r"><code>byx &lt;- 1.5
+bym &lt;- 1.2
+bmx &lt;- 1.1</code></pre>
+</div>
+<div id="simulate-data-that-resemble-the-dag-you-just-drew.-again-we-assume-all-data-are-normally-distributed." class="section level4">
+<h4>3. Simulate data that resemble the DAG you just drew. Again, we assume all data are normally distributed.</h4>
+<blockquote>
+<p>Sample X (e.g., 100,000 observations) from a normal distribution, with mean 0 and standard deviation 1: b. Define the relation between X and M (based on your DAG), e.g., βMX = 2: c. Generate M, based on X plus some random error: d. Define the relation between X and Y, and M and Y (based on your DAG), e.g., βYX = 1.0 and βYM = 0.5: e. Generate Y, based on X and M plus some random error:</p>
+</blockquote>
+<pre class="r"><code>set.seed(12345)
+
+X &lt;- rnorm(100000, 0, 1)
+M &lt;- bmx * X + rnorm(100000, 0, 1)
+Y &lt;- byx * X + bym * M + rnorm(100000, 0, 1)</code></pre>
+</div>
+<div id="fit-a-linear-model-regressing-y-on-x-unadjusted-or-regressing-y-on-x-and-m-adjusted" class="section level4">
+<h4>4. Fit a linear model, regressing Y on X (‘unadjusted’) or regressing Y on X and M (‘adjusted’):</h4>
+<pre class="r"><code>fit0 &lt;- lm(Y~X)
+fit1 &lt;- lm(Y~X + M)
+
+list(unadjusted = fit0, adjusted = fit1) %&gt;% map_df(tidy, .id = &quot;model&quot;)</code></pre>
+<pre><code>       model        term    estimate   std.error   statistic   p.value
+1 unadjusted (Intercept) 0.005904210 0.004948668   1.1930909 0.2328366
+2 unadjusted           X 2.822411056 0.004947113 570.5167726 0.0000000
+3   adjusted (Intercept) 0.001583845 0.003159298   0.5013282 0.6161412
+4   adjusted           X 1.498598241 0.004693741 319.2758898 0.0000000
+5   adjusted           M 1.202695514 0.003154558 381.2564149 0.0000000</code></pre>
+</div>
+<div id="section-8" class="section level4">
+<h4>5.</h4>
+<blockquote>
+<p>Look at the estimates of the effect of X on Y from the two linear models. How do these relate to the DAG?</p>
+</blockquote>
+<p>In the unadjusted model, the direct effect of X on Y is overestimated, since it is partially medieated by M. In the adjusted model we get the true effects</p>
+</div>
+<div id="section-9" class="section level4">
+<h4>6.</h4>
+<blockquote>
+<p>Take different values for βYX, βMX, and βYM (including zero, or negative values) and evaluate the impact in terms of discrepancy between the 2 models from step 4. Can you explain what you observe?</p>
+</blockquote>
+<pre class="r"><code>byx &lt;- 1.5
+bym &lt;- -1.2
+bmx &lt;- 1.1
+
+set.seed(12345)
+
+X &lt;- rnorm(100000, 0, 1)
+M &lt;- bmx * X + rnorm(100000, 0, 1)
+Y &lt;- byx * X + bym * M + rnorm(100000, 0, 1)
+
+fit0 &lt;- lm(Y~X)
+fit1 &lt;- lm(Y~X + M)
+
+list(unadjusted = fit0, adjusted = fit1) %&gt;% map_df(tidy, .id = &quot;model&quot;)</code></pre>
+<pre><code>       model        term     estimate   std.error    statistic
+1 unadjusted (Intercept) -0.002717154 0.004935538   -0.5505284
+2 unadjusted           X  0.180719356 0.004933988   36.6274428
+3   adjusted (Intercept)  0.001583845 0.003159298    0.5013282
+4   adjusted           X  1.498598241 0.004693741  319.2758898
+5   adjusted           M -1.197304486 0.003154558 -379.5474506
+        p.value
+1  5.819583e-01
+2 9.108075e-292
+3  6.161412e-01
+4  0.000000e+00
+5  0.000000e+00</code></pre>
+<p>Just as before, the effect of X on Y is underestimated in the unadjusted model</p>
+</div>
+</div>
+<div id="collider-stratification" class="section level3">
+<h3>3. Collider stratification</h3>
+<blockquote>
+<p>The aim of this exercise is to illustrate collider stratification bias.</p>
+</blockquote>
+<div id="section-10" class="section level4">
+<h4>1.</h4>
+<blockquote>
+<p>Draw a DAG of an exposure (‘X’), an outcome (‘Y’), and a common effect (‘S’). Name the arrows as follows: βYX is the arrow from X to Y, βSX is the arrow from X to S, and βSY is the arrow from Y to S.</p>
+</blockquote>
+<pre class="r"><code>require(DiagrammeR)
+dag3 &lt;- &quot;digraph {
+  graph [layout = dot]
+  
+  node[shape = circle]
+  X; Y; S;
+  
+  X -&gt; Y [label = &#39;Byx&#39;]
+  X -&gt; S [label = &#39;Bsx&#39;]
+  Y -&gt; S [label = &#39;Bsy&#39;]
+  
+  subgraph {
+    rank = same; X; Y
+  }
+}&quot;
+
+DiagrammeR(dag3, type = &quot;grViz&quot;)</code></pre>
+<div id="htmlwidget-7453f7b5a563b28b397c" style="width:672px;height:480px;" class="grViz html-widget"></div>
+<script type="application/json" data-for="htmlwidget-7453f7b5a563b28b397c">{"x":{"diagram":"digraph {\n  graph [layout = dot]\n  \n  node[shape = circle]\n  X; Y; S;\n  \n  X -> Y [label = \"Byx\"]\n  X -> S [label = \"Bsx\"]\n  Y -> S [label = \"Bsy\"]\n  \n  subgraph {\n    rank = same; X; Y\n  }\n}","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script>
+</div>
+<div id="section-11" class="section level4">
+<h4>2.</h4>
+<blockquote>
+<p>Make some assumptions about the relations between the different variables, i.e., make assumptions about the values of βYX, βSX, and βSY.</p>
+</blockquote>
+<pre class="r"><code>byx = 1.5
+bsx = 1.4
+bsy = 1.6</code></pre>
+</div>
+<div id="section-12" class="section level4">
+<h4>3.</h4>
+<blockquote>
+<p>Simulate some data based on the DAG you just drew. Let’s assume all data are normally distributed.</p>
+</blockquote>
+<blockquote>
+<ol style="list-style-type: lower-alpha">
+<li>Sample X (e.g., 100,000 observations) from a normal distribution, with mean 0 and standard deviation 1:</li>
+<li>Define the relation between X and Y (based on your DAG), e.g., βYX = 0.67:</li>
+<li>Generate Y, based on X plus some random error:</li>
+<li>Define the relation between X and S, and Y and S (based on your DAG), e.g., βSY = 2.0 and βSY = 1.0:</li>
+<li>Generate S, based on X and Y plus some random error:</li>
+</ol>
+</blockquote>
+<pre class="r"><code>set.seed(12345)
+X &lt;- rnorm(100000, 0, 1)
+Y &lt;- byx * X + rnorm(100000, 0, 1)
+S &lt;- bsx * X + bsy * Y + rnorm(10000, 0, 1)</code></pre>
+</div>
+<div id="section-13" class="section level4">
+<h4>4.</h4>
+<blockquote>
+<p>Fit a linear model, regressing Y on X (‘unadjusted’) or regressing Y on X and S (‘adjusted’):</p>
+</blockquote>
+<pre class="r"><code>fit0 &lt;- lm(Y~X)
+fit1 &lt;- lm(Y~X + S)
+
+list(unadjusted = fit0, adjusted = fit1) %&gt;% map_df(tidy, .id = &quot;model&quot;)</code></pre>
+<pre><code>       model        term      estimate    std.error   statistic   p.value
+1 unadjusted (Intercept)  0.0035922351 0.0031670408   1.1342560 0.2566899
+2 unadjusted           X  1.5007048746 0.0031660461 473.9996976 0.0000000
+3   adjusted (Intercept) -0.0007969837 0.0016715409  -0.4767958 0.6335086
+4   adjusted           X -0.2099862821 0.0037539097 -55.9380223 0.0000000
+5   adjusted           S  0.4500441703 0.0008843321 508.9085305 0.0000000</code></pre>
+</div>
+<div id="section-14" class="section level4">
+<h4>5.</h4>
+<blockquote>
+<p>Look at the estimates of the effect of X on Y from the two linear models. How do these relate to the DAG?</p>
+</blockquote>
+<p>Now the unadjusted model find the true value, since S is a collider of X and Y</p>
+<p>In the adjusted model, byx even switched sign</p>
+</div>
+<div id="section-15" class="section level4">
+<h4>6.</h4>
+<blockquote>
+<p>Take different values for βYX, βSX, and βSY (including zero, or negative values) and evaluate the impact in terms of discrepancy between the 2 models from step 4. Can you explain what you observe?</p>
+</blockquote>
+<pre class="r"><code>byx = 1.5
+bsx = -1.1
+bsy = 1.6
+
+set.seed(12345)
+X &lt;- rnorm(100000, 0, 1)
+Y &lt;- byx * X + rnorm(100000, 0, 1)
+S &lt;- bsx * X + bsy * Y + rnorm(10000, 0, 1)
+
+fit0 &lt;- lm(Y~X)
+fit1 &lt;- lm(Y~X + S)
+
+list(unadjusted = fit0, adjusted = fit1) %&gt;% map_df(tidy, .id = &quot;model&quot;)</code></pre>
+<pre><code>       model        term      estimate    std.error   statistic   p.value
+1 unadjusted (Intercept)  0.0035922351 0.0031670408   1.1342560 0.2566899
+2 unadjusted           X  1.5007048746 0.0031660461 473.9996976 0.0000000
+3   adjusted (Intercept) -0.0007969837 0.0016715409  -0.4767958 0.6335086
+4   adjusted           X  0.9151241436 0.0020288515 451.0552617 0.0000000
+5   adjusted           S  0.4500441703 0.0008843321 508.9085305 0.0000000</code></pre>
+<p>With negative bsx, byx did not switch sign in the adjusted model</p>
+<pre class="r"><code>byx = 1.5
+bsx = 0
+bsy = 1.6
+
+set.seed(12345)
+X &lt;- rnorm(100000, 0, 1)
+Y &lt;- byx * X + rnorm(100000, 0, 1)
+S &lt;- bsx * X + bsy * Y + rnorm(10000, 0, 1)
+
+fit0 &lt;- lm(Y~X)
+fit1 &lt;- lm(Y~X + S)
+
+list(unadjusted = fit0, adjusted = fit1) %&gt;% map_df(tidy, .id = &quot;model&quot;)</code></pre>
+<pre><code>       model        term      estimate    std.error   statistic   p.value
+1 unadjusted (Intercept)  0.0035922351 0.0031670408   1.1342560 0.2566899
+2 unadjusted           X  1.5007048746 0.0031660461 473.9996976 0.0000000
+3   adjusted (Intercept) -0.0007969837 0.0016715409  -0.4767958 0.6335086
+4   adjusted           X  0.4200755563 0.0027020650 155.4646367 0.0000000
+5   adjusted           S  0.4500441703 0.0008843321 508.9085305 0.0000000</code></pre>
+<p>With bsx = 0, S is no longer a collider. In the adjusted model, byx is too low. Part of the variation in X is now passed to S through Y. Including S in the model somehow sucks a part of the true byx into bsy, shrinking byx</p>
+</div>
+</div>
+<div id="putting-it-all-together---dag-based-analysis" class="section level3">
+<h3>4. Putting it all together - DAG-based analysis</h3>
+<blockquote>
+<p>The aim of this exercise is to combine the concepts discussed above. 1. Draw a DAG, including at least an exposure (‘X’) and an outcome (‘Y’). You may consider to add confounder(s), intermediate(s) and/or a common effect (‘S’) of X and Y. Name all the arrows in your DAG. Tip: do not start with a very complex DAG, but build it up in (small) steps. 2. In your DAG, identify colliders and intermediates (i.e., the variables that you don’t want to control for) as well as confounders (i.e., the variables that you do want to control for). 3. Apply the tools that you used in the previous exercises and assess the impact of omitting a confounder from the analytical model, or including e.g. a collider. 4. Draw a DAG and generate the data. Provide a fellow student with the data and let him/her do the analysis. Does (s)he come up with the right estimate? In addition, also provide the DAG. Will (s)he change his/her analysis plan?</p>
+</blockquote>
+<p>This one was skipped.</p>
+</div>
+</div>
+<div id="propensity-scoring" class="section level2">
+<h2>3. Propensity scoring</h2>
+<blockquote>
+<p>Introduction In this exercise, you will use data of a study that aimed to assess whether annual influenza vaccination reduces mortality risk among elderly (i.e., people aged &gt;65 years). The data consists of observations of eligible subjects who did, or did not, receive the annual influenza vaccine. The endpoint in this study is mortality during the influenza epidemic period (which usually starts 4 to 8 weeks after vaccination). Note that the vaccine was not randomly allocated; rather vaccination status may depend on characteristics of the participants in the study.</p>
+</blockquote>
+<blockquote>
+<p>Code book (data_PS.txt) Variable name Description Values Vac Influenza vaccination status 0 = unvaccinated 1 = vaccinated Age Age (years) Continuous Sex Sex 0 = male 1 = female Cvd Cardiovascular disease 0 = absent 1 = present cvd_drug Cardiovascular drug use 0 = absent 1 = present pulm Pulmonary disease 0 = absent 1 = present pulm_drug Pulmonary drug use 0 = absent 1 = present DM Diabetes Mellitus 0 = absent 1 = present Contact Number of GP contacts in 12 months prior to start of study continuous Death Mortality status 0 = absent 1 = present Step 1. Think before you act:</p>
+</blockquote>
+<div id="section-16" class="section level3">
+<h3>1.</h3>
+<blockquote>
+<p>Look at the variables measured in this study (i.e., the code book), and plan your analysis (draw a DAG, define exposure, outcome, confounders, and the model to relate exposure to outcome, etc.)</p>
+</blockquote>
+<p>The target relationship is Vac vs Death.</p>
+<p>Several factor may be considered confounders (e.g. causally related to exposure and outcome)</p>
+<ul>
+<li>age</li>
+<li>sex</li>
+<li>Cvd</li>
+<li>pulm</li>
+<li>DM</li>
+<li>Contact (not directly causal of outcome, but possibly indicative of worse health status)</li>
+</ul>
+<p>Possible effect modifiers are</p>
+<ul>
+<li>DM (affects the immune system, so possibly also the effectiveness of vaccination)</li>
+</ul>
+<p>Hierarchies</p>
+<ul>
+<li>Age and sex influence Cvd</li>
+</ul>
+<p>What’s hard to put in:</p>
+<ul>
+<li>pulm_drug may aleviate the effect of pulm on death.</li>
+<li>also, someone using pulm_drug may also be more inclined to take a vaccination</li>
+</ul>
+<pre class="r"><code>require(DiagrammeR)
+dag_PS &lt;- &quot;digraph {
+  graph [layout = dot]
+  
+  node[shape = circle]
+  Vac; Death; Age; Sex; Cvd; cvd_drug; pulm; pulm_drug; DM; Contact
+  
+  Vac -&gt; Death
+  Age -&gt; Death
+  Age -&gt; Vac
+  Age -&gt; Cvd
+  Age -&gt; pulm
+  Age -&gt; DM
+  Age -&gt; Contact
+  Sex -&gt; Death
+  Sex -&gt; Vac
+  Sex -&gt; Cvd
+  Sex -&gt; pulm
+  Sex -&gt; DM
+  Sex -&gt; Contact
+
+
+  Cvd -&gt; Vac
+  Cvd -&gt; Death
+  pulm -&gt; Vac
+  pulm -&gt; Death
+  DM -&gt; Death
+  DM -&gt; Vac
+  Contact -&gt; Vac
+  Contact -&gt; Death
+
+  
+
+  subgraph {
+    rank = same; Vac; Death
+  }
+}&quot;
+DiagrammeR(dag_PS, type = &quot;grViz&quot;)</code></pre>
+<div id="htmlwidget-cb0130ae5e5cdee79e22" style="width:672px;height:480px;" class="grViz html-widget"></div>
+<script type="application/json" data-for="htmlwidget-cb0130ae5e5cdee79e22">{"x":{"diagram":"digraph {\n  graph [layout = dot]\n  \n  node[shape = circle]\n  Vac; Death; Age; Sex; Cvd; cvd_drug; pulm; pulm_drug; DM; Contact\n  \n  Vac -> Death\n  Age -> Death\n  Age -> Vac\n  Age -> Cvd\n  Age -> pulm\n  Age -> DM\n  Age -> Contact\n  Sex -> Death\n  Sex -> Vac\n  Sex -> Cvd\n  Sex -> pulm\n  Sex -> DM\n  Sex -> Contact\n\n\n  Cvd -> Vac\n  Cvd -> Death\n  pulm -> Vac\n  pulm -> Death\n  DM -> Death\n  DM -> Vac\n  Contact -> Vac\n  Contact -> Death\n\n  \n\n  subgraph {\n    rank = same; Vac; Death\n  }\n}","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script>
+</div>
+<div id="load-the-data-and-attach" class="section level3">
+<h3>2. Load the data and attach:</h3>
+<pre class="r"><code>df &lt;- read.table(here(&quot;data&quot;, &quot;data_PS.txt&quot;), sep = &quot;\t&quot;)
+str(df)</code></pre>
+<pre><code>&#39;data.frame&#39;:   44418 obs. of  10 variables:
+ $ vacc     : int  1 1 1 1 1 1 1 1 1 1 ...
+ $ age      : int  66 73 75 76 77 78 80 81 66 67 ...
+ $ sex      : int  0 1 1 1 1 1 1 1 0 0 ...
+ $ cvd      : int  0 1 1 1 1 1 1 1 0 0 ...
+ $ cvd_drug : int  0 1 1 1 1 1 1 1 0 0 ...
+ $ pulm     : int  1 0 0 0 0 0 0 0 0 0 ...
+ $ pulm_drug: int  0 0 0 0 0 0 0 0 0 0 ...
+ $ DM       : int  0 0 0 0 0 0 0 0 0 0 ...
+ $ contact  : int  27 4 8 7 7 5 9 17 10 13 ...
+ $ death    : int  0 0 0 0 0 0 0 0 0 0 ...</code></pre>
+<p>Let’s curate a few 0 - 1 variables as logical vectors (true vs false) so that R treats them right internally in all functions</p>
+<pre class="r"><code>logical_vars &lt;- c(&quot;vacc&quot;, &quot;sex&quot;, &quot;cvd&quot;, &quot;cvd_drug&quot;, &quot;pulm&quot;, &quot;pulm_drug&quot;, &quot;DM&quot;, &quot;death&quot;)
+df  %&lt;&gt;%
+  mutate_at(vars(logical_vars), as.logical)
+str(df)</code></pre>
+<pre><code>&#39;data.frame&#39;:   44418 obs. of  10 variables:
+ $ vacc     : logi  TRUE TRUE TRUE TRUE TRUE TRUE ...
+ $ age      : int  66 73 75 76 77 78 80 81 66 67 ...
+ $ sex      : logi  FALSE TRUE TRUE TRUE TRUE TRUE ...
+ $ cvd      : logi  FALSE TRUE TRUE TRUE TRUE TRUE ...
+ $ cvd_drug : logi  FALSE TRUE TRUE TRUE TRUE TRUE ...
+ $ pulm     : logi  TRUE FALSE FALSE FALSE FALSE FALSE ...
+ $ pulm_drug: logi  FALSE FALSE FALSE FALSE FALSE FALSE ...
+ $ DM       : logi  FALSE FALSE FALSE FALSE FALSE FALSE ...
+ $ contact  : int  27 4 8 7 7 5 9 17 10 13 ...
+ $ death    : logi  FALSE FALSE FALSE FALSE FALSE FALSE ...</code></pre>
+<p>Rename sex to a more sensible name</p>
+<pre class="r"><code>df %&lt;&gt;%
+  rename(sex_female = sex)</code></pre>
+<p>Store names of original predictive variables in a vector for later use</p>
+<pre class="r"><code>orig_vars &lt;- setdiff(names(df), &quot;death&quot;)
+orig_vars</code></pre>
+<pre><code>[1] &quot;vacc&quot;       &quot;age&quot;        &quot;sex_female&quot; &quot;cvd&quot;        &quot;cvd_drug&quot;  
+[6] &quot;pulm&quot;       &quot;pulm_drug&quot;  &quot;DM&quot;         &quot;contact&quot;   </code></pre>
+</div>
+<div id="have-a-quick-look-summarydata" class="section level3">
+<h3>3. Have a quick look: summary(data)</h3>
+<pre class="r"><code>summary(df)</code></pre>
+<pre><code>    vacc              age         sex_female         cvd         
+ Mode :logical   Min.   : 65.00   Mode :logical   Mode :logical  
+ FALSE:12030     1st Qu.: 70.00   FALSE:16974     FALSE:22791    
+ TRUE :32388     Median : 75.00   TRUE :27444     TRUE :21627    
+                 Mean   : 75.66                                  
+                 3rd Qu.: 80.00                                  
+                 Max.   :104.00                                  
+  cvd_drug          pulm         pulm_drug           DM         
+ Mode :logical   Mode :logical   Mode :logical   Mode :logical  
+ FALSE:23543     FALSE:39000     FALSE:39427     FALSE:41553    
+ TRUE :20875     TRUE :5418      TRUE :4991      TRUE :2865     
+                                                                
+                                                                
+                                                                
+    contact         death        
+ Min.   :  2.00   Mode :logical  
+ 1st Qu.:  6.00   FALSE:44039    
+ Median : 12.00   TRUE :379      
+ Mean   : 14.68                  
+ 3rd Qu.: 19.00                  
+ Max.   :146.00                  </code></pre>
+</div>
+<div id="step-2." class="section level3">
+<h3>Step 2.</h3>
+<blockquote>
+<p>Construct a propensity score:</p>
+</blockquote>
+<div id="section-17" class="section level4">
+<h4>1.</h4>
+<blockquote>
+<p>Create a table of the distributions of the confounding variables by exposure status. You may use commands such as: mean(age[vacc==0]); mean(age[vacc==1]) table(vacc,sex)</p>
+</blockquote>
+<pre class="r"><code>df %&gt;%
+  group_by(vacc) %&gt;%
+  summarize(mean_age = mean(age), fraction_female = mean(sex_female))</code></pre>
+<pre><code># A tibble: 2 x 3
+  vacc  mean_age fraction_female
+  &lt;lgl&gt;    &lt;dbl&gt;           &lt;dbl&gt;
+1 F         75.1           0.648
+2 T         75.9           0.606</code></pre>
+<pre class="r"><code>tableone::CreateTableOne(data = df, strata = &quot;vacc&quot;, test = F)</code></pre>
+<pre><code>                       Stratified by vacc
+                        FALSE         TRUE          
+  n                     12030         32388         
+  vacc = TRUE (%)           0 ( 0.0)  32388 (100.0) 
+  age (mean (sd))       75.07 (7.37)  75.88 (6.86)  
+  sex_female = TRUE (%)  7801 (64.8)  19643 ( 60.6) 
+  cvd = TRUE (%)         4595 (38.2)  17032 ( 52.6) 
+  cvd_drug = TRUE (%)    4360 (36.2)  16515 ( 51.0) 
+  pulm = TRUE (%)         787 ( 6.5)   4631 ( 14.3) 
+  pulm_drug = TRUE (%)    708 ( 5.9)   4283 ( 13.2) 
+  DM = TRUE (%)           467 ( 3.9)   2398 (  7.4) 
+  contact (mean (sd))   11.56 (10.69) 15.83 (11.87) 
+  death = TRUE (%)        113 ( 0.9)    266 (  0.8) </code></pre>
+</div>
+<div id="section-18" class="section level4">
+<h4>2.</h4>
+<blockquote>
+<p>What is the odds ratio of the crude (unadjusted) association between vaccination status and mortality?<br />
+fit &lt;- glm(death ~ vacc, family=‘binomial’) log.or &lt;- fit$coef[2] se.log.or &lt;- sqrt(diag(vcov(fit))[2]) exp(c(log.or, log.or - 1.96<em>se.log.or, log.or + 1.96</em>se.log.or))</p>
+</blockquote>
+<p>Let’s use <code>confint</code> to get likelihood profile confidence intervals</p>
+<pre class="r"><code>fit0 &lt;- glm(death ~ vacc, family = &#39;binomial&#39;, data = df)
+summary(fit0)</code></pre>
+<pre><code>
+Call:
+glm(formula = death ~ vacc, family = &quot;binomial&quot;, data = df)
+
+Deviance Residuals: 
+    Min       1Q   Median       3Q      Max  
+-0.1374  -0.1374  -0.1284  -0.1284   3.0991  
+
+Coefficients:
+            Estimate Std. Error z value Pr(&gt;|z|)    
+(Intercept) -4.65833    0.09452 -49.286   &lt;2e-16 ***
+vaccTRUE    -0.13547    0.11280  -1.201     0.23    
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+(Dispersion parameter for binomial family taken to be 1)
+
+    Null deviance: 4365.8  on 44417  degrees of freedom
+Residual deviance: 4364.3  on 44416  degrees of freedom
+AIC: 4368.3
+
+Number of Fisher Scoring iterations: 7</code></pre>
+<pre class="r"><code>confint(fit0)</code></pre>
+<pre><code>                 2.5 %      97.5 %
+(Intercept) -4.8493808 -4.47853095
+vaccTRUE    -0.3535467  0.08908945</code></pre>
+<p>No significant effect in unadjusted analysis</p>
+</div>
+<div id="section-19" class="section level4">
+<h4>3.</h4>
+<blockquote>
+<p>A propensity score can be constructed by means of a multivariable regression model, predicting exposure status given confounders. What is the dependent variable (outcome variable) of this model? What are the independent variables of this model? What kind of regression model is most convenient for this study?</p>
+</blockquote>
+<p>Logistic, since exposure is binary</p>
+<p>Independent variables can be all covariates that are not the outcome (Death), and possibly interactions and non-linear transformations of these</p>
+</div>
+<div id="section-20" class="section level4">
+<h4>4.</h4>
+<blockquote>
+<p>Based on your answer to the previous question construct a propensity score. For example:</p>
+</blockquote>
+<pre class="r"><code>ps_fit1 &lt;- glm(vacc ~ age + sex_female, family = &quot;binomial&quot;, data = df)</code></pre>
+<blockquote>
+<p>You can obtain the predicted value of the model (i.e., probability of the determinant, given the potential confounders): PS &lt;- fit$fitted.values</p>
+</blockquote>
+<p>Let’s keep the data nicely together in the data.frame</p>
+<pre class="r"><code>df %&lt;&gt;% 
+  mutate(ps_1 = ps_fit1$fitted.values)</code></pre>
+</div>
+<div id="section-21" class="section level4">
+<h4>5.</h4>
+<blockquote>
+<p>What is the mean propensity score of those who are vaccinated? And what is the mean propensity score of those who are not vaccinated? Is this like you would expect?</p>
+</blockquote>
+<pre class="r"><code>df %&gt;%
+  group_by(vacc) %&gt;%
+  summarize(mean_ps = mean(ps_1))</code></pre>
+<pre><code># A tibble: 2 x 2
+  vacc  mean_ps
+  &lt;lgl&gt;   &lt;dbl&gt;
+1 F       0.726
+2 T       0.730</code></pre>
+<p>The propensity scores are pretty close together. Based on the baseline table we see that age and sex are distributed pretty equally amongst vaccinated and unvaccinated subjects, so it makes sense that the propensity score does not work too well</p>
+<p>Let’s look at the distributions</p>
+<pre class="r"><code>df %&gt;%
+  ggplot(aes(x = ps_1, fill = vacc)) + 
+  geom_histogram(alpha = .5)</code></pre>
+<p><img src="figure/acr_assignments.Rmd/unnamed-chunk-32-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="section-22" class="section level4">
+<h4>6.</h4>
+<blockquote>
+<p>The primary goal of a propensity score is to balance confounder characteristics among those exposed and those unexposed to the determinant. Balance can be assessed e.g. within quintiles of the propensity score:</p>
+</blockquote>
+<blockquote>
+<p>n.cat &lt;- 5 # no. categories to split PS PS_cat &lt;- ceiling(rank(PS)*n.cat/length(PS)) # split PS for (i in 1:max(PS_cat)){ print(sapply(split(age[PS_cat==i],vacc[PS_cat==i]),mean))}</p>
+</blockquote>
+<pre class="r"><code>n_cat &lt;- 5
+df %&lt;&gt;%
+  mutate(ps_range = cut(ps_1, 
+                      breaks = quantile(ps_1, 
+                                        probs = seq(0, 1, length.out = n_cat + 1)),
+                      include.lowest = T, ordered_result = T),
+         ps_cat = as.numeric(ps_range))
+
+df %&gt;%
+  group_by(ps_cat, ps_range) %&gt;%
+  summarize(mean(vacc), mean(age), mean(sex_female), mean(pulm))</code></pre>
+<pre><code># A tibble: 5 x 6
+# Groups:   ps_cat [?]
+  ps_cat ps_range   `mean(vacc)` `mean(age)` `mean(sex_femal… `mean(pulm)`
+   &lt;dbl&gt; &lt;ord&gt;             &lt;dbl&gt;       &lt;dbl&gt;            &lt;dbl&gt;        &lt;dbl&gt;
+1   1.00 [0.672,0.…        0.674        68.9            1.00         0.104
+2   2.00 (0.7,0.72…        0.723        74.1            0.863        0.107
+3   3.00 (0.723,0.…        0.737        74.3            0.490        0.117
+4   4.00 (0.737,0.…        0.757        77.8            0.390        0.137
+5   5.00 (0.756,0.…        0.763        84.4            0.275        0.150</code></pre>
+</div>
+<div id="section-23" class="section level4">
+<h4>7.</h4>
+<blockquote>
+<p>Donstruct a table of the distributions of the confounding variables by exposure status using only those subject whose PS lies within the third category of the PS. Compare the balance of confounding variables between exposure groups in this table with that in the table of the confounders by exposure status that was constructed using all subjects. In which table are the exposure groups more comparable?</p>
+</blockquote>
+<pre class="r"><code>tableone::CreateTableOne(data = df %&gt;% filter(ps_cat == 3), strata = &quot;vacc&quot;, test = F)</code></pre>
+<pre><code>                       Stratified by vacc
+                        FALSE          TRUE          
+  n                      2223           6242         
+  vacc = TRUE (%)           0 (  0.0)   6242 (100.0) 
+  age (mean (sd))       73.94 (6.12)   74.45 (6.06)  
+  sex_female = TRUE (%)  1024 ( 46.1)   3122 ( 50.0) 
+  cvd = TRUE (%)          893 ( 40.2)   3310 ( 53.0) 
+  cvd_drug = TRUE (%)     852 ( 38.3)   3220 ( 51.6) 
+  pulm = TRUE (%)         141 (  6.3)    849 ( 13.6) 
+  pulm_drug = TRUE (%)    126 (  5.7)    790 ( 12.7) 
+  DM = TRUE (%)            94 (  4.2)    502 (  8.0) 
+  contact (mean (sd))   11.15 (10.69)  15.14 (11.36) 
+  death = TRUE (%)         16 (  0.7)     33 (  0.5) 
+  ps_1 (mean (sd))       0.73 (0.00)    0.73 (0.00)  
+  ps_range (%)                                       
+     [0.672,0.7]            0 (  0.0)      0 (  0.0) 
+     (0.7,0.723]            0 (  0.0)      0 (  0.0) 
+     (0.723,0.737]       2223 (100.0)   6242 (100.0) 
+     (0.737,0.756]          0 (  0.0)      0 (  0.0) 
+     (0.756,0.836]          0 (  0.0)      0 (  0.0) 
+  ps_cat (mean (sd))     3.00 (0.00)    3.00 (0.00)  </code></pre>
+<p>Not a whole lot better when compared to earlier</p>
+</div>
+</div>
+<div id="step-3." class="section level3">
+<h3>Step 3.</h3>
+<blockquote>
+<p>Estimate the effect of influenza vaccination on mortality risk</p>
+</blockquote>
+<div id="section-24" class="section level4">
+<h4>1.</h4>
+<blockquote>
+<p>There are different ways of using the PS to control for confounding. Here we will include the PS as a continuous covariate and as a categorical covariate in the model regressing outcome on exposure and PS:</p>
+</blockquote>
+<blockquote>
+<p>fit &lt;- glm(death ~ vacc + PS, family=‘binomial’) log.or &lt;- fit$coef[2] se.log.or &lt;- sqrt(diag(vcov(fit))[2]) exp(c(log.or, log.or - 1.96<em>se.log.or, log.or + 1.96</em>se.log.or))</p>
+</blockquote>
+<blockquote>
+<p>fit &lt;- glm(death ~ vacc + factor(PS_cat), family=‘binomial’) log.or &lt;- fit$coef[2] se.log.or &lt;- sqrt(diag(vcov(fit))[2]) exp(c(log.or, log.or - 1.96<em>se.log.or, log.or + 1.96</em>se.log.or))</p>
+</blockquote>
+<pre class="r"><code>fit_1 &lt;-glm(death ~ vacc + ps_1, family = &quot;binomial&quot;, data = df)
+summary(fit_1)</code></pre>
+<pre><code>
+Call:
+glm(formula = death ~ vacc + ps_1, family = &quot;binomial&quot;, data = df)
+
+Deviance Residuals: 
+    Min       1Q   Median       3Q      Max  
+-0.4210  -0.1484  -0.1166  -0.0883   3.5402  
+
+Coefficients:
+            Estimate Std. Error z value Pr(&gt;|z|)    
+(Intercept) -21.5561     1.3049 -16.519   &lt;2e-16 ***
+vaccTRUE     -0.2157     0.1132  -1.906   0.0567 .  
+ps_1         22.9303     1.7395  13.182   &lt;2e-16 ***
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+(Dispersion parameter for binomial family taken to be 1)
+
+    Null deviance: 4365.8  on 44417  degrees of freedom
+Residual deviance: 4184.9  on 44415  degrees of freedom
+AIC: 4190.9
+
+Number of Fisher Scoring iterations: 8</code></pre>
+<pre class="r"><code>confint(fit_1)</code></pre>
+<pre><code>                  2.5 %       97.5 %
+(Intercept) -24.1293723 -19.01318274
+vaccTRUE     -0.4345128   0.00958604
+ps_1         19.5331364  26.35332361</code></pre>
+<pre class="r"><code>fit_2 &lt;-glm(death ~ vacc + factor(ps_cat), family = &quot;binomial&quot;, data = df)
+summary(fit_2)</code></pre>
+<pre><code>
+Call:
+glm(formula = death ~ vacc + factor(ps_cat), family = &quot;binomial&quot;, 
+    data = df)
+
+Deviance Residuals: 
+    Min       1Q   Median       3Q      Max  
+-0.2162  -0.1418  -0.1043  -0.1018   3.4778  
+
+Coefficients:
+                Estimate Std. Error z value Pr(&gt;|z|)    
+(Intercept)      -5.8154     0.2123 -27.398  &lt; 2e-16 ***
+vaccTRUE         -0.2298     0.1133  -2.029 0.042472 *  
+factor(ps_cat)2   0.7860     0.2454   3.202 0.001363 ** 
+factor(ps_cat)3   0.8335     0.2463   3.384 0.000715 ***
+factor(ps_cat)4   1.4502     0.2252   6.439  1.2e-10 ***
+factor(ps_cat)5   2.0707     0.2160   9.589  &lt; 2e-16 ***
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+(Dispersion parameter for binomial family taken to be 1)
+
+    Null deviance: 4365.8  on 44417  degrees of freedom
+Residual deviance: 4195.9  on 44412  degrees of freedom
+AIC: 4207.9
+
+Number of Fisher Scoring iterations: 8</code></pre>
+<pre class="r"><code>confint(fit_2)</code></pre>
+<pre><code>                     2.5 %       97.5 %
+(Intercept)     -6.2567028 -5.421433710
+vaccTRUE        -0.4487724 -0.004363489
+factor(ps_cat)2  0.3153528  1.282339288
+factor(ps_cat)3  0.3608170  1.331347980
+factor(ps_cat)4  1.0257024  1.912630090
+factor(ps_cat)5  1.6671111  2.517402559</code></pre>
+</div>
+<div id="section-25" class="section level4">
+<h4>2.</h4>
+<blockquote>
+<p>As a comparison, estimate the relation between vaccination status and mortality and adjust for confounding by including all confounders as covariates in the model.</p>
+</blockquote>
+<pre class="r"><code>fit_3 &lt;- glm(reformulate(orig_vars, response = &quot;death&quot;), data = df, family = &quot;binomial&quot;)
+summary(fit_3)</code></pre>
+<pre><code>
+Call:
+glm(formula = reformulate(orig_vars, response = &quot;death&quot;), family = &quot;binomial&quot;, 
+    data = df)
+
+Deviance Residuals: 
+    Min       1Q   Median       3Q      Max  
+-1.7894  -0.1278  -0.0936  -0.0724   3.6549  
+
+Coefficients:
+                 Estimate Std. Error z value Pr(&gt;|z|)    
+(Intercept)    -10.753394   0.554101 -19.407  &lt; 2e-16 ***
+vaccTRUE        -0.487711   0.117305  -4.158 3.22e-05 ***
+age              0.071497   0.006961  10.271  &lt; 2e-16 ***
+sex_femaleTRUE  -0.685423   0.109941  -6.234 4.53e-10 ***
+cvdTRUE          0.662615   0.300484   2.205   0.0274 *  
+cvd_drugTRUE    -0.582017   0.294435  -1.977   0.0481 *  
+pulmTRUE         0.690273   0.369852   1.866   0.0620 .  
+pulm_drugTRUE   -0.373648   0.382207  -0.978   0.3283    
+DMTRUE           0.175138   0.172056   1.018   0.3087    
+contact          0.049913   0.002742  18.204  &lt; 2e-16 ***
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+(Dispersion parameter for binomial family taken to be 1)
+
+    Null deviance: 4365.8  on 44417  degrees of freedom
+Residual deviance: 3816.7  on 44408  degrees of freedom
+AIC: 3836.7
+
+Number of Fisher Scoring iterations: 8</code></pre>
+<p>The estimated effect of vaccination on death is greater when including all covariates</p>
+</div>
+<div id="section-26" class="section level4">
+<h4>3.</h4>
+<blockquote>
+<p>How do all these odds ratios compare to the odds ratio that was estimated without adjustment for confounding?</p>
+</blockquote>
+<pre class="r"><code>fit_0 &lt;- glm(death ~ vacc, data = df, family = &quot;binomial&quot;)
+summary(fit_0)</code></pre>
+<pre><code>
+Call:
+glm(formula = death ~ vacc, family = &quot;binomial&quot;, data = df)
+
+Deviance Residuals: 
+    Min       1Q   Median       3Q      Max  
+-0.1374  -0.1374  -0.1284  -0.1284   3.0991  
+
+Coefficients:
+            Estimate Std. Error z value Pr(&gt;|z|)    
+(Intercept) -4.65833    0.09452 -49.286   &lt;2e-16 ***
+vaccTRUE    -0.13547    0.11280  -1.201     0.23    
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+(Dispersion parameter for binomial family taken to be 1)
+
+    Null deviance: 4365.8  on 44417  degrees of freedom
+Residual deviance: 4364.3  on 44416  degrees of freedom
+AIC: 4368.3
+
+Number of Fisher Scoring iterations: 7</code></pre>
+<p>In the unadjusted model, the log-odds for vaccination is closer to the null value (smaller effect on death)</p>
+</div>
+</div>
+<div id="step-4.-some-afterthoughts" class="section level3">
+<h3>Step 4. Some afterthoughts</h3>
+<div id="section-27" class="section level4">
+<h4>1.</h4>
+<blockquote>
+<p>What are potential advantages of PS analysis compared to including all confounders separately in a multivariable logistic regression model?</p>
+</blockquote>
+<p>Checks during model building; possible to use more covariates in a setting with rare events but frequnet exposure</p>
+</div>
+<div id="section-28" class="section level4">
+<h4>2.</h4>
+<blockquote>
+<p>How could the balance of confounding variables between exposure groups within strata of the PS possibly be improved?</p>
+</blockquote>
+<p>By correlations between the covariates and the covariates used for the PS</p>
+</div>
+<div id="section-29" class="section level4">
+<h4>3.</h4>
+<blockquote>
+<p>Could you think of ways of (graphically) summarizing the balance of confounders for subjects with the same PS?</p>
+</blockquote>
+<p>Yes, for example calculate the standardized difference and plot these</p>
+<p>First for all data</p>
+<pre class="r"><code>require(tableone)
+diffs_overall &lt;- CreateTableOne(vars = setdiff(orig_vars, &quot;vacc&quot;), strata = &quot;vacc&quot;, data = df, test = F, smd = T) %&gt;%
+  ExtractSmd()
+
+diffs_overall &lt;- data.frame(variable = rownames(diffs_overall), 
+                            smd = as.numeric(diffs_overall))</code></pre>
+<p>The in each PS quantile</p>
+<pre class="r"><code>diffs_quantiles &lt;- split(df, df$ps_cat) %&gt;%
+  map_df(function(data) CreateTableOne(vars = setdiff(orig_vars, &quot;vacc&quot;), strata = &quot;vacc&quot;, data = data, test = F, smd = T) %&gt;%
+  ExtractSmd())
+diffs_melted &lt;- melt(diffs_quantiles, variable.name = &quot;PS_category&quot;, value.name = &quot;smd&quot;)
+diffs_melted$variable &lt;- (diffs_overall$variable)</code></pre>
+<p>Now to plot</p>
+<pre class="r"><code>diffs_overall %&gt;%
+  ggplot(aes(x = smd, y = variable)) + 
+  geom_point(shape = 5, size = 3) + 
+  lims(x = c(0,.5)) +
+  geom_point(data = diffs_melted, aes(x = smd, y = variable, col = PS_category), 
+             alpha = .4)</code></pre>
+<p><img src="figure/acr_assignments.Rmd/unnamed-chunk-40-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>We observe that the SMD within the PS categories (the colored dots), are not my closer to 0 than the overall. So the PS does not seem to equal out the distributions of covariates for accross vaccination status</p>
+<p>Maybe this was because we used a very simple model for propensity scoring.</p>
+<pre class="r"><code>table(df$vacc)</code></pre>
+<pre><code>
+FALSE  TRUE 
+12030 32388 </code></pre>
+<p>We have 12030 in the smallest group of treatment, so we can potential include 1203 terms.</p>
+<p>Let’s go all out and use all possible confounders, including up to cubic terms, and all third order interactions. Of course, the cubic terms of the binary variables are senseless, but this way we can get all terms with 2 lines of code</p>
+<pre class="r"><code># ps_fit2 &lt;- glm(vacc ~ (age + sex_female + cvd + cvd_drug + pulm + pulm_drug + DM + contact)^3,
+#                data = df, family = &quot;binomial&quot;)
+ps_fit2 &lt;- glm(vacc ~ polym(age, sex_female, cvd, cvd_drug, pulm, pulm_drug, DM, contact, 
+                            degree = 3, raw = T),
+               data = df, family = &quot;binomial&quot;)</code></pre>
+<pre><code>Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred</code></pre>
+<p>This takes some time to fit. Let’s see how many terms we included:</p>
+<pre class="r"><code>length(coef(ps_fit2))</code></pre>
+<pre><code>[1] 165</code></pre>
+<p>Well below the threshold. Let’s use this as the new propensity score and do the same calculations</p>
+<pre class="r"><code>n_cat &lt;- 5
+df %&lt;&gt;%
+  mutate(
+    ps_2 = ps_fit2$fitted.values,
+    ps_2_range = cut(ps_2, 
+                      breaks = quantile(ps_2, 
+                                        probs = seq(0, 1, length.out = n_cat + 1)),
+                      include.lowest = T, ordered_result = T),
+    ps_2_cat = as.numeric(ps_2_range))
+
+diffs_quantiles_2 &lt;- split(df, df$ps_2_cat) %&gt;%
+  map_df(function(data) CreateTableOne(vars = setdiff(orig_vars, &quot;vacc&quot;), strata = &quot;vacc&quot;, data = data, test = F, smd = T) %&gt;%
+  ExtractSmd())
+diffs_melted_2 &lt;- melt(diffs_quantiles_2, variable.name = &quot;PS_category&quot;, value.name = &quot;smd&quot;)
+diffs_melted_2$variable &lt;- (diffs_overall$variable)</code></pre>
+<p>Now to plot</p>
+<pre class="r"><code>diffs_overall %&gt;%
+  ggplot(aes(x = smd, y = variable)) + 
+  geom_point(shape = 5, size = 3) + 
+  lims(x = c(0,.5)) +
+  geom_point(data = diffs_melted_2, aes(x = smd, y = variable, col = PS_category), 
+             alpha = .4)</code></pre>
+<p><img src="figure/acr_assignments.Rmd/unnamed-chunk-45-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Now we observe that the confounder distributions within the propensity score strata are a lot more alike. However, most covariates are binary, which are not very informative to plot.</p>
+<pre class="r"><code>df %&gt;%
+  select(age, contact, ps_2_cat, vacc) %&gt;% 
+  as.data.table() %&gt;%
+  melt.data.table(id.vars = c(&quot;vacc&quot;, &quot;ps_2_cat&quot;)) %&gt;%
+  ggplot(aes(x = value, fill = vacc)) +
+  geom_histogram(alpha = 0.8) + 
+  facet_grid(ps_2_cat ~ variable, scales = &quot;free&quot;)</code></pre>
+<p><img src="figure/acr_assignments.Rmd/unnamed-chunk-46-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Relative distributions seem equal within the propensity score quantiles</p>
+</div>
+<div id="additional-ideas" class="section level4">
+<h4>Additional ideas</h4>
+<ul>
+<li>random forest for PS</li>
+<li>nicer functions for smd</li>
+</ul>
+</div>
+</div>
+</div>
+<div id="excercise-inverse-probability-weighing" class="section level2">
+<h2>Excercise inverse probability weighing</h2>
+<p>Skipped due to time limitations</p>
+</div>
+</div>
+<div id="day-2-unobserved-confounding" class="section level1">
+<h1>Day 2 Unobserved confounding</h1>
+<div id="excercise-instrumental-variable" class="section level2">
+<h2>Excercise Instrumental variable</h2>
+<blockquote>
+<p>Introduction This practical exercise is based on a paper by Sexton and Hebel (Jama 1984). They were interested in the association between maternal smoking and birth weight. In an observational setting, however, extraneous factors might confound the observed association between maternal smoking and infant body weight. Therefore, they designed a randomized controlled trial in which they randomly assigned women to an encouragement program to stop smoking. Thus, pregnant women who smoked either received the advice to stop smoking, or they did not receive such an advice. It was assumed that women who were enrolled in the program would be more likely to stop smoking during pregnancy. In this study the encouragement program is called an instrumental variable.</p>
+</blockquote>
+<blockquote>
+<p>Code book (data_IV.txt) Variable name Description Values program Allocation to encouragement program 0 = no program 1 = program age Age (years) Continuous education Years of education Continuous height Maternal height (cm) Continuous weight Maternal weight (kg) Continuous N.prev.preg No. previous pregnancies Ordinal low.birthweight History of child with low birth weight 0 = absent 1 = present smoking_rand No. cigarettes smoked per day at time of randomisation Continuous smoking_8m No. cigarettes smoked per day at 8 months gestational age Continuous birth.weight Birth weight (g) Continuous</p>
+</blockquote>
+<div id="step-1.-think-before-you-act" class="section level3">
+<h3>Step 1. Think before you act</h3>
+<div id="section-30" class="section level4">
+<h4>1.</h4>
+<blockquote>
+<p>Look at the variables measured in this study (i.e., the code book), and plan your analysis (draw a DAG, define exposure, outcome, confounders, and the model to relate exposure to outcome, etc.)</p>
+</blockquote>
+<pre class="r"><code>require(DiagrammeR)
+dag_iv &lt;- &quot;digraph {
+  graph [layout = dot]
+  
+  node[shape = circle]
+  program; birth_weight;
+  age; eduction; height; weight; 
+  n_prev_preg; low_birthweight;
+  smoking_rand; smoking_8m;
+  
+  program -&gt; smoking_8m
+  smoking_8m -&gt; birth_weight
+  smoking_rand -&gt; smoking_8m
+  low_birthweight -&gt; smoking_rand
+  low_birthweight -&gt; smoking_8m
+  low_birthweight -&gt; birth_weight
+  n_prev_preg -&gt; smoking_rand
+  n_prev_preg -&gt; birth_weight
+  age -&gt; birth_weight
+  age -&gt; smoking_rand
+  age -&gt; smoking_8m
+  eduction -&gt; smoking_rand
+  eduction -&gt; smoking_8m
+  height -&gt; smoking_rand
+  height -&gt; smoking_8m
+  weight -&gt; smoking_rand
+  weight -&gt; smoking_8m
+  weight -&gt; brith_weight
+
+  subgraph {
+    rank = same; program; smoking_8m; birth_weight
+  }
+}&quot;
+DiagrammeR(dag_iv, type = &quot;grViz&quot;)</code></pre>
+<div id="htmlwidget-c86dedc542520f0b0ea0" style="width:672px;height:480px;" class="grViz html-widget"></div>
+<script type="application/json" data-for="htmlwidget-c86dedc542520f0b0ea0">{"x":{"diagram":"digraph {\n  graph [layout = dot]\n  \n  node[shape = circle]\n  program; birth_weight;\n  age; eduction; height; weight; \n  n_prev_preg; low_birthweight;\n  smoking_rand; smoking_8m;\n  \n  program -> smoking_8m\n  smoking_8m -> birth_weight\n  smoking_rand -> smoking_8m\n  low_birthweight -> smoking_rand\n  low_birthweight -> smoking_8m\n  low_birthweight -> birth_weight\n  n_prev_preg -> smoking_rand\n  n_prev_preg -> birth_weight\n  age -> birth_weight\n  age -> smoking_rand\n  age -> smoking_8m\n  eduction -> smoking_rand\n  eduction -> smoking_8m\n  height -> smoking_rand\n  height -> smoking_8m\n  weight -> smoking_rand\n  weight -> smoking_8m\n  weight -> brith_weight\n\n  subgraph {\n    rank = same; program; smoking_8m; birth_weight\n  }\n}","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script>
+</div>
+<div id="section-31" class="section level4">
+<h4>2.</h4>
+<blockquote>
+<p>Load the data and attach: data &lt;- read.table(“data_IV.txt”, sep=“”) attach(data)</p>
+</blockquote>
+<pre class="r"><code>iv &lt;- read.table(here(&quot;data&quot;, &quot;data_IV.txt&quot;), sep = &quot;\t&quot;)</code></pre>
+</div>
+<div id="section-32" class="section level4">
+<h4>3.</h4>
+<blockquote>
+<p>Have a quick look: summary(data)</p>
+</blockquote>
+<pre class="r"><code>str(iv)</code></pre>
+<pre><code>&#39;data.frame&#39;:   935 obs. of  10 variables:
+ $ program        : int  0 0 0 0 0 0 0 0 0 0 ...
+ $ age            : int  20 25 24 16 12 18 30 31 27 36 ...
+ $ education      : int  13 11 9 13 12 12 13 13 15 11 ...
+ $ height         : int  163 173 152 175 151 165 167 173 173 167 ...
+ $ weight         : int  55 67 52 66 51 55 62 76 67 68 ...
+ $ N.prev.preg    : int  0 0 0 0 3 0 1 0 1 0 ...
+ $ low.birthweight: int  0 0 0 0 1 0 0 0 0 0 ...
+ $ smoking_rand   : int  12 17 15 12 15 12 12 11 10 14 ...
+ $ smoking_8months: int  5 18 14 7 3 4 11 6 0 10 ...
+ $ birth.weight   : int  2355 3703 3297 3387 3258 3962 3781 3160 3235 3395 ...</code></pre>
+<p>Let’s curate a bit</p>
+<pre class="r"><code>iv %&lt;&gt;%
+  mutate(
+    program = as.logical(program),
+    low.birthweight = as.logical(low.birthweight)
+  )</code></pre>
+</div>
+</div>
+<div id="step-2.-conventional-analysis" class="section level3">
+<h3>Step 2. Conventional analysis</h3>
+<div id="section-33" class="section level4">
+<h4>1.</h4>
+<blockquote>
+<p>What is the association between the number of cigarettes smoked per day at 8 months gestational age and birth weight? Explain what this number means. Do you think this is a valid estimate? Why?</p>
+</blockquote>
+<pre class="r"><code>fit0 &lt;- lm(birth.weight ~ smoking_8months, data =iv)
+summary(fit0)</code></pre>
+<pre><code>
+Call:
+lm(formula = birth.weight ~ smoking_8months, data = iv)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-1434.61  -343.13    -4.61   315.17  1395.37 
+
+Coefficients:
+                Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept)     3287.611     24.467 134.368   &lt;2e-16 ***
+smoking_8months   -3.397      2.900  -1.171    0.242    
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+Residual standard error: 510 on 933 degrees of freedom
+Multiple R-squared:  0.001469,  Adjusted R-squared:  0.0003984 
+F-statistic: 1.372 on 1 and 933 DF,  p-value: 0.2417</code></pre>
+<p>Smoking more reduces the birth weight, but it is not a significant effect.</p>
+<p>It does not take into account confounding variables that affect both smoking and birth weight</p>
+</div>
+</div>
+<div id="step-3.-evaluate-iv-assumptions" class="section level3">
+<h3>Step 3. Evaluate IV assumptions</h3>
+<div id="section-34" class="section level4">
+<h4>1.</h4>
+<blockquote>
+<p>Create a table of the distributions of the potential confounding variables by program status. You may use commands such as:</p>
+</blockquote>
+<pre class="r"><code>iv %&gt;%
+  group_by(program) %&gt;%
+  summarize_all(funs(mean)) %&gt;%
+  t()</code></pre>
+<pre><code>                        [,1]         [,2]
+program            0.0000000    1.0000000
+age               25.0550847   25.2937365
+education         12.1250000   12.0043197
+height           163.6906780  164.2419006
+weight            61.8220339   62.6220302
+N.prev.preg        1.2754237    1.2829374
+low.birthweight    0.1588983    0.1835853
+smoking_rand      11.8474576   11.9632829
+smoking_8months    8.9449153    3.3455724
+birth.weight    3209.1186441 3325.2850972</code></pre>
+<blockquote>
+<p>Which IV assumption can you check using this table?</p>
+</blockquote>
+<p>Pretty equal confounder distributions, only smoking 8 months and birth weight seem to be different. (what we wanted)</p>
+</div>
+<div id="section-35" class="section level4">
+<h4>2.</h4>
+<blockquote>
+<p>What is the association between the advice to stop smoking and the number of cigarettes smoked per day at 8 months gestational age? Explain what this number means. Which IV assumption do you check by this analysis?</p>
+</blockquote>
+<pre class="r"><code>lm(smoking_8months ~ program, data = iv) %&gt;% summary()</code></pre>
+<pre><code>
+Call:
+lm(formula = smoking_8months ~ program, data = iv)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-8.9449 -3.3456 -0.9449  3.0551 16.6544 
+
+Coefficients:
+            Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept)   8.9449     0.2315   38.64   &lt;2e-16 ***
+programTRUE  -5.5993     0.3290  -17.02   &lt;2e-16 ***
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+Residual standard error: 5.03 on 933 degrees of freedom
+Multiple R-squared:  0.2369,    Adjusted R-squared:  0.2361 
+F-statistic: 289.7 on 1 and 933 DF,  p-value: &lt; 2.2e-16</code></pre>
+<p>Difference in cigarettes, due to being in there program. Although the R-squared is low, so program does not explian much of the variance. You can check that the IV is related to the exposure of interest</p>
+<p>In a plot:</p>
+<pre class="r"><code>iv %&gt;%
+  ggplot(aes(x = smoking_8months, fill = program)) + 
+  geom_histogram(alpha = 0.5)</code></pre>
+<p><img src="figure/acr_assignments.Rmd/unnamed-chunk-54-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>In a boxplot:</p>
+<pre class="r"><code>iv %&gt;%
+  ggplot(aes(y = smoking_8months, x = program)) + 
+  geom_boxplot()</code></pre>
+<p><img src="figure/acr_assignments.Rmd/unnamed-chunk-55-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+</div>
+<div id="step-4.-iv-analysis" class="section level3">
+<h3>Step 4. IV analysis</h3>
+<div id="what-is-the-association-between-the-advice-to-stop-smoking-and-birth-weight-explain-what-this-number-means." class="section level4">
+<h4>1. What is the association between the advice to stop smoking and birth weight? Explain what this number means.</h4>
+<pre class="r"><code>lm(birth.weight ~ program, data = iv) %&gt;% summary()</code></pre>
+<pre><code>
+Call:
+lm(formula = birth.weight ~ program, data = iv)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-1472.29  -331.12     4.88   329.30  1456.88 
+
+Coefficients:
+            Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept)  3209.12      23.34 137.489  &lt; 2e-16 ***
+programTRUE   116.17      33.17   3.502 0.000483 ***
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+Residual standard error: 507.1 on 933 degrees of freedom
+Multiple R-squared:  0.01298,   Adjusted R-squared:  0.01192 
+F-statistic: 12.27 on 1 and 933 DF,  p-value: 0.0004832</code></pre>
+<p>This is the ‘intention to treat’ effect. So the effect of assigning someone to a program on the birth weight.</p>
+</div>
+<div id="section-36" class="section level4">
+<h4>2.</h4>
+<blockquote>
+<p>Given the two effects of the advice to stop smoking (estimated in the previous two questions), can you estimate the (IV) effect of smoking on birth weight. Explain what this number means.</p>
+</blockquote>
+<p>We have a model for smoking at 8 months (model iv, instrumental variable)</p>
+<p><span class="math display">\[smoke_i = \alpha_0 + \alpha_1 * program_i + \nu_i\]</span></p>
+<p>And a model for birthweight based on the program (model intention to treat, itt)</p>
+<p><span class="math display">\[birthweight_i = \gamma_0 + \gamma_1 * program_i + \eta_i\]</span></p>
+<p>What we want to know is</p>
+<p><span class="math display">\[birthweight_i =\beta_0 + \beta_1*smoke_i+\epsilon_i\]</span></p>
+<p>So we can use the nested models iv and itt</p>
+<p><span class="math display">\[birthweight_i = \beta_0 + \beta_1*(\alpha_0 + \alpha_1 * program_i + \nu_i)+\epsilon_i\]</span></p>
+<p><span class="math display">\[=\beta_0 + \beta_1*\alpha_0 + \beta_1*\alpha_1*program_i + \beta_1*\nu_i + \epsilon_i\]</span></p>
+<p>Now we can easily see that</p>
+<p><span class="math display">\[\beta_1 = \frac{\gamma_1}{\alpha_1}\]</span></p>
+<pre class="r"><code>fit_itt &lt;- lm(birth.weight ~ program, data = iv)
+fit_iv  &lt;- lm(smoking_8months ~ program, data = iv)
+
+coef(fit_itt)[2] / coef(fit_iv)[2]</code></pre>
+<pre><code>programTRUE 
+  -20.74644 </code></pre>
+<p>For each extra cigarette a day, the birthweight goes down with by 20 grams</p>
+</div>
+<div id="section-37" class="section level4">
+<h4>3.</h4>
+<blockquote>
+<p>A faster way of estimating the (IV) effect of smoking on birth weight is:</p>
+</blockquote>
+<pre class="r"><code>fit &lt;- lm(smoking_8months ~ program, data = iv) 
+lm(birth.weight ~ predict(fit), data = iv) %&gt;% summary()</code></pre>
+<pre><code>
+Call:
+lm(formula = birth.weight ~ predict(fit), data = iv)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-1472.29  -331.12     4.88   329.30  1456.88 
+
+Coefficients:
+             Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept)  3394.694     40.148  84.555  &lt; 2e-16 ***
+predict(fit)  -20.746      5.924  -3.502 0.000483 ***
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+Residual standard error: 507.1 on 933 degrees of freedom
+Multiple R-squared:  0.01298,   Adjusted R-squared:  0.01192 
+F-statistic: 12.27 on 1 and 933 DF,  p-value: 0.0004832</code></pre>
+<blockquote>
+<p>Can you explain what is done here?</p>
+</blockquote>
+<p>It directly nests the IV model into the eventual model (see neste model above)</p>
+</div>
+</div>
+<div id="step-5.-another-iv-analysis" class="section level3">
+<h3>Step 5. Another IV analysis</h3>
+<blockquote>
+<p>Above, you have estimated the associations between the number of cigarettes smoked per day and birth weight. A pregnant woman, however, might be more interested to know how much weight her baby will gain if she completely stops smoking, as compared to continue smoking.</p>
+</blockquote>
+<div id="section-38" class="section level4">
+<h4>1.</h4>
+<blockquote>
+<p>What proportion of women completely stopped smoking in among those enrolled in the program? And what was this proportion among those in the control group? stop &lt;- 1*(smoking_8months==0) mean(stop[program==1]); mean(stop[program==0])</p>
+</blockquote>
+<pre class="r"><code>iv %&gt;%
+  group_by(program) %&gt;%
+  summarize(non_smoking_8months =mean(smoking_8months == 0))</code></pre>
+<pre><code># A tibble: 2 x 2
+  program non_smoking_8months
+  &lt;lgl&gt;                 &lt;dbl&gt;
+1 F                     0.150
+2 T                     0.428</code></pre>
+</div>
+<div id="section-39" class="section level4">
+<h4>2.</h4>
+<blockquote>
+<p>How much weight would a baby, on average, gain if a mother stopped smoking? Use the following expression: Or, using R: (mean(birth.weight[program==1])-mean(birth.weight[program==0])) / (mean(stop[program==1]) - mean(stop[program==0]))</p>
+</blockquote>
+<p>We can calculate this directly by doing another IV analysis for totally stopping with smoking, just like above</p>
+<pre class="r"><code>iv %&lt;&gt;%
+  mutate(non_smoking_8months = smoking_8months == 0)</code></pre>
+<pre class="r"><code>lm(birth.weight ~ 
+     lm(non_smoking_8months ~ program, data = iv)$fitted.values, 
+   data = iv) %&gt;%
+  summary()</code></pre>
+<pre><code>
+Call:
+lm(formula = birth.weight ~ lm(non_smoking_8months ~ program, 
+    data = iv)$fitted.values, data = iv)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-1472.29  -331.12     4.88   329.30  1456.88 
+
+Coefficients:
+                                                           Estimate
+(Intercept)                                                 3146.09
+lm(non_smoking_8months ~ program, data = iv)$fitted.values   419.04
+                                                           Std. Error
+(Intercept)                                                     38.21
+lm(non_smoking_8months ~ program, data = iv)$fitted.values     119.65
+                                                           t value
+(Intercept)                                                 82.338
+lm(non_smoking_8months ~ program, data = iv)$fitted.values   3.502
+                                                           Pr(&gt;|t|)    
+(Intercept)                                                 &lt; 2e-16 ***
+lm(non_smoking_8months ~ program, data = iv)$fitted.values 0.000483 ***
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+Residual standard error: 507.1 on 933 degrees of freedom
+Multiple R-squared:  0.01298,   Adjusted R-squared:  0.01192 
+F-statistic: 12.27 on 1 and 933 DF,  p-value: 0.0004832</code></pre>
+<p>So 419</p>
+</div>
+</div>
+</div>
+<div id="sensitivity-analysis-of-unmeasured-confounding" class="section level2">
+<h2>Sensitivity analysis of unmeasured confounding</h2>
+<blockquote>
+<p>Introduction Observational (i.e., non-randomized) studies on the effects of medical interventions are prone to confounding. Several methods have been proposed to control for measured confounding. The potential impact of an unmeasured confounder on the association under study can be estimated by means of simulations.</p>
+</blockquote>
+<blockquote>
+<p>Sensitivity analysis of unmeasured confounding will be applied to a study that aimed to assess whether annual influenza vaccination reduces mortality risk among elderly (for details, see computer exercise on propensity score analysis).</p>
+</blockquote>
+<blockquote>
+<p>Code book (data_PS.txt) Variable name Description Values Vac Influenza vaccination status 0 = unvaccinated 1 = vaccinated Age Age (years) Continuous Sex Sex 0 = male 1 = female Cvd Cardiovascular disease 0 = absent 1 = present cvd_drug Cardiovascular drug use 0 = absent 1 = present pulm Pulmonary disease 0 = absent 1 = present pulm_drug Pulmonary drug use 0 = absent 1 = present DM Diabetes Mellitus 0 = absent 1 = present Contact Number of GP contacts in 12 months prior to start of study continuous Death Mortality status 0 = absent 1 = present</p>
+</blockquote>
+<div id="step-1.-think-before-you-act-1" class="section level3">
+<h3>Step 1. Think before you act:</h3>
+<div id="section-40" class="section level4">
+<h4>1.</h4>
+<blockquote>
+<p>Look at the variables measured in this study (i.e., the code book), and plan your analysis (draw a DAG, define exposure, outcome, confounders, and the model to relate exposure to outcome, etc.). Also think of possible unmeasured confounders.</p>
+</blockquote>
+<p>For DAG, see above</p>
+<p>Possible unmeasured confounders are immunodeficiency, smoking</p>
+</div>
+<div id="section-41" class="section level4">
+<h4>2.</h4>
+<blockquote>
+<p>Load the data and attach: data &lt;- read.table(“data_PS.txt”, sep=“”) attach(data)</p>
+</blockquote>
+</div>
+<div id="section-42" class="section level4">
+<h4>3.</h4>
+<blockquote>
+<p>Have a quick look: summary(data)</p>
+</blockquote>
+<p>As above</p>
+<pre class="r"><code>df &lt;- read.table(here(&quot;data&quot;, &quot;data_PS.txt&quot;), sep = &quot;\t&quot;)
+str(df)</code></pre>
+<pre><code>&#39;data.frame&#39;:   44418 obs. of  10 variables:
+ $ vacc     : int  1 1 1 1 1 1 1 1 1 1 ...
+ $ age      : int  66 73 75 76 77 78 80 81 66 67 ...
+ $ sex      : int  0 1 1 1 1 1 1 1 0 0 ...
+ $ cvd      : int  0 1 1 1 1 1 1 1 0 0 ...
+ $ cvd_drug : int  0 1 1 1 1 1 1 1 0 0 ...
+ $ pulm     : int  1 0 0 0 0 0 0 0 0 0 ...
+ $ pulm_drug: int  0 0 0 0 0 0 0 0 0 0 ...
+ $ DM       : int  0 0 0 0 0 0 0 0 0 0 ...
+ $ contact  : int  27 4 8 7 7 5 9 17 10 13 ...
+ $ death    : int  0 0 0 0 0 0 0 0 0 0 ...</code></pre>
+<p>Let’s curate a few 0 - 1 variables as logical vectors (true vs false) so that R treats them right internally in all functions</p>
+<pre class="r"><code>logical_vars &lt;- c(&quot;vacc&quot;, &quot;sex&quot;, &quot;cvd&quot;, &quot;cvd_drug&quot;, &quot;pulm&quot;, &quot;pulm_drug&quot;, &quot;DM&quot;, &quot;death&quot;)
+df  %&lt;&gt;%
+  mutate_at(vars(logical_vars), as.logical)
+str(df)</code></pre>
+<pre><code>&#39;data.frame&#39;:   44418 obs. of  10 variables:
+ $ vacc     : logi  TRUE TRUE TRUE TRUE TRUE TRUE ...
+ $ age      : int  66 73 75 76 77 78 80 81 66 67 ...
+ $ sex      : logi  FALSE TRUE TRUE TRUE TRUE TRUE ...
+ $ cvd      : logi  FALSE TRUE TRUE TRUE TRUE TRUE ...
+ $ cvd_drug : logi  FALSE TRUE TRUE TRUE TRUE TRUE ...
+ $ pulm     : logi  TRUE FALSE FALSE FALSE FALSE FALSE ...
+ $ pulm_drug: logi  FALSE FALSE FALSE FALSE FALSE FALSE ...
+ $ DM       : logi  FALSE FALSE FALSE FALSE FALSE FALSE ...
+ $ contact  : int  27 4 8 7 7 5 9 17 10 13 ...
+ $ death    : logi  FALSE FALSE FALSE FALSE FALSE FALSE ...</code></pre>
+<p>Rename sex to a more sensible name</p>
+<pre class="r"><code>df %&lt;&gt;%
+  rename(sex_female = sex)</code></pre>
+<p>Store names of original covariates in a vector for later use</p>
+<pre class="r"><code>orig_covariates &lt;- setdiff(names(df), c(&quot;death&quot;, &quot;vacc&quot;))
+orig_covariates</code></pre>
+<pre><code>[1] &quot;age&quot;        &quot;sex_female&quot; &quot;cvd&quot;        &quot;cvd_drug&quot;   &quot;pulm&quot;      
+[6] &quot;pulm_drug&quot;  &quot;DM&quot;         &quot;contact&quot;   </code></pre>
+</div>
+</div>
+<div id="have-a-quick-look-summarydata-1" class="section level3">
+<h3>3. Have a quick look: summary(data)</h3>
+<pre class="r"><code>summary(df)</code></pre>
+<pre><code>    vacc              age         sex_female         cvd         
+ Mode :logical   Min.   : 65.00   Mode :logical   Mode :logical  
+ FALSE:12030     1st Qu.: 70.00   FALSE:16974     FALSE:22791    
+ TRUE :32388     Median : 75.00   TRUE :27444     TRUE :21627    
+                 Mean   : 75.66                                  
+                 3rd Qu.: 80.00                                  
+                 Max.   :104.00                                  
+  cvd_drug          pulm         pulm_drug           DM         
+ Mode :logical   Mode :logical   Mode :logical   Mode :logical  
+ FALSE:23543     FALSE:39000     FALSE:39427     FALSE:41553    
+ TRUE :20875     TRUE :5418      TRUE :4991      TRUE :2865     
+                                                                
+                                                                
+                                                                
+    contact         death        
+ Min.   :  2.00   Mode :logical  
+ 1st Qu.:  6.00   FALSE:44039    
+ Median : 12.00   TRUE :379      
+ Mean   : 14.68                  
+ 3rd Qu.: 19.00                  
+ Max.   :146.00                  </code></pre>
+</div>
+<div id="step-2.-estimate-the-effect-of-influenza-vaccination-on-mortality-risk" class="section level3">
+<h3>Step 2. Estimate the effect of influenza vaccination on mortality risk:</h3>
+<div id="section-43" class="section level4">
+<h4>1.</h4>
+<blockquote>
+<p>Estimate the effect of influenza vaccination on the risk of mortality, while adjusting for measured confounders, e.g.: fit &lt;- glm(death ~ vacc + age + sex, family=‘binomial’) log.or &lt;- fit$coef[2] se.log.or &lt;- sqrt(diag(vcov(fit))[2]) exp(c(log.or, log.or - 1.96<em>se.log.or, log.or + 1.96</em>se.log.or))</p>
+</blockquote>
+<p>Let’s do this with profile likelihoods</p>
+<pre class="r"><code>fit &lt;- glm(death ~ vacc + age + sex_female, family = &quot;binomial&quot;, data = df)
+summary(fit)</code></pre>
+<pre><code>
+Call:
+glm(formula = death ~ vacc + age + sex_female, family = &quot;binomial&quot;, 
+    data = df)
+
+Deviance Residuals: 
+    Min       1Q   Median       3Q      Max  
+-0.5134  -0.1431  -0.1129  -0.0898   3.5127  
+
+Coefficients:
+                 Estimate Std. Error z value Pr(&gt;|z|)    
+(Intercept)    -11.601509   0.539953 -21.486  &lt; 2e-16 ***
+vaccTRUE        -0.191353   0.113312  -1.689   0.0913 .  
+age              0.093608   0.006676  14.021  &lt; 2e-16 ***
+sex_femaleTRUE  -0.552634   0.105524  -5.237 1.63e-07 ***
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+(Dispersion parameter for binomial family taken to be 1)
+
+    Null deviance: 4365.8  on 44417  degrees of freedom
+Residual deviance: 4165.7  on 44414  degrees of freedom
+AIC: 4173.7
+
+Number of Fisher Scoring iterations: 8</code></pre>
+<pre class="r"><code>exp(confint(fit))</code></pre>
+<pre><code>                      2.5 %       97.5 %
+(Intercept)    3.160118e-06 2.625595e-05
+vaccTRUE       6.633449e-01 1.034765e+00
+age            1.083838e+00 1.112588e+00
+sex_femaleTRUE 4.680495e-01 7.080727e-01</code></pre>
+<p>No significant effect of vaccination here</p>
+</div>
+<div id="step-3.-sensitivity-analysis-of-unmeasured-confounding" class="section level4">
+<h4>Step 3. Sensitivity analysis of unmeasured confounding:</h4>
+<blockquote>
+<p>We will apply the method proposed by Lin, Psaty and Kronmal (Biometrics 1998) in order to quantify the impact of a potential unmeasured confounder.</p>
+</blockquote>
+<blockquote>
+<ol style="list-style-type: decimal">
+<li>Consider an unmeasured binary confounder (e.g., smoking yes/no).</li>
+</ol>
+<ol style="list-style-type: lower-alpha">
+<li>Define the prevalence of the confounder among vaccinated subject (p1).</li>
+<li>Define the prevalence of the confounder among unvaccinated subjects (p0).</li>
+<li>Define the odds ratio of the relation between the confounder and mortality (ORyz).</li>
+</ol>
+</blockquote>
+<pre class="r"><code>p0 &lt;- .3
+p1 &lt;- .5
+ORyz &lt;- 2</code></pre>
+<ol start="2" style="list-style-type: decimal">
+<li>Calculate the factor (A) that quantifies the impact of the unmeasured confounder:</li>
+</ol>
+<pre class="r"><code>A &lt;- (ORyz*p1 + 1-p1 ) / (ORyz*p0 + 1-p0)
+A</code></pre>
+<pre><code>[1] 1.153846</code></pre>
+</div>
+<div id="section-44" class="section level4">
+<h4>3.</h4>
+<blockquote>
+<p>Estimate the effect of influenza vaccination on the risk of mortality, while adjusting for measured confounders and the unmeasured confounder: obs.OR &lt;- exp(c(log.or, log.or - 1.96<em>se.log.or, log.or + 1.96</em>se.log.or)) names(obs.OR) &lt;- c(‘OR’,‘95%’,‘CI’) obs.OR # observed odds ratio obs.OR/A # odds ratio after adjustment for unmeasured confounder</p>
+</blockquote>
+<pre class="r"><code>obs_OR &lt;- c(exp(coef(fit)[2]), exp(confint(fit))[2,])
+obs_OR</code></pre>
+<pre><code> vaccTRUE     2.5 %    97.5 % 
+0.8258413 0.6633449 1.0347650 </code></pre>
+<pre class="r"><code>obs_OR / A</code></pre>
+<pre><code> vaccTRUE     2.5 %    97.5 % 
+0.7157291 0.5748989 0.8967963 </code></pre>
+</div>
+<div id="section-45" class="section level4">
+<h4>4.</h4>
+<blockquote>
+<p>Evaluate different scenarios of unmeasured confounding. You may want to do this in an automated way, varying two parameters, while keeping the third fixed. For example:</p>
+</blockquote>
+<p>With the proposed code:</p>
+<pre class="r"><code>ORyz    &lt;- 2
+p0  &lt;- seq(0.3,.5,.05)
+p1  &lt;- seq(0.1,.3,.05)
+
+M &lt;- matrix(ncol=length(p0)*3, nrow=length(p1))
+colnames(M) &lt;- rep(p0, each=3)
+rownames(M) &lt;- p1
+for (i in 1:length(p0)){
+    for (j in 1:length(p1)){
+        A &lt;- (ORyz*p1[j] + 1-p1[j] ) / (ORyz*p0[i] + 1-p0[i])
+        M[j,(3*i-2):(3*i)] &lt;- obs_OR/A  }}  
+round(M,2)</code></pre>
+<pre><code>      0.3  0.3  0.3 0.35 0.35 0.35  0.4  0.4  0.4 0.45 0.45 0.45  0.5  0.5
+0.1  0.98 0.78 1.22 1.01 0.81 1.27 1.05 0.84 1.32 1.09 0.87 1.36 1.13 0.90
+0.15 0.93 0.75 1.17 0.97 0.78 1.21 1.01 0.81 1.26 1.04 0.84 1.30 1.08 0.87
+0.2  0.89 0.72 1.12 0.93 0.75 1.16 0.96 0.77 1.21 1.00 0.80 1.25 1.03 0.83
+0.25 0.86 0.69 1.08 0.89 0.72 1.12 0.92 0.74 1.16 0.96 0.77 1.20 0.99 0.80
+0.3  0.83 0.66 1.03 0.86 0.69 1.07 0.89 0.71 1.11 0.92 0.74 1.15 0.95 0.77
+      0.5
+0.1  1.41
+0.15 1.35
+0.2  1.29
+0.25 1.24
+0.3  1.19</code></pre>
+<blockquote>
+<p>Can you explain what is done here?</p>
+</blockquote>
+<p>A grid of possible values for p0 and p1 are made, and for each combination the value for the adjusted OR is reported</p>
+<blockquote>
+<p>Can you modify this procedure such that the parameters p1 and p0 are fixed, and ORyz is varied over a certain range?</p>
+</blockquote>
+<p>Instead of using nested for-loops, we can map a function to a data.frame of parameters using the function <code>pmap</code> from <code>purrr</code>.</p>
+<p>This is a little more R-ey than creating (nested) loops</p>
+<p>We can just as easily do this for ranges of three parameters. Here the function <code>expand.grid</code> comes in handy</p>
+<pre class="r"><code>ORs &lt;- seq(1, 4, length.out = 5)
+p0s &lt;- seq(0.3, 0.5, 0.05)
+p1s &lt;- seq(0.1, 0.3, 0.05)
+
+param_grid &lt;- expand.grid(OR = ORs, p0 = p0s, p1 = p1s)
+head(param_grid)</code></pre>
+<pre><code>    OR   p0  p1
+1 1.00 0.30 0.1
+2 1.75 0.30 0.1
+3 2.50 0.30 0.1
+4 3.25 0.30 0.1
+5 4.00 0.30 0.1
+6 1.00 0.35 0.1</code></pre>
+<pre class="r"><code>dim(param_grid)</code></pre>
+<pre><code>[1] 125   3</code></pre>
+<p>So we have 125 combinations of the 3 parameters</p>
+<p>Now apply a function to this grid. A downside of <code>pmap</code> is that it depends on the column orders (instead of using named arguments), so you need to make sure you the column order of the parameter grid.</p>
+<pre class="r"><code>adjusted_ORs &lt;- param_grid %&gt;%
+  pmap_df(function(OR, p0, p1) {
+    A = (OR * p1 + 1 - p1) / (OR * p0 + 1-p0)
+    adj_OR = obs_OR / A
+    data.frame(estimate = adj_OR[1], ci_low = adj_OR[2], ci_high = adj_OR[3])
+  })
+adjusted_ORs</code></pre>
+<pre><code>     estimate    ci_low  ci_high
+1   0.8258413 0.6633449 1.034765
+2   0.9410749 0.7559046 1.179151
+3   1.0412781 0.8363913 1.304704
+4   1.1292115 0.9070226 1.414883
+5   1.2069988 0.9695040 1.512349
+6   0.8258413 0.6633449 1.034765
+7   0.9698833 0.7790445 1.215247
+8   1.0951373 0.8796530 1.372188
+9   1.2050541 0.9679420 1.509912
+10  1.3022881 1.0460438 1.631745
+11  0.8258413 0.6633449 1.034765
+12  0.9986918 0.8021845 1.251344
+13  1.1489965 0.9229146 1.439673
+14  1.2808966 1.0288614 1.604942
+15  1.3975775 1.1225836 1.751141
+16  0.8258413 0.6633449 1.034765
+17  1.0275002 0.8253244 1.287440
+18  1.2028557 0.9661762 1.507158
+19  1.3567392 1.0897808 1.699971
+20  1.4928669 1.1991234 1.870537
+21  0.8258413 0.6633449 1.034765
+22  1.0563086 0.8484643 1.323537
+23  1.2567150 1.0094378 1.574642
+24  1.4325818 1.1507003 1.795000
+25  1.5881563 1.2756632 1.989933
+26  0.8258413 0.6633449 1.034765
+27  0.9093533 0.7304247 1.139404
+28  0.9775264 0.7851837 1.224824
+29  1.0342311 0.8307309 1.295874
+30  1.0821368 0.8692105 1.355899
+31  0.8258413 0.6633449 1.034765
+32  0.9371906 0.7527846 1.174284
+33  1.0280881 0.8257967 1.288177
+34  1.1036944 0.8865263 1.382910
+35  1.1675687 0.9378324 1.462944
+36  0.8258413 0.6633449 1.034765
+37  0.9650280 0.7751445 1.209164
+38  1.0786498 0.8664096 1.351530
+39  1.1731577 0.9423217 1.469947
+40  1.2530005 1.0064543 1.569988
+41  0.8258413 0.6633449 1.034765
+42  0.9928653 0.7975045 1.244043
+43  1.1292115 0.9070226 1.414883
+44  1.2426210 0.9981170 1.556983
+45  1.3384324 1.0750761 1.677033
+46  0.8258413 0.6633449 1.034765
+47  1.0207027 0.8198644 1.278923
+48  1.1797732 0.9476355 1.478236
+49  1.3120842 1.0539124 1.644019
+50  1.4238642 1.1436980 1.784078
+51  0.8258413 0.6633449 1.034765
+52  0.8797005 0.7066065 1.102250
+53  0.9211306 0.7398846 1.154161
+54  0.9539890 0.7662777 1.195332
+55  0.9806865 0.7877220 1.228783
+56  0.8258413 0.6633449 1.034765
+57  0.9066301 0.7282373 1.135992
+58  0.9687753 0.7781545 1.213859
+59  1.0180629 0.8177441 1.275615
+60  1.0581091 0.8499106 1.325793
+61  0.8258413 0.6633449 1.034765
+62  0.9335597 0.7498681 1.169734
+63  1.0164200 0.8164244 1.273557
+64  1.0821368 0.8692105 1.355899
+65  1.1355317 0.9120992 1.422802
+66  0.8258413 0.6633449 1.034765
+67  0.9604893 0.7714989 1.203477
+68  1.0640647 0.8546943 1.333255
+69  1.1462107 0.9206769 1.436182
+70  1.2129543 0.9742878 1.519811
+71  0.8258413 0.6633449 1.034765
+72  0.9874189 0.7931297 1.237219
+73  1.1117094 0.8929642 1.392953
+74  1.2102846 0.9721433 1.516466
+75  1.2903770 1.0364763 1.616820
+76  0.8258413 0.6633449 1.034765
+77  0.8519205 0.6842926 1.067442
+78  0.8708871 0.6995273 1.091207
+79  0.8853018 0.7111057 1.109268
+80  0.8966277 0.7202030 1.123459
+81  0.8258413 0.6633449 1.034765
+82  0.8779997 0.7052403 1.100119
+83  0.9159330 0.7357097 1.147648
+84  0.9447624 0.7588665 1.183771
+85  0.9674140 0.7770611 1.212153
+86  0.8258413 0.6633449 1.034765
+87  0.9040789 0.7261881 1.132795
+88  0.9609789 0.7718922 1.204090
+89  1.0042230 0.8066273 1.258274
+90  1.0382004 0.8339192 1.300847
+91  0.8258413 0.6633449 1.034765
+92  0.9301580 0.7471358 1.165472
+93  1.0060248 0.8080746 1.260532
+94  1.0636835 0.8543882 1.332777
+95  1.1089868 0.8907774 1.389542
+96  0.8258413 0.6633449 1.034765
+97  0.9562372 0.7680835 1.198149
+98  1.0510707 0.8442571 1.316974
+99  1.1231441 0.9021490 1.407280
+100 1.1797732 0.9476355 1.478236
+101 0.8258413 0.6633449 1.034765
+102 0.8258413 0.6633449 1.034765
+103 0.8258413 0.6633449 1.034765
+104 0.8258413 0.6633449 1.034765
+105 0.8258413 0.6633449 1.034765
+106 0.8258413 0.6633449 1.034765
+107 0.8511221 0.6836513 1.066441
+108 0.8685572 0.6976558 1.088287
+109 0.8813082 0.7078979 1.104264
+110 0.8910393 0.7157142 1.116457
+111 0.8258413 0.6633449 1.034765
+112 0.8764030 0.7039578 1.098118
+113 0.9112731 0.7319667 1.141810
+114 0.9367752 0.7524509 1.173763
+115 0.9562372 0.7680835 1.198149
+116 0.8258413 0.6633449 1.034765
+117 0.9016838 0.7242643 1.129794
+118 0.9539890 0.7662777 1.195332
+119 0.9922421 0.7970039 1.243262
+120 1.0214352 0.8204528 1.279841
+121 0.8258413 0.6633449 1.034765
+122 0.9269647 0.7445708 1.161471
+123 0.9967050 0.8005886 1.248854
+124 1.0477091 0.8415569 1.312762
+125 1.0866332 0.8728222 1.361533</code></pre>
+<p>Combine with paramater grid</p>
+<pre class="r"><code>sa &lt;- data.frame(param_grid, adjusted_ORs)
+sa</code></pre>
+<pre><code>      OR   p0   p1  estimate    ci_low  ci_high
+1   1.00 0.30 0.10 0.8258413 0.6633449 1.034765
+2   1.75 0.30 0.10 0.9410749 0.7559046 1.179151
+3   2.50 0.30 0.10 1.0412781 0.8363913 1.304704
+4   3.25 0.30 0.10 1.1292115 0.9070226 1.414883
+5   4.00 0.30 0.10 1.2069988 0.9695040 1.512349
+6   1.00 0.35 0.10 0.8258413 0.6633449 1.034765
+7   1.75 0.35 0.10 0.9698833 0.7790445 1.215247
+8   2.50 0.35 0.10 1.0951373 0.8796530 1.372188
+9   3.25 0.35 0.10 1.2050541 0.9679420 1.509912
+10  4.00 0.35 0.10 1.3022881 1.0460438 1.631745
+11  1.00 0.40 0.10 0.8258413 0.6633449 1.034765
+12  1.75 0.40 0.10 0.9986918 0.8021845 1.251344
+13  2.50 0.40 0.10 1.1489965 0.9229146 1.439673
+14  3.25 0.40 0.10 1.2808966 1.0288614 1.604942
+15  4.00 0.40 0.10 1.3975775 1.1225836 1.751141
+16  1.00 0.45 0.10 0.8258413 0.6633449 1.034765
+17  1.75 0.45 0.10 1.0275002 0.8253244 1.287440
+18  2.50 0.45 0.10 1.2028557 0.9661762 1.507158
+19  3.25 0.45 0.10 1.3567392 1.0897808 1.699971
+20  4.00 0.45 0.10 1.4928669 1.1991234 1.870537
+21  1.00 0.50 0.10 0.8258413 0.6633449 1.034765
+22  1.75 0.50 0.10 1.0563086 0.8484643 1.323537
+23  2.50 0.50 0.10 1.2567150 1.0094378 1.574642
+24  3.25 0.50 0.10 1.4325818 1.1507003 1.795000
+25  4.00 0.50 0.10 1.5881563 1.2756632 1.989933
+26  1.00 0.30 0.15 0.8258413 0.6633449 1.034765
+27  1.75 0.30 0.15 0.9093533 0.7304247 1.139404
+28  2.50 0.30 0.15 0.9775264 0.7851837 1.224824
+29  3.25 0.30 0.15 1.0342311 0.8307309 1.295874
+30  4.00 0.30 0.15 1.0821368 0.8692105 1.355899
+31  1.00 0.35 0.15 0.8258413 0.6633449 1.034765
+32  1.75 0.35 0.15 0.9371906 0.7527846 1.174284
+33  2.50 0.35 0.15 1.0280881 0.8257967 1.288177
+34  3.25 0.35 0.15 1.1036944 0.8865263 1.382910
+35  4.00 0.35 0.15 1.1675687 0.9378324 1.462944
+36  1.00 0.40 0.15 0.8258413 0.6633449 1.034765
+37  1.75 0.40 0.15 0.9650280 0.7751445 1.209164
+38  2.50 0.40 0.15 1.0786498 0.8664096 1.351530
+39  3.25 0.40 0.15 1.1731577 0.9423217 1.469947
+40  4.00 0.40 0.15 1.2530005 1.0064543 1.569988
+41  1.00 0.45 0.15 0.8258413 0.6633449 1.034765
+42  1.75 0.45 0.15 0.9928653 0.7975045 1.244043
+43  2.50 0.45 0.15 1.1292115 0.9070226 1.414883
+44  3.25 0.45 0.15 1.2426210 0.9981170 1.556983
+45  4.00 0.45 0.15 1.3384324 1.0750761 1.677033
+46  1.00 0.50 0.15 0.8258413 0.6633449 1.034765
+47  1.75 0.50 0.15 1.0207027 0.8198644 1.278923
+48  2.50 0.50 0.15 1.1797732 0.9476355 1.478236
+49  3.25 0.50 0.15 1.3120842 1.0539124 1.644019
+50  4.00 0.50 0.15 1.4238642 1.1436980 1.784078
+51  1.00 0.30 0.20 0.8258413 0.6633449 1.034765
+52  1.75 0.30 0.20 0.8797005 0.7066065 1.102250
+53  2.50 0.30 0.20 0.9211306 0.7398846 1.154161
+54  3.25 0.30 0.20 0.9539890 0.7662777 1.195332
+55  4.00 0.30 0.20 0.9806865 0.7877220 1.228783
+56  1.00 0.35 0.20 0.8258413 0.6633449 1.034765
+57  1.75 0.35 0.20 0.9066301 0.7282373 1.135992
+58  2.50 0.35 0.20 0.9687753 0.7781545 1.213859
+59  3.25 0.35 0.20 1.0180629 0.8177441 1.275615
+60  4.00 0.35 0.20 1.0581091 0.8499106 1.325793
+61  1.00 0.40 0.20 0.8258413 0.6633449 1.034765
+62  1.75 0.40 0.20 0.9335597 0.7498681 1.169734
+63  2.50 0.40 0.20 1.0164200 0.8164244 1.273557
+64  3.25 0.40 0.20 1.0821368 0.8692105 1.355899
+65  4.00 0.40 0.20 1.1355317 0.9120992 1.422802
+66  1.00 0.45 0.20 0.8258413 0.6633449 1.034765
+67  1.75 0.45 0.20 0.9604893 0.7714989 1.203477
+68  2.50 0.45 0.20 1.0640647 0.8546943 1.333255
+69  3.25 0.45 0.20 1.1462107 0.9206769 1.436182
+70  4.00 0.45 0.20 1.2129543 0.9742878 1.519811
+71  1.00 0.50 0.20 0.8258413 0.6633449 1.034765
+72  1.75 0.50 0.20 0.9874189 0.7931297 1.237219
+73  2.50 0.50 0.20 1.1117094 0.8929642 1.392953
+74  3.25 0.50 0.20 1.2102846 0.9721433 1.516466
+75  4.00 0.50 0.20 1.2903770 1.0364763 1.616820
+76  1.00 0.30 0.25 0.8258413 0.6633449 1.034765
+77  1.75 0.30 0.25 0.8519205 0.6842926 1.067442
+78  2.50 0.30 0.25 0.8708871 0.6995273 1.091207
+79  3.25 0.30 0.25 0.8853018 0.7111057 1.109268
+80  4.00 0.30 0.25 0.8966277 0.7202030 1.123459
+81  1.00 0.35 0.25 0.8258413 0.6633449 1.034765
+82  1.75 0.35 0.25 0.8779997 0.7052403 1.100119
+83  2.50 0.35 0.25 0.9159330 0.7357097 1.147648
+84  3.25 0.35 0.25 0.9447624 0.7588665 1.183771
+85  4.00 0.35 0.25 0.9674140 0.7770611 1.212153
+86  1.00 0.40 0.25 0.8258413 0.6633449 1.034765
+87  1.75 0.40 0.25 0.9040789 0.7261881 1.132795
+88  2.50 0.40 0.25 0.9609789 0.7718922 1.204090
+89  3.25 0.40 0.25 1.0042230 0.8066273 1.258274
+90  4.00 0.40 0.25 1.0382004 0.8339192 1.300847
+91  1.00 0.45 0.25 0.8258413 0.6633449 1.034765
+92  1.75 0.45 0.25 0.9301580 0.7471358 1.165472
+93  2.50 0.45 0.25 1.0060248 0.8080746 1.260532
+94  3.25 0.45 0.25 1.0636835 0.8543882 1.332777
+95  4.00 0.45 0.25 1.1089868 0.8907774 1.389542
+96  1.00 0.50 0.25 0.8258413 0.6633449 1.034765
+97  1.75 0.50 0.25 0.9562372 0.7680835 1.198149
+98  2.50 0.50 0.25 1.0510707 0.8442571 1.316974
+99  3.25 0.50 0.25 1.1231441 0.9021490 1.407280
+100 4.00 0.50 0.25 1.1797732 0.9476355 1.478236
+101 1.00 0.30 0.30 0.8258413 0.6633449 1.034765
+102 1.75 0.30 0.30 0.8258413 0.6633449 1.034765
+103 2.50 0.30 0.30 0.8258413 0.6633449 1.034765
+104 3.25 0.30 0.30 0.8258413 0.6633449 1.034765
+105 4.00 0.30 0.30 0.8258413 0.6633449 1.034765
+106 1.00 0.35 0.30 0.8258413 0.6633449 1.034765
+107 1.75 0.35 0.30 0.8511221 0.6836513 1.066441
+108 2.50 0.35 0.30 0.8685572 0.6976558 1.088287
+109 3.25 0.35 0.30 0.8813082 0.7078979 1.104264
+110 4.00 0.35 0.30 0.8910393 0.7157142 1.116457
+111 1.00 0.40 0.30 0.8258413 0.6633449 1.034765
+112 1.75 0.40 0.30 0.8764030 0.7039578 1.098118
+113 2.50 0.40 0.30 0.9112731 0.7319667 1.141810
+114 3.25 0.40 0.30 0.9367752 0.7524509 1.173763
+115 4.00 0.40 0.30 0.9562372 0.7680835 1.198149
+116 1.00 0.45 0.30 0.8258413 0.6633449 1.034765
+117 1.75 0.45 0.30 0.9016838 0.7242643 1.129794
+118 2.50 0.45 0.30 0.9539890 0.7662777 1.195332
+119 3.25 0.45 0.30 0.9922421 0.7970039 1.243262
+120 4.00 0.45 0.30 1.0214352 0.8204528 1.279841
+121 1.00 0.50 0.30 0.8258413 0.6633449 1.034765
+122 1.75 0.50 0.30 0.9269647 0.7445708 1.161471
+123 2.50 0.50 0.30 0.9967050 0.8005886 1.248854
+124 3.25 0.50 0.30 1.0477091 0.8415569 1.312762
+125 4.00 0.50 0.30 1.0866332 0.8728222 1.361533</code></pre>
+<p>Of course these ‘3 dimensional’ data are harder to visualize, so we can grab all values for some p1</p>
+<pre class="r"><code>sa[sa$p0 == 0.5,]</code></pre>
+<pre><code>      OR  p0   p1  estimate    ci_low  ci_high
+21  1.00 0.5 0.10 0.8258413 0.6633449 1.034765
+22  1.75 0.5 0.10 1.0563086 0.8484643 1.323537
+23  2.50 0.5 0.10 1.2567150 1.0094378 1.574642
+24  3.25 0.5 0.10 1.4325818 1.1507003 1.795000
+25  4.00 0.5 0.10 1.5881563 1.2756632 1.989933
+46  1.00 0.5 0.15 0.8258413 0.6633449 1.034765
+47  1.75 0.5 0.15 1.0207027 0.8198644 1.278923
+48  2.50 0.5 0.15 1.1797732 0.9476355 1.478236
+49  3.25 0.5 0.15 1.3120842 1.0539124 1.644019
+50  4.00 0.5 0.15 1.4238642 1.1436980 1.784078
+71  1.00 0.5 0.20 0.8258413 0.6633449 1.034765
+72  1.75 0.5 0.20 0.9874189 0.7931297 1.237219
+73  2.50 0.5 0.20 1.1117094 0.8929642 1.392953
+74  3.25 0.5 0.20 1.2102846 0.9721433 1.516466
+75  4.00 0.5 0.20 1.2903770 1.0364763 1.616820
+96  1.00 0.5 0.25 0.8258413 0.6633449 1.034765
+97  1.75 0.5 0.25 0.9562372 0.7680835 1.198149
+98  2.50 0.5 0.25 1.0510707 0.8442571 1.316974
+99  3.25 0.5 0.25 1.1231441 0.9021490 1.407280
+100 4.00 0.5 0.25 1.1797732 0.9476355 1.478236
+121 1.00 0.5 0.30 0.8258413 0.6633449 1.034765
+122 1.75 0.5 0.30 0.9269647 0.7445708 1.161471
+123 2.50 0.5 0.30 0.9967050 0.8005886 1.248854
+124 3.25 0.5 0.30 1.0477091 0.8415569 1.312762
+125 4.00 0.5 0.30 1.0866332 0.8728222 1.361533</code></pre>
+</div>
+</div>
+<div id="step-4.-some-afterthoughts-1" class="section level3">
+<h3>Step 4. Some afterthoughts</h3>
+<div id="section-46" class="section level4">
+<h4>1.</h4>
+<blockquote>
+<p>In this exercise, you evaluated the potential impact of a single (binary) unmeasured confounder. What are limitations to this approach, and how could you overcome these limitations?</p>
+</blockquote>
+<p>You can repeat this for other potential unmeasured confounders, try multivariate sensitivity analysis.</p>
+<p>Or (monte-carlo) simulations for hypothesized distributions of continous potential unmeasured confounders</p>
+</div>
+</div>
+</div>
+</div>
+<div id="day-3-interaction-and-effect-modification" class="section level1">
+<h1>Day 3 Interaction and effect modification</h1>
+<div id="exercise-1" class="section level2">
+<h2>Exercise 1</h2>
+<blockquote>
+<p>Introduction The data you will use in this practical is data from the Utrecht Health Project (Leidsche Rijn Gezondheidsproject). The dataset only includes two exposure variables, age and BMI, and one outcome variable, diastolic blood pressure. This practical is based on the paper ‘Estimating interaction on an additive scale between continuous determinants in a logistic regression model’, IJE 2007; 36: 1111-1118. As you may have noticed when reading the article for the pre-assignment, it is a cohort studies but odds ratios are estimated and logistic regression is used. It might be more appropriate to estimate risk ratios in a cohort study, for example by using log-binomial regression. In this practical you will do this.</p>
+</blockquote>
+<blockquote>
+<p>Code book (Data_set_EM_1.sav) Variable name Description Values age Age (years) Continuous BMI Body mass index (kg/m2) Continuous bpdias Diastolic blood pressure (mmHg) Continuous age_dich Age dichotomised 0 = &lt;40 years 1 = &gt;= 40 years bmi_dich Body mass index dichotomised 0 = &lt;25 kg/m2 1 = &gt;= 25 kg/m2 bpdias_dich Diastolic blood pressure dichotomised 0 = &lt;90 mmHg 1 = &gt;= 90 mmHg</p>
+</blockquote>
+<div id="load-and-describe" class="section level3">
+<h3>1-3 load and describe</h3>
+<blockquote>
+<p>Load the data and attach: library(foreign) dat &lt;- data.frame(read.spss(“Data_set_EM_1.sav”,use.value.labels=FALSE)) attach(dat) 2. Have a quick look: summary(dat) 3. Explore and describe the variables included in the dataset.</p>
+</blockquote>
+<pre class="r"><code>lrg &lt;- read_spss(here(&quot;data&quot;, &quot;Data_set_Effect_modification_1.sav&quot;))
+str(lrg)</code></pre>
+<pre><code>Classes &#39;tbl_df&#39;, &#39;tbl&#39; and &#39;data.frame&#39;:   4897 obs. of  6 variables:
+ $ age        : atomic  18 18.1 18.1 18.1 18.1 18.1 18.1 18.2 18.2 18.2 ...
+  ..- attr(*, &quot;label&quot;)= chr &quot;age&quot;
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F5.0&quot;
+ $ BMI        : atomic  27.3 20.1 19.9 23.3 17.8 ...
+  ..- attr(*, &quot;label&quot;)= chr &quot;bmi&quot;
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F8.1&quot;
+ $ bpdias     : atomic  61.5 56 58 66.5 77 84.5 70 57 70.5 64 ...
+  ..- attr(*, &quot;label&quot;)= chr &quot;blood pressure diast&quot;
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F6.0&quot;
+ $ age_dich   : atomic  0 0 0 0 0 0 0 0 0 0 ...
+  ..- attr(*, &quot;label&quot;)= chr &quot;age dich &gt;= 40&quot;
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F8.0&quot;
+  ..- attr(*, &quot;display_width&quot;)= int 9
+ $ bmi_dich   : atomic  1 0 0 0 0 0 1 0 0 1 ...
+  ..- attr(*, &quot;label&quot;)= chr &quot;bmi dich &gt;= 25&quot;
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F8.0&quot;
+ $ bpdias_dich: atomic  0 0 0 0 0 0 0 0 0 0 ...
+  ..- attr(*, &quot;label&quot;)= chr &quot;bp dias dich &gt;= 90&quot;
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F8.0&quot;
+  ..- attr(*, &quot;display_width&quot;)= int 12</code></pre>
+<p>Let’s curate some variables</p>
+<pre class="r"><code>lrg %&lt;&gt;%
+  mutate(age_over_40 = as.logical(age_dich),
+         overweight = as.logical(bmi_dich),
+         hypertension = as.logical(bpdias_dich))</code></pre>
+<div id="section-47" class="section level4">
+<h4>4.</h4>
+<blockquote>
+<p>Estimate the risk ratio and confidence interval between overweight and diastolic hypertension. How do you interpret the result? fit &lt;- glm(bpdias_dich~bmi_dich, family=binomial(link=“log”)) exp(fit<span class="math inline">\(coef[2]); exp(fit\)</span>coef[2] - 1.96<em>sqrt(diag(vcov(fit))[2])) exp(fit$coef[2] + 1.96</em>sqrt(diag(vcov(fit))[2]))</p>
+</blockquote>
+<pre class="r"><code>fit1 &lt;- glm(hypertension ~ overweight, family = binomial(link = &quot;log&quot;), data = lrg)
+exp(coef(fit1))</code></pre>
+<pre><code>   (Intercept) overweightTRUE 
+    0.07185869     2.49288557 </code></pre>
+<pre class="r"><code>exp(confint(fit1))</code></pre>
+<pre><code>                    2.5 %     97.5 %
+(Intercept)    0.06215579 0.08244068
+overweightTRUE 2.11830960 2.94744657</code></pre>
+<p>Looks like a significant effect for overweight</p>
+<blockquote>
+<p>Instead , we can also write a short function, that we can use later:</p>
+</blockquote>
+<p>Preferably we would use likelihood-profile confidence intervals, but they take time to calculate, so let’s use the wald approximation</p>
+<pre class="r"><code>extract.RR &lt;- function(fit,q=2){
+        A1 &lt;- exp(fit$coef[q]); 
+        A2 &lt;- exp(fit$coef[q] - 1.96*sqrt(diag(vcov(fit))[q]))
+        A3 &lt;- exp(fit$coef[2] + 1.96*sqrt(diag(vcov(fit))[q]))
+        result &lt;- c(A1,A2,A3)
+        return(result)}
+extract.RR(fit1,2)</code></pre>
+<pre><code>overweightTRUE overweightTRUE overweightTRUE 
+      2.492886       2.113636       2.940184 </code></pre>
+</div>
+<div id="section-48" class="section level4">
+<h4>5.</h4>
+<blockquote>
+<p>Estimate the risk ratio and confidence interval between overweight and diastolic hypertension for subjects younger than 40 years and for subjects of 40 years or older. What do you conclude? fit &lt;- glm(bpdias_dich~bmi_dich, subset=age_dich==0, family=binomial(link=“log”)) extract.RR(fit,2) fit &lt;- glm(bpdias_dich~bmi_dich, subset=age_dich==1, family=binomial(link=“log”)) extract.RR(fit,2)</p>
+</blockquote>
+<pre class="r"><code>split(lrg, lrg$age_over_40) %&gt;% 
+  map_df(function(data) glm(hypertension ~ overweight, family = binomial(link = &quot;log&quot;), data = data) %&gt;%
+      extract.RR()) %&gt;% t()</code></pre>
+<pre><code>          [,1]     [,2]     [,3]
+FALSE 2.531006 1.946935 3.290295
+TRUE  1.854241 1.507600 2.280585</code></pre>
+<p>OR is higher in younger patients</p>
+</div>
+<div id="section-49" class="section level4">
+<h4>6.</h4>
+<blockquote>
+<p>Recode the variables bmi_dich and age_dich into one variable with four categories. Recode young normal weight subjects as 1, older normal weight subjects as 2, young overweight subjects as 3, and older overweight subjects as 4. recode &lt;- factor(ifelse(age_dich==0 &amp; bmi_dich==0,1, ifelse(age_dich==1 &amp; bmi_dich==0,2, ifelse(age_dich==0 &amp; bmi_dich==1,3,4)))) table(recode,age_dich,bmi_dich)</p>
+</blockquote>
+<pre class="r"><code>lrg %&lt;&gt;%
+  mutate(group = factor(paste0(overweight, age_over_40),
+                         levels = c(&quot;FALSEFALSE&quot;, &quot;FALSETRUE&quot;, &quot;TRUEFALSE&quot;, &quot;TRUETRUE&quot;),
+                         labels = 1:4))
+
+lrg[!duplicated(lrg$group),] %&gt;% select(overweight, age_over_40, group)</code></pre>
+<pre><code># A tibble: 4 x 3
+  overweight age_over_40 group
+  &lt;lgl&gt;      &lt;lgl&gt;       &lt;fct&gt;
+1 T          F           3    
+2 F          F           1    
+3 F          T           2    
+4 T          T           4    </code></pre>
+</div>
+<div id="section-50" class="section level4">
+<h4>7.</h4>
+<blockquote>
+<p>Estimate the risk ratio and confidence interval for diastolic hypertension for older normal weight subjects, young overweight subjects and older overweight subjects with young normal weight subjects as the reference category. Compare your results with the results of question 5. Do you see similarities? Do you see disparities? How could you explain these similarities and disparities? fit &lt;- glm(bpdias_dich~factor(recode), family=binomial(link=“log”)) extract.RR(fit,2)<br />
+extract.RR(fit,3) extract.RR(fit,4)</p>
+</blockquote>
+<pre class="r"><code>fit2 &lt;- glm(hypertension ~ group, data = lrg, family = binomial(link = &quot;log&quot;))
+rrs &lt;- map(as.list(2:4), function(x) extract.RR(fit2, x))
+rrs</code></pre>
+<pre><code>[[1]]
+  group2   group2   group2 
+3.364375 2.538789 4.458432 
+
+[[2]]
+  group3   group3   group2 
+2.531006 1.946935 4.373671 
+
+[[3]]
+  group4   group4   group2 
+6.238361 4.918018 4.267611 </code></pre>
+<p>Group 3 (overweight, younger than 40) matches the result from 5</p>
+<p>Group 2 (no overweight, older than 40) does not match results from 5, due to different reference category</p>
+<p>Group 4 is pretty high, so being old and overweight gives a high risk of hypertension</p>
+</div>
+<div id="section-51" class="section level4">
+<h4>8.</h4>
+<blockquote>
+<p>Estimate from the results of question 7 the measure of multiplicative interaction. Is there interaction on a multiplicative scale?</p>
+</blockquote>
+<pre class="r"><code>rrs[[3]][1] / (rrs[[1]][1] * rrs[[2]][1])</code></pre>
+<pre><code>   group4 
+0.7326103 </code></pre>
+<p>Looks like a negative interaction on multiplicative scale</p>
+</div>
+<div id="section-52" class="section level4">
+<h4>9.</h4>
+<blockquote>
+<p>Calculate from the results of question 7 the measure of additive interaction RERI. Is there interaction on an additive scale?</p>
+</blockquote>
+<pre class="r"><code>rrs[[3]][1] - rrs[[1]][1] - rrs[[2]][1] + 1</code></pre>
+<pre><code>  group4 
+1.342981 </code></pre>
+<p>Positive interaction on additive scale</p>
+<blockquote>
+<ol start="10" style="list-style-type: decimal">
+<li>Include bmi_dich, age_dich and the product term of the two in a log-binomial regression model. What are the risk ratios and confidence intervals for BMI, age and their product term? Interpret the results. Explain in words what the risk ratio of the product term means. fit &lt;- glm(bpdias_dich~age_dich*bmi_dich, family=binomial(link=“log”)) extract.RR(fit,2) extract.RR(fit,3) extract.RR(fit,4)</li>
+</ol>
+</blockquote>
+<p>Let’s update the function for extracting rate ratios</p>
+<pre class="r"><code>extract_RR &lt;- function(fit){
+        A1 &lt;- exp(fit$coef); 
+        A2 &lt;- exp(fit$coef - 1.96*sqrt(diag(vcov(fit))))
+        A3 &lt;- exp(fit$coef + 1.96*sqrt(diag(vcov(fit))))
+        return(data.frame(term = names(A1), estimate = A1, ci_low = A2, ci_high = A3))}</code></pre>
+<pre class="r"><code>fit3 &lt;- glm(hypertension~overweight*age_over_40, family = binomial(&quot;log&quot;), data = lrg)
+extract_RR(fit3)</code></pre>
+<pre><code>                                                         term   estimate
+(Intercept)                                       (Intercept) 0.04364641
+overweightTRUE                                 overweightTRUE 2.53100578
+age_over_40TRUE                               age_over_40TRUE 3.36437477
+overweightTRUE:age_over_40TRUE overweightTRUE:age_over_40TRUE 0.73261032
+                                   ci_low    ci_high
+(Intercept)                    0.03518029 0.05414989
+overweightTRUE                 1.94693465 3.29029546
+age_over_40TRUE                2.53878869 4.45843232
+overweightTRUE:age_over_40TRUE 0.52450358 1.02328733</code></pre>
+<p>The risk ratio of the product means that for age over 40, the relative risk for overweight is this times as great as in the younger group</p>
+</div>
+<div id="section-53" class="section level4">
+<h4>11.</h4>
+<blockquote>
+<p>Compare the results of question 10 with your results of question 7 and 8. What are the similarities and what are the disparities? Is there significant interaction on a multiplicative scale?</p>
+</blockquote>
+<p>The interaction-term is the same as answer 8, the result for overweight is the same as answer 7</p>
+<p>Negative interaction on multiplicative scale, but not significant (ci overlaps 1)</p>
+</div>
+<div id="section-54" class="section level4">
+<h4>12.</h4>
+<blockquote>
+<p>Use the excel spreadsheet “delta method” to calculate a confidence interval around your estimate of additive interaction as calculated in question 9. What additional information do you need to calculate the confidence interval? Is there significant interaction on an additive scale? (You can use either the “dummy” sheet or the “product term” sheet)</p>
+</blockquote>
+<p>Use values from fit</p>
+<pre class="r"><code>summary(fit3)</code></pre>
+<pre><code>
+Call:
+glm(formula = hypertension ~ overweight * age_over_40, family = binomial(&quot;log&quot;), 
+    data = lrg)
+
+Deviance Residuals: 
+    Min       1Q   Median       3Q      Max  
+-0.7973  -0.5636  -0.4839  -0.2988   2.5027  
+
+Coefficients:
+                               Estimate Std. Error z value Pr(&gt;|z|)    
+(Intercept)                     -3.1316     0.1100 -28.465   &lt;2e-16 ***
+overweightTRUE                   0.9286     0.1339   6.937    4e-12 ***
+age_over_40TRUE                  1.2132     0.1437   8.446   &lt;2e-16 ***
+overweightTRUE:age_over_40TRUE  -0.3111     0.1705  -1.825    0.068 .  
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+(Dispersion parameter for binomial family taken to be 1)
+
+    Null deviance: 3681.8  on 4896  degrees of freedom
+Residual deviance: 3375.7  on 4893  degrees of freedom
+AIC: 3383.7
+
+Number of Fisher Scoring iterations: 6</code></pre>
+<p>We need the covariance matrix</p>
+<pre class="r"><code>vcov(fit3)</code></pre>
+<pre><code>                               (Intercept) overweightTRUE age_over_40TRUE
+(Intercept)                     0.01210393    -0.01210393     -0.01210393
+overweightTRUE                 -0.01210393     0.01791782      0.01210393
+age_over_40TRUE                -0.01210393     0.01210393      0.02063548
+overweightTRUE:age_over_40TRUE  0.01210393    -0.01791782     -0.02063548
+                               overweightTRUE:age_over_40TRUE
+(Intercept)                                        0.01210393
+overweightTRUE                                    -0.01791782
+age_over_40TRUE                                   -0.02063548
+overweightTRUE:age_over_40TRUE                     0.02906706</code></pre>
+<p>RERI: 1.3323, (0.37797, 2.2866) AP: 0.2144, (0.0694, 0.3593) S: 1.3431, (1.0647, 1.6943)</p>
+<p>Significant interaction on additive scale</p>
+</div>
+<div id="section-55" class="section level4">
+<h4>13.</h4>
+<blockquote>
+<p>What would be your overall conclusion of examining the interaction between age and overweight on diastolic hypertension? The joint effect of age and BMI on diastolic blood pressure is more than what would be expected if we sum up the individual effects of age and BMI, but less than if we multiply the individual effects.</p>
+</blockquote>
+</div>
+</div>
+</div>
+<div id="exercise-2" class="section level2">
+<h2>Exercise 2</h2>
+<blockquote>
+<p>You will investigate the interaction between ACE inhibitor use and the ACE (insertion (I) / deletion (D)) polymorphism on the risk of diabetes on an additive as well as on a multiplicative scale, and you will assess the influence of potential confounders.</p>
+</blockquote>
+<blockquote>
+<p>Introduction This practical is based on the article ‘Genetic variation in the renin-angiotensin system modifies the beneficial effects of ACE (angiotensin-converting enzyme) inhibitors on the risk of diabetes mellitus among hypertensives’, J Hum Hypertens 2008. The dataset includes data from a case-control study among patients with hypertension. ACE inhibitors, which are drugs indicated for hypertension, are known to protect against developing diabetes. The aim of the study was to assess whether the association between ACE inhibitors and the incidence of diabetes was modified by genetic polymorphisms in the renin-angiotensin system (RAS). The polymorphism ACE (insertion (I) / deletion (D)) was genotypes. Note that this is a case-control study and therefore you should calculate odds ratios using logistic regression.</p>
+</blockquote>
+<blockquote>
+<p>Code book (Data_set_EM_2.sav) Variable name Description Values number Patient identifier - ace_inhib ACE-inhibitor use 0 = no 1 = yes poly_ace Genetic polymorphism 0 = absent 1 = present age Age (years) Continuous gender Gender 0 = male 1 = female smoking Smoking status 0 = no smoking 1 = smoking Phys_act Physical activity level 0 = low 1 = high BMI Body mass index (kg/m2) Continuous Obesity BMI &gt; 30 0 = absent 1 = present hyperchol hypercholesterolaemia 0 = absent 1 = present Incdiab Incident diabetes 0 = absent 1 = present</p>
+</blockquote>
+<blockquote>
+<ol style="list-style-type: decimal">
+<li>Describe and explore the variables in the dataset. Note that some variables have missing values. How are these missing values coded? dat &lt;- data.frame(read.spss(“Data_set_EM_2.sav”,use.value.labels=FALSE)) attach(dat) summary(dat)</li>
+</ol>
+</blockquote>
+<pre class="r"><code>ace &lt;- read_spss(here(&quot;data&quot;, &quot;Data_set_Effect_modification_2.sav&quot;))
+str(ace)</code></pre>
+<pre><code>Classes &#39;tbl_df&#39;, &#39;tbl&#39; and &#39;data.frame&#39;:   2255 obs. of  11 variables:
+ $ number   : atomic  203 1541 1541 1954 2404 ...
+  ..- attr(*, &quot;label&quot;)= chr &quot;identification number&quot;
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F10.0&quot;
+  ..- attr(*, &quot;display_width&quot;)= int 12
+ $ ace_inhib:Class &#39;labelled&#39;  atomic [1:2255] 1 0 0 1 1 0 1 1 1 0 ...
+  .. ..- attr(*, &quot;label&quot;)= chr &quot;ace inhibitor&quot;
+  .. ..- attr(*, &quot;format.spss&quot;)= chr &quot;F10.0&quot;
+  .. ..- attr(*, &quot;display_width&quot;)= int 12
+  .. ..- attr(*, &quot;labels&quot;)= Named num [1:2] 0 1
+  .. .. ..- attr(*, &quot;names&quot;)= chr [1:2] &quot;never user&quot; &quot;past or current user&quot;
+ $ poly_ace :Class &#39;labelled&#39;  atomic [1:2255] 1 1 1 0 1 0 0 1 1 0 ...
+  .. ..- attr(*, &quot;label&quot;)= chr &quot;polymorphism ACE&quot;
+  .. ..- attr(*, &quot;format.spss&quot;)= chr &quot;F10.0&quot;
+  .. ..- attr(*, &quot;display_width&quot;)= int 12
+  .. ..- attr(*, &quot;labels&quot;)= Named num [1:2] 0 1
+  .. .. ..- attr(*, &quot;names&quot;)= chr [1:2] &quot;II+ID&quot; &quot;DD&quot;
+ $ age      : atomic  75 52 55 87 58 56 60 54 61 61 ...
+  ..- attr(*, &quot;label&quot;)= chr &quot;age&quot;
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F10.0&quot;
+  ..- attr(*, &quot;display_width&quot;)= int 12
+ $ gender   :Class &#39;labelled&#39;  atomic [1:2255] 0 1 1 0 1 1 1 1 1 1 ...
+  .. ..- attr(*, &quot;label&quot;)= chr &quot;gender&quot;
+  .. ..- attr(*, &quot;format.spss&quot;)= chr &quot;F10.0&quot;
+  .. ..- attr(*, &quot;display_width&quot;)= int 12
+  .. ..- attr(*, &quot;labels&quot;)= Named num [1:3] 0 1 999
+  .. .. ..- attr(*, &quot;names&quot;)= chr [1:3] &quot;female&quot; &quot;male&quot; &quot;missing&quot;
+ $ smoking  :Class &#39;labelled&#39;  atomic [1:2255] 0 1 1 0 NA 1 1 0 0 2 ...
+  .. ..- attr(*, &quot;label&quot;)= chr &quot;smoking&quot;
+  .. ..- attr(*, &quot;format.spss&quot;)= chr &quot;F10.0&quot;
+  .. ..- attr(*, &quot;display_width&quot;)= int 12
+  .. ..- attr(*, &quot;labels&quot;)= Named num [1:4] 0 1 2 999
+  .. .. ..- attr(*, &quot;names&quot;)= chr [1:4] &quot;never smoker&quot; &quot;stopped smoker&quot; &quot;current smoker&quot; &quot;missing&quot;
+ $ phys_act :Class &#39;labelled&#39;  atomic [1:2255] 0 1 1 0 NA 1 1 1 1 1 ...
+  .. ..- attr(*, &quot;label&quot;)= chr &quot;physical activity&quot;
+  .. ..- attr(*, &quot;format.spss&quot;)= chr &quot;F10.0&quot;
+  .. ..- attr(*, &quot;display_width&quot;)= int 12
+  .. ..- attr(*, &quot;labels&quot;)= Named num [1:3] 0 1 999
+  .. .. ..- attr(*, &quot;names&quot;)= chr [1:3] &quot;low&quot; &quot;regular&quot; &quot;missing&quot;
+ $ BMI      : atomic  46.1 19.4 19.4 24.1 NA ...
+  ..- attr(*, &quot;label&quot;)= chr &quot;BMI&quot;
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F10.1&quot;
+  ..- attr(*, &quot;display_width&quot;)= int 12
+ $ obesity  :Class &#39;labelled&#39;  atomic [1:2255] 1 0 0 0 NA 1 1 1 1 0 ...
+  .. ..- attr(*, &quot;label&quot;)= chr &quot;obesity&quot;
+  .. ..- attr(*, &quot;format.spss&quot;)= chr &quot;F10.0&quot;
+  .. ..- attr(*, &quot;display_width&quot;)= int 12
+  .. ..- attr(*, &quot;labels&quot;)= Named num [1:3] 0 1 999
+  .. .. ..- attr(*, &quot;names&quot;)= chr [1:3] &quot;non obese&quot; &quot;obese&quot; &quot;missing&quot;
+ $ hyperchol:Class &#39;labelled&#39;  atomic [1:2255] 0 0 0 0 NA 2 2 0 0 0 ...
+  .. ..- attr(*, &quot;label&quot;)= chr &quot;hypercholesteroleamia&quot;
+  .. ..- attr(*, &quot;format.spss&quot;)= chr &quot;F10.0&quot;
+  .. ..- attr(*, &quot;display_width&quot;)= int 12
+  .. ..- attr(*, &quot;labels&quot;)= Named num [1:4] 0 1 2 999
+  .. .. ..- attr(*, &quot;names&quot;)= chr [1:4] &quot;no hypercholesterolemia&quot; &quot;non treated hypercholesterolemia&quot; &quot;treated hypercholesterolemia&quot; &quot;missing&quot;
+ $ incdiab  : atomic  1 0 0 0 1 0 0 0 0 0 ...
+  ..- attr(*, &quot;label&quot;)= chr &quot;incident diabetes&quot;
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F10.0&quot;
+  ..- attr(*, &quot;display_width&quot;)= int 12</code></pre>
+<p>Missings coded with:</p>
+<pre class="r"><code>ace %&gt;% map(function(x) attr(x, &quot;labels&quot;))</code></pre>
+<pre><code>$number
+NULL
+
+$ace_inhib
+          never user past or current user 
+                   0                    1 
+
+$poly_ace
+II+ID    DD 
+    0     1 
+
+$age
+NULL
+
+$gender
+ female    male missing 
+      0       1     999 
+
+$smoking
+  never smoker stopped smoker current smoker        missing 
+             0              1              2            999 
+
+$phys_act
+    low regular missing 
+      0       1     999 
+
+$BMI
+NULL
+
+$obesity
+non obese     obese   missing 
+        0         1       999 
+
+$hyperchol
+         no hypercholesterolemia non treated hypercholesterolemia 
+                               0                                1 
+    treated hypercholesterolemia                          missing 
+                               2                              999 
+
+$incdiab
+NULL</code></pre>
+<p>All missings are coded with 999</p>
+<p>The function <code>read_spss</code> from <code>haven</code> already to care of looking for the codings for missings and assigning them the value <code>NA</code></p>
+<p>Time to curate</p>
+<p>Binary variables to logicals</p>
+<pre class="r"><code>ace %&lt;&gt;% 
+  mutate_at(vars(ace_inhib, poly_ace, obesity, incdiab), funs(as.logical)) %&gt;%
+  mutate(gender_male = as.logical(gender))</code></pre>
+<p><code>labelled</code> to factors</p>
+<pre class="r"><code>ace %&lt;&gt;%
+  mutate_at(vars(smoking, phys_act, hyperchol, gender), funs(labelled::to_factor))</code></pre>
+<p>Numerics to regular numerics (without the SPSS extra information)</p>
+<pre class="r"><code>ace %&lt;&gt;%
+  mutate_at(vars(number, age, BMI), funs(as.numeric))</code></pre>
+<p>Now see what we have</p>
+<pre class="r"><code>str(ace)</code></pre>
+<pre><code>Classes &#39;tbl_df&#39;, &#39;tbl&#39; and &#39;data.frame&#39;:   2255 obs. of  12 variables:
+ $ number     : num  203 1541 1541 1954 2404 ...
+ $ ace_inhib  : logi  TRUE FALSE FALSE TRUE TRUE FALSE ...
+ $ poly_ace   : logi  TRUE TRUE TRUE FALSE TRUE FALSE ...
+ $ age        : num  75 52 55 87 58 56 60 54 61 61 ...
+ $ gender     : Factor w/ 3 levels &quot;female&quot;,&quot;male&quot;,..: 1 2 2 1 2 2 2 2 2 2 ...
+  ..- attr(*, &quot;label&quot;)= chr &quot;gender&quot;
+ $ smoking    : Factor w/ 4 levels &quot;never smoker&quot;,..: 1 2 2 1 NA 2 2 1 1 3 ...
+  ..- attr(*, &quot;label&quot;)= chr &quot;smoking&quot;
+ $ phys_act   : Factor w/ 3 levels &quot;low&quot;,&quot;regular&quot;,..: 1 2 2 1 NA 2 2 2 2 2 ...
+  ..- attr(*, &quot;label&quot;)= chr &quot;physical activity&quot;
+ $ BMI        : num  46.1 19.4 19.4 24.1 NA ...
+ $ obesity    : logi  TRUE FALSE FALSE FALSE NA TRUE ...
+ $ hyperchol  : Factor w/ 4 levels &quot;no hypercholesterolemia&quot;,..: 1 1 1 1 NA 3 3 1 1 1 ...
+  ..- attr(*, &quot;label&quot;)= chr &quot;hypercholesteroleamia&quot;
+ $ incdiab    : logi  TRUE FALSE FALSE FALSE TRUE FALSE ...
+ $ gender_male: logi  FALSE TRUE TRUE FALSE TRUE TRUE ...</code></pre>
+<p>This looks more like a proper R-style data frame</p>
+<div id="section-56" class="section level3">
+<h3>2.</h3>
+<blockquote>
+<p>Is there an association between the use of ACE inhibitors and risk of diabetes?</p>
+</blockquote>
+<pre class="r"><code>fit0 &lt;- glm(incdiab ~ ace_inhib, family = binomial(&quot;logit&quot;), data = ace)
+extract_RR(fit0)</code></pre>
+<pre><code>                       term  estimate     ci_low  ci_high
+(Intercept)     (Intercept) 0.1119658 0.09346762 0.134125
+ace_inhibTRUE ace_inhibTRUE 0.7510409 0.55742060 1.011915</code></pre>
+<p>No statistically significant difference in crude analysis</p>
+</div>
+<div id="section-57" class="section level3">
+<h3>3.</h3>
+<blockquote>
+<p>Look at interaction by ACE polymorphism. Calculate the individual effects of the use of ACE inhibitors and ACE polymorphism as well as the joint effect of both exposures. Ignore possible confounding for now. What do you notice with respect to the direction of the effects? How do you proceed? recode &lt;- factor(ifelse(ace_inhib==0 &amp; poly_ace==0,1, ifelse(ace_inhib==1 &amp; poly_ace==0,2, ifelse(ace_inhib==0 &amp; poly_ace==1,3,4)))) fit &lt;- glm(incdiab~factor(recode), family=binomial) extract.RR(fit,2) extract.RR(fit,3) extract.RR(fit,4)</p>
+</blockquote>
+<p>We can make a function to recode 2 categorical variables into 1</p>
+<pre class="r"><code>recode_2_factors &lt;- function(data, informative_labels = TRUE,
+                             missing_as_level = FALSE) {
+  require(glue)
+  if (!is.list(data) | is.null(names(data))) stop(&quot;please provide a dataframe or named list&quot;)
+  if (length(data) &gt; 2) warning(&quot;using only first two columns&quot;)
+  
+  if (!is.data.frame(data)) data = as.data.frame(data)
+  
+  x_names &lt;- names(data)
+  
+  x &lt;- data[[1]]
+  y &lt;- data[[2]]
+  
+  out &lt;- factor(glue(&#39;{x_names[1]}{x}{x_names[2]}{y}&#39;))
+  
+  if (!missing_as_level) out[!complete.cases(data)] &lt;- NA
+  
+  if (informative_labels) return(out)
+  as.numeric(out)
+}</code></pre>
+<p>Let’s recode</p>
+<pre class="r"><code>ace %&lt;&gt;%
+  mutate(group = recode_2_factors(list(ace = ace_inhib, poly = poly_ace)))
+ace[1:10,] %&gt;% select(group, ace_inhib, poly_ace)</code></pre>
+<pre><code># A tibble: 10 x 3
+   group             ace_inhib poly_ace
+   &lt;fct&gt;             &lt;lgl&gt;     &lt;lgl&gt;   
+ 1 aceTRUEpolyTRUE   T         T       
+ 2 aceFALSEpolyTRUE  F         T       
+ 3 aceFALSEpolyTRUE  F         T       
+ 4 aceTRUEpolyFALSE  T         F       
+ 5 aceTRUEpolyTRUE   T         T       
+ 6 aceFALSEpolyFALSE F         F       
+ 7 aceTRUEpolyFALSE  T         F       
+ 8 aceTRUEpolyTRUE   T         T       
+ 9 aceTRUEpolyTRUE   T         T       
+10 aceFALSEpolyFALSE F         F       </code></pre>
+<pre class="r"><code>fit1 &lt;- glm(incdiab ~ group, family = binomial(&quot;logit&quot;), data = ace)
+extract_RR(fit1)</code></pre>
+<pre><code>                                       term  estimate     ci_low   ci_high
+(Intercept)                     (Intercept) 0.1142132 0.09183425 0.1420456
+groupaceFALSEpolyTRUE groupaceFALSEpolyTRUE 0.9009675 0.60683071 1.3376751
+groupaceTRUEpolyFALSE groupaceTRUEpolyFALSE 0.7014837 0.49299250 0.9981477
+groupaceTRUEpolyTRUE   groupaceTRUEpolyTRUE 0.8626163 0.51877923 1.4343421</code></pre>
+<p>Both are smaller than 1, only ace inhibitor statistical significance. Interaction also smaller than 1</p>
+<p>To proceed, we need to recode the category with the lowest OR as the reference category and then repeat the steps</p>
+<pre class="r"><code>ace %&lt;&gt;%
+  mutate(group2 = relevel(group, ref = &quot;aceTRUEpolyFALSE&quot;)) # set reference category
+fit2 &lt;- glm(incdiab ~ group2, family = binomial(&quot;logit&quot;), data = ace)
+extract_RR(fit2)</code></pre>
+<pre><code>                                           term   estimate     ci_low
+(Intercept)                         (Intercept) 0.08011869 0.06072214
+group2aceFALSEpolyFALSE group2aceFALSEpolyFALSE 1.42554992 1.00185570
+group2aceFALSEpolyTRUE   group2aceFALSEpolyTRUE 1.28437408 0.83493514
+group2aceTRUEpolyTRUE     group2aceTRUEpolyTRUE 1.22970261 0.71911141
+                          ci_high
+(Intercept)             0.1057111
+group2aceFALSEpolyFALSE 2.0284284
+group2aceFALSEpolyTRUE  1.9757424
+group2aceTRUEpolyTRUE   2.1028293</code></pre>
+<div id="section-58" class="section level4">
+<h4>4.</h4>
+<blockquote>
+<p>Is there significant interaction on a multiplicative scale? Do not answer this question with only yes or no, but also quantify the interaction. (Drawing a graph with the individual and joint effects may be useful)</p>
+</blockquote>
+<pre class="r"><code>ors &lt;- extract_RR(fit2)
+ors[3,2] / (ors[4,2]*ors[2,2])</code></pre>
+<pre><code>[1] 0.732671</code></pre>
+<p>Looks like a negative multiplicative interaction, though not significant, judging on the confidence intervall of the interaction term</p>
+<pre class="r"><code>ors[-1,] %&gt;%
+  ggplot() + 
+  geom_errorbarh(aes(x = estimate, xmin = ci_low, xmax = ci_high, y = term)) + 
+  lims(x = c(0, 3))</code></pre>
+<p><img src="figure/acr_assignments.Rmd/unnamed-chunk-101-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="section-59" class="section level4">
+<h4>5.</h4>
+<blockquote>
+<p>Is there significant interaction on an additive scale? Do not answer this question with only yes or no, but also quantify the interaction.</p>
+</blockquote>
+<p>ANSWER: Calculated by hand: 1.28-1.23-1.43+1=-0.38. RERI is -0.38 (-1.23; 0.49), so negative interaction on additive scale but not significant because 0 is in the confidence interval. The combined effect is 0.38 less than the sum of the individual effects.</p>
+<ol start="6" style="list-style-type: decimal">
+<li>Does adjustment for potential confounders change the findings of question 4 and 5? (Assume that all measured covariables are potential confounders)</li>
+</ol>
+<p>ANSWER: Multiplicative: Without covariables: OR product term is 0.81 (0.39; 1.67). With covariables: OR product term is 0.81 (0.38; 1.75). No influence of confounding.</p>
+<p>Additive Without covariables: RERI is -0.25 (-1.14; 0.63). With covariables: RERI is -0.26 (-1.12; 0.60). No influence of confounding.</p>
+</div>
+</div>
+</div>
+<div id="session-information" class="section level2">
+<h2>Session information</h2>
+<!-- Insert the session information into the document -->
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 3.4.3 (2017-11-30)
+Platform: x86_64-apple-darwin15.6.0 (64-bit)
+Running under: macOS Sierra 10.12.6
+
+Matrix products: default
+BLAS: /Library/Frameworks/R.framework/Versions/3.4/Resources/lib/libRblas.0.dylib
+LAPACK: /Library/Frameworks/R.framework/Versions/3.4/Resources/lib/libRlapack.dylib
+
+locale:
+[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+ [1] glue_1.2.0          tableone_0.9.2      bindrcpp_0.2       
+ [4] DiagrammeR_0.9.2    haven_1.1.1         magrittr_1.5       
+ [7] here_0.1            epistats_0.1.0      ggplot2_2.2.1      
+[10] data.table_1.10.4-3 dplyr_0.7.4         purrr_0.2.4        
+[13] broom_0.4.3        
+
+loaded via a namespace (and not attached):
+ [1] Rcpp_0.12.15       lattice_0.20-35    tidyr_0.8.0       
+ [4] zoo_1.8-1          class_7.3-14       visNetwork_2.0.3  
+ [7] assertthat_0.2.0   rprojroot_1.3-2    digest_0.6.15     
+[10] psych_1.7.8        utf8_1.1.3         R6_2.2.2          
+[13] plyr_1.8.4         backports_1.1.2    labelled_1.0.1    
+[16] survey_3.33        evaluate_0.10.1    e1071_1.6-8       
+[19] pillar_1.1.0       rlang_0.1.6        lazyeval_0.2.1    
+[22] rstudioapi_0.7     Matrix_1.2-12      rmarkdown_1.8     
+[25] labeling_0.3       splines_3.4.3      downloader_0.4    
+[28] readr_1.1.1        stringr_1.2.0      foreign_0.8-69    
+[31] htmlwidgets_1.0    igraph_1.1.2       munsell_0.4.3     
+[34] compiler_3.4.3     influenceR_0.1.0   rgexf_0.15.3      
+[37] pkgconfig_2.0.1    mnormt_1.5-5       htmltools_0.3.6   
+[40] tibble_1.4.2       gridExtra_2.3      codetools_0.2-15  
+[43] XML_3.98-1.9       viridisLite_0.3.0  crayon_1.3.4      
+[46] MASS_7.3-48        grid_3.4.3         nlme_3.1-131      
+[49] jsonlite_1.5       gtable_0.2.0       git2r_0.21.0      
+[52] scales_0.5.0       cli_1.0.0          stringi_1.1.6     
+[55] reshape2_1.4.3     viridis_0.5.0      brew_1.0-6        
+[58] RColorBrewer_1.1-2 tools_3.4.3        forcats_0.2.0     
+[61] hms_0.4.1          Rook_1.1-1         parallel_3.4.3    
+[64] survival_2.41-3    yaml_2.1.16        colorspace_1.3-2  
+[67] knitr_1.19         bindr_0.1         </code></pre>
+</div>
+</div>
+
+<hr>
+<p>
+    This <a href="http://rmarkdown.rstudio.com">R Markdown</a> site was created with <a href="https://github.com/jdblischak/workflowr">workflowr</a>
+</p>
+<hr>
+
+<!-- To enable disqus, uncomment the section below and provide your disqus_shortname -->
+
+<!-- disqus
+  <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+        var disqus_shortname = 'rmarkdown'; // required: replace example with your forum shortname
+
+        /* * * DON'T EDIT BELOW THIS LINE * * */
+        (function() {
+            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+-->
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

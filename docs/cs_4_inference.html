@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+<meta name="author" content="Wouter van Amsterdam" />
+
+<meta name="date" content="2018-02-15" />
+
+<title>Inference methods</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/font-awesome-4.5.0/css/font-awesome.min.css" rel="stylesheet" />
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+
+<div class="container-fluid main-container">
+
+<!-- tabsets -->
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+</script>
+
+<!-- code folding -->
+
+
+
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+  padding-left: 25px;
+  text-indent: 0;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">epi_stats</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/jdblischak/workflowr">
+    <span class="fa fa-github"></span>
+     
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">Inference methods</h1>
+<h4 class="author"><em>Wouter van Amsterdam</em></h4>
+<h4 class="date"><em>2018-02-15</em></h4>
+
+</div>
+
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+<!-- Update knitr chunk options -->
+<!-- Insert the date the file was last updated -->
+<p><strong>Last updated:</strong> 2018-02-22</p>
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+<p><strong>Code version:</strong> d3c2fe9</p>
+<!-- Add your analysis here -->
+<div id="intro" class="section level1">
+<h1>Intro</h1>
+<p>Teacher: Rene Eijkemans</p>
+<p>Learn from data what the data-generating process is.</p>
+<p>Resampling from sample, not theoretical distribution</p>
+<p>Non-parametric Monte Carlo methods</p>
+<ul>
+<li>Bootstrap, cross-validation &amp; jackknife</li>
+<li>Permutation tests</li>
+</ul>
+<p>Possible inference - Hypothesis tests - Assess bias - Confidence interval</p>
+<p>Leap of faith</p>
+<div id="monte-carlo-methods" class="section level2">
+<h2>Monte Carlo methods</h2>
+<p>Any methods for statistical inference based on random sampling, where simulation is used to estimate parameters</p>
+<p>Parametric MC: sample from given probability distribution Non-parametric MC: sample from observed sample</p>
+</div>
+<div id="bootstrap" class="section level2">
+<h2>Bootstrap</h2>
+<p>Non-parametric MC, B. Efron, 1979</p>
+<p>Create microworld, sample takes place of population</p>
+<p>Sample treated as finite pseudo-population</p>
+<p>Leap of faith: drawing samples from observed sample is close to drawing samples from population</p>
+<div id="simple-example" class="section level3">
+<h3>Simple example</h3>
+<pre class="r"><code>dat &lt;- c(174, 165, 182, 171, 178)
+sample(dat, size = length(dat), replace = T)</code></pre>
+<pre><code>[1] 171 178 171 178 182</code></pre>
+<pre class="r"><code>library(boot)
+av &lt;- function(x, i) {mean(x[i])}
+obj &lt;- boot(data = dat, statistic = av, R = 500)
+mean(obj$t)</code></pre>
+<pre><code>[1] 174.0588</code></pre>
+<pre class="r"><code>obj</code></pre>
+<pre><code>
+ORDINARY NONPARAMETRIC BOOTSTRAP
+
+
+Call:
+boot(data = dat, statistic = av, R = 500)
+
+
+Bootstrap Statistics :
+    original  bias    std. error
+t1*      174  0.0588     2.55614</code></pre>
+<pre class="r"><code>str(obj)</code></pre>
+<pre><code>List of 11
+ $ t0       : num 174
+ $ t        : num [1:500, 1] 175 169 174 171 177 ...
+ $ R        : num 500
+ $ data     : num [1:5] 174 165 182 171 178
+ $ seed     : int [1:626] 403 5 -1346850345 656028621 13211492 1949688650 95765173 -1737862641 -58526954 1501289920 ...
+ $ statistic:function (x, i)  
+  ..- attr(*, &quot;srcref&quot;)=Class &#39;srcref&#39;  atomic [1:8] 2 7 2 33 7 33 2 2
+  .. .. ..- attr(*, &quot;srcfile&quot;)=Classes &#39;srcfilecopy&#39;, &#39;srcfile&#39; &lt;environment: 0x7fc4cb115c30&gt; 
+ $ sim      : chr &quot;ordinary&quot;
+ $ call     : language boot(data = dat, statistic = av, R = 500)
+ $ stype    : chr &quot;i&quot;
+ $ strata   : num [1:5] 1 1 1 1 1
+ $ weights  : num [1:5] 0.2 0.2 0.2 0.2 0.2
+ - attr(*, &quot;class&quot;)= chr &quot;boot&quot;
+ - attr(*, &quot;boot_type&quot;)= chr &quot;boot&quot;</code></pre>
+<pre class="r"><code>boot.ci(obj)</code></pre>
+<pre><code>Warning in boot.ci(obj): bootstrap variances needed for studentized
+intervals</code></pre>
+<pre><code>BOOTSTRAP CONFIDENCE INTERVAL CALCULATIONS
+Based on 500 bootstrap replicates
+
+CALL : 
+boot.ci(boot.out = obj)
+
+Intervals : 
+Level      Normal              Basic         
+95%   (168.9, 179.0 )   (169.1, 178.8 )  
+
+Level     Percentile            BCa          
+95%   (169.2, 178.9 )   (168.6, 178.2 )  
+Calculations and Intervals on Original Scale
+Some BCa intervals may be unstable</code></pre>
+<p>To program: write function that calculates parameter, and takes index for row numbers</p>
+<p>Take expected value of bootstrap statistic, which is by definition the mean of the bootstrap statistics</p>
+<p>Standard error is the standard deviation of the bootstrap distribution (since standard error tries to estimate the SD of the sampling distribution of the statistic)</p>
+<p>Bias = expected value for parameter in sample - true value When bias is much lower than standard error, probabilby no bias bias / std.error &lt; 0.25 (by Rizzo, or .1), no real bias</p>
+<p>You can bootstrap the bootstrap, or jackknife the boostrap (which is faster)</p>
+<p>For health technology, you get right-skewed data, but you need to use the mean because you want to describe the population (and get information on the outliers too). Bootstrapping works very well</p>
+</div>
+<div id="example-with-paired-data-for-ratios" class="section level3">
+<h3>Example with paired data for ratios</h3>
+<pre class="r"><code>data(patch, package = &quot;bootstrap&quot;)
+patch</code></pre>
+<pre><code>  subject placebo oldpatch newpatch     z     y
+1       1    9243    17649    16449  8406 -1200
+2       2    9671    12013    14614  2342  2601
+3       3   11792    19979    17274  8187 -2705
+4       4   13357    21816    23798  8459  1982
+5       5    9055    13850    12560  4795 -1290
+6       6    6290     9806    10157  3516   351
+7       7   12412    17208    16570  4796  -638
+8       8   18806    29044    26325 10238 -2719</code></pre>
+<pre class="r"><code>n &lt;- nrow(patch)
+B &lt;- 2000
+theta.b &lt;- numeric(B)
+theta.hat &lt;- mean(patch$y) / mean(patch$z)
+
+for (b in 1:B) {
+  i &lt;- sample(1:n, size = n, replace = T)
+  y &lt;- patch$y[i]
+  z &lt;- patch$z[i]
+  theta.b[b] &lt;- mean(y) / mean(z)
+}
+
+hist(theta.b)</code></pre>
+<p><img src="figure/cs_4_inference.Rmd/unnamed-chunk-4-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>bias &lt;- mean(theta.b) - theta.hat
+se &lt;- sd(theta.b)
+bias</code></pre>
+<pre><code>[1] 0.008774365</code></pre>
+<pre class="r"><code>se</code></pre>
+<pre><code>[1] 0.1020246</code></pre>
+<pre class="r"><code>quantile(theta.b, probs = c(.025, .975))</code></pre>
+<pre><code>      2.5%      97.5% 
+-0.2339987  0.1633148 </code></pre>
+<p>Bootstrap with replicate</p>
+<pre class="r"><code>dat &lt;- c(174, 165, 182, 171, 178)
+n &lt;- length(dat)
+Mb &lt;- replicate(1000,
+                expr = {y &lt;- sample(dat, size = n, replace = T);
+                median(y)})
+hist(Mb)</code></pre>
+<p><img src="figure/cs_4_inference.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+</div>
+<div id="jackknife" class="section level2">
+<h2>Jackknife</h2>
+<p>M.H. Quenouille in 1949 for estimating bias J.W. Tukey in 1958 for estimating standard error</p>
+<p>Leave-one-out cross-validation, so limited to N samples where N is sample size.</p>
+<p>Each time, the sample size is 1 smaller.</p>
+<div id="with-r-code" class="section level3">
+<h3>With R code</h3>
+<pre class="r"><code>dat &lt;- c(174, 165, 182, 171, 178)
+for (i in 1:length(dat)) print(dat[-i])</code></pre>
+<pre><code>[1] 165 182 171 178
+[1] 174 182 171 178
+[1] 174 165 171 178
+[1] 174 165 182 178
+[1] 174 165 182 171</code></pre>
+<p>With patch data</p>
+<pre class="r"><code>n &lt;- nrow(patch)
+theta.hat &lt;- mean(patch$y) / mean(patch$z)
+theta.jack &lt;- numeric(n)
+for (i in 1:n) {
+  theta.jack[i] &lt;- mean(patch$y[-i]) / mean(patch$z[-i])
+}
+bias &lt;- (n-1) * (mean(theta.jack) - theta.hat)
+se &lt;- sqrt((n-1)*mean((theta.jack - mean(theta.jack))^2))
+bias</code></pre>
+<pre><code>[1] 0.008002488</code></pre>
+<pre class="r"><code>se</code></pre>
+<pre><code>[1] 0.1055278</code></pre>
+<p>For median, not very smooth. Does not work well</p>
+<p>Non-smooth -&gt; not a small change, when we make a small change to the data</p>
+<p>Median is not a nice statistic</p>
+<p>The boostrap estimates of standard error and bias are themselves random variables</p>
+<p>Jackknife for boostrap: take all bootstrap samples that do not contain observation <span class="math inline">\(i\)</span>. Gives <span class="math inline">\(n\)</span> estimates of the standard error. Not a real jackknife, bootstrap samples can be included in multiple jackknife- samples.</p>
+</div>
+</div>
+<div id="bootstrap-confidence-intervals" class="section level2">
+<h2>Bootstrap confidence intervals</h2>
+<p>Examples</p>
+<ul>
+<li>standard normal BCI: unbiased, large sample size and normal distribution assumed; simple, not best</li>
+<li>basic BCI: <span class="math inline">\((2\hat{\theta} - \hat{\theta}_{1-\alpha/2}; 2\hat{\theta} - \hat{\theta}_{\alpha/2})\)</span>; uses percentile</li>
+<li>percentile BCI: no distribution assumed, not corrected for bias, coverage is less good, better than standard normal BCI</li>
+<li>studentized BCI: sampling of a “t-type” statistic, generated by resampling; estimates of s.e. of the bootstrap statistic are necessary (bootstrap nested inside a bootstrap, time consuming)</li>
+<li>BCa: Bias Corrected, or “adjusted for acceleration (i.e. skewness)”</li>
+</ul>
+<p>BCa:</p>
+<ul>
+<li>Bias is “median bias” of the replicates for <span class="math inline">\(\hat{\theta}\)</span></li>
+<li>Looks if s.e. is dependent on location (which is true for skewed data), rate of change of s.e. with location (e.g. binomial, poisson)</li>
+<li>Transformation respecting</li>
+<li><p>Second order accuracy, i.e. error -&gt; 0; at rate 1/n</p></li>
+<li>Studentized BCI: second order accuracy, not transformation respecting</li>
+<li>Percentile: first order accuracy (1/sqrt(n)); not transformation respecting</li>
+<li><p>Standard normal BCI: no second order accuracy, nor transformation respecting</p></li>
+</ul>
+<p>For accuracy in classification: bootstrap 0.632; calculates optimism for out of sample accuracy, (not the same as over-fitting) To account for inter-dependence of bootstrap sample, 63.2% of data are in the same Another problem was interdependence of of samples, so 0.632+ is best. Tibshirani (is against cross-validation)</p>
+<pre class="r"><code>data(patch, package=&quot;bootstrap&quot;)
+
+theta.boot &lt;- function(dat,ind)
+{ y &lt;- dat[ind,1]; z &lt;- dat[ind,2]; mean(y) / mean(z) }
+
+y &lt;- patch$y; z &lt;- patch$z
+dat &lt;- cbind(y,z)
+boot.obj &lt;- boot(dat, statistic = theta.boot, R=2000)
+boot.obj</code></pre>
+<pre><code>
+ORDINARY NONPARAMETRIC BOOTSTRAP
+
+
+Call:
+boot(data = dat, statistic = theta.boot, R = 2000)
+
+
+Bootstrap Statistics :
+      original      bias    std. error
+t1* -0.0713061 0.008716536   0.1028885</code></pre>
+<pre class="r"><code>print(boot.ci(boot.obj), type=&quot;all&quot;)</code></pre>
+<pre><code>Warning in boot.ci(boot.obj): bootstrap variances needed for studentized
+intervals</code></pre>
+<pre><code>BOOTSTRAP CONFIDENCE INTERVAL CALCULATIONS
+Based on 2000 bootstrap replicates
+
+CALL : 
+boot.ci(boot.out = boot.obj)
+
+Intervals : 
+Level      Normal              Basic         
+95%   (-0.2817,  0.1216 )   (-0.3013,  0.0928 )  
+
+Level     Percentile            BCa          
+95%   (-0.2354,  0.1587 )   (-0.2299,  0.1871 )  
+Calculations and Intervals on Original Scale</code></pre>
+</div>
+<div id="cross-validation" class="section level2">
+<h2>Cross-validation</h2>
+<p>Assessing model fit, not individual parameter estimates</p>
+<ul>
+<li>misclassification</li>
+<li>fit</li>
+<li>stability of parameter estimates</li>
+</ul>
+<div id="with-data" class="section level3">
+<h3>With data</h3>
+<pre class="r"><code>data(ironslag,package=&quot;DAAG&quot;) 
+ironslag</code></pre>
+<pre><code>   chemical magnetic
+1        24       25
+2        16       22
+3        24       17
+4        18       21
+5        18       20
+6        10       13
+7        14       16
+8        16       14
+9        18       19
+10       20       10
+11       21       23
+12       20       20
+13       21       19
+14       15       15
+15       16       16
+16       15       16
+17       17       12
+18       19       15
+19       16       15
+20       15       15
+21       15       15
+22       13       17
+23       24       18
+24       22       16
+25       21       18
+26       24       22
+27       15       20
+28       20       21
+29       20       21
+30       25       21
+31       27       25
+32       22       22
+33       20       18
+34       24       21
+35       24       18
+36       23       20
+37       29       25
+38       27       20
+39       23       18
+40       19       19
+41       25       16
+42       15       16
+43       16       16
+44       27       26
+45       27       28
+46       30       28
+47       29       30
+48       26       32
+49       25       28
+50       25       36
+51       32       40
+52       28       33
+53       25       33</code></pre>
+<pre class="r"><code>a &lt;- seq(10,40,0.1)
+L1 &lt;- lm(magnetic ~ chemical, data = ironslag)
+par(mfrow=c(1,2))
+plot(ironslag$chemical,ironslag$magnetic,main=&quot;Linear&quot;,pch=16)
+yhat1 &lt;- L1$coef[1] + L1$coef[2] * a
+lines(a,yhat1,lwd=2)
+L2 &lt;- lm(magnetic ~ chemical + I(chemical^2), data = ironslag)
+plot(ironslag$chemical,ironslag$magnetic,main=&quot;Quadratic&quot;,pch=16)
+yhat2 &lt;- L2$coef[1] + L2$coef[2] * a + L2$coef[3] * a^2
+lines(a,yhat2,lwd=2)</code></pre>
+<p><img src="figure/cs_4_inference.Rmd/unnamed-chunk-9-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>plot(L2)</code></pre>
+<p><img src="figure/cs_4_inference.Rmd/unnamed-chunk-9-2.png" width="672" style="display: block; margin: auto;" /><img src="figure/cs_4_inference.Rmd/unnamed-chunk-9-3.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Now with cross-validation</p>
+<pre class="r"><code>attach(ironslag)
+n &lt;- length(magnetic)
+e1 &lt;- e2 &lt;- numeric(n)
+for (k in 1:n) {
+  y &lt;- magnetic[-k]
+  x &lt;- chemical[-k]
+
+  J1 &lt;- lm(y ~ x)
+  yhat1 &lt;- J1$coef[1] + J1$coef[2] * chemical[k]    # prediction
+  e1[k] &lt;- magnetic[k] - yhat1              # residual
+  
+  J2 &lt;- lm(y ~ x + I(x^2))
+  yhat2 &lt;- J2$coef[1] + J2$coef[2] * chemical[k]  + J2$coef[3] *    chemical[k]^2
+  e2[k] &lt;- magnetic[k] - yhat2  }
+sqrt(c(mean(e1^2),mean(e2^2)))       # estimates for the prediction error</code></pre>
+<pre><code>[1] 4.422267 4.225219</code></pre>
+<pre class="r"><code>detach(ironslag)</code></pre>
+<p>Difference between in-sample error and out-of-sample error (with cross-validation), is a function of the sample size.</p>
+<p>Best is repeated cross-validation</p>
+<p>Diagnostic plot</p>
+<ul>
+<li>Residual vs predicted: heteroscedasticity, straight line (otherwise non-linearity)</li>
+<li>Leverage vs residuals: high influence points.</li>
+</ul>
+<p>Leave one out: - n-1 times the same model (is dependent on sample, high variability accross samples) - better for assessing performance of a single model</p>
+<p>5 vs 10 fold validation - less dependent on sample</p>
+</div>
+</div>
+<div id="permutation-test" class="section level2">
+<h2>Permutation test</h2>
+<p>Permutation tests sample without replacement, scrambling the labels</p>
+<p>Applicatoins:</p>
+<ul>
+<li>equality of two (or more) distributions</li>
+<li>(multivariate) independence, association, location, scale, …</li>
+</ul>
+<p>99-999 permutations should suffice; technically this is a randomization test</p>
+<p>Calculate p-value:</p>
+<p><span class="math display">\[p = \frac{1+\sum_{b=1}^B{I(|\hat{\theta}_b| \geq |\theta|)}}{B+1}\]</span></p>
+<p>Use <span class="math inline">\(B+1\)</span> because the actual sample can be seen as 1 permutation</p>
+<div id="with-r-code-1" class="section level3">
+<h3>With R code</h3>
+<pre class="r"><code>exp.lean &lt;- c(7.53,7.48,8.08,8.09,10.15,8.40,10.88,6.13,7.90,7.05,7.48,7.58,8.11)  # n=13
+exp.obese &lt;- c(9.21,11.51,12.79,11.85,9.97,8.79,9.69,9.68,9.19) # n=9
+t0 &lt;- t.test(exp.lean,exp.obese)    # standard t-test
+t0</code></pre>
+<pre><code>
+    Welch Two Sample t-test
+
+data:  exp.lean and exp.obese
+t = -3.8555, df = 15.919, p-value = 0.001411
+alternative hypothesis: true difference in means is not equal to 0
+95 percent confidence interval:
+ -3.459167 -1.004081
+sample estimates:
+mean of x mean of y 
+ 8.066154 10.297778 </code></pre>
+<pre class="r"><code>g1 &lt;- min(purrr::map_int(list(lean = exp.lean, obese = exp.obese), length))
+z &lt;- c(exp.lean, exp.obese)
+n &lt;- length(z)
+R &lt;- 999
+reps &lt;- numeric(R)
+K &lt;- length(z)
+
+set.seed(123456)
+for (i in 1:R) {
+  k &lt;- sample(K, size = g1, replace = F)
+  x1 &lt;- z[k]
+  y1 &lt;- z[-k]
+  reps[i] &lt;- t.test(x1, y1)$statistic
+}
+
+options(digits = 7)
+(1 + sum(reps&gt;=t0$statistic))/(R+1)</code></pre>
+<pre><code>[1] 0.999</code></pre>
+<pre class="r"><code>(1 + sum(reps&lt;=t0$statistic))/(R+1)</code></pre>
+<pre><code>[1] 0.002</code></pre>
+<pre class="r"><code>(1 + sum(abs(reps)&gt;=abs(t0$statistic)))/(R+1)</code></pre>
+<pre><code>[1] 0.002</code></pre>
+<pre class="r"><code>mean(abs(c(t0$statistic, reps)) &gt;= abs(t0$statistic))</code></pre>
+<pre><code>[1] 0.002</code></pre>
+<pre class="r"><code>t0$p.value</code></pre>
+<pre><code>[1] 0.001410692</code></pre>
+<pre class="r"><code>hist(reps)
+abline(v = t0$statistic, lty = 2)</code></pre>
+<p><img src="figure/cs_4_inference.Rmd/unnamed-chunk-12-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="differences-of-two-distributions" class="section level3">
+<h3>Differences of two distributions</h3>
+<p>Kolmorov-Smirnov test: differences in distributions (shape and location)</p>
+<pre class="r"><code>ks0 &lt;- ks.test(exp.lean,exp.obese,exact=F)$statistic
+z &lt;- c(exp.lean,exp.obese)
+R &lt;- 999
+reps &lt;- numeric(R)
+K &lt;- 1:length(z)
+for (i in 1:R) {
+  k &lt;- sample(K,size=13,replace=FALSE)
+  x1 &lt;- z[k]
+  y1 &lt;- z[-k]
+  reps[i] &lt;- ks.test(x1,y1,exact=F)$statistic
+}
+
+hist(reps)
+abline(v = ks0, lty = 2)</code></pre>
+<p><img src="figure/cs_4_inference.Rmd/unnamed-chunk-13-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>p &lt;- mean(c(ks0, reps)&gt;=ks0);
+ifelse(p&gt;0.5, 2*(1-p), 2*p) # two-sided ASLks.test(exp.lean,exp.obese,exact=F)$p.value # p-value from KS test</code></pre>
+<pre><code>[1] 0.002</code></pre>
+</div>
+<div id="theoretical-considerations" class="section level3">
+<h3>Theoretical considerations</h3>
+<p>This is very robust.</p>
+<p>Only theoretically, when distribution under null-hypothesis is non-symmetric, null-distribution by permutation is allways symmetric.</p>
+<p>Permutation tests condition on data we have (if we would not have had the same data if we would replicate the study). If we set the group sizes (e.g. in a trial).</p>
+<p>Bootstrap generalizes better than permutation tests because it’s less dependent on sample</p>
+<p>Fisher’s exact test fixes number of groups AND outcomes. It ignores randomness of observing data</p>
+</div>
+</div>
+<div id="session-information" class="section level2">
+<h2>Session information</h2>
+<!-- Insert the session information into the document -->
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 3.4.3 (2017-11-30)
+Platform: x86_64-apple-darwin15.6.0 (64-bit)
+Running under: macOS Sierra 10.12.6
+
+Matrix products: default
+BLAS: /Library/Frameworks/R.framework/Versions/3.4/Resources/lib/libRblas.0.dylib
+LAPACK: /Library/Frameworks/R.framework/Versions/3.4/Resources/lib/libRlapack.dylib
+
+locale:
+[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+[1] boot_1.3-20
+
+loaded via a namespace (and not attached):
+ [1] Rcpp_0.12.15    digest_0.6.15   rprojroot_1.3-2 backports_1.1.2
+ [5] git2r_0.21.0    magrittr_1.5    evaluate_0.10.1 rlang_0.1.6    
+ [9] stringi_1.1.6   rmarkdown_1.8   tools_3.4.3     stringr_1.2.0  
+[13] purrr_0.2.4     yaml_2.1.16     compiler_3.4.3  htmltools_0.3.6
+[17] knitr_1.19     </code></pre>
+</div>
+</div>
+
+<hr>
+<p>
+    This <a href="http://rmarkdown.rstudio.com">R Markdown</a> site was created with <a href="https://github.com/jdblischak/workflowr">workflowr</a>
+</p>
+<hr>
+
+<!-- To enable disqus, uncomment the section below and provide your disqus_shortname -->
+
+<!-- disqus
+  <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+        var disqus_shortname = 'rmarkdown'; // required: replace example with your forum shortname
+
+        /* * * DON'T EDIT BELOW THIS LINE * * */
+        (function() {
+            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+-->
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
