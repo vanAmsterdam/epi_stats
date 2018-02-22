@@ -34,7 +34,7 @@ statistic courses in the Epidemiology Graduate Program of the Julius Center, Utr
 
 ## Advanced methods in causal research
 
-[assignments Advanced methods in causal research](arc_assignments.html)
+[assignments Advanced methods in causal research](acr_assignments.html)
 
 ### Assignments
 
