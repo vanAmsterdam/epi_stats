@@ -1,0 +1,413 @@
+---
+title: "Inference methods"
+author: "Wouter van Amsterdam"
+date: 2018-02-15
+output: html_document
+---
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+```
+
+<!-- Update knitr chunk options -->
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+<!-- Insert the date the file was last updated -->
+```{r last-updated, echo=FALSE, results='asis'}
+```
+
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+```{r code-version, echo=FALSE, results='asis'}
+```
+
+<!-- Add your analysis here -->
+
+# Intro
+
+Teacher: Rene Eijkemans
+
+Learn from data what the data-generating process is.
+
+Resampling from sample, not theoretical distribution
+
+Non-parametric Monte Carlo methods
+
+- Bootstrap, cross-validation & jackknife
+- Permutation tests
+
+Possible inference
+- Hypothesis tests
+- Assess bias
+- Confidence interval
+
+Leap of faith
+
+## Monte Carlo methods
+
+Any methods for statistical inference based on random sampling, 
+where simulation is used to estimate parameters
+
+Parametric MC: sample from given probability distribution
+Non-parametric MC: sample from observed sample
+
+
+## Bootstrap
+
+Non-parametric MC, B. Efron, 1979
+
+Create microworld, sample takes place of population
+
+Sample treated as finite pseudo-population
+
+Leap of faith: drawing samples from observed sample is close to drawing 
+samples from population
+
+### Simple example
+
+```{r}
+dat <- c(174, 165, 182, 171, 178)
+sample(dat, size = length(dat), replace = T)
+
+```
+
+```{r}
+library(boot)
+av <- function(x, i) {mean(x[i])}
+obj <- boot(data = dat, statistic = av, R = 500)
+mean(obj$t)
+obj
+str(obj)
+boot.ci(obj)
+```
+
+To program: write function that calculates parameter, and takes index for 
+row numbers
+
+Take expected value of bootstrap statistic, which is by definition the mean 
+of the bootstrap statistics
+
+Standard error is the standard deviation of the bootstrap distribution 
+(since standard error tries to estimate the SD of the sampling distribution 
+of the statistic)
+
+
+Bias = expected value for parameter in sample - true value
+When bias is much lower than standard error, probabilby no bias
+bias / std.error  < 0.25 (by Rizzo, or .1), no real bias
+
+You can bootstrap the bootstrap, or jackknife the boostrap (which is faster)
+
+
+
+For health technology, you get right-skewed data, but you need to use the 
+mean because you want to describe the population (and get information on 
+the outliers too). Bootstrapping works very well
+
+
+
+### Example with paired data for ratios
+
+```{r}
+data(patch, package = "bootstrap")
+patch
+```
+
+```{r}
+
+n <- nrow(patch)
+B <- 2000
+theta.b <- numeric(B)
+theta.hat <- mean(patch$y) / mean(patch$z)
+
+for (b in 1:B) {
+  i <- sample(1:n, size = n, replace = T)
+  y <- patch$y[i]
+  z <- patch$z[i]
+  theta.b[b] <- mean(y) / mean(z)
+}
+
+hist(theta.b)
+bias <- mean(theta.b) - theta.hat
+se <- sd(theta.b)
+bias
+se
+quantile(theta.b, probs = c(.025, .975))
+```
+
+Bootstrap with replicate
+
+```{r}
+dat <- c(174, 165, 182, 171, 178)
+n <- length(dat)
+Mb <- replicate(1000,
+                expr = {y <- sample(dat, size = n, replace = T);
+                median(y)})
+hist(Mb)
+
+```
+
+
+## Jackknife
+
+M.H. Quenouille in 1949 for estimating bias
+J.W. Tukey in 1958 for estimating standard error
+
+Leave-one-out cross-validation, so limited to N samples where N is sample size.
+
+Each time, the sample size is 1 smaller.
+
+### With R code
+
+```{r}
+dat <- c(174, 165, 182, 171, 178)
+for (i in 1:length(dat)) print(dat[-i])
+```
+
+With patch data
+
+```{r}
+n <- nrow(patch)
+theta.hat <- mean(patch$y) / mean(patch$z)
+theta.jack <- numeric(n)
+for (i in 1:n) {
+  theta.jack[i] <- mean(patch$y[-i]) / mean(patch$z[-i])
+}
+bias <- (n-1) * (mean(theta.jack) - theta.hat)
+se <- sqrt((n-1)*mean((theta.jack - mean(theta.jack))^2))
+bias
+se
+
+```
+
+For median, not very smooth. Does not work well
+
+Non-smooth -> not a small change, when we make a small change to the data
+
+Median is not a nice statistic
+
+
+The boostrap estimates of standard error and bias are themselves random variables
+
+Jackknife for boostrap: take all bootstrap samples that do not contain 
+observation $i$. Gives $n$ estimates of the standard error.
+Not a real jackknife, bootstrap samples can be included in multiple jackknife-
+samples.
+
+## Bootstrap confidence intervals
+
+Examples
+
+- standard normal BCI: unbiased, large sample size and normal distribution assumed; simple, not best
+- basic BCI: $(2\hat{\theta} - \hat{\theta}_{1-\alpha/2}; 2\hat{\theta} - \hat{\theta}_{\alpha/2})$; uses percentile
+- percentile BCI: no distribution assumed, not corrected for bias, coverage is less good, better than standard normal BCI
+- studentized BCI: sampling of a "t-type" statistic, generated by resampling; estimates of 
+s.e. of the bootstrap statistic are necessary (bootstrap nested inside a bootstrap, time consuming)
+- BCa: Bias Corrected, or "adjusted for acceleration (i.e. skewness)"
+
+BCa: 
+
+- Bias is "median bias" of the replicates for $\hat{\theta}$
+- Looks if s.e. is dependent on location (which is true for skewed data), 
+rate of change of s.e. with location (e.g. binomial, poisson)
+- Transformation respecting
+- Second order accuracy, i.e. error -> 0; at rate 1/n
+
+- Studentized BCI: second order accuracy, not transformation respecting
+- Percentile: first order accuracy (1/sqrt(n)); not transformation respecting
+- Standard normal BCI: no second order accuracy, nor transformation respecting
+
+
+For accuracy in classification: bootstrap 0.632; 
+calculates optimism for out of sample accuracy, (not the same as over-fitting)
+To account for inter-dependence of bootstrap sample, 63.2% of data are in the same
+Another problem was interdependence of of samples, so 0.632+ is best.
+Tibshirani (is against cross-validation)
+
+
+```{r}
+data(patch, package="bootstrap")
+
+theta.boot <- function(dat,ind)
+{ y <- dat[ind,1]; z <- dat[ind,2]; mean(y) / mean(z) }
+
+y <- patch$y; z <- patch$z
+dat <- cbind(y,z)
+boot.obj <- boot(dat, statistic = theta.boot, R=2000)
+boot.obj
+print(boot.ci(boot.obj), type="all")
+
+```
+
+## Cross-validation
+
+Assessing model fit, not individual parameter estimates
+
+- misclassification
+- fit
+- stability of parameter estimates
+
+
+### With data
+
+```{r}
+data(ironslag,package="DAAG") 
+ironslag
+a <- seq(10,40,0.1)
+L1 <- lm(magnetic ~ chemical, data = ironslag)
+par(mfrow=c(1,2))
+plot(ironslag$chemical,ironslag$magnetic,main="Linear",pch=16)
+yhat1 <- L1$coef[1] + L1$coef[2] * a
+lines(a,yhat1,lwd=2)
+L2 <- lm(magnetic ~ chemical + I(chemical^2), data = ironslag)
+plot(ironslag$chemical,ironslag$magnetic,main="Quadratic",pch=16)
+yhat2 <- L2$coef[1] + L2$coef[2] * a + L2$coef[3] * a^2
+lines(a,yhat2,lwd=2)
+
+plot(L2)
+```
+
+Now with cross-validation
+
+```{r}
+attach(ironslag)
+n <- length(magnetic)
+e1 <- e2 <- numeric(n)
+for (k in 1:n) {
+  y <- magnetic[-k]
+  x <- chemical[-k]
+
+  J1 <- lm(y ~ x)
+  yhat1 <- J1$coef[1] + J1$coef[2] * chemical[k]	# prediction
+  e1[k] <- magnetic[k] - yhat1				# residual
+  
+  J2 <- lm(y ~ x + I(x^2))
+  yhat2 <- J2$coef[1] + J2$coef[2] * chemical[k]  + J2$coef[3] * 	chemical[k]^2
+  e2[k] <- magnetic[k] - yhat2	}
+sqrt(c(mean(e1^2),mean(e2^2)))	     # estimates for the prediction error
+detach(ironslag)
+```
+
+Difference between in-sample error and out-of-sample error (with cross-validation),
+is a function of the sample size.
+
+
+Best is repeated cross-validation
+
+Diagnostic plot
+
+- Residual vs predicted: heteroscedasticity, straight line (otherwise non-linearity)
+- Leverage vs residuals: high influence points.
+
+
+Leave one out:
+- n-1 times the same model (is dependent on sample, high variability accross samples)
+- better for assessing performance of a single model
+
+5 vs 10 fold validation
+- less dependent on sample
+
+
+## Permutation test
+
+Permutation tests sample without replacement, scrambling the labels
+
+Applicatoins:
+
+- equality of two (or more) distributions
+- (multivariate) independence, association, location, scale, ...
+
+99-999 permutations should suffice; technically this is a randomization test
+
+Calculate p-value:
+
+$$p = \frac{1+\sum_{b=1}^B{I(|\hat{\theta}_b| \geq |\theta|)}}{B+1}$$
+
+Use $B+1$ because the actual sample can be seen as 1 permutation
+
+### With R code
+
+```{r}
+exp.lean <- c(7.53,7.48,8.08,8.09,10.15,8.40,10.88,6.13,7.90,7.05,7.48,7.58,8.11)  # n=13
+exp.obese <- c(9.21,11.51,12.79,11.85,9.97,8.79,9.69,9.68,9.19)	# n=9
+t0 <- t.test(exp.lean,exp.obese)	# standard t-test
+t0
+```
+
+```{r}
+g1 <- min(purrr::map_int(list(lean = exp.lean, obese = exp.obese), length))
+z <- c(exp.lean, exp.obese)
+n <- length(z)
+R <- 999
+reps <- numeric(R)
+K <- length(z)
+
+set.seed(123456)
+for (i in 1:R) {
+  k <- sample(K, size = g1, replace = F)
+  x1 <- z[k]
+  y1 <- z[-k]
+  reps[i] <- t.test(x1, y1)$statistic
+}
+
+options(digits = 7)
+(1 + sum(reps>=t0$statistic))/(R+1)
+(1 + sum(reps<=t0$statistic))/(R+1)
+(1 + sum(abs(reps)>=abs(t0$statistic)))/(R+1)
+mean(abs(c(t0$statistic, reps)) >= abs(t0$statistic))
+t0$p.value
+
+hist(reps)
+abline(v = t0$statistic, lty = 2)
+```
+
+### Differences of two distributions
+
+Kolmorov-Smirnov test: differences in distributions (shape and location)
+
+```{r, warning=F}
+ks0 <- ks.test(exp.lean,exp.obese,exact=F)$statistic
+z <- c(exp.lean,exp.obese)
+R <- 999
+reps <- numeric(R)
+K <- 1:length(z)
+for (i in 1:R) {
+  k <- sample(K,size=13,replace=FALSE)
+  x1 <- z[k]
+  y1 <- z[-k]
+  reps[i] <- ks.test(x1,y1,exact=F)$statistic
+}
+
+hist(reps)
+abline(v = ks0, lty = 2)
+
+p <- mean(c(ks0, reps)>=ks0);
+ifelse(p>0.5, 2*(1-p), 2*p) # two-sided ASLks.test(exp.lean,exp.obese,exact=F)$p.value # p-value from KS test
+
+```
+
+### Theoretical considerations
+
+This is very robust.
+
+Only theoretically, when distribution under null-hypothesis is non-symmetric,
+null-distribution by permutation is allways symmetric.
+
+Permutation tests condition on data we have (if we would not have had 
+the same data if we would replicate the study). If we set the group 
+sizes (e.g. in a trial).
+
+Bootstrap generalizes better than permutation tests because it's less 
+dependent on sample
+
+Fisher's exact test fixes number of groups AND outcomes. 
+It ignores randomness of observing data
+
+## Session information
+
+<!-- Insert the session information into the document -->
+```{r session-info}
+```

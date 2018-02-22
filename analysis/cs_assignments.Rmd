@@ -691,6 +691,69 @@ dev.off()
 
 Now be proud ;)
 
+# Day 2 simulation studies
+
+These cost a lot of time to render and are put in a separate file.
+Find them here: [assignments Simulation Studies](cs_assignments_sim.html)
+
+# Day 3 numerical methods
+
+# Day 4 Inference
+
+
+
+## Problem 8.2 (Rizzo)
+
+### A. get data from SPSS into R
+
+```{r}
+require(haven)
+rtsbp <- haven::read_spss(here::here("data", "RTSBP.sav"))
+rtsbp
+```
+
+### B. Make boxplot by group
+
+```{r}
+require(magrittr)
+rtsbp %>%
+  boxplot(RT~groep, data = .)
+```
+
+### C. Compare distributions
+
+With K-S test
+
+```{r}
+ks.test(rtsbp$RT[rtsbp$groep==1], rtsbp$RT[rtsbp$groep==2])
+```
+
+#### D. Compare distributions with permutation test
+
+```{r, warning = F}
+ks0 <- ks.test(rtsbp$RT[rtsbp$groep==1], rtsbp$RT[rtsbp$groep==2])
+n  <- nrow(rtsbp)
+n1 <- min(table(rtsbp$groep))
+
+y <- rtsbp$RT
+nperm <- 999
+ks <- numeric(nperm)
+
+for (i in 1:nperm) {
+  g <- sample(n, n1, replace = F)
+  ks[i] <- ks.test(y[g], y[-g], exact = F)$statistic
+}
+
+# two-sided permutation p-value
+(1 + sum(abs(ks) >= abs(ks0$statistic)))/(nperm+1)
+
+hist(ks)
+abline(v = ks0$statistic, lty = 2)
+
+```
+
+
+
 ## Session information
 
 <!-- Insert the session information into the document -->

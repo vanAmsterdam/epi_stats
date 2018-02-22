@@ -1,0 +1,1780 @@
+---
+title: "Assignments for Advanced Methods for Causal Research, Confounding and Effect modification"
+author: "Wouter van Amsterdam"
+date: 2018-02-19
+output: html_document
+---
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+```
+
+<!-- Update knitr chunk options -->
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+<!-- Insert the date the file was last updated -->
+```{r last-updated, echo=FALSE, results='asis'}
+```
+
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+```{r code-version, echo=FALSE, results='asis'}
+```
+
+<!-- Add your analysis here -->
+
+# Setup
+
+Load some handy packages
+
+```{r}
+require(broom)
+require(purrr)
+require(dplyr)
+require(data.table)
+require(ggplot2)
+require(epistats)
+require(here) # for managing working directory
+require(magrittr)
+require(haven) # for importing from spss
+```
+
+
+# Day 1 DAG, Propensity score, inverse probability weighing
+
+## 1. Directed acyclic graphs (DAG)
+
+### 1. Confounding
+
+> The aim of this exercise is to illustrate the causal structure of confounding using simulated data.
+
+#### 1.	
+
+> Draw a DAG of confounding. Indicate the confounder as 'C', the exposure as 'X', and the outcome as 'Y'. Furthermore, name the arrows as follows: βYX is the arrow from X to Y, βXC is the arrow from C to X, and βYC is the arrow from C to Y.  
+
+```{r}
+require(DiagrammeR)
+dag1 <- "digraph dag1 {
+  graph [layout = dot]
+  
+  node[shape = circle]
+  X; Y; C;
+  
+  X -> Y [label = 'Byx']
+  C -> X [label = 'Bxc']
+  C -> Y [label = 'Byc']
+  
+  subgraph {
+    rank = same; X; Y
+  }
+}"
+
+DiagrammeR(dag1, type = "grViz")
+```
+
+
+#### 2.	
+
+> Let's make some assumptions about the relations between the different variables, i.e., make assumptions about the values of βYX, βXC, and βYC.
+
+```{r}
+byx = 1.5
+bxc = 1.1
+byc = 1.3
+```
+
+#### 3.
+
+>Now, let's simulate some data to illustrate confounding, and confounding adjustment. The illustrated data will resemble the DAG you just drew. Let's assume all data are normally distributed.
+
+##### a.
+> Sample C (e.g., 100,000 observations) from a normal distribution, with mean 0 and standard deviation 1:
+
+```{r}
+set.seed(12345)
+C <- rnorm(100000, 0, 1)
+```
+
+##### b. 
+
+> Define the relation between C and X (based on your DAG), e.g., βXC = 2:
+
+See 2.
+
+##### c. Generate X, based on C plus some random error:
+
+```{r}
+X <- bxc * C + rnorm(100000, 0, 1)
+```
+
+##### d.
+
+>Define the relation between C and Y, and C and X (based on your DAG), e.g., βYC = 1.5 and βYX = 1.0:
+Beta.yc <- 1.5
+Beta.yx <- 1
+
+See 2.
+
+> e.	Generate Y, based on C and X plus some random error:
+
+```{r}
+Y <- byx * X + byc * C + rnorm(100000, 0, 1)
+```
+
+#### 4.
+
+> Now, you can fit a linear model, regressing Y on X ('unadjusted') or regressing Y on X and C ('adjusted'):
+
+```{r}
+
+
+fit0 <- lm(Y~X)
+fit1 <- lm(Y~X + C)
+
+list(unadjusted = fit0, adjusted = fit1) %>% map_df(tidy, .id = "model")
+
+```
+
+#### 5.
+
+>Look at the estimates of the effect of X on Y from the two linear models. How do these relate to the DAG? 
+
+The unadjusted model has overestimated the coefficient for X, since all 
+lines are positive.
+
+The adjusted model found the true values
+
+#### 6.
+
+
+>Take different values for βYX, βXC, and βYC (including zero, or negative values) and evaluate the impact in terms of discrepancy between the 2 models from step 4. Can you explain what you observe?
+
+
+```{r}
+byx = 1.5
+bxc = -1.1
+byc = 1.3
+
+set.seed(12345)
+C <- rnorm(100000, 0, 1)
+
+X <- bxc * C + rnorm(100000, 0, 1)
+Y <- byx * X + byc * C + rnorm(100000, 0, 1)
+
+fit0 <- lm(Y~X)
+fit1 <- lm(Y~X + C)
+
+list(unadjusted = fit0, adjusted = fit1) %>% map_df(tidy, .id = "model")
+
+```
+
+Now the effect of X on Y was underestimated in the unadjusted model, 
+since one of the arrows was negative
+ (and the other ones positive, so the sign of the product is negative)
+
+### 2. Conditioning on an intermediate 
+
+> The aim of this exercise is to illustrate the bias due to conditioning on an intermediate.
+
+#### 1. 
+
+> Draw a DAG of an exposure ('X'), an outcome ('Y'), and an intermediate ('M') of the relation between X and Y. Name the arrows as follows: βYX is the direct arrow from X to Y, βMX is the arrow from X to M, and βYM is the arrow from M to Y.
+
+
+```{r}
+require(DiagrammeR)
+dag2 <- "digraph dag2 {
+  graph [layout = dot]
+  
+  node[shape = circle]
+  X; M; Y;
+  
+  X -> Y [label = 'Byx']
+  X -> M [label = 'Bmx']
+  M -> Y [label = 'Bym']
+  
+  subgraph {
+    rank = same; X; Y; M
+  }
+}"
+
+DiagrammeR(dag2, type = "grViz")
+```
+
+#### 2.
+
+> Make some assumptions about the relations between the different variables, i.e., make assumptions about the values of βYX, βMX, and βYM.
+
+```{r}
+byx <- 1.5
+bym <- 1.2
+bmx <- 1.1
+```
+
+#### 3. Simulate data that resemble the DAG you just drew. Again, we assume all data are normally distributed.
+
+> Sample X (e.g., 100,000 observations) from a normal distribution, with mean 0 and standard deviation 1:
+b.	Define the relation between X and M (based on your DAG), e.g., βMX = 2:
+c.	Generate M, based on X plus some random error:
+d.	Define the relation between X and Y, and M and Y (based on your DAG), e.g., βYX = 1.0 and βYM = 0.5:
+e.	Generate Y, based on X and M plus some random error:
+
+```{r}
+set.seed(12345)
+
+X <- rnorm(100000, 0, 1)
+M <- bmx * X + rnorm(100000, 0, 1)
+Y <- byx * X + bym * M + rnorm(100000, 0, 1)
+```
+
+#### 4. Fit a linear model, regressing Y on X ('unadjusted') or regressing Y on X and M ('adjusted'):
+
+
+```{r}
+fit0 <- lm(Y~X)
+fit1 <- lm(Y~X + M)
+
+list(unadjusted = fit0, adjusted = fit1) %>% map_df(tidy, .id = "model")
+
+```
+
+#### 5.
+
+> Look at the estimates of the effect of X on Y from the two linear models. How do these relate to the DAG? 
+
+In the unadjusted model, the direct effect of X on Y is overestimated, 
+since it is partially medieated by M. In the adjusted model we get the
+true effects
+
+#### 6. 
+
+> Take different values for βYX, βMX, and βYM (including zero, or negative values) and evaluate the impact in terms of discrepancy between the 2 models from step 4. Can you explain what you observe?
+
+```{r}
+byx <- 1.5
+bym <- -1.2
+bmx <- 1.1
+
+set.seed(12345)
+
+X <- rnorm(100000, 0, 1)
+M <- bmx * X + rnorm(100000, 0, 1)
+Y <- byx * X + bym * M + rnorm(100000, 0, 1)
+
+fit0 <- lm(Y~X)
+fit1 <- lm(Y~X + M)
+
+list(unadjusted = fit0, adjusted = fit1) %>% map_df(tidy, .id = "model")
+
+```
+
+Just as before, the effect of X on Y is underestimated in the unadjusted model
+
+### 3. Collider stratification
+
+> The aim of this exercise is to illustrate collider stratification bias.
+
+#### 1. 
+
+> Draw a DAG of an exposure ('X'), an outcome ('Y'), and a common effect ('S'). Name the arrows as follows: βYX is the arrow from X to Y, βSX is the arrow from X to S, and βSY is the arrow from Y to S.  
+
+
+```{r}
+require(DiagrammeR)
+dag3 <- "digraph {
+  graph [layout = dot]
+  
+  node[shape = circle]
+  X; Y; S;
+  
+  X -> Y [label = 'Byx']
+  X -> S [label = 'Bsx']
+  Y -> S [label = 'Bsy']
+  
+  subgraph {
+    rank = same; X; Y
+  }
+}"
+
+DiagrammeR(dag3, type = "grViz")
+```
+
+#### 2.
+
+> Make some assumptions about the relations between the different variables, i.e., make assumptions about the values of βYX, βSX, and βSY.
+
+```{r}
+byx = 1.5
+bsx = 1.4
+bsy = 1.6
+```
+
+#### 3. 
+
+> Simulate some data based on the DAG you just drew. Let's assume all data are normally distributed.
+
+> a.	Sample X (e.g., 100,000 observations) from a normal distribution, with mean 0 and standard deviation 1:
+b.	Define the relation between X and Y (based on your DAG), e.g., βYX = 0.67:
+c.	Generate Y, based on X plus some random error:
+d.	Define the relation between X and S, and Y and S (based on your DAG), e.g., βSY = 2.0 and βSY = 1.0:
+e.	Generate S, based on X and Y plus some random error:
+
+```{r}
+set.seed(12345)
+X <- rnorm(100000, 0, 1)
+Y <- byx * X + rnorm(100000, 0, 1)
+S <- bsx * X + bsy * Y + rnorm(10000, 0, 1)
+```
+
+#### 4. 
+
+> Fit a linear model, regressing Y on X ('unadjusted') or regressing Y on X and S ('adjusted'):
+
+```{r}
+fit0 <- lm(Y~X)
+fit1 <- lm(Y~X + S)
+
+list(unadjusted = fit0, adjusted = fit1) %>% map_df(tidy, .id = "model")
+
+```
+
+#### 5.	
+
+> Look at the estimates of the effect of X on Y from the two linear models. How do these relate to the DAG? 
+
+Now the unadjusted model find the true value, since S is a collider of X and Y
+
+In the adjusted model, byx even switched sign
+
+#### 6. 
+
+> Take different values for βYX, βSX, and βSY (including zero, or negative values) and evaluate the impact in terms of discrepancy between the 2 models from step 4. Can you explain what you observe?
+
+```{r}
+
+byx = 1.5
+bsx = -1.1
+bsy = 1.6
+
+set.seed(12345)
+X <- rnorm(100000, 0, 1)
+Y <- byx * X + rnorm(100000, 0, 1)
+S <- bsx * X + bsy * Y + rnorm(10000, 0, 1)
+
+fit0 <- lm(Y~X)
+fit1 <- lm(Y~X + S)
+
+list(unadjusted = fit0, adjusted = fit1) %>% map_df(tidy, .id = "model")
+```
+
+With negative bsx, byx did not switch sign in the adjusted model
+
+```{r}
+byx = 1.5
+bsx = 0
+bsy = 1.6
+
+set.seed(12345)
+X <- rnorm(100000, 0, 1)
+Y <- byx * X + rnorm(100000, 0, 1)
+S <- bsx * X + bsy * Y + rnorm(10000, 0, 1)
+
+fit0 <- lm(Y~X)
+fit1 <- lm(Y~X + S)
+
+list(unadjusted = fit0, adjusted = fit1) %>% map_df(tidy, .id = "model")
+
+
+```
+
+With bsx = 0, S is no longer a collider. In the adjusted model, byx is too low.
+Part of the variation in X is now passed to S through Y. 
+Including S in the model somehow sucks a part of the true byx into bsy, 
+shrinking byx
+
+### 4. Putting it all together - DAG-based analysis 
+
+> The aim of this exercise is to combine the concepts discussed above.
+1.	Draw a DAG, including at least an exposure ('X') and an outcome ('Y'). You may consider to add confounder(s), intermediate(s) and/or a common effect ('S') of X and Y. Name all the arrows in your DAG. Tip: do not start with a very complex DAG, but build it up in (small) steps.
+2.	In your DAG, identify colliders and intermediates (i.e., the variables that you don't want to control for) as well as confounders (i.e., the variables that you do want to control for).
+3.	Apply the tools that you used in the previous exercises and assess the impact of omitting a confounder from the analytical model, or including e.g. a collider. 
+4.	Draw a DAG and generate the data. Provide a fellow student with the data and let him/her do the analysis. Does (s)he come up with the right estimate? In addition, also provide the DAG. Will (s)he change his/her analysis plan?
+
+
+This one was skipped.
+
+## 3. Propensity scoring
+
+> Introduction
+In this exercise, you will use data of a study that aimed to assess whether annual influenza vaccination reduces mortality risk among elderly (i.e., people aged >65 years). The data consists of observations of eligible subjects who did, or did not, receive the annual influenza vaccine. The endpoint in this study is mortality during the influenza epidemic period (which usually starts 4 to 8 weeks after vaccination). Note that the vaccine was not randomly allocated; rather vaccination status may depend on characteristics of the participants in the study.
+
+> Code book (data_PS.txt)
+Variable name	Description	Values
+Vac	Influenza vaccination status	0 = unvaccinated
+1 = vaccinated
+Age	Age (years)	Continuous
+Sex	Sex	0 = male
+1 = female
+Cvd	Cardiovascular disease	0 = absent
+1 = present
+cvd_drug	Cardiovascular drug use	0 = absent
+1 = present
+pulm	Pulmonary disease	0 = absent
+1 = present
+pulm_drug	Pulmonary drug use	0 = absent
+1 = present
+DM	Diabetes Mellitus	0 = absent
+1 = present
+Contact	Number of GP contacts in 12 months prior to start of study	continuous
+Death	Mortality status	0 = absent
+1 = present
+Step 1. Think before you act:
+
+### 1.
+
+> Look at the variables measured in this study (i.e., the code book), and plan your analysis (draw a DAG, define exposure, outcome, confounders, and the model to relate exposure to outcome, etc.)
+
+The target relationship is Vac vs Death.
+
+Several factor may be considered confounders (e.g. causally related to 
+exposure and outcome)
+
+- age
+- sex
+- Cvd
+- pulm
+- DM
+- Contact (not directly causal of outcome, but possibly indicative of 
+worse health status)
+
+Possible effect modifiers are
+
+- DM (affects the immune system, so possibly also the effectiveness of vaccination)
+
+Hierarchies
+
+- Age and sex influence Cvd
+
+What's hard to put in:
+
+- pulm_drug may aleviate the effect of pulm on death.
+- also, someone using pulm_drug may also be more inclined to take a vaccination
+
+```{r}
+require(DiagrammeR)
+dag_PS <- "digraph {
+  graph [layout = dot]
+  
+  node[shape = circle]
+  Vac; Death; Age; Sex; Cvd; cvd_drug; pulm; pulm_drug; DM; Contact
+  
+  Vac -> Death
+  Age -> Death
+  Age -> Vac
+  Age -> Cvd
+  Age -> pulm
+  Age -> DM
+  Age -> Contact
+  Sex -> Death
+  Sex -> Vac
+  Sex -> Cvd
+  Sex -> pulm
+  Sex -> DM
+  Sex -> Contact
+
+
+  Cvd -> Vac
+  Cvd -> Death
+  pulm -> Vac
+  pulm -> Death
+  DM -> Death
+  DM -> Vac
+  Contact -> Vac
+  Contact -> Death
+
+  
+
+  subgraph {
+    rank = same; Vac; Death
+  }
+}"
+DiagrammeR(dag_PS, type = "grViz")
+```
+
+### 2. Load the data and attach: 
+
+```{r}
+df <- read.table(here("data", "data_PS.txt"), sep = "\t")
+str(df)
+```
+
+Let's curate a few 0 - 1 variables as logical vectors (true vs false) 
+so that R treats them right internally in all functions
+
+```{r}
+logical_vars <- c("vacc", "sex", "cvd", "cvd_drug", "pulm", "pulm_drug", "DM", "death")
+df  %<>%
+  mutate_at(vars(logical_vars), as.logical)
+str(df)
+```
+
+Rename sex to a more sensible name
+
+```{r}
+df %<>%
+  rename(sex_female = sex)
+```
+
+Store names of original predictive variables in a vector for later use
+
+```{r}
+orig_vars <- setdiff(names(df), "death")
+orig_vars
+```
+
+
+### 3. Have a quick look: summary(data)
+
+```{r}
+summary(df)
+```
+
+### Step 2.
+
+> Construct a propensity score:
+
+#### 1.
+
+> Create a table of the distributions of the confounding variables by exposure status. You may use commands such as:
+mean(age[vacc==0]); mean(age[vacc==1])
+table(vacc,sex)
+
+```{r}
+df %>%
+  group_by(vacc) %>%
+  summarize(mean_age = mean(age), fraction_female = mean(sex_female))
+```
+
+```{r}
+tableone::CreateTableOne(data = df, strata = "vacc", test = F)
+```
+
+
+#### 2.	
+
+> What is the odds ratio of the crude (unadjusted) association between vaccination status and mortality?  
+fit <- glm(death ~ vacc, family='binomial')
+log.or <- fit$coef[2]
+se.log.or <- sqrt(diag(vcov(fit))[2])
+exp(c(log.or, log.or - 1.96*se.log.or, log.or + 1.96*se.log.or))
+
+Let's use `confint` to get likelihood profile confidence intervals
+
+```{r}
+fit0 <- glm(death ~ vacc, family = 'binomial', data = df)
+summary(fit0)
+confint(fit0)
+```
+
+No significant effect in unadjusted analysis
+
+#### 3.
+
+> A propensity score can be constructed by means of a multivariable regression model, predicting exposure status given confounders. What is the dependent variable (outcome variable) of this model? What are the independent variables of this model? What kind of regression model is most convenient for this study?
+
+Logistic, since exposure is binary
+
+Independent variables can be all covariates that are not the outcome (Death),
+and possibly interactions and non-linear transformations of these
+
+#### 4.
+
+> Based on your answer to the previous question construct a propensity score. For example:
+
+```{r}
+ps_fit1 <- glm(vacc ~ age + sex_female, family = "binomial", data = df)
+```
+
+> You can obtain the predicted value of the model (i.e., probability of the determinant, given the potential confounders):
+PS <- fit$fitted.values
+
+Let's keep the data nicely together in the data.frame
+
+```{r}
+df %<>% 
+  mutate(ps_1 = ps_fit1$fitted.values)
+```
+
+
+#### 5. 
+
+> What is the mean propensity score of those who are vaccinated? And what is the mean propensity score of those who are not vaccinated? Is this like you would expect? 
+
+```{r}
+df %>%
+  group_by(vacc) %>%
+  summarize(mean_ps = mean(ps_1))
+```
+
+The propensity scores are pretty close together.
+Based on the baseline table we see that age and sex are distributed
+pretty equally amongst vaccinated and unvaccinated subjects, 
+so it makes sense that the propensity score does not work too well
+
+Let's look at the distributions
+
+```{r}
+df %>%
+  ggplot(aes(x = ps_1, fill = vacc)) + 
+  geom_histogram(alpha = .5)
+```
+
+
+#### 6.
+
+> The primary goal of a propensity score is to balance confounder characteristics among those exposed and those unexposed to the determinant. Balance can be assessed e.g. within quintiles of the propensity score:
+
+> n.cat	<- 5	# no. categories to split PS
+PS_cat <- ceiling(rank(PS)*n.cat/length(PS)) # split PS
+for (i in 1:max(PS_cat)){
+	print(sapply(split(age[PS_cat==i],vacc[PS_cat==i]),mean))} 
+	
+
+```{r}
+n_cat <- 5
+df %<>%
+  mutate(ps_range = cut(ps_1, 
+                      breaks = quantile(ps_1, 
+                                        probs = seq(0, 1, length.out = n_cat + 1)),
+                      include.lowest = T, ordered_result = T),
+         ps_cat = as.numeric(ps_range))
+
+df %>%
+  group_by(ps_cat, ps_range) %>%
+  summarize(mean(vacc), mean(age), mean(sex_female), mean(pulm))
+```
+
+#### 7.
+
+> Donstruct a table of the distributions of the confounding variables by exposure status using only those subject whose PS lies within the third category of the PS. Compare the balance of confounding variables between exposure groups in this table with that in the table of the confounders by exposure status that was constructed using all subjects. In which table are the exposure groups more comparable?
+
+```{r}
+tableone::CreateTableOne(data = df %>% filter(ps_cat == 3), strata = "vacc", test = F)
+```
+
+Not a whole lot better when compared to earlier
+
+### Step 3.
+
+> Estimate the effect of influenza vaccination on mortality risk
+
+#### 1. 
+
+> There are different ways of using the PS to control for confounding. Here we will include the PS as a continuous covariate and as a categorical covariate in the model regressing outcome on exposure and PS:
+
+> fit <- glm(death ~ vacc + PS, family='binomial')
+log.or <- fit$coef[2]
+se.log.or <- sqrt(diag(vcov(fit))[2])
+exp(c(log.or, log.or - 1.96*se.log.or, log.or + 1.96*se.log.or))
+
+> fit <- glm(death ~ vacc + factor(PS_cat), family='binomial')
+log.or <- fit$coef[2]
+se.log.or <- sqrt(diag(vcov(fit))[2])
+exp(c(log.or, log.or - 1.96*se.log.or, log.or + 1.96*se.log.or))
+
+
+```{r, cache = T}
+fit_1 <-glm(death ~ vacc + ps_1, family = "binomial", data = df)
+summary(fit_1)
+confint(fit_1)
+
+fit_2 <-glm(death ~ vacc + factor(ps_cat), family = "binomial", data = df)
+summary(fit_2)
+confint(fit_2)
+
+```
+
+#### 2.
+
+> As a comparison, estimate the relation between vaccination status and mortality and adjust for confounding by including all confounders as covariates in the model. 
+
+```{r}
+fit_3 <- glm(reformulate(orig_vars, response = "death"), data = df, family = "binomial")
+summary(fit_3)
+```
+
+The estimated effect of vaccination on death is greater when including all 
+covariates
+
+#### 3.
+
+> How do all these odds ratios compare to the odds ratio that was estimated without adjustment for confounding? 
+
+```{r}
+fit_0 <- glm(death ~ vacc, data = df, family = "binomial")
+summary(fit_0)
+```
+
+In the unadjusted model, the log-odds for vaccination is closer to the null value
+(smaller effect on death)
+
+### Step 4. Some afterthoughts
+
+#### 1.
+
+> What are potential advantages of PS analysis compared to including all confounders separately in a multivariable logistic regression model? 
+
+Checks during model building; possible to use more covariates in 
+a setting with rare events but frequnet exposure
+
+#### 2.
+
+> How could the balance of confounding variables between exposure groups within strata of the PS possibly be improved?
+
+By correlations between the covariates and the covariates used for the PS
+
+#### 3.
+
+> Could you think of ways of (graphically) summarizing the balance of confounders for subjects with the same PS?
+
+Yes, for example calculate the standardized difference and plot these
+
+First for all data
+```{r}
+require(tableone)
+diffs_overall <- CreateTableOne(vars = setdiff(orig_vars, "vacc"), strata = "vacc", data = df, test = F, smd = T) %>%
+  ExtractSmd()
+
+diffs_overall <- data.frame(variable = rownames(diffs_overall), 
+                            smd = as.numeric(diffs_overall))
+```
+
+The in each PS quantile 
+
+```{r}
+diffs_quantiles <- split(df, df$ps_cat) %>%
+  map_df(function(data) CreateTableOne(vars = setdiff(orig_vars, "vacc"), strata = "vacc", data = data, test = F, smd = T) %>%
+  ExtractSmd())
+diffs_melted <- melt(diffs_quantiles, variable.name = "PS_category", value.name = "smd")
+diffs_melted$variable <- (diffs_overall$variable)
+```
+
+Now to plot
+
+```{r}
+diffs_overall %>%
+  ggplot(aes(x = smd, y = variable)) + 
+  geom_point(shape = 5, size = 3) + 
+  lims(x = c(0,.5)) +
+  geom_point(data = diffs_melted, aes(x = smd, y = variable, col = PS_category), 
+             alpha = .4)
+```
+
+We observe that the SMD within the PS categories (the colored dots), 
+are not my closer to 0 than the overall. So the PS does not seem to 
+equal out the distributions of covariates for accross vaccination status
+
+Maybe this was because we used a very simple model for propensity scoring.
+
+```{r}
+table(df$vacc)
+```
+
+We have 12030 in the smallest group of treatment, so we can potential 
+include 1203 terms. 
+
+Let's go all out and use all possible confounders, including up to cubic 
+terms, and all third order interactions. Of course, the cubic terms of the
+ binary variables are senseless, but this way we can get all terms with 
+ 2 lines of code
+
+```{r, cache = T}
+# ps_fit2 <- glm(vacc ~ (age + sex_female + cvd + cvd_drug + pulm + pulm_drug + DM + contact)^3,
+#                data = df, family = "binomial")
+ps_fit2 <- glm(vacc ~ polym(age, sex_female, cvd, cvd_drug, pulm, pulm_drug, DM, contact, 
+                            degree = 3, raw = T),
+               data = df, family = "binomial")
+```
+
+This takes some time to fit. Let's see how many terms we included:
+
+```{r}
+length(coef(ps_fit2))
+```
+
+Well below the threshold. Let's use this as the new propensity score and do 
+the same calculations
+
+```{r}
+n_cat <- 5
+df %<>%
+  mutate(
+    ps_2 = ps_fit2$fitted.values,
+    ps_2_range = cut(ps_2, 
+                      breaks = quantile(ps_2, 
+                                        probs = seq(0, 1, length.out = n_cat + 1)),
+                      include.lowest = T, ordered_result = T),
+    ps_2_cat = as.numeric(ps_2_range))
+
+diffs_quantiles_2 <- split(df, df$ps_2_cat) %>%
+  map_df(function(data) CreateTableOne(vars = setdiff(orig_vars, "vacc"), strata = "vacc", data = data, test = F, smd = T) %>%
+  ExtractSmd())
+diffs_melted_2 <- melt(diffs_quantiles_2, variable.name = "PS_category", value.name = "smd")
+diffs_melted_2$variable <- (diffs_overall$variable)
+```
+
+Now to plot
+
+```{r}
+diffs_overall %>%
+  ggplot(aes(x = smd, y = variable)) + 
+  geom_point(shape = 5, size = 3) + 
+  lims(x = c(0,.5)) +
+  geom_point(data = diffs_melted_2, aes(x = smd, y = variable, col = PS_category), 
+             alpha = .4)
+
+```
+
+Now we observe that the confounder distributions within the propensity 
+score strata are a lot more alike. However, most covariates are binary, 
+which are not very informative to plot.
+
+```{r}
+df %>%
+  select(age, contact, ps_2_cat, vacc) %>% 
+  as.data.table() %>%
+  melt.data.table(id.vars = c("vacc", "ps_2_cat")) %>%
+  ggplot(aes(x = value, fill = vacc)) +
+  geom_histogram(alpha = 0.8) + 
+  facet_grid(ps_2_cat ~ variable, scales = "free")
+  
+```
+
+Relative distributions seem equal within the propensity score quantiles
+
+#### Additional ideas
+
+- random forest for PS
+- nicer functions for smd
+
+## Excercise inverse probability weighing
+
+Skipped due to time limitations
+
+# Day 2 Unobserved confounding
+
+## Excercise Instrumental variable
+
+> Introduction
+This practical exercise is based on a paper by Sexton and Hebel (Jama 1984). They were interested in the association between maternal smoking and birth weight. In an observational setting, however, extraneous factors might confound the observed association between maternal smoking and infant body weight. Therefore, they designed a randomized controlled trial in which they randomly assigned women to an encouragement program to stop smoking. Thus, pregnant women who smoked either received the advice to stop smoking, or they did not receive such an advice. It was assumed that women who were enrolled in the program would be more likely to stop smoking during pregnancy. In this study the encouragement program is called an instrumental variable. 
+
+> Code book (data_IV.txt)
+Variable name	Description	Values
+program	Allocation to encouragement program	0 = no program
+1 = program
+age	Age (years)	Continuous
+education	Years of education	Continuous 
+height	Maternal height (cm)	Continuous
+weight	Maternal weight (kg)	Continuous
+N.prev.preg	No. previous pregnancies	Ordinal
+low.birthweight	History of child with low birth weight	0 = absent
+1 = present
+smoking_rand	No. cigarettes smoked per day at time of randomisation	Continuous
+smoking_8m	No. cigarettes smoked per day at 8 months gestational age	Continuous
+birth.weight	Birth weight (g)	Continuous
+
+### Step 1. Think before you act
+
+#### 1.
+
+> Look at the variables measured in this study (i.e., the code book), and plan your analysis (draw a DAG, define exposure, outcome, confounders, and the model to relate exposure to outcome, etc.)
+
+```{r}
+require(DiagrammeR)
+dag_iv <- "digraph {
+  graph [layout = dot]
+  
+  node[shape = circle]
+  program; birth_weight;
+  age; eduction; height; weight; 
+  n_prev_preg; low_birthweight;
+  smoking_rand; smoking_8m;
+  
+  program -> smoking_8m
+  smoking_8m -> birth_weight
+  smoking_rand -> smoking_8m
+  low_birthweight -> smoking_rand
+  low_birthweight -> smoking_8m
+  low_birthweight -> birth_weight
+  n_prev_preg -> smoking_rand
+  n_prev_preg -> birth_weight
+  age -> birth_weight
+  age -> smoking_rand
+  age -> smoking_8m
+  eduction -> smoking_rand
+  eduction -> smoking_8m
+  height -> smoking_rand
+  height -> smoking_8m
+  weight -> smoking_rand
+  weight -> smoking_8m
+  weight -> brith_weight
+
+  subgraph {
+    rank = same; program; smoking_8m; birth_weight
+  }
+}"
+DiagrammeR(dag_iv, type = "grViz")
+```
+
+#### 2. 
+
+> Load the data and attach: 
+data <- read.table("data_IV.txt", sep="\t")
+attach(data)
+
+```{r}
+iv <- read.table(here("data", "data_IV.txt"), sep = "\t")
+```
+
+
+#### 3.
+
+ > Have a quick look: summary(data)
+
+```{r}
+str(iv)
+```
+
+Let's curate a bit
+
+```{r}
+iv %<>%
+  mutate(
+    program = as.logical(program),
+    low.birthweight = as.logical(low.birthweight)
+  )
+```
+
+
+### Step 2. Conventional analysis
+
+#### 1.
+
+> What is the association between the number of cigarettes smoked per day at 8 months gestational age and birth weight? Explain what this number means. Do you think this is a valid estimate? Why?
+
+```{r}
+fit0 <- lm(birth.weight ~ smoking_8months, data =iv)
+summary(fit0)
+```
+
+Smoking more reduces the birth weight, but it is not a significant effect.
+
+It does not take into account confounding variables that affect both smoking 
+and birth weight
+
+### Step 3. Evaluate IV assumptions
+
+#### 1.
+
+> Create a table of the distributions of the potential confounding variables by program status. You may use commands such as:
+
+```{r}
+iv %>%
+  group_by(program) %>%
+  summarize_all(funs(mean)) %>%
+  t()
+```
+
+> Which IV assumption can you check using this table?
+
+Pretty equal confounder distributions, only smoking 8 months and birth weight
+seem to be different. (what we wanted)
+
+#### 2.
+
+> What is the association between the advice to stop smoking and the number of cigarettes smoked per day at 8 months gestational age? Explain what this number means. Which IV assumption do you check by this analysis?
+ 
+```{r}
+lm(smoking_8months ~ program, data = iv) %>% summary()
+```
+
+Difference in cigarettes, due to being in there program.
+Although the R-squared is low, so program does not explian much of the variance.
+You can check that the IV is related to the exposure of interest
+
+In a plot:
+
+```{r}
+iv %>%
+  ggplot(aes(x = smoking_8months, fill = program)) + 
+  geom_histogram(alpha = 0.5)
+```
+
+In a boxplot:
+
+```{r}
+iv %>%
+  ggplot(aes(y = smoking_8months, x = program)) + 
+  geom_boxplot()
+```
+
+
+### Step 4. IV analysis
+
+#### 1. What is the association between the advice to stop smoking and birth weight? Explain what this number means.
+ 
+```{r}
+lm(birth.weight ~ program, data = iv) %>% summary()
+```
+
+This is the 'intention to treat' effect. So the effect of assigning someone 
+to a program on the birth weight.
+
+#### 2. 
+
+> Given the two effects of the advice to stop smoking (estimated in the previous two questions), can you estimate the (IV) effect of smoking on birth weight. Explain what this number means.
+
+
+We have a model for smoking at 8 months (model iv, instrumental variable)
+
+$$smoke_i = \alpha_0 + \alpha_1 * program_i + \nu_i$$
+
+And a model for birthweight based on the program (model intention to treat, itt)
+
+$$birthweight_i = \gamma_0 + \gamma_1 * program_i + \eta_i$$
+
+What we want to know is 
+
+$$birthweight_i =\beta_0 + \beta_1*smoke_i+\epsilon_i$$
+
+So we can use the nested models iv and itt
+
+$$birthweight_i = \beta_0 + \beta_1*(\alpha_0 + \alpha_1 * program_i + \nu_i)+\epsilon_i$$
+
+$$=\beta_0 + \beta_1*\alpha_0 + \beta_1*\alpha_1*program_i + \beta_1*\nu_i + \epsilon_i$$
+
+Now we can easily see that 
+
+$$\beta_1 = \frac{\gamma_1}{\alpha_1}$$
+
+```{r}
+fit_itt <- lm(birth.weight ~ program, data = iv)
+fit_iv  <- lm(smoking_8months ~ program, data = iv)
+
+coef(fit_itt)[2] / coef(fit_iv)[2]
+
+```
+
+For each extra cigarette a day, the birthweight goes down with by 20 grams
+
+
+
+#### 3.
+
+> A faster way of estimating the (IV) effect of smoking on birth weight is:
+
+```{r}
+fit <- lm(smoking_8months ~ program, data = iv) 
+lm(birth.weight ~ predict(fit), data = iv) %>% summary()
+
+```
+
+> Can you explain what is done here?
+
+It directly nests the IV model into the eventual model (see neste model above)
+
+### Step 5. Another IV analysis
+
+> Above, you have estimated the associations between the number of cigarettes smoked per day and birth weight. A pregnant woman, however, might be more interested to know how much weight her baby will gain if she completely stops smoking, as compared to continue smoking.
+
+#### 1. 
+
+> What proportion of women completely stopped smoking in among those enrolled in the program? And what was this proportion among those in the control group?
+> stop <- 1*(smoking_8months==0)
+mean(stop[program==1]); mean(stop[program==0])
+
+
+
+```{r}
+iv %>%
+  group_by(program) %>%
+  summarize(non_smoking_8months =mean(smoking_8months == 0))
+```
+
+#### 2.
+
+> How much weight would a baby, on average, gain if a mother stopped smoking? Use the following expression:
+Or, using R:
+(mean(birth.weight[program==1])-mean(birth.weight[program==0])) / (mean(stop[program==1]) - mean(stop[program==0]))
+
+We can calculate this directly by doing another IV analysis for totally 
+stopping with smoking, just like above
+
+```{r}
+iv %<>%
+  mutate(non_smoking_8months = smoking_8months == 0)
+```
+
+```{r}
+lm(birth.weight ~ 
+     lm(non_smoking_8months ~ program, data = iv)$fitted.values, 
+   data = iv) %>%
+  summary()
+```
+
+So 419
+
+## Sensitivity analysis of unmeasured confounding
+
+> Introduction
+Observational (i.e., non-randomized) studies on the effects of medical interventions are prone to confounding. Several methods have been proposed to control for measured confounding. The potential impact of an unmeasured confounder on the association under study can be estimated by means of simulations. 
+ 
+> Sensitivity analysis of unmeasured confounding will be applied to a study that aimed to assess whether annual influenza vaccination reduces mortality risk among elderly (for details, see computer exercise on propensity score analysis).
+
+> Code book (data_PS.txt)
+Variable name	Description	Values
+Vac	Influenza vaccination status	0 = unvaccinated
+1 = vaccinated
+Age	Age (years)	Continuous
+Sex	Sex	0 = male
+1 = female
+Cvd	Cardiovascular disease	0 = absent
+1 = present
+cvd_drug	Cardiovascular drug use	0 = absent
+1 = present
+pulm	Pulmonary disease	0 = absent
+1 = present
+pulm_drug	Pulmonary drug use	0 = absent
+1 = present
+DM	Diabetes Mellitus	0 = absent
+1 = present
+Contact	Number of GP contacts in 12 months prior to start of study	continuous
+Death	Mortality status	0 = absent
+1 = present
+
+### Step 1. Think before you act:
+
+#### 1.
+
+> Look at the variables measured in this study (i.e., the code book), and plan your analysis (draw a DAG, define exposure, outcome, confounders, and the model to relate exposure to outcome, etc.). Also think of possible unmeasured confounders.
+
+For DAG, see above
+
+Possible unmeasured confounders are immunodeficiency, smoking
+
+#### 2. 
+
+> Load the data and attach: 
+data <- read.table("data_PS.txt", sep="\t")
+attach(data)
+
+#### 3.	
+
+> Have a quick look: summary(data)
+
+As above
+
+```{r}
+df <- read.table(here("data", "data_PS.txt"), sep = "\t")
+str(df)
+```
+
+Let's curate a few 0 - 1 variables as logical vectors (true vs false) 
+so that R treats them right internally in all functions
+
+```{r}
+logical_vars <- c("vacc", "sex", "cvd", "cvd_drug", "pulm", "pulm_drug", "DM", "death")
+df  %<>%
+  mutate_at(vars(logical_vars), as.logical)
+str(df)
+```
+
+Rename sex to a more sensible name
+
+```{r}
+df %<>%
+  rename(sex_female = sex)
+```
+
+Store names of original covariates in a vector for later use
+
+```{r}
+orig_covariates <- setdiff(names(df), c("death", "vacc"))
+orig_covariates
+```
+
+
+### 3. Have a quick look: summary(data)
+
+```{r}
+summary(df)
+```
+
+### Step 2. Estimate the effect of influenza vaccination on mortality risk:
+
+#### 1.
+
+> Estimate the effect of influenza vaccination on the risk of mortality, while adjusting for measured confounders, e.g.: 
+fit <- glm(death ~ vacc + age + sex, family='binomial')
+log.or <- fit$coef[2]
+se.log.or <- sqrt(diag(vcov(fit))[2])
+exp(c(log.or, log.or - 1.96*se.log.or, log.or + 1.96*se.log.or))
+
+Let's do this with profile likelihoods
+
+```{r}
+fit <- glm(death ~ vacc + age + sex_female, family = "binomial", data = df)
+summary(fit)
+exp(confint(fit))
+```
+
+No significant effect of vaccination here
+
+#### Step 3. Sensitivity analysis of unmeasured confounding:
+
+> We will apply the method proposed by Lin, Psaty and Kronmal (Biometrics 1998) in order to quantify the impact of a potential unmeasured confounder.
+
+> 1.	Consider an unmeasured binary confounder (e.g., smoking yes/no).
+a.	Define the prevalence of the confounder among vaccinated subject (p1).
+b.	Define the prevalence of the confounder among unvaccinated subjects (p0).
+c.	Define the odds ratio of the relation between the confounder and mortality (ORyz).
+
+```{r}
+p0 <- .3
+p1 <- .5
+ORyz <- 2
+```
+
+2.	Calculate the factor (A) that quantifies the impact of the unmeasured confounder:
+
+```{r}
+A <- (ORyz*p1 + 1-p1 ) / (ORyz*p0 + 1-p0)
+A
+```
+
+#### 3.
+
+> Estimate the effect of influenza vaccination on the risk of mortality, while adjusting for measured confounders and the unmeasured confounder: 
+obs.OR <- exp(c(log.or, log.or - 1.96*se.log.or, log.or + 1.96*se.log.or))
+names(obs.OR) <- c('OR','95%','CI')
+obs.OR # observed odds ratio
+obs.OR/A # odds ratio after adjustment for unmeasured confounder
+
+```{r}
+obs_OR <- c(exp(coef(fit)[2]), exp(confint(fit))[2,])
+obs_OR
+obs_OR / A
+```
+
+#### 4.
+
+> Evaluate different scenarios of unmeasured confounding. You may want to do this in an automated way, varying two parameters, while keeping the third fixed. For example:
+
+With the proposed code:
+
+```{r}
+ORyz 	<- 2
+p0 	<- seq(0.3,.5,.05)
+p1 	<- seq(0.1,.3,.05)
+
+M <- matrix(ncol=length(p0)*3, nrow=length(p1))
+colnames(M) <- rep(p0, each=3)
+rownames(M) <- p1
+for (i in 1:length(p0)){
+	for (j in 1:length(p1)){
+		A <- (ORyz*p1[j] + 1-p1[j] ) / (ORyz*p0[i] + 1-p0[i])
+		M[j,(3*i-2):(3*i)] <- obs_OR/A 	}}	
+round(M,2)
+```
+
+> Can you explain what is done here? 
+
+A grid of possible values for p0 and p1 are made, and for each combination 
+the value for the adjusted OR is reported
+
+> Can you modify this procedure such that the parameters p1 and p0 are fixed, and ORyz is varied over a certain range?
+
+Instead of using nested for-loops, we can map a function to a data.frame 
+of parameters using the function `pmap` from `purrr`. 
+
+This is a little more R-ey than creating (nested) loops
+
+We can just as easily do this for ranges of three parameters. 
+Here the function `expand.grid` comes in handy
+
+```{r}
+ORs <- seq(1, 4, length.out = 5)
+p0s <- seq(0.3, 0.5, 0.05)
+p1s <- seq(0.1, 0.3, 0.05)
+
+param_grid <- expand.grid(OR = ORs, p0 = p0s, p1 = p1s)
+head(param_grid)
+dim(param_grid)
+```
+
+So we have 125 combinations of the 3 parameters
+
+Now apply a function to this grid. A downside of `pmap` is that it depends
+on the column orders (instead of using named arguments), so you need to 
+make sure you the column order of the parameter grid.
+
+```{r}
+adjusted_ORs <- param_grid %>%
+  pmap_df(function(OR, p0, p1) {
+    A = (OR * p1 + 1 - p1) / (OR * p0 + 1-p0)
+    adj_OR = obs_OR / A
+    data.frame(estimate = adj_OR[1], ci_low = adj_OR[2], ci_high = adj_OR[3])
+  })
+adjusted_ORs
+```
+
+Combine with paramater grid
+
+```{r}
+sa <- data.frame(param_grid, adjusted_ORs)
+sa
+```
+
+Of course these '3 dimensional' data are harder to visualize, so we can 
+grab all values for some p1
+
+```{r}
+sa[sa$p0 == 0.5,]
+```
+
+
+### Step 4. Some afterthoughts
+
+#### 1.
+
+>  In this exercise, you evaluated the potential impact of a single (binary) unmeasured confounder. What are limitations to this approach, and how could you overcome these limitations?
+
+You can repeat this for other potential unmeasured confounders, 
+try multivariate sensitivity analysis. 
+
+Or (monte-carlo) simulations for hypothesized distributions of continous
+ potential unmeasured confounders
+
+
+# Day 3 Interaction and effect modification
+
+## Exercise 1
+
+> Introduction 
+The data you will use in this practical is data from the Utrecht Health Project (Leidsche Rijn Gezondheidsproject). The dataset only includes two exposure variables, age and BMI, and one outcome variable, diastolic blood pressure. This practical is based on the paper 'Estimating interaction on an additive scale between continuous determinants in a logistic regression model', IJE 2007; 36: 1111-1118. As you may have noticed when reading the article for the pre-assignment, it is a cohort studies but odds ratios are estimated and logistic regression is used. It might be more appropriate to estimate risk ratios in a cohort study, for example by using log-binomial regression. In this practical you will do this. 
+
+> Code book (Data_set_EM_1.sav)
+Variable name	Description	Values
+age	Age (years)	Continuous
+BMI	Body mass index (kg/m2)	Continuous
+bpdias	Diastolic blood pressure (mmHg)	Continuous
+age_dich	Age dichotomised	0 = <40 years
+1 = >= 40 years
+bmi_dich	Body mass index dichotomised	0 = <25 kg/m2
+1 = >= 25 kg/m2
+bpdias_dich	Diastolic blood pressure dichotomised	0 = <90 mmHg
+1 = >= 90 mmHg
+
+### 1-3 load and describe
+
+>Load the data and attach: 
+library(foreign)
+dat <- data.frame(read.spss("Data_set_EM_1.sav",use.value.labels=FALSE))
+attach(dat) 
+2.	Have a quick look: summary(dat)
+3.	Explore and describe the variables included in the dataset.
+
+```{r}
+lrg <- read_spss(here("data", "Data_set_Effect_modification_1.sav"))
+str(lrg)
+```
+
+Let's curate some variables
+
+```{r}
+lrg %<>%
+  mutate(age_over_40 = as.logical(age_dich),
+         overweight = as.logical(bmi_dich),
+         hypertension = as.logical(bpdias_dich))
+```
+
+#### 4.
+
+> Estimate the risk ratio and confidence interval between overweight and diastolic hypertension. How do you interpret the result?
+fit <- glm(bpdias_dich~bmi_dich, family=binomial(link="log"))
+exp(fit$coef[2]); 
+exp(fit$coef[2] - 1.96*sqrt(diag(vcov(fit))[2]))
+exp(fit$coef[2] + 1.96*sqrt(diag(vcov(fit))[2]))
+
+```{r}
+fit1 <- glm(hypertension ~ overweight, family = binomial(link = "log"), data = lrg)
+exp(coef(fit1))
+exp(confint(fit1))
+```
+
+Looks like a significant effect for overweight
+
+> Instead , we can also write a short function, that we can use later:
+
+Preferably we would use likelihood-profile confidence intervals, 
+but they take time to calculate, so let's use the wald approximation
+
+
+
+```{r}
+extract.RR <- function(fit,q=2){
+		A1 <- exp(fit$coef[q]); 
+		A2 <- exp(fit$coef[q] - 1.96*sqrt(diag(vcov(fit))[q]))
+		A3 <- exp(fit$coef[2] + 1.96*sqrt(diag(vcov(fit))[q]))
+		result <- c(A1,A2,A3)
+		return(result)}
+extract.RR(fit1,2)
+```
+
+#### 5.	
+
+> Estimate the risk ratio and confidence interval between overweight and diastolic hypertension for subjects younger than 40 years and for subjects of 40 years or older. What do you conclude?
+fit <- glm(bpdias_dich~bmi_dich, subset=age_dich==0, family=binomial(link="log"))
+extract.RR(fit,2)
+fit <- glm(bpdias_dich~bmi_dich, subset=age_dich==1, family=binomial(link="log"))
+extract.RR(fit,2)
+
+```{r}
+split(lrg, lrg$age_over_40) %>% 
+  map_df(function(data) glm(hypertension ~ overweight, family = binomial(link = "log"), data = data) %>%
+      extract.RR()) %>% t()
+```
+
+OR is higher in younger patients
+
+#### 6.
+
+> Recode the variables bmi_dich and age_dich into one variable with four categories. Recode young normal weight subjects as 1, older normal weight subjects as 2, young overweight subjects as 3, and older overweight subjects as 4. 
+recode <- factor(ifelse(age_dich==0 & bmi_dich==0,1,
+                      ifelse(age_dich==1 & bmi_dich==0,2,
+                      ifelse(age_dich==0 & bmi_dich==1,3,4))))
+table(recode,age_dich,bmi_dich)
+
+```{r}
+lrg %<>%
+  mutate(group = factor(paste0(overweight, age_over_40),
+                         levels = c("FALSEFALSE", "FALSETRUE", "TRUEFALSE", "TRUETRUE"),
+                         labels = 1:4))
+
+lrg[!duplicated(lrg$group),] %>% select(overweight, age_over_40, group)
+```
+
+#### 7.
+
+> Estimate the risk ratio and confidence interval for diastolic hypertension for older normal weight subjects, young overweight subjects and older overweight subjects with young normal weight subjects as the reference category. Compare your results with the results of question 5. Do you see similarities? Do you see disparities? How could you explain these similarities and disparities?
+fit <- glm(bpdias_dich~factor(recode), family=binomial(link="log"))
+extract.RR(fit,2)	
+extract.RR(fit,3)
+extract.RR(fit,4)
+
+```{r}
+fit2 <- glm(hypertension ~ group, data = lrg, family = binomial(link = "log"))
+rrs <- map(as.list(2:4), function(x) extract.RR(fit2, x))
+rrs
+```
+
+Group 3 (overweight, younger than 40) matches the result from 5
+
+Group 2 (no overweight, older than 40) does not match results from 5, due
+to different reference category
+
+Group 4 is pretty high, so being old and overweight gives a high risk of 
+hypertension
+
+#### 8.
+
+> Estimate from the results of question 7 the measure of multiplicative interaction. Is there interaction on a multiplicative scale?
+
+```{r}
+rrs[[3]][1] / (rrs[[1]][1] * rrs[[2]][1])
+```
+
+Looks like a negative interaction on multiplicative scale
+
+#### 9.
+
+> Calculate from the results of question 7 the measure of additive interaction RERI. Is there interaction on an additive scale?
+
+```{r}
+rrs[[3]][1] - rrs[[1]][1] - rrs[[2]][1] + 1
+```
+
+Positive interaction on additive scale
+
+> 10.	Include bmi_dich, age_dich and the product term of the two in a log-binomial regression model. What are the risk ratios and confidence intervals for BMI, age and their product term? Interpret the results. Explain in words what the risk ratio of the product term means.
+fit <- glm(bpdias_dich~age_dich*bmi_dich, family=binomial(link="log"))
+extract.RR(fit,2)
+extract.RR(fit,3)
+extract.RR(fit,4)
+
+Let's update the function for extracting rate ratios
+
+```{r}
+extract_RR <- function(fit){
+		A1 <- exp(fit$coef); 
+		A2 <- exp(fit$coef - 1.96*sqrt(diag(vcov(fit))))
+		A3 <- exp(fit$coef + 1.96*sqrt(diag(vcov(fit))))
+		return(data.frame(term = names(A1), estimate = A1, ci_low = A2, ci_high = A3))}
+```
+
+
+```{r}
+fit3 <- glm(hypertension~overweight*age_over_40, family = binomial("log"), data = lrg)
+extract_RR(fit3)
+```
+
+The risk ratio of the product means that for age over 40, the relative 
+risk for overweight is this times as great as in the younger group
+
+#### 11.
+
+> Compare the results of question 10 with your results of question 7 and 8. What are the similarities and what are the disparities? Is there significant interaction on a multiplicative scale?
+
+The interaction-term is the same as answer 8, 
+the result for overweight is the same as answer 7
+
+Negative interaction on multiplicative scale, but not significant (ci overlaps 1)
+
+#### 12. 
+
+> Use the excel spreadsheet "delta method" to calculate a confidence interval around your estimate of additive interaction as calculated in question 9. What additional information do you need to calculate the confidence interval? Is there significant interaction on an additive scale? (You can use either the "dummy" sheet or the "product term" sheet) 
+
+Use values from fit
+
+```{r}
+summary(fit3)
+```
+
+We need the covariance matrix
+
+```{r}
+vcov(fit3)
+```
+
+
+RERI: 1.3323, (0.37797, 2.2866)
+AP: 0.2144, (0.0694, 0.3593)
+S: 1.3431, (1.0647, 1.6943)
+
+Significant interaction on additive scale
+
+#### 13.
+
+> What would be your overall conclusion of examining the interaction between age and overweight on diastolic hypertension?
+The joint effect of age and BMI on diastolic blood pressure is more than what would be expected if we sum up the individual effects of age and BMI, but less than if we multiply the individual effects. 
+
+## Exercise 2
+
+> You will investigate the interaction between ACE inhibitor use and the ACE (insertion (I) / deletion (D)) polymorphism on the risk of diabetes on an additive as well as on a multiplicative scale, and you will assess the influence of potential confounders. 
+
+> Introduction 
+This practical is based on the article 'Genetic variation in the renin-angiotensin system modifies the beneficial effects of ACE (angiotensin-converting enzyme) inhibitors on the risk of diabetes mellitus among hypertensives', J Hum Hypertens 2008. The dataset includes data from a case-control study among patients with hypertension. ACE inhibitors, which are drugs indicated for hypertension, are known to protect against developing diabetes. The aim of the study was to assess whether the association between ACE inhibitors and the incidence of diabetes was modified by genetic polymorphisms in the renin-angiotensin system (RAS). The polymorphism ACE (insertion (I) / deletion (D)) was genotypes. Note that this is a case-control study and therefore you should calculate odds ratios using logistic regression. 
+
+> Code book (Data_set_EM_2.sav)
+Variable name	Description	Values
+number	Patient identifier	-
+ace_inhib	ACE-inhibitor use	0 = no
+1 = yes
+poly_ace	Genetic polymorphism	0 = absent
+1 = present
+age	Age (years)	Continuous
+gender	Gender	0 = male
+1 = female
+smoking	Smoking status	0 = no smoking
+1 = smoking
+Phys_act	Physical activity level	0 = low
+1 = high
+BMI	Body mass index (kg/m2)	Continuous
+Obesity	BMI > 30	0 = absent
+1 = present
+hyperchol	hypercholesterolaemia	0 = absent
+1 = present
+Incdiab	Incident diabetes	0 = absent
+1 = present
+
+> 1.	Describe and explore the variables in the dataset. Note that some variables have missing values. How are these missing values coded?
+dat <- data.frame(read.spss("Data_set_EM_2.sav",use.value.labels=FALSE))
+attach(dat)
+summary(dat)
+
+```{r}
+ace <- read_spss(here("data", "Data_set_Effect_modification_2.sav"))
+str(ace)
+```
+
+Missings coded with:
+
+```{r}
+ace %>% map(function(x) attr(x, "labels"))
+```
+
+All missings are coded with 999
+
+The function `read_spss` from `haven` already to care of looking for the 
+codings for missings and assigning them the value `NA`
+
+Time to curate
+
+Binary variables to logicals
+
+```{r}
+ace %<>% 
+  mutate_at(vars(ace_inhib, poly_ace, obesity, incdiab), funs(as.logical)) %>%
+  mutate(gender_male = as.logical(gender))
+```
+
+`labelled` to factors
+
+```{r}
+ace %<>%
+  mutate_at(vars(smoking, phys_act, hyperchol, gender), funs(labelled::to_factor))
+```
+
+Numerics to regular numerics (without the SPSS extra information)
+
+```{r}
+ace %<>%
+  mutate_at(vars(number, age, BMI), funs(as.numeric))
+```
+
+
+Now see what we have
+
+```{r}
+str(ace)
+```
+
+This looks more like a proper R-style data frame
+
+### 2. 
+
+> Is there an association between the use of ACE inhibitors and risk of diabetes?
+
+```{r}
+fit0 <- glm(incdiab ~ ace_inhib, family = binomial("logit"), data = ace)
+extract_RR(fit0)
+```
+
+No statistically significant difference in crude analysis
+
+### 3. 
+
+> Look at interaction by ACE polymorphism. Calculate the individual effects of the use of ACE inhibitors and ACE polymorphism as well as the joint effect of both exposures. Ignore possible confounding for now. What do you notice with respect to the direction of the effects? How do you proceed?
+recode <- factor(ifelse(ace_inhib==0 & poly_ace==0,1,
+                   ifelse(ace_inhib==1 & poly_ace==0,2,
+                   ifelse(ace_inhib==0 & poly_ace==1,3,4))))
+fit <- glm(incdiab~factor(recode), family=binomial)
+extract.RR(fit,2)
+extract.RR(fit,3)
+extract.RR(fit,4)
+
+We can make a function to recode 2 categorical variables into 1
+
+```{r}
+recode_2_factors <- function(data, informative_labels = TRUE,
+                             missing_as_level = FALSE) {
+  require(glue)
+  if (!is.list(data) | is.null(names(data))) stop("please provide a dataframe or named list")
+  if (length(data) > 2) warning("using only first two columns")
+  
+  if (!is.data.frame(data)) data = as.data.frame(data)
+  
+  x_names <- names(data)
+  
+  x <- data[[1]]
+  y <- data[[2]]
+  
+  out <- factor(glue('{x_names[1]}{x}{x_names[2]}{y}'))
+  
+  if (!missing_as_level) out[!complete.cases(data)] <- NA
+  
+  if (informative_labels) return(out)
+  as.numeric(out)
+}
+```
+
+Let's recode
+
+```{r}
+ace %<>%
+  mutate(group = recode_2_factors(list(ace = ace_inhib, poly = poly_ace)))
+ace[1:10,] %>% select(group, ace_inhib, poly_ace)
+```
+
+
+```{r}
+fit1 <- glm(incdiab ~ group, family = binomial("logit"), data = ace)
+extract_RR(fit1)
+```
+
+Both are smaller than 1, only ace inhibitor statistical significance.
+Interaction also smaller than 1
+
+To proceed, we need to recode the category with the lowest OR as the reference 
+category and then repeat the steps 
+
+```{r}
+ace %<>%
+  mutate(group2 = relevel(group, ref = "aceTRUEpolyFALSE")) # set reference category
+fit2 <- glm(incdiab ~ group2, family = binomial("logit"), data = ace)
+extract_RR(fit2)
+
+```
+
+#### 4.
+
+> Is there significant interaction on a multiplicative scale? Do not answer this question with only yes or no, but also quantify the interaction. (Drawing a graph with the individual and joint effects may be useful)
+
+```{r}
+ors <- extract_RR(fit2)
+ors[3,2] / (ors[4,2]*ors[2,2])
+```
+
+Looks like a negative multiplicative interaction, though not significant, 
+judging on the confidence intervall of the interaction term
+
+```{r}
+ors[-1,] %>%
+  ggplot() + 
+  geom_errorbarh(aes(x = estimate, xmin = ci_low, xmax = ci_high, y = term)) + 
+  lims(x = c(0, 3))
+```
+
+
+#### 5. 
+
+> Is there significant interaction on an additive scale? Do not answer this question with only yes or no, but also quantify the interaction.
+
+ANSWER:
+Calculated by hand: 1.28-1.23-1.43+1=-0.38.
+RERI is -0.38 (-1.23; 0.49), so negative interaction on additive scale but not significant because 0 is in the confidence interval. The combined effect is 0.38 less than the sum of the individual effects. 
+ 
+6.	Does adjustment for potential confounders change the findings of question 4 and 5? (Assume that all measured covariables are potential confounders)
+
+ANSWER:
+Multiplicative:
+Without covariables: OR product term is 0.81 (0.39; 1.67).
+With covariables: OR product term is 0.81 (0.38; 1.75).
+No influence of confounding.
+
+Additive
+Without covariables: RERI is -0.25 (-1.14; 0.63).
+With covariables: RERI is -0.26 (-1.12; 0.60).
+No influence of confounding.
+
+
+
+
+## Session information
+
+<!-- Insert the session information into the document -->
+```{r session-info}
+```
