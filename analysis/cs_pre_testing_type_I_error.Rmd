@@ -27,14 +27,14 @@ knitr::read_chunk("chunks.R")
 <!-- Add your analysis here -->
 
 ```{r}
-knitr::opts_chunk$set(echo = FALSE, warning = FALSE)
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE)
 library(epistats)
 library(magrittr)
 library(dplyr)
 library(here)
 ```
 
-```{r}
+```{r, echo = F}
 require(RefManageR)
 refs <- RefManageR::ReadBib(here("refs", "tierror.bib"))
 
@@ -45,11 +45,11 @@ BibOptions(check.entries = FALSE, style = "markdown", cite.style = "authoryear",
 
 # Introduction
 
-This analysis is based on the paper by Rasch et al. on the value of pre-testing
+This is a re-analysis of the paper by Rasch et al. on the value of pre-testing
 assumptions of two-sample location tests (T-test, Wilcoxon-Mann-Whitney U test,
  Welch's-T-test) `r AutoCite(refs, "Rasch2011-fc")`.
 
-In the paper they test two ways of working:
+In the paper they test two strategies for statistical testing:
 
 1. pre-test assumptions of preferred tests, namely Kolmogorov-Smirnov test for
 normality, and Levene's test for homogeneity of variances
@@ -57,7 +57,7 @@ normality, and Levene's test for homogeneity of variances
 
 In a graph:
 
-```{r}
+```{r, echo=F}
 require(DiagrammeR)
 DiagrammeR(
 'digraph no {
@@ -110,9 +110,14 @@ DiagrammeR(
 
 ```
 
+Remember that the Welch test is a T-test without assuming equal variance (
+this is actually the default T-test in some statistical packages like R
+).
 In their results, they reported the actual type I error rate of the 
 differents **tests** along 100.000 simulations over a set of continuous 
 probability density functions, parameterized with 4 [moments](https://en.wikipedia.org/wiki/Moment_(mathematics)#Significance_of_the_moments).
+The conclude that always using the Welch T-test has the best type-I error rate,
+and good enough power.
 
 Howerever, we can argue that what they actually should test is the type I 
 error rate of the total strategy of pre-testing. This requires a compositional
@@ -129,9 +134,16 @@ into R
 
 ```{r}
 require(readxl)
-tab2_1 <- readxl::read_excel(here("data", "rasch_table2.xlsx"), sheet = 2)
+tab2_1 <- readxl::read_excel(here("data", "rasch_table2.xlsx"), sheet = "table2_1")
 head(tab2_1)
-tab2 <- tab2_1
+tab2_1 %<>% mutate(delta = 0)
+tab2_2 <- readxl::read_excel(here("data", "rasch_table2.xlsx"), sheet = "table2_2")
+tab2_3 <- readxl::read_excel(here("data", "rasch_table2.xlsx"), sheet = "table2_3")
+tab2_4 <- readxl::read_excel(here("data", "rasch_table2.xlsx"), sheet = "table2_4")
+tab2_5 <- readxl::read_excel(here("data", "rasch_table2.xlsx"), sheet = "table2_5")
+
+tab2 <- data.table::rbindlist(list(tab2_1, tab2_2, tab2_3, tab2_4, tab2_5), 
+                              idcol = "sheet", fill = T, use.names = T)
 ```
 
 Fill consecutive rows of distribution type and variance ratio with last 
@@ -139,7 +151,11 @@ non-missing values
 
 ```{r}
 tab2 %<>%
-  mutate_at(vars(distribution_type, var_ratio), funs(fill_recursive))
+  mutate_at(vars(distribution_type, var_ratio, delta), funs(fill_recursive)) %>%
+  mutate(sigma2 = ifelse(delta == 0,1,delta),
+         distribution_type = factor(distribution_type, 
+                                    levels = c("1", "2", "3", "4", "5", "1_5")))
+
 head(tab2)
 ```
 
@@ -158,15 +174,33 @@ head(tab2)
 ```
 
 Now calculate frequency of using T test as 100% minus W and U, and 
-check they add up to 100%
+check they add up to 100%. For some rows the value for the T-test using 
+pre-testing is missing, since it did not occur in that situation. 
+Fill these with zeros to make sure they won't turn up as missing values.
 
 ```{r}
+tab2$pre_t[is.na(tab2$pre_t)] <- 0
 tab2 %<>%
   mutate(pre_t_freq = 100 - (pre_w_freq + pre_u_freq))
 tab2 %>%
   transmute(pre_t_freq + pre_w_freq + pre_u_freq) %>%
   table()
 ```
+
+Check if there are any more missing values
+
+```{r}
+nna(tab2)
+```
+
+
+Export curated table for later reference.
+
+```{r}
+write.table(tab2, file = here("data", "rasch_table2_curated.txt"), 
+            sep = "\t")
+```
+
 
 Calculate weighted type I error rate for strategy 1 with pre-testing
 
@@ -175,59 +209,126 @@ tab2 %<>%
   mutate(pre_test = 1e-2*(pre_t*pre_t_freq + pre_w*pre_w_freq + pre_u*pre_u_freq))
 ```
 
-Look at improved results table:
+Look at the augmented results table. This table shows the type-I error rates 
+for the different strategies (pre-testing), and using either one of the
+three tests everytime (T-test, Welch test, Mann-Whitney-U-test)
 
 ```{r, results = 'asis'}
 knitr::kable(
-  tab2 %>% select(distribution_type, var_ratio, n1, n2, pre_test, t, w, u)
+  tab2 %>% 
+    mutate(pre_test = myround(pre_test, 2)) %>%
+    select(distribution_type, var_ratio, n1, n2, pre_test, t, w, u)
 )
 ```
 
-Plot results
+### Plots
+
+```{r, echo = F}
+knitr::opts_chunk$set(echo = F)
+```
+
+
+Plot results for the simulations where the null-hypothesis is true
 
 ```{r}
 require(ggplot2)
 tab2 %>%
+  filter(delta == 0) %>%
   mutate(id = 1:n()) %>%
   data.table::melt(id.vars = "id", measure.vars = c("t", "w", "u", "pre_test"),
                    variable.name = "test", value.name = "type_I_error_rate") %>%
   ggplot(aes(x = id, y = type_I_error_rate, col = test))  +
   geom_line() + 
-  lims(y = c(0, 20))
+  lims(y = c(0, 80))
 ```
 
-It looks like the pre-testing is doeing better than the t-test and u-test on 
-controlling the type I error rate.
+It looks like the pre-testing is doing better than the t-test and u-test on 
+controlling the type I error rate, except in some situations when both 
+the pre-testing and t-test go wrong considerably.
 
-Focus on Welch test (the recommended according to `r AutoCite(refs)`) and pre-testing
+Let's focus on the Welch test (the recommended according to `r AutoCite(refs)`) and pre-testing
 
 ```{r}
 require(ggplot2)
 tab2 %>%
+  filter(delta == 0) %>%
   mutate(id = 1:n()) %>%
   data.table::melt(id.vars = "id", measure.vars = c("w", "pre_test"),
                    variable.name = "test", value.name = "type_I_error_rate") %>%
   ggplot(aes(x = id, y = type_I_error_rate, col = test))  +
   geom_line() + 
-  lims(y = c(0, 20))
+  lims(y = c(0, 80)) + 
+  ggtitle("Type I error rates when null-hypothesis is true")
+```
 
+
+
+```{r}
+require(ggplot2)
+tab2 %>%
+  filter(delta == 0) %>%
+  group_by(distribution_type) %>% mutate(id = 1:n()) %>% ungroup() %>%
+  data.table::melt(id.vars = c("id", "distribution_type"), measure.vars = c("w", "pre_test"),
+                   variable.name = "test", value.name = "type_I_error_rate") %>% 
+  ggplot(aes(x = id, y = type_I_error_rate, col = test))  +
+  geom_line() + 
+  facet_wrap(~distribution_type) + 
+  lims(y = c(0, 80)) + 
+  ggtitle("Type I error rates when null-hypothesis is true", "By distrubution type")
 ```
 
 It looks like the pre-testing strategy has a somewhat higher type-I error rate 
-in some situations. However, the Welch test seems what conservative in some 
-situations too.
+in some situations.
 
 Let's look at the most extreme situations.
 
 ```{r}
 tab2 %>%
+  filter(delta == 0) %>%
   mutate(diff_pre_w = pre_test - w) %>%
   arrange(desc(diff_pre_w)) %>%
-  select(distribution_type, var_ratio, n1, n2, w, pre_test, diff_pre_w) 
+  select(distribution_type, var_ratio, n1, n2, delta, w, pre_test, diff_pre_w) %>%
+  filter(row_number() <= 20)
 ```
 
-It seems like the pre-testing scheme is doing worse when variances differ 
-and the group with highest variance is the greatest.
+It seems like the pre-testing scheme is doing worse when at least one of the
+groups is of distribution type 5 (high skewness and kurtosis), 
+and when variances differ 
+and the group with highest variance has the lowest sample size.
+
+#### Power
+
+Let's also look at situations when the null-hypthesis is false
+
+```{r}
+require(ggplot2)
+tab2 %>%
+  group_by(distribution_type, delta, var_ratio) %>% mutate(id = 1:n()) %>% ungroup() %>%
+  data.table::melt(id.vars = c("id", "distribution_type", "delta", "var_ratio"), 
+                   measure.vars = c("w", "pre_test"),
+                   variable.name = "test", value.name = "type_I_error_rate") %>% 
+  mutate(distribution_type = factor(distribution_type, 
+                            labels = paste0("dist ", levels(distribution_type))),
+         var_ratio = factor(var_ratio, levels = 1:2, labels = c("s1=s2", "s1!=s2")),
+         delta = factor(delta, levels = c(0, 1, 5), 
+                        labels = c("delta = 0", "delta = 1", "delta = 5"))) %>%
+  ggplot(aes(x = id, y = type_I_error_rate, col = test))  +
+  geom_line() + 
+  facet_grid(delta~distribution_type+var_ratio) + 
+  lims(y = c(0, 100)) + 
+  ggtitle("Type I error rates when null-hypothesis is true or false", 
+          "By distrubution type")
+```
+
+The power does not seem to differ too much. 
+
+# Conlcusion
+
+After re-analyzing the results from Rasch et al. and calculating type-I error 
+rates and power for the strategy of pre-testing, it seems that the 
+conclusion of the original paper stays unchanged: performing the Welch 
+test has the best type-I error rate for most situations, and a comparable 
+power.
 
 # References
 

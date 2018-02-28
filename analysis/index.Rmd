@@ -1,5 +1,5 @@
 ---
-title: "Home"
+title: "Thoughts and assingments in epidemiology and statistics"
 output:
   html_document:
     toc: false
@@ -8,9 +8,16 @@ output:
 This website is made to share the assignments I worked out for 
 statistic courses in the Epidemiology Graduate Program of the Julius Center, Utrecht, the Netherlands
 
+# Blog posts
+
+[pre-testing and type-I error rates: re-analysis of Rasch](cs_pre_testing_type_I_error.html)
+
+[the circle dance: strategy for positioning at equidistance in a group](circle_dance.html)
+
+# Worked-out assignments
+
 ## Classical Methods in Data Analysis
 
-### Assignments
 [assignments week 1](c_assignments_week1.html)
 
 [assignments week 2](c_assignments_week2.html)
@@ -21,7 +28,6 @@ statistic courses in the Epidemiology Graduate Program of the Julius Center, Utr
 
 ## Modern Methods in Data Analysis
 
-### Assignments
 [assignments week 1](assignments_week1.html)
 
 [assignments week 2](assignments_week2.html)
@@ -36,9 +42,10 @@ statistic courses in the Epidemiology Graduate Program of the Julius Center, Utr
 
 [assignments Advanced methods in causal research](acr_assignments.html)
 
-### Assignments
+# Notes and commmon errors
 
-## Notes
+**working directory**
+
 Due to how this website was made, the R-code 'thinks' it is in the `analysis` 
 subdirectory, while the data sits in the `data` directory, which is found from 
 the parent directory. Working with Rmarkdown and keeping track of the 
@@ -52,11 +59,9 @@ which can be installed with `devtools::install_github("vanAmsterdam/epistats")`
 If `devtools` is not yet installed, first run `install.packages("devtools")`
 
 
-### Function from a package
+**packages and functions**
 
 Sometimes different packages provide functions with the same names. 
-For example, `read_spss` exists in both `foreign` and `heaven`. 
-
 To make sure you use the intended function 
 (and to circumvent using `library(package)`), use `<package>::<function>` 
 to use `<function>` from package `<package>`, like `epistats::fromParentdir`
