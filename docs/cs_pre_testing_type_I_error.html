@@ -322,7 +322,7 @@ shared across the workflowr files. -->
 <p><strong>Last updated:</strong> 2018-02-28</p>
 <!-- Insert the code version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
-<p><strong>Code version:</strong> 9f3aa07</p>
+<p><strong>Code version:</strong> 5ffa68c</p>
 <!-- Add your analysis here -->
 <pre class="r"><code>knitr::opts_chunk$set(echo = TRUE, warning = FALSE)
 library(epistats)
@@ -343,10 +343,10 @@ library(here)</code></pre>
 <p>Remember that the Welch test is a T-test without assuming equal variance ( this is actually the default T-test in some statistical packages like R ). In their results, they reported the actual type I error rate of the differents <strong>tests</strong> along 100.000 simulations over a set of continuous probability density functions, parameterized with 4 <a href="https://en.wikipedia.org/wiki/Moment_(mathematics)#Significance_of_the_moments">moments</a>. The conclude that always using the Welch T-test has the best type-I error rate, and good enough power.</p>
 <p>Howerever, we can argue that what they actually should test is the type I error rate of the total strategy of pre-testing. This requires a compositional type I error rate, weighted by the times a certain test was used.</p>
 </div>
-<div id="calculate-strategy-type-i-error-rate" class="section level1">
-<h1>Calculate strategy type I error rate</h1>
-<div id="get-data" class="section level2">
-<h2>Get data</h2>
+<div id="import-and-curate-data" class="section level1">
+<h1>Import and curate data</h1>
+<div id="get-data-into-r" class="section level2">
+<h2>Get data into R</h2>
 <p>We grabbed the data from their paper pdf with an online <a href="https://www.pdftoexcel.com/">pdf to excel tool</a>. After some manual deletion of rows and columns, the data was ready for import into R</p>
 <pre class="r"><code>require(readxl)
 tab2_1 &lt;- readxl::read_excel(here(&quot;data&quot;, &quot;rasch_table2.xlsx&quot;), sheet = &quot;table2_1&quot;)
@@ -438,6 +438,10 @@ tab2 %&gt;%
 <p>Export curated table for later reference.</p>
 <pre class="r"><code>write.table(tab2, file = here(&quot;data&quot;, &quot;rasch_table2_curated.txt&quot;), 
             sep = &quot;\t&quot;)</code></pre>
+</div>
+</div>
+<div id="re-analyse-results" class="section level1">
+<h1>Re-analyse results</h1>
 <p>Calculate weighted type I error rate for strategy 1 with pre-testing</p>
 <pre class="r"><code>tab2 %&lt;&gt;%
   mutate(pre_test = 1e-2*(pre_t*pre_t_freq + pre_w*pre_w_freq + pre_u*pre_u_freq))</code></pre>
@@ -2263,8 +2267,8 @@ tab2 %&gt;%
 </tr>
 </tbody>
 </table>
-<div id="plots" class="section level3">
-<h3>Plots</h3>
+<div id="plots" class="section level2">
+<h2>Plots</h2>
 <p>Plot results for the simulations where the null-hypothesis is true</p>
 <p><img src="figure/cs_pre_testing_type_I_error.Rmd/unnamed-chunk-13-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>It looks like the pre-testing is doing better than the t-test and u-test on controlling the type I error rate, except in some situations when both the pre-testing and t-test go wrong considerably.</p>
@@ -2295,17 +2299,16 @@ tab2 %&gt;%
 19                 2         2 30  30     0  4.17  5.339500   1.169500
 20                 3         1 10  30     0  3.90  4.662806   0.762806</code></pre>
 <p>It seems like the pre-testing scheme is doing worse when at least one of the groups is of distribution type 5 (high skewness and kurtosis), and when variances differ and the group with highest variance has the lowest sample size.</p>
-<div id="power" class="section level4">
-<h4>Power</h4>
+<div id="power" class="section level3">
+<h3>Power</h3>
 <p>Let’s also look at situations when the null-hypthesis is false</p>
 <p><img src="figure/cs_pre_testing_type_I_error.Rmd/unnamed-chunk-17-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>The power does not seem to differ too much.</p>
 </div>
 </div>
 </div>
-</div>
-<div id="conlcusion" class="section level1">
-<h1>Conlcusion</h1>
+<div id="conclusion" class="section level1">
+<h1>Conclusion</h1>
 <p>After re-analyzing the results from Rasch et al. and calculating type-I error rates and power for the strategy of pre-testing, it seems that the conclusion of the original paper stays unchanged: performing the Welch test has the best type-I error rate for most situations, and a comparable power.</p>
 </div>
 <div id="references" class="section level1">
