@@ -322,7 +322,7 @@ shared across the workflowr files. -->
 <p><strong>Last updated:</strong> 2018-02-28</p>
 <!-- Insert the code version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
-<p><strong>Code version:</strong> 5ffa68c</p>
+<p><strong>Code version:</strong> 88ed7e8</p>
 <!-- Add your analysis here -->
 <pre class="r"><code>knitr::opts_chunk$set(echo = TRUE, warning = FALSE)
 library(epistats)
@@ -339,7 +339,7 @@ library(here)</code></pre>
 </ol>
 <p>In a graph:</p>
 <div id="htmlwidget-b8e0c2e2742a5382bafd" style="width:672px;height:480px;" class="grViz html-widget"></div>
-<script type="application/json" data-for="htmlwidget-b8e0c2e2742a5382bafd">{"x":{"diagram":"digraph no {\n  graph [layout = dot, rankdir = LR, overlap = true, fontsize = 10]\n\n  node [shape = circle]\n  sample [label = \"Sample of pairs\"];\n\n  node [shape = rectangle]\n  ks_test [label = \"Kolmogoroff-Smirnov\"]\n  levene [label =\"Levene\"]\n\n  node [shape = rectangle]\n  normal\n  nonnormal [label = \"non normal\"]\n  homo [label = \"homogeneous variances\"]\n  hetero [label = \"non-homogeneous variances\"]\n\n  node [shape = rectangle]\n  WU [label = \"Wilcoxon-U\"];\n  ttest [label = \"t-test\"]\n  Welch [label = \"Welch\"]\n  alfaU [label = \"Type I \n Wilcoxon-U\"]\n  alfaT [label = \"Type I \n t-test\"]\n  alfaW [label = \"Type I \n Welch\"]\n\n  sample -> ks_test\n  ks_test -> normal; ks_test ->nonnormal\n  nonnormal -> WU\n  normal -> levene\n  levene -> homo\n  levene -> hetero\n  homo -> ttest\n  hetero -> Welch\n\n  WU -> alfaU\n  ttest -> alfaT\n  Welch -> alfaW\n\n  subgraph{\n    rank = same; WU, ttest\n\n  }\n  subgraph {\n    rank = same; normal, nonnormal\n  }\n\n}","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script>
+<script type="application/json" data-for="htmlwidget-b8e0c2e2742a5382bafd">{"x":{"diagram":"digraph no {\n  graph [layout = dot, rankdir = LR, overlap = true, fontsize = 10]\n\n  node [shape = circle]\n  sample [label = \"Sample of pairs\"];\n\n  node [shape = rectangle]\n  ks_test [label = \"Kolmogoroff-Smirnov\"]\n  levene [label =\"Levene\"]\n\n  node [shape = rectangle]\n  normal\n  nonnormal [label = \"non normal\"]\n  homo [label = \"homogeneous variances\"]\n  hetero [label = \"non-homogeneous variances\"]\n\n  node [shape = rectangle]\n  WU [label = \"Wilcoxon-U\"];\n  ttest [label = \"t-test\"]\n  Welch [label = \"Welch\"]\n\n  sample -> ks_test\n  ks_test -> normal; ks_test ->nonnormal\n  nonnormal -> WU\n  normal -> levene\n  levene -> homo\n  levene -> hetero\n  homo -> ttest\n  hetero -> Welch\n\n  subgraph{\n    rank = same; WU, ttest\n\n  }\n  subgraph {\n    rank = same; normal, nonnormal\n  }\n\n}","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script>
 <p>Remember that the Welch test is a T-test without assuming equal variance ( this is actually the default T-test in some statistical packages like R ). In their results, they reported the actual type I error rate of the differents <strong>tests</strong> along 100.000 simulations over a set of continuous probability density functions, parameterized with 4 <a href="https://en.wikipedia.org/wiki/Moment_(mathematics)#Significance_of_the_moments">moments</a>. The conclude that always using the Welch T-test has the best type-I error rate, and good enough power.</p>
 <p>Howerever, we can argue that what they actually should test is the type I error rate of the total strategy of pre-testing. This requires a compositional type I error rate, weighted by the times a certain test was used.</p>
 </div>
@@ -2275,7 +2275,7 @@ tab2 %&gt;%
 <p>Let’s focus on the Welch test (the recommended according to (<a href="#bib-Rasch2011-fc">Rasch, Kubinger, and Moder, 2011</a>)) and pre-testing</p>
 <p><img src="figure/cs_pre_testing_type_I_error.Rmd/unnamed-chunk-14-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p><img src="figure/cs_pre_testing_type_I_error.Rmd/unnamed-chunk-15-1.png" width="672" style="display: block; margin: auto;" /></p>
-<p>It looks like the pre-testing strategy has a somewhat higher type-I error rate in some situations.</p>
+<p>It looks like the pre-testing strategy has a much higher type-I error rate in some situations.</p>
 <p>Let’s look at the most extreme situations.</p>
 <pre><code>   distribution_type var_ratio n1  n2 delta     w  pre_test diff_pre_w
 1                  5         2 30 100     0  4.63 69.300000  64.670000
