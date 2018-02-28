@@ -11,7 +11,7 @@
 
 
 
-<title>Home</title>
+<title>Thoughts and assingments in epidemiology and statistics</title>
 
 <script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -204,29 +204,30 @@ $(document).ready(function () {
 
 
 
-<h1 class="title toc-ignore">Home</h1>
+<h1 class="title toc-ignore">Thoughts and assingments in epidemiology and statistics</h1>
 
 </div>
 
 
 <p>This website is made to share the assignments I worked out for statistic courses in the Epidemiology Graduate Program of the Julius Center, Utrecht, the Netherlands</p>
+<div id="blog-posts" class="section level1">
+<h1>Blog posts</h1>
+<p><a href="cs_pre_testing_type_I_error.html">pre-testing and type-I error rates: re-analysis of Rasch</a></p>
+<p><a href="circle_dance.html">the circle dance: strategy for positioning at equidistance in a group</a></p>
+</div>
+<div id="worked-out-assignments" class="section level1">
+<h1>Worked-out assignments</h1>
 <div id="classical-methods-in-data-analysis" class="section level2">
 <h2>Classical Methods in Data Analysis</h2>
-<div id="assignments" class="section level3">
-<h3>Assignments</h3>
 <p><a href="c_assignments_week1.html">assignments week 1</a></p>
 <p><a href="c_assignments_week2.html">assignments week 2</a></p>
 <p><a href="c_assignments_week3.html">assignments week 3</a></p>
 <p><a href="c_case_studies.html">case studies (not finished)</a></p>
 </div>
-</div>
 <div id="modern-methods-in-data-analysis" class="section level2">
 <h2>Modern Methods in Data Analysis</h2>
-<div id="assignments-1" class="section level3">
-<h3>Assignments</h3>
 <p><a href="assignments_week1.html">assignments week 1</a></p>
 <p><a href="assignments_week2.html">assignments week 2</a></p>
-</div>
 </div>
 <div id="computational-statistics" class="section level2">
 <h2>Computational Statistics</h2>
@@ -236,20 +237,16 @@ $(document).ready(function () {
 <div id="advanced-methods-in-causal-research" class="section level2">
 <h2>Advanced methods in causal research</h2>
 <p><a href="acr_assignments.html">assignments Advanced methods in causal research</a></p>
-<div id="assignments-2" class="section level3">
-<h3>Assignments</h3>
 </div>
 </div>
-<div id="notes" class="section level2">
-<h2>Notes</h2>
+<div id="notes-and-commmon-errors" class="section level1">
+<h1>Notes and commmon errors</h1>
+<p><strong>working directory</strong></p>
 <p>Due to how this website was made, the R-code ‘thinks’ it is in the <code>analysis</code> subdirectory, while the data sits in the <code>data</code> directory, which is found from the parent directory. Working with Rmarkdown and keeping track of the directory is not too easy at all. After modern methods, I switched to using the package <code>here</code>, which is specifically designed to target such problems.</p>
 <p>Before that I used the function <code>fromParentDir</code>, which allows you to call files from the parent directory. The function can be found in the package <code>epistats</code>, which can be installed with <code>devtools::install_github(&quot;vanAmsterdam/epistats&quot;)</code></p>
 <p>If <code>devtools</code> is not yet installed, first run <code>install.packages(&quot;devtools&quot;)</code></p>
-<div id="function-from-a-package" class="section level3">
-<h3>Function from a package</h3>
-<p>Sometimes different packages provide functions with the same names. For example, <code>read_spss</code> exists in both <code>foreign</code> and <code>heaven</code>.</p>
-<p>To make sure you use the intended function (and to circumvent using <code>library(package)</code>), use <code>&lt;package&gt;::&lt;function&gt;</code> to use <code>&lt;function&gt;</code> from package <code>&lt;package&gt;</code>, like <code>epistats::fromParentdir</code></p>
-</div>
+<p><strong>packages and functions</strong></p>
+<p>Sometimes different packages provide functions with the same names. To make sure you use the intended function (and to circumvent using <code>library(package)</code>), use <code>&lt;package&gt;::&lt;function&gt;</code> to use <code>&lt;function&gt;</code> from package <code>&lt;package&gt;</code>, like <code>epistats::fromParentdir</code></p>
 </div>
 
 <hr>

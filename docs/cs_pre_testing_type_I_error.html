@@ -322,17 +322,17 @@ shared across the workflowr files. -->
 <p><strong>Last updated:</strong> 2018-02-28</p>
 <!-- Insert the code version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
-<p><strong>Code version:</strong> 66681b1</p>
+<p><strong>Code version:</strong> 9f3aa07</p>
 <!-- Add your analysis here -->
-<pre class="r"><code>knitr::opts_chunk$set(echo = FALSE, warning = FALSE)
+<pre class="r"><code>knitr::opts_chunk$set(echo = TRUE, warning = FALSE)
 library(epistats)
 library(magrittr)
 library(dplyr)
 library(here)</code></pre>
 <div id="introduction" class="section level1">
 <h1>Introduction</h1>
-<p>This analysis is based on the paper by Rasch et al. on the value of pre-testing assumptions of two-sample location tests (T-test, Wilcoxon-Mann-Whitney U test, Welch’s-T-test) <a name=cite-Rasch2011-fc></a>(<a href="#bib-Rasch2011-fc">Rasch, Kubinger, and Moder, 2011</a>).</p>
-<p>In the paper they test two ways of working:</p>
+<p>This is a re-analysis of the paper by Rasch et al. on the value of pre-testing assumptions of two-sample location tests (T-test, Wilcoxon-Mann-Whitney U test, Welch’s-T-test) <a name=cite-Rasch2011-fc></a>(<a href="#bib-Rasch2011-fc">Rasch, Kubinger, and Moder, 2011</a>).</p>
+<p>In the paper they test two strategies for statistical testing:</p>
 <ol style="list-style-type: decimal">
 <li>pre-test assumptions of preferred tests, namely Kolmogorov-Smirnov test for normality, and Levene’s test for homogeneity of variances</li>
 <li>Always use a single test (T, Welch, or U)</li>
@@ -340,7 +340,7 @@ library(here)</code></pre>
 <p>In a graph:</p>
 <div id="htmlwidget-b8e0c2e2742a5382bafd" style="width:672px;height:480px;" class="grViz html-widget"></div>
 <script type="application/json" data-for="htmlwidget-b8e0c2e2742a5382bafd">{"x":{"diagram":"digraph no {\n  graph [layout = dot, rankdir = LR, overlap = true, fontsize = 10]\n\n  node [shape = circle]\n  sample [label = \"Sample of pairs\"];\n\n  node [shape = rectangle]\n  ks_test [label = \"Kolmogoroff-Smirnov\"]\n  levene [label =\"Levene\"]\n\n  node [shape = rectangle]\n  normal\n  nonnormal [label = \"non normal\"]\n  homo [label = \"homogeneous variances\"]\n  hetero [label = \"non-homogeneous variances\"]\n\n  node [shape = rectangle]\n  WU [label = \"Wilcoxon-U\"];\n  ttest [label = \"t-test\"]\n  Welch [label = \"Welch\"]\n  alfaU [label = \"Type I \n Wilcoxon-U\"]\n  alfaT [label = \"Type I \n t-test\"]\n  alfaW [label = \"Type I \n Welch\"]\n\n  sample -> ks_test\n  ks_test -> normal; ks_test ->nonnormal\n  nonnormal -> WU\n  normal -> levene\n  levene -> homo\n  levene -> hetero\n  homo -> ttest\n  hetero -> Welch\n\n  WU -> alfaU\n  ttest -> alfaT\n  Welch -> alfaW\n\n  subgraph{\n    rank = same; WU, ttest\n\n  }\n  subgraph {\n    rank = same; normal, nonnormal\n  }\n\n}","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script>
-<p>In their results, they reported the actual type I error rate of the differents <strong>tests</strong> along 100.000 simulations over a set of continuous probability density functions, parameterized with 4 <a href="https://en.wikipedia.org/wiki/Moment_(mathematics)#Significance_of_the_moments">moments</a>.</p>
+<p>Remember that the Welch test is a T-test without assuming equal variance ( this is actually the default T-test in some statistical packages like R ). In their results, they reported the actual type I error rate of the differents <strong>tests</strong> along 100.000 simulations over a set of continuous probability density functions, parameterized with 4 <a href="https://en.wikipedia.org/wiki/Moment_(mathematics)#Significance_of_the_moments">moments</a>. The conclude that always using the Welch T-test has the best type-I error rate, and good enough power.</p>
 <p>Howerever, we can argue that what they actually should test is the type I error rate of the total strategy of pre-testing. This requires a compositional type I error rate, weighted by the times a certain test was used.</p>
 </div>
 <div id="calculate-strategy-type-i-error-rate" class="section level1">
@@ -348,6 +348,9 @@ library(here)</code></pre>
 <div id="get-data" class="section level2">
 <h2>Get data</h2>
 <p>We grabbed the data from their paper pdf with an online <a href="https://www.pdftoexcel.com/">pdf to excel tool</a>. After some manual deletion of rows and columns, the data was ready for import into R</p>
+<pre class="r"><code>require(readxl)
+tab2_1 &lt;- readxl::read_excel(here(&quot;data&quot;, &quot;rasch_table2.xlsx&quot;), sheet = &quot;table2_1&quot;)
+head(tab2_1)</code></pre>
 <pre><code># A tibble: 6 x 12
   distribution_type var_ratio    n1    n2 pre_t pre_w pre_w_freq pre_u
               &lt;dbl&gt;     &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt;      &lt;dbl&gt;
@@ -358,42 +361,100 @@ library(here)</code></pre>
 5             NA        NA     30.0 100    4.86  5.00 (4.80)      9.09
 6             NA         2.00  10.0  10.0  6.08  3.33 (32.99)     0   
 # ... with 4 more variables: pre_u_freq &lt;chr&gt;, t &lt;dbl&gt;, w &lt;dbl&gt;, u &lt;dbl&gt;</code></pre>
+<pre class="r"><code>tab2_1 %&lt;&gt;% mutate(delta = 0)
+tab2_2 &lt;- readxl::read_excel(here(&quot;data&quot;, &quot;rasch_table2.xlsx&quot;), sheet = &quot;table2_2&quot;)
+tab2_3 &lt;- readxl::read_excel(here(&quot;data&quot;, &quot;rasch_table2.xlsx&quot;), sheet = &quot;table2_3&quot;)
+tab2_4 &lt;- readxl::read_excel(here(&quot;data&quot;, &quot;rasch_table2.xlsx&quot;), sheet = &quot;table2_4&quot;)
+tab2_5 &lt;- readxl::read_excel(here(&quot;data&quot;, &quot;rasch_table2.xlsx&quot;), sheet = &quot;table2_5&quot;)
+
+tab2 &lt;- data.table::rbindlist(list(tab2_1, tab2_2, tab2_3, tab2_4, tab2_5), 
+                              idcol = &quot;sheet&quot;, fill = T, use.names = T)</code></pre>
 <p>Fill consecutive rows of distribution type and variance ratio with last non-missing values</p>
-<pre><code># A tibble: 6 x 12
-  distribution_type var_ratio    n1    n2 pre_t pre_w pre_w_freq pre_u
-              &lt;dbl&gt;     &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt;      &lt;dbl&gt;
-1              1.00      1.00  10.0  10.0  4.95  4.55 4.84        0   
-2              1.00      1.00  30.0  30.0  4.97  4.82 (4.98)     11.1 
-3              1.00      1.00  10.0  30.0  5.00  4.87 (4.31)      0   
-4              1.00      1.00  30.0  10.0  4.97  5.09 (4.32)      0   
-5              1.00      1.00  30.0 100    4.86  5.00 (4.80)      9.09
-6              1.00      2.00  10.0  10.0  6.08  3.33 (32.99)     0   
-# ... with 4 more variables: pre_u_freq &lt;chr&gt;, t &lt;dbl&gt;, w &lt;dbl&gt;, u &lt;dbl&gt;</code></pre>
+<pre class="r"><code>tab2 %&lt;&gt;%
+  mutate_at(vars(distribution_type, var_ratio, delta), funs(fill_recursive)) %&gt;%
+  mutate(sigma2 = ifelse(delta == 0,1,delta),
+         distribution_type = factor(distribution_type, 
+                                    levels = c(&quot;1&quot;, &quot;2&quot;, &quot;3&quot;, &quot;4&quot;, &quot;5&quot;, &quot;1_5&quot;)))
+
+head(tab2)</code></pre>
+<pre><code>  sheet distribution_type var_ratio n1  n2 pre_t pre_w pre_w_freq pre_u
+1     1                 1         1 10  10  4.95  4.55       4.84  0.00
+2     1                 1         1 30  30  4.97  4.82     (4.98) 11.11
+3     1                 1         1 10  30  5.00  4.87     (4.31)  0.00
+4     1                 1         1 30  10  4.97  5.09     (4.32)  0.00
+5     1                 1         1 30 100  4.86  5.00     (4.80)  9.09
+6     1                 1         2 10  10  6.08  3.33    (32.99)  0.00
+  pre_u_freq    t    w    u delta sigma2
+1       0.02 4.96 4.82 5.21     0      1
+2     (0.09) 4.96 4.95 4.92     0      1
+3     (0.06) 5.01 5.05 4.87     0      1
+4     (0.06) 4.96 5.15 5.00     0      1
+5     (0.11) 4.84 4.91 4.82     0      1
+6     (0.03) 5.38 4.93 6.06     0      1</code></pre>
 <p>Lose the parentheses in some columns</p>
-<pre><code># A tibble: 6 x 12
-  distribution_type var_ratio    n1    n2 pre_t pre_w pre_w_freq pre_u
-              &lt;dbl&gt;     &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;      &lt;dbl&gt; &lt;dbl&gt;
-1              1.00      1.00  10.0  10.0  4.95  4.55       4.84  0   
-2              1.00      1.00  30.0  30.0  4.97  4.82       4.98 11.1 
-3              1.00      1.00  10.0  30.0  5.00  4.87       4.31  0   
-4              1.00      1.00  30.0  10.0  4.97  5.09       4.32  0   
-5              1.00      1.00  30.0 100    4.86  5.00       4.80  9.09
-6              1.00      2.00  10.0  10.0  6.08  3.33      33.0   0   
-# ... with 4 more variables: pre_u_freq &lt;dbl&gt;, t &lt;dbl&gt;, w &lt;dbl&gt;, u &lt;dbl&gt;</code></pre>
-<p>Now calculate frequency of using T test as 100% minus W and U, and check they add up to 100%</p>
+<pre class="r"><code>require(stringr)
+
+tab2 %&lt;&gt;% 
+  mutate_at(vars(pre_w_freq, pre_u_freq), funs(
+    str_replace_all(.,
+    pattern = &quot;\\(|\\)&quot;, 
+    replacement = &quot;&quot;) %&gt;%
+      as.numeric))
+head(tab2)</code></pre>
+<pre><code>  sheet distribution_type var_ratio n1  n2 pre_t pre_w pre_w_freq pre_u
+1     1                 1         1 10  10  4.95  4.55       4.84  0.00
+2     1                 1         1 30  30  4.97  4.82       4.98 11.11
+3     1                 1         1 10  30  5.00  4.87       4.31  0.00
+4     1                 1         1 30  10  4.97  5.09       4.32  0.00
+5     1                 1         1 30 100  4.86  5.00       4.80  9.09
+6     1                 1         2 10  10  6.08  3.33      32.99  0.00
+  pre_u_freq    t    w    u delta sigma2
+1       0.02 4.96 4.82 5.21     0      1
+2       0.09 4.96 4.95 4.92     0      1
+3       0.06 5.01 5.05 4.87     0      1
+4       0.06 4.96 5.15 5.00     0      1
+5       0.11 4.84 4.91 4.82     0      1
+6       0.03 5.38 4.93 6.06     0      1</code></pre>
+<p>Now calculate frequency of using T test as 100% minus W and U, and check they add up to 100%. For some rows the value for the T-test using pre-testing is missing, since it did not occur in that situation. Fill these with zeros to make sure they won’t turn up as missing values.</p>
+<pre class="r"><code>tab2$pre_t[is.na(tab2$pre_t)] &lt;- 0
+tab2 %&lt;&gt;%
+  mutate(pre_t_freq = 100 - (pre_w_freq + pre_u_freq))
+tab2 %&gt;%
+  transmute(pre_t_freq + pre_w_freq + pre_u_freq) %&gt;%
+  table()</code></pre>
 <pre><code>.
 100 
- 38 </code></pre>
+180 </code></pre>
+<p>Check if there are any more missing values</p>
+<pre class="r"><code>nna(tab2)</code></pre>
+<pre><code>            sheet distribution_type         var_ratio                n1 
+                0                 0                 0                 0 
+               n2             pre_t             pre_w        pre_w_freq 
+                0                 0                 0                 0 
+            pre_u        pre_u_freq                 t                 w 
+                0                 0                 0                 0 
+                u             delta            sigma2        pre_t_freq 
+                0                 0                 0                 0 </code></pre>
+<p>Export curated table for later reference.</p>
+<pre class="r"><code>write.table(tab2, file = here(&quot;data&quot;, &quot;rasch_table2_curated.txt&quot;), 
+            sep = &quot;\t&quot;)</code></pre>
 <p>Calculate weighted type I error rate for strategy 1 with pre-testing</p>
-<p>Look at improved results table:</p>
+<pre class="r"><code>tab2 %&lt;&gt;%
+  mutate(pre_test = 1e-2*(pre_t*pre_t_freq + pre_w*pre_w_freq + pre_u*pre_u_freq))</code></pre>
+<p>Look at the augmented results table. This table shows the type-I error rates for the different strategies (pre-testing), and using either one of the three tests everytime (T-test, Welch test, Mann-Whitney-U-test)</p>
+<pre class="r"><code>knitr::kable(
+  tab2 %&gt;% 
+    mutate(pre_test = myround(pre_test, 2)) %&gt;%
+    select(distribution_type, var_ratio, n1, n2, pre_test, t, w, u)
+)</code></pre>
 <table>
 <thead>
 <tr class="header">
-<th align="right">distribution_type</th>
+<th align="left">distribution_type</th>
 <th align="right">var_ratio</th>
 <th align="right">n1</th>
 <th align="right">n2</th>
-<th align="right">pre_test</th>
+<th align="left">pre_test</th>
 <th align="right">t</th>
 <th align="right">w</th>
 <th align="right">u</th>
@@ -401,410 +462,1851 @@ library(here)</code></pre>
 </thead>
 <tbody>
 <tr class="odd">
-<td align="right">1</td>
+<td align="left">1</td>
 <td align="right">1</td>
 <td align="right">10</td>
 <td align="right">10</td>
-<td align="right">4.929650</td>
+<td align="left">4.93</td>
 <td align="right">4.96</td>
 <td align="right">4.82</td>
 <td align="right">5.21</td>
 </tr>
 <tr class="even">
-<td align="right">1</td>
+<td align="left">1</td>
 <td align="right">1</td>
 <td align="right">30</td>
 <td align="right">30</td>
-<td align="right">4.968056</td>
+<td align="left">4.97</td>
 <td align="right">4.96</td>
 <td align="right">4.95</td>
 <td align="right">4.92</td>
 </tr>
 <tr class="odd">
-<td align="right">1</td>
+<td align="left">1</td>
 <td align="right">1</td>
 <td align="right">10</td>
 <td align="right">30</td>
-<td align="right">4.991397</td>
+<td align="left">4.99</td>
 <td align="right">5.01</td>
 <td align="right">5.05</td>
 <td align="right">4.87</td>
 </tr>
 <tr class="even">
-<td align="right">1</td>
+<td align="left">1</td>
 <td align="right">1</td>
 <td align="right">30</td>
 <td align="right">10</td>
-<td align="right">4.972202</td>
+<td align="left">4.97</td>
 <td align="right">4.96</td>
 <td align="right">5.15</td>
 <td align="right">5.00</td>
 </tr>
 <tr class="odd">
-<td align="right">1</td>
+<td align="left">1</td>
 <td align="right">1</td>
 <td align="right">30</td>
 <td align="right">100</td>
-<td align="right">4.871373</td>
+<td align="left">4.87</td>
 <td align="right">4.84</td>
 <td align="right">4.91</td>
 <td align="right">4.82</td>
 </tr>
 <tr class="even">
-<td align="right">1</td>
+<td align="left">1</td>
 <td align="right">2</td>
 <td align="right">10</td>
 <td align="right">10</td>
-<td align="right">5.170951</td>
+<td align="left">5.17</td>
 <td align="right">5.38</td>
 <td align="right">4.93</td>
 <td align="right">6.06</td>
 </tr>
 <tr class="odd">
-<td align="right">1</td>
+<td align="left">1</td>
 <td align="right">2</td>
 <td align="right">30</td>
 <td align="right">30</td>
-<td align="right">4.992679</td>
+<td align="left">4.99</td>
 <td align="right">5.15</td>
 <td align="right">4.98</td>
 <td align="right">5.88</td>
 </tr>
 <tr class="even">
-<td align="right">1</td>
+<td align="left">1</td>
 <td align="right">2</td>
 <td align="right">10</td>
 <td align="right">30</td>
-<td align="right">2.492070</td>
+<td align="left">2.49</td>
 <td align="right">0.90</td>
 <td align="right">5.00</td>
 <td align="right">2.19</td>
 </tr>
 <tr class="odd">
-<td align="right">1</td>
+<td align="left">1</td>
 <td align="right">2</td>
 <td align="right">30</td>
 <td align="right">10</td>
-<td align="right">7.286654</td>
+<td align="left">7.29</td>
 <td align="right">15.51</td>
 <td align="right">5.19</td>
 <td align="right">10.09</td>
 </tr>
 <tr class="even">
-<td align="right">1</td>
+<td align="left">1</td>
 <td align="right">2</td>
 <td align="right">30</td>
 <td align="right">100</td>
-<td align="right">4.929245</td>
+<td align="left">4.93</td>
 <td align="right">0.63</td>
 <td align="right">4.96</td>
 <td align="right">1.89</td>
 </tr>
 <tr class="odd">
-<td align="right">2</td>
+<td align="left">2</td>
 <td align="right">1</td>
 <td align="right">10</td>
 <td align="right">10</td>
-<td align="right">4.539642</td>
+<td align="left">4.54</td>
 <td align="right">4.36</td>
 <td align="right">4.17</td>
 <td align="right">5.23</td>
 </tr>
 <tr class="even">
-<td align="right">2</td>
+<td align="left">2</td>
 <td align="right">1</td>
 <td align="right">30</td>
 <td align="right">30</td>
-<td align="right">4.814318</td>
+<td align="left">4.81</td>
 <td align="right">4.19</td>
 <td align="right">4.15</td>
 <td align="right">4.92</td>
 </tr>
 <tr class="odd">
-<td align="right">2</td>
+<td align="left">2</td>
 <td align="right">1</td>
 <td align="right">10</td>
 <td align="right">30</td>
-<td align="right">5.183343</td>
+<td align="left">5.18</td>
 <td align="right">4.92</td>
 <td align="right">4.58</td>
 <td align="right">5.06</td>
 </tr>
 <tr class="even">
-<td align="right">2</td>
+<td align="left">2</td>
 <td align="right">1</td>
 <td align="right">30</td>
 <td align="right">10</td>
-<td align="right">5.064274</td>
+<td align="left">5.06</td>
 <td align="right">4.91</td>
 <td align="right">4.45</td>
 <td align="right">4.96</td>
 </tr>
 <tr class="odd">
-<td align="right">2</td>
+<td align="left">2</td>
 <td align="right">1</td>
 <td align="right">30</td>
 <td align="right">100</td>
-<td align="right">4.986498</td>
+<td align="left">4.99</td>
 <td align="right">4.98</td>
 <td align="right">4.33</td>
 <td align="right">4.99</td>
 </tr>
 <tr class="even">
-<td align="right">2</td>
+<td align="left">2</td>
 <td align="right">2</td>
 <td align="right">10</td>
 <td align="right">10</td>
-<td align="right">5.062210</td>
+<td align="left">5.06</td>
 <td align="right">4.87</td>
 <td align="right">4.42</td>
 <td align="right">6.96</td>
 </tr>
 <tr class="odd">
-<td align="right">2</td>
+<td align="left">2</td>
 <td align="right">2</td>
 <td align="right">30</td>
 <td align="right">30</td>
-<td align="right">5.339500</td>
+<td align="left">5.34</td>
 <td align="right">4.34</td>
 <td align="right">4.17</td>
 <td align="right">6.64</td>
 </tr>
 <tr class="even">
-<td align="right">2</td>
+<td align="left">2</td>
 <td align="right">2</td>
 <td align="right">10</td>
 <td align="right">30</td>
-<td align="right">2.924136</td>
+<td align="left">2.92</td>
 <td align="right">1.13</td>
 <td align="right">4.17</td>
 <td align="right">1.88</td>
 </tr>
 <tr class="odd">
-<td align="right">2</td>
+<td align="left">2</td>
 <td align="right">2</td>
 <td align="right">30</td>
 <td align="right">10</td>
-<td align="right">7.726602</td>
+<td align="left">7.73</td>
 <td align="right">13.84</td>
 <td align="right">4.76</td>
 <td align="right">12.43</td>
 </tr>
 <tr class="even">
-<td align="right">2</td>
+<td align="left">2</td>
 <td align="right">2</td>
 <td align="right">30</td>
 <td align="right">100</td>
-<td align="right">1.923586</td>
+<td align="left">1.92</td>
 <td align="right">0.86</td>
 <td align="right">4.36</td>
 <td align="right">1.57</td>
 </tr>
 <tr class="odd">
-<td align="right">3</td>
+<td align="left">3</td>
 <td align="right">1</td>
 <td align="right">10</td>
 <td align="right">10</td>
-<td align="right">4.053828</td>
+<td align="left">4.05</td>
 <td align="right">3.90</td>
 <td align="right">3.60</td>
 <td align="right">5.21</td>
 </tr>
 <tr class="even">
-<td align="right">3</td>
+<td align="left">3</td>
 <td align="right">1</td>
 <td align="right">30</td>
 <td align="right">30</td>
-<td align="right">4.899160</td>
+<td align="left">4.90</td>
 <td align="right">4.70</td>
 <td align="right">4.63</td>
 <td align="right">5.07</td>
 </tr>
 <tr class="odd">
-<td align="right">3</td>
+<td align="left">3</td>
 <td align="right">1</td>
 <td align="right">10</td>
 <td align="right">30</td>
-<td align="right">4.662806</td>
+<td align="left">4.66</td>
 <td align="right">4.92</td>
 <td align="right">3.90</td>
 <td align="right">4.97</td>
 </tr>
 <tr class="even">
-<td align="right">3</td>
+<td align="left">3</td>
 <td align="right">1</td>
 <td align="right">30</td>
 <td align="right">10</td>
-<td align="right">4.623415</td>
+<td align="left">4.62</td>
 <td align="right">4.92</td>
 <td align="right">4.02</td>
 <td align="right">4.94</td>
 </tr>
 <tr class="odd">
-<td align="right">3</td>
+<td align="left">3</td>
 <td align="right">1</td>
 <td align="right">30</td>
 <td align="right">100</td>
-<td align="right">4.990220</td>
+<td align="left">4.99</td>
 <td align="right">4.96</td>
 <td align="right">4.51</td>
 <td align="right">5.02</td>
 </tr>
 <tr class="even">
-<td align="right">3</td>
+<td align="left">3</td>
 <td align="right">2</td>
 <td align="right">10</td>
 <td align="right">10</td>
-<td align="right">4.118655</td>
+<td align="left">4.12</td>
 <td align="right">4.07</td>
 <td align="right">3.57</td>
 <td align="right">5.81</td>
 </tr>
 <tr class="odd">
-<td align="right">3</td>
+<td align="left">3</td>
 <td align="right">2</td>
 <td align="right">30</td>
 <td align="right">30</td>
-<td align="right">4.921457</td>
+<td align="left">4.92</td>
 <td align="right">4.56</td>
 <td align="right">4.40</td>
 <td align="right">5.75</td>
 </tr>
 <tr class="even">
-<td align="right">3</td>
+<td align="left">3</td>
 <td align="right">2</td>
 <td align="right">10</td>
 <td align="right">30</td>
-<td align="right">1.789080</td>
+<td align="left">1.79</td>
 <td align="right">1.08</td>
 <td align="right">4.29</td>
 <td align="right">3.03</td>
 </tr>
 <tr class="odd">
-<td align="right">3</td>
+<td align="left">3</td>
 <td align="right">2</td>
 <td align="right">30</td>
 <td align="right">10</td>
-<td align="right">7.536392</td>
+<td align="left">7.54</td>
 <td align="right">13.86</td>
 <td align="right">3.84</td>
 <td align="right">8.65</td>
 </tr>
 <tr class="even">
-<td align="right">3</td>
+<td align="left">3</td>
 <td align="right">2</td>
 <td align="right">30</td>
 <td align="right">100</td>
-<td align="right">2.850225</td>
+<td align="left">2.85</td>
 <td align="right">0.71</td>
 <td align="right">4.69</td>
 <td align="right">3.02</td>
 </tr>
 <tr class="odd">
-<td align="right">4</td>
+<td align="left">4</td>
 <td align="right">1</td>
 <td align="right">10</td>
 <td align="right">10</td>
-<td align="right">5.089904</td>
+<td align="left">5.09</td>
 <td align="right">5.07</td>
 <td align="right">4.92</td>
 <td align="right">5.32</td>
 </tr>
 <tr class="even">
-<td align="right">4</td>
+<td align="left">4</td>
 <td align="right">1</td>
 <td align="right">30</td>
 <td align="right">30</td>
-<td align="right">5.046076</td>
+<td align="left">5.05</td>
 <td align="right">4.92</td>
 <td align="right">4.89</td>
 <td align="right">4.99</td>
 </tr>
 <tr class="odd">
-<td align="right">4</td>
+<td align="left">4</td>
 <td align="right">1</td>
 <td align="right">10</td>
 <td align="right">30</td>
-<td align="right">5.437200</td>
+<td align="left">5.44</td>
 <td align="right">5.08</td>
 <td align="right">5.45</td>
 <td align="right">5.05</td>
 </tr>
 <tr class="even">
-<td align="right">4</td>
+<td align="left">4</td>
 <td align="right">1</td>
 <td align="right">30</td>
 <td align="right">10</td>
-<td align="right">5.392164</td>
+<td align="left">5.39</td>
 <td align="right">5.04</td>
 <td align="right">5.37</td>
 <td align="right">5.02</td>
 </tr>
 <tr class="odd">
-<td align="right">4</td>
+<td align="left">4</td>
 <td align="right">1</td>
 <td align="right">30</td>
 <td align="right">100</td>
-<td align="right">4.876073</td>
+<td align="left">4.88</td>
 <td align="right">5.05</td>
 <td align="right">4.98</td>
 <td align="right">5.02</td>
 </tr>
 <tr class="even">
-<td align="right">4</td>
+<td align="left">4</td>
 <td align="right">2</td>
 <td align="right">10</td>
 <td align="right">10</td>
-<td align="right">5.597153</td>
+<td align="left">5.60</td>
 <td align="right">5.65</td>
 <td align="right">5.25</td>
 <td align="right">7.42</td>
 </tr>
 <tr class="odd">
-<td align="right">4</td>
+<td align="left">4</td>
 <td align="right">2</td>
 <td align="right">30</td>
 <td align="right">30</td>
-<td align="right">5.468840</td>
+<td align="left">5.47</td>
 <td align="right">5.19</td>
 <td align="right">4.99</td>
 <td align="right">7.98</td>
 </tr>
 <tr class="even">
-<td align="right">4</td>
+<td align="left">4</td>
 <td align="right">2</td>
 <td align="right">10</td>
 <td align="right">30</td>
-<td align="right">3.662870</td>
+<td align="left">3.66</td>
 <td align="right">0.93</td>
 <td align="right">4.80</td>
 <td align="right">2.07</td>
 </tr>
+<tr class="odd">
+<td align="left">4</td>
+<td align="right">2</td>
+<td align="right">30</td>
+<td align="right">10</td>
+<td align="left">7.59</td>
+<td align="right">15.39</td>
+<td align="right">5.67</td>
+<td align="right">13.01</td>
+</tr>
+<tr class="even">
+<td align="left">4</td>
+<td align="right">2</td>
+<td align="right">30</td>
+<td align="right">100</td>
+<td align="left">3.34</td>
+<td align="right">0.70</td>
+<td align="right">4.86</td>
+<td align="right">2.64</td>
+</tr>
+<tr class="odd">
+<td align="left">5</td>
+<td align="right">1</td>
+<td align="right">10</td>
+<td align="right">10</td>
+<td align="left">4.19</td>
+<td align="right">3.80</td>
+<td align="right">2.99</td>
+<td align="right">5.27</td>
+</tr>
+<tr class="even">
+<td align="left">5</td>
+<td align="right">1</td>
+<td align="right">30</td>
+<td align="right">30</td>
+<td align="left">5.00</td>
+<td align="right">4.55</td>
+<td align="right">4.39</td>
+<td align="right">4.99</td>
+</tr>
+<tr class="odd">
+<td align="left">5</td>
+<td align="right">1</td>
+<td align="right">10</td>
+<td align="right">30</td>
+<td align="left">4.37</td>
+<td align="right">4.45</td>
+<td align="right">7.32</td>
+<td align="right">5.01</td>
+</tr>
+<tr class="even">
+<td align="left">5</td>
+<td align="right">1</td>
+<td align="right">30</td>
+<td align="right">10</td>
+<td align="left">4.41</td>
+<td align="right">4.43</td>
+<td align="right">7.15</td>
+<td align="right">5.03</td>
+</tr>
+<tr class="odd">
+<td align="left">5</td>
+<td align="right">1</td>
+<td align="right">30</td>
+<td align="right">100</td>
+<td align="left">4.92</td>
+<td align="right">4.85</td>
+<td align="right">6.48</td>
+<td align="right">4.92</td>
+</tr>
+<tr class="even">
+<td align="left">5</td>
+<td align="right">2</td>
+<td align="right">10</td>
+<td align="right">10</td>
+<td align="left">12.57</td>
+<td align="right">8.56</td>
+<td align="right">8.07</td>
+<td align="right">20.84</td>
+</tr>
+<tr class="odd">
+<td align="left">5</td>
+<td align="right">2</td>
+<td align="right">30</td>
+<td align="right">30</td>
+<td align="left">44.63</td>
+<td align="right">6.60</td>
+<td align="right">6.47</td>
+<td align="right">47.48</td>
+</tr>
+<tr class="even">
+<td align="left">5</td>
+<td align="right">2</td>
+<td align="right">10</td>
+<td align="right">30</td>
+<td align="left">19.42</td>
+<td align="right">2.76</td>
+<td align="right">4.05</td>
+<td align="right">21.59</td>
+</tr>
+<tr class="odd">
+<td align="left">5</td>
+<td align="right">2</td>
+<td align="right">30</td>
+<td align="right">10</td>
+<td align="left">26.97</td>
+<td align="right">16.75</td>
+<td align="right">12.26</td>
+<td align="right">32.33</td>
+</tr>
+<tr class="even">
+<td align="left">5</td>
+<td align="right">2</td>
+<td align="right">30</td>
+<td align="right">100</td>
+<td align="left">69.30</td>
+<td align="right">1.36</td>
+<td align="right">4.63</td>
+<td align="right">69.30</td>
+</tr>
+<tr class="odd">
+<td align="left">1_5</td>
+<td align="right">1</td>
+<td align="right">10</td>
+<td align="right">10</td>
+<td align="left">5.95</td>
+<td align="right">5.75</td>
+<td align="right">5.33</td>
+<td align="right">7.44</td>
+</tr>
+<tr class="even">
+<td align="left">1_5</td>
+<td align="right">1</td>
+<td align="right">30</td>
+<td align="right">30</td>
+<td align="left">9.04</td>
+<td align="right">5.42</td>
+<td align="right">5.35</td>
+<td align="right">10.07</td>
+</tr>
+<tr class="odd">
+<td align="left">1_5</td>
+<td align="right">1</td>
+<td align="right">10</td>
+<td align="right">30</td>
+<td align="left">9.30</td>
+<td align="right">7.04</td>
+<td align="right">5.05</td>
+<td align="right">10.23</td>
+</tr>
+<tr class="even">
+<td align="left">1_5</td>
+<td align="right">1</td>
+<td align="right">30</td>
+<td align="right">10</td>
+<td align="left">6.34</td>
+<td align="right">3.84</td>
+<td align="right">8.27</td>
+<td align="right">5.61</td>
+</tr>
+<tr class="odd">
+<td align="left">1_5</td>
+<td align="right">1</td>
+<td align="right">30</td>
+<td align="right">100</td>
+<td align="left">15.02</td>
+<td align="right">5.87</td>
+<td align="right">5.01</td>
+<td align="right">15.02</td>
+</tr>
+<tr class="even">
+<td align="left">1_5</td>
+<td align="right">2</td>
+<td align="right">10</td>
+<td align="right">10</td>
+<td align="left">10.49</td>
+<td align="right">9.01</td>
+<td align="right">8.67</td>
+<td align="right">14.35</td>
+</tr>
+<tr class="odd">
+<td align="left">1_5</td>
+<td align="right">2</td>
+<td align="right">30</td>
+<td align="right">30</td>
+<td align="left">26.75</td>
+<td align="right">7.01</td>
+<td align="right">6.92</td>
+<td align="right">31.16</td>
+</tr>
+<tr class="even">
+<td align="left">1_5</td>
+<td align="right">2</td>
+<td align="right">10</td>
+<td align="right">30</td>
+<td align="left">13.57</td>
+<td align="right">3.15</td>
+<td align="right">5.51</td>
+<td align="right">15.87</td>
+</tr>
+<tr class="odd">
+<td align="left">1_5</td>
+<td align="right">2</td>
+<td align="right">30</td>
+<td align="right">10</td>
+<td align="left">14.44</td>
+<td align="right">15.83</td>
+<td align="right">12.31</td>
+<td align="right">20.60</td>
+</tr>
+<tr class="even">
+<td align="left">1_5</td>
+<td align="right">2</td>
+<td align="right">30</td>
+<td align="right">100</td>
+<td align="left">43.91</td>
+<td align="right">1.45</td>
+<td align="right">5.17</td>
+<td align="right">43.91</td>
+</tr>
+<tr class="odd">
+<td align="left">1</td>
+<td align="right">1</td>
+<td align="right">10</td>
+<td align="right">10</td>
+<td align="left">56.15</td>
+<td align="right">56.26</td>
+<td align="right">55.68</td>
+<td align="right">54.90</td>
+</tr>
+<tr class="even">
+<td align="left">1</td>
+<td align="right">1</td>
+<td align="right">30</td>
+<td align="right">30</td>
+<td align="left">96.69</td>
+<td align="right">96.68</td>
+<td align="right">96.66</td>
+<td align="right">95.90</td>
+</tr>
+<tr class="odd">
+<td align="left">1</td>
+<td align="right">1</td>
+<td align="right">10</td>
+<td align="right">30</td>
+<td align="left">75.39</td>
+<td align="right">76.07</td>
+<td align="right">72.52</td>
+<td align="right">73.30</td>
+</tr>
+<tr class="even">
+<td align="left">1</td>
+<td align="right">1</td>
+<td align="right">30</td>
+<td align="right">10</td>
+<td align="left">75.58</td>
+<td align="right">76.31</td>
+<td align="right">72.86</td>
+<td align="right">73.61</td>
+</tr>
+<tr class="odd">
+<td align="left">1</td>
+<td align="right">1</td>
+<td align="right">30</td>
+<td align="right">100</td>
+<td align="left">99.74</td>
+<td align="right">99.74</td>
+<td align="right">99.69</td>
+<td align="right">99.62</td>
+</tr>
+<tr class="even">
+<td align="left">1</td>
+<td align="right">2</td>
+<td align="right">10</td>
+<td align="right">10</td>
+<td align="left">26.92</td>
+<td align="right">27.65</td>
+<td align="right">26.12</td>
+<td align="right">27.34</td>
+</tr>
+<tr class="odd">
+<td align="left">1</td>
+<td align="right">2</td>
+<td align="right">30</td>
+<td align="right">30</td>
+<td align="left">66.54</td>
+<td align="right">67.15</td>
+<td align="right">66.61</td>
+<td align="right">64.21</td>
+</tr>
+<tr class="even">
+<td align="left">1</td>
+<td align="right">2</td>
+<td align="right">10</td>
+<td align="right">30</td>
+<td align="left">35.49</td>
+<td align="right">25.80</td>
+<td align="right">51.56</td>
+<td align="right">34.62</td>
+</tr>
+<tr class="odd">
+<td align="left">1</td>
+<td align="right">2</td>
+<td align="right">30</td>
+<td align="right">10</td>
+<td align="left">32.11</td>
+<td align="right">52.89</td>
+<td align="right">28.55</td>
+<td align="right">40.01</td>
+</tr>
+<tr class="even">
+<td align="left">1</td>
+<td align="right">2</td>
+<td align="right">30</td>
+<td align="right">100</td>
+<td align="left">95.20</td>
+<td align="right">81.73</td>
+<td align="right">95.47</td>
+<td align="right">87.56</td>
+</tr>
+<tr class="odd">
+<td align="left">2</td>
+<td align="right">1</td>
+<td align="right">10</td>
+<td align="right">10</td>
+<td align="left">32.46</td>
+<td align="right">31.67</td>
+<td align="right">31.08</td>
+<td align="right">35.91</td>
+</tr>
+<tr class="even">
+<td align="left">2</td>
+<td align="right">1</td>
+<td align="right">30</td>
+<td align="right">30</td>
+<td align="left">76.55</td>
+<td align="right">66.32</td>
+<td align="right">66.08</td>
+<td align="right">80.45</td>
+</tr>
+<tr class="odd">
+<td align="left">2</td>
+<td align="right">1</td>
+<td align="right">10</td>
+<td align="right">30</td>
+<td align="left">47.16</td>
+<td align="right">43.06</td>
+<td align="right">42.68</td>
+<td align="right">50.17</td>
+</tr>
+<tr class="even">
+<td align="left">2</td>
+<td align="right">1</td>
+<td align="right">30</td>
+<td align="right">10</td>
+<td align="left">47.36</td>
+<td align="right">43.28</td>
+<td align="right">42.68</td>
+<td align="right">50.43</td>
+</tr>
+<tr class="odd">
+<td align="left">2</td>
+<td align="right">1</td>
+<td align="right">30</td>
+<td align="right">100</td>
+<td align="left">92.49</td>
+<td align="right">77.43</td>
+<td align="right">80.12</td>
+<td align="right">94.08</td>
+</tr>
+<tr class="even">
+<td align="left">2</td>
+<td align="right">2</td>
+<td align="right">10</td>
+<td align="right">10</td>
+<td align="left">15.27</td>
+<td align="right">15.44</td>
+<td align="right">14.34</td>
+<td align="right">14.11</td>
+</tr>
+<tr class="odd">
+<td align="left">2</td>
+<td align="right">2</td>
+<td align="right">30</td>
+<td align="right">30</td>
+<td align="left">36.92</td>
+<td align="right">36.18</td>
+<td align="right">35.62</td>
+<td align="right">29.07</td>
+</tr>
+<tr class="even">
+<td align="left">2</td>
+<td align="right">2</td>
+<td align="right">10</td>
+<td align="right">30</td>
+<td align="left">21.20</td>
+<td align="right">10.85</td>
+<td align="right">27.25</td>
+<td align="right">11.03</td>
+</tr>
+<tr class="odd">
+<td align="left">2</td>
+<td align="right">2</td>
+<td align="right">30</td>
+<td align="right">10</td>
+<td align="left">19.70</td>
+<td align="right">33.70</td>
+<td align="right">15.64</td>
+<td align="right">22.33</td>
+</tr>
+<tr class="even">
+<td align="left">2</td>
+<td align="right">2</td>
+<td align="right">30</td>
+<td align="right">100</td>
+<td align="left">41.40</td>
+<td align="right">32.37</td>
+<td align="right">59.63</td>
+<td align="right">37.99</td>
+</tr>
+<tr class="odd">
+<td align="left">3</td>
+<td align="right">1</td>
+<td align="right">10</td>
+<td align="right">10</td>
+<td align="left">67.18</td>
+<td align="right">65.48</td>
+<td align="right">64.36</td>
+<td align="right">80.15</td>
+</tr>
+<tr class="even">
+<td align="left">3</td>
+<td align="right">1</td>
+<td align="right">30</td>
+<td align="right">30</td>
+<td align="left">98.21</td>
+<td align="right">94.93</td>
+<td align="right">94.86</td>
+<td align="right">99.89</td>
+</tr>
+<tr class="odd">
+<td align="left">3</td>
+<td align="right">1</td>
+<td align="right">10</td>
+<td align="right">30</td>
+<td align="left">83.28</td>
+<td align="right">78.83</td>
+<td align="right">77.57</td>
+<td align="right">93.12</td>
+</tr>
+<tr class="even">
+<td align="left">3</td>
+<td align="right">1</td>
+<td align="right">30</td>
+<td align="right">10</td>
+<td align="left">84.01</td>
+<td align="right">78.20</td>
+<td align="right">78.23</td>
+<td align="right">93.76</td>
+</tr>
+<tr class="odd">
+<td align="left">3</td>
+<td align="right">1</td>
+<td align="right">30</td>
+<td align="right">100</td>
+<td align="left">99.07</td>
+<td align="right">99.16</td>
+<td align="right">98.15</td>
+<td align="right">100.00</td>
+</tr>
+<tr class="even">
+<td align="left">3</td>
+<td align="right">2</td>
+<td align="right">10</td>
+<td align="right">10</td>
+<td align="left">39.06</td>
+<td align="right">37.83</td>
+<td align="right">35.87</td>
+<td align="right">53.68</td>
+</tr>
+<tr class="odd">
+<td align="left">3</td>
+<td align="right">2</td>
+<td align="right">30</td>
+<td align="right">30</td>
+<td align="left">79.92</td>
+<td align="right">71.64</td>
+<td align="right">71.16</td>
+<td align="right">94.63</td>
+</tr>
+<tr class="even">
+<td align="left">3</td>
+<td align="right">2</td>
+<td align="right">10</td>
+<td align="right">30</td>
+<td align="left">46.13</td>
+<td align="right">34.06</td>
+<td align="right">58.80</td>
+<td align="right">73.52</td>
+</tr>
+<tr class="odd">
+<td align="left">3</td>
+<td align="right">2</td>
+<td align="right">30</td>
+<td align="right">10</td>
+<td align="left">52.92</td>
+<td align="right">59.69</td>
+<td align="right">41.06</td>
+<td align="right">69.78</td>
+</tr>
+<tr class="even">
+<td align="left">3</td>
+<td align="right">2</td>
+<td align="right">30</td>
+<td align="right">100</td>
+<td align="left">96.57</td>
+<td align="right">82.00</td>
+<td align="right">94.03</td>
+<td align="right">99.77</td>
+</tr>
+<tr class="odd">
+<td align="left">4</td>
+<td align="right">1</td>
+<td align="right">10</td>
+<td align="right">10</td>
+<td align="left">59.36</td>
+<td align="right">59.20</td>
+<td align="right">58.82</td>
+<td align="right">56.45</td>
+</tr>
+<tr class="even">
+<td align="left">4</td>
+<td align="right">1</td>
+<td align="right">30</td>
+<td align="right">30</td>
+<td align="left">97.11</td>
+<td align="right">96.28</td>
+<td align="right">96.24</td>
+<td align="right">96.24</td>
+</tr>
+<tr class="odd">
+<td align="left">4</td>
+<td align="right">1</td>
+<td align="right">10</td>
+<td align="right">30</td>
+<td align="left">78.51</td>
+<td align="right">78.48</td>
+<td align="right">75.47</td>
+<td align="right">73.45</td>
+</tr>
+<tr class="even">
+<td align="left">4</td>
+<td align="right">1</td>
+<td align="right">30</td>
+<td align="right">10</td>
+<td align="left">78.96</td>
+<td align="right">78.11</td>
+<td align="right">76.71</td>
+<td align="right">75.51</td>
+</tr>
+<tr class="odd">
+<td align="left">4</td>
+<td align="right">1</td>
+<td align="right">30</td>
+<td align="right">100</td>
+<td align="left">98.28</td>
+<td align="right">99.18</td>
+<td align="right">98.51</td>
+<td align="right">99.54</td>
+</tr>
+<tr class="even">
+<td align="left">4</td>
+<td align="right">2</td>
+<td align="right">10</td>
+<td align="right">10</td>
+<td align="left">24.64</td>
+<td align="right">26.13</td>
+<td align="right">24.21</td>
+<td align="right">18.34</td>
+</tr>
+<tr class="odd">
+<td align="left">4</td>
+<td align="right">2</td>
+<td align="right">30</td>
+<td align="right">30</td>
+<td align="left">66.19</td>
+<td align="right">69.92</td>
+<td align="right">69.34</td>
+<td align="right">42.57</td>
+</tr>
+<tr class="even">
+<td align="left">4</td>
+<td align="right">2</td>
+<td align="right">10</td>
+<td align="right">30</td>
+<td align="left">47.21</td>
+<td align="right">26.42</td>
+<td align="right">54.32</td>
+<td align="right">18.95</td>
+</tr>
+<tr class="odd">
+<td align="left">4</td>
+<td align="right">2</td>
+<td align="right">30</td>
+<td align="right">10</td>
+<td align="left">26.61</td>
+<td align="right">53.29</td>
+<td align="right">25.46</td>
+<td align="right">28.14</td>
+</tr>
+<tr class="even">
+<td align="left">4</td>
+<td align="right">2</td>
+<td align="right">30</td>
+<td align="right">100</td>
+<td align="left">55.74</td>
+<td align="right">83.52</td>
+<td align="right">95.04</td>
+<td align="right">61.73</td>
+</tr>
+<tr class="odd">
+<td align="left">5</td>
+<td align="right">1</td>
+<td align="right">10</td>
+<td align="right">10</td>
+<td align="left">70.58</td>
+<td align="right">65.93</td>
+<td align="right">65.00</td>
+<td align="right">82.31</td>
+</tr>
+<tr class="even">
+<td align="left">5</td>
+<td align="right">1</td>
+<td align="right">30</td>
+<td align="right">30</td>
+<td align="left">98.86</td>
+<td align="right">94.81</td>
+<td align="right">94.72</td>
+<td align="right">99.87</td>
+</tr>
+<tr class="odd">
+<td align="left">5</td>
+<td align="right">1</td>
+<td align="right">10</td>
+<td align="right">30</td>
+<td align="left">87.88</td>
+<td align="right">79.24</td>
+<td align="right">73.64</td>
+<td align="right">91.17</td>
+</tr>
+<tr class="even">
+<td align="left">5</td>
+<td align="right">1</td>
+<td align="right">30</td>
+<td align="right">10</td>
+<td align="left">92.25</td>
+<td align="right">77.16</td>
+<td align="right">83.77</td>
+<td align="right">98.07</td>
+</tr>
+<tr class="odd">
+<td align="left">5</td>
+<td align="right">1</td>
+<td align="right">30</td>
+<td align="right">100</td>
+<td align="left">99.98</td>
+<td align="right">98.88</td>
+<td align="right">96.81</td>
+<td align="right">99.98</td>
+</tr>
+<tr class="even">
+<td align="left">5</td>
+<td align="right">2</td>
+<td align="right">10</td>
+<td align="right">10</td>
+<td align="left">32.38</td>
+<td align="right">27.81</td>
+<td align="right">24.35</td>
+<td align="right">49.43</td>
+</tr>
+<tr class="odd">
+<td align="left">5</td>
+<td align="right">2</td>
+<td align="right">30</td>
+<td align="right">30</td>
+<td align="left">87.84</td>
+<td align="right">75.09</td>
+<td align="right">74.63</td>
+<td align="right">92.98</td>
+</tr>
+<tr class="even">
+<td align="left">5</td>
+<td align="right">2</td>
+<td align="right">10</td>
+<td align="right">30</td>
+<td align="left">55.81</td>
+<td align="right">27.31</td>
+<td align="right">60.14</td>
+<td align="right">65.40</td>
+</tr>
+<tr class="odd">
+<td align="left">5</td>
+<td align="right">2</td>
+<td align="right">30</td>
+<td align="right">10</td>
+<td align="left">57.03</td>
+<td align="right">55.52</td>
+<td align="right">21.66</td>
+<td align="right">68.62</td>
+</tr>
+<tr class="even">
+<td align="left">5</td>
+<td align="right">2</td>
+<td align="right">30</td>
+<td align="right">100</td>
+<td align="left">98.26</td>
+<td align="right">86.69</td>
+<td align="right">93.42</td>
+<td align="right">98.26</td>
+</tr>
+<tr class="odd">
+<td align="left">1_5</td>
+<td align="right">1</td>
+<td align="right">10</td>
+<td align="right">10</td>
+<td align="left">60.08</td>
+<td align="right">60.07</td>
+<td align="right">58.56</td>
+<td align="right">58.39</td>
+</tr>
+<tr class="even">
+<td align="left">1_5</td>
+<td align="right">1</td>
+<td align="right">30</td>
+<td align="right">30</td>
+<td align="left">93.29</td>
+<td align="right">98.65</td>
+<td align="right">98.62</td>
+<td align="right">96.40</td>
+</tr>
+<tr class="odd">
+<td align="left">1_5</td>
+<td align="right">1</td>
+<td align="right">10</td>
+<td align="right">30</td>
+<td align="left">73.09</td>
+<td align="right">80.00</td>
+<td align="right">73.37</td>
+<td align="right">72.93</td>
+</tr>
+<tr class="even">
+<td align="left">1_5</td>
+<td align="right">1</td>
+<td align="right">30</td>
+<td align="right">10</td>
+<td align="left">83.21</td>
+<td align="right">80.33</td>
+<td align="right">86.91</td>
+<td align="right">79.87</td>
+</tr>
+<tr class="odd">
+<td align="left">1_5</td>
+<td align="right">1</td>
+<td align="right">30</td>
+<td align="right">100</td>
+<td align="left">99.18</td>
+<td align="right">99.89</td>
+<td align="right">99.79</td>
+<td align="right">99.18</td>
+</tr>
+<tr class="even">
+<td align="left">1_5</td>
+<td align="right">2</td>
+<td align="right">10</td>
+<td align="right">10</td>
+<td align="left">21.24</td>
+<td align="right">21.22</td>
+<td align="right">19.18</td>
+<td align="right">20.30</td>
+</tr>
+<tr class="odd">
+<td align="left">1_5</td>
+<td align="right">2</td>
+<td align="right">30</td>
+<td align="right">30</td>
+<td align="left">52.73</td>
+<td align="right">75.61</td>
+<td align="right">75.05</td>
+<td align="right">51.05</td>
+</tr>
+<tr class="even">
+<td align="left">1_5</td>
+<td align="right">2</td>
+<td align="right">10</td>
+<td align="right">30</td>
+<td align="left">28.77</td>
+<td align="right">23.80</td>
+<td align="right">52.60</td>
+<td align="right">28.76</td>
+</tr>
+<tr class="odd">
+<td align="left">1_5</td>
+<td align="right">2</td>
+<td align="right">30</td>
+<td align="right">10</td>
+<td align="left">30.98</td>
+<td align="right">52.02</td>
+<td align="right">20.68</td>
+<td align="right">27.20</td>
+</tr>
+<tr class="even">
+<td align="left">1_5</td>
+<td align="right">2</td>
+<td align="right">30</td>
+<td align="right">100</td>
+<td align="left">68.92</td>
+<td align="right">87.92</td>
+<td align="right">97.32</td>
+<td align="right">68.92</td>
+</tr>
+<tr class="odd">
+<td align="left">1</td>
+<td align="right">1</td>
+<td align="right">10</td>
+<td align="right">10</td>
+<td align="left">100.00</td>
+<td align="right">100.00</td>
+<td align="right">100.00</td>
+<td align="right">100.00</td>
+</tr>
+<tr class="even">
+<td align="left">1</td>
+<td align="right">1</td>
+<td align="right">30</td>
+<td align="right">30</td>
+<td align="left">100.00</td>
+<td align="right">100.00</td>
+<td align="right">100.00</td>
+<td align="right">100.00</td>
+</tr>
+<tr class="odd">
+<td align="left">1</td>
+<td align="right">1</td>
+<td align="right">10</td>
+<td align="right">30</td>
+<td align="left">100.00</td>
+<td align="right">100.00</td>
+<td align="right">100.00</td>
+<td align="right">100.00</td>
+</tr>
+<tr class="even">
+<td align="left">1</td>
+<td align="right">1</td>
+<td align="right">30</td>
+<td align="right">10</td>
+<td align="left">100.00</td>
+<td align="right">100.00</td>
+<td align="right">100.00</td>
+<td align="right">100.00</td>
+</tr>
+<tr class="odd">
+<td align="left">1</td>
+<td align="right">1</td>
+<td align="right">30</td>
+<td align="right">100</td>
+<td align="left">99.98</td>
+<td align="right">100.00</td>
+<td align="right">100.00</td>
+<td align="right">100.00</td>
+</tr>
+<tr class="even">
+<td align="left">1</td>
+<td align="right">2</td>
+<td align="right">10</td>
+<td align="right">10</td>
+<td align="left">99.98</td>
+<td align="right">100.00</td>
+<td align="right">100.00</td>
+<td align="right">100.00</td>
+</tr>
+<tr class="odd">
+<td align="left">1</td>
+<td align="right">2</td>
+<td align="right">30</td>
+<td align="right">30</td>
+<td align="left">99.92</td>
+<td align="right">100.00</td>
+<td align="right">100.00</td>
+<td align="right">100.00</td>
+</tr>
+<tr class="even">
+<td align="left">1</td>
+<td align="right">2</td>
+<td align="right">10</td>
+<td align="right">30</td>
+<td align="left">99.99</td>
+<td align="right">100.00</td>
+<td align="right">100.00</td>
+<td align="right">100.00</td>
+</tr>
+<tr class="odd">
+<td align="left">1</td>
+<td align="right">2</td>
+<td align="right">30</td>
+<td align="right">10</td>
+<td align="left">99.96</td>
+<td align="right">100.00</td>
+<td align="right">100.00</td>
+<td align="right">100.00</td>
+</tr>
+<tr class="even">
+<td align="left">1</td>
+<td align="right">2</td>
+<td align="right">30</td>
+<td align="right">100</td>
+<td align="left">99.89</td>
+<td align="right">100.00</td>
+<td align="right">100.00</td>
+<td align="right">100.00</td>
+</tr>
+<tr class="odd">
+<td align="left">2</td>
+<td align="right">1</td>
+<td align="right">10</td>
+<td align="right">10</td>
+<td align="left">98.96</td>
+<td align="right">98.06</td>
+<td align="right">97.85</td>
+<td align="right">99.98</td>
+</tr>
+<tr class="even">
+<td align="left">2</td>
+<td align="right">1</td>
+<td align="right">30</td>
+<td align="right">30</td>
+<td align="left">99.89</td>
+<td align="right">99.93</td>
+<td align="right">99.93</td>
+<td align="right">100.00</td>
+</tr>
+<tr class="odd">
+<td align="left">2</td>
+<td align="right">1</td>
+<td align="right">10</td>
+<td align="right">30</td>
+<td align="left">99.64</td>
+<td align="right">99.35</td>
+<td align="right">98.81</td>
+<td align="right">100.00</td>
+</tr>
+<tr class="even">
+<td align="left">2</td>
+<td align="right">1</td>
+<td align="right">30</td>
+<td align="right">10</td>
+<td align="left">99.42</td>
+<td align="right">99.39</td>
+<td align="right">98.93</td>
+<td align="right">99.99</td>
+</tr>
+<tr class="odd">
+<td align="left">2</td>
+<td align="right">1</td>
+<td align="right">30</td>
+<td align="right">100</td>
+<td align="left">98.87</td>
+<td align="right">100.00</td>
+<td align="right">99.98</td>
+<td align="right">100.00</td>
+</tr>
+<tr class="even">
+<td align="left">2</td>
+<td align="right">2</td>
+<td align="right">10</td>
+<td align="right">10</td>
+<td align="left">95.07</td>
+<td align="right">93.72</td>
+<td align="right">93.13</td>
+<td align="right">99.87</td>
+</tr>
+<tr class="odd">
+<td align="left">2</td>
+<td align="right">2</td>
+<td align="right">30</td>
+<td align="right">30</td>
+<td align="left">98.69</td>
+<td align="right">99.09</td>
+<td align="right">99.06</td>
+<td align="right">100.00</td>
+</tr>
+<tr class="even">
+<td align="left">2</td>
+<td align="right">2</td>
+<td align="right">10</td>
+<td align="right">30</td>
+<td align="left">99.27</td>
+<td align="right">95.59</td>
+<td align="right">97.74</td>
+<td align="right">100.00</td>
+</tr>
+<tr class="odd">
+<td align="left">2</td>
+<td align="right">2</td>
+<td align="right">30</td>
+<td align="right">10</td>
+<td align="left">94.47</td>
+<td align="right">97.38</td>
+<td align="right">94.58</td>
+<td align="right">99.98</td>
+</tr>
+<tr class="even">
+<td align="left">2</td>
+<td align="right">2</td>
+<td align="right">30</td>
+<td align="right">100</td>
+<td align="left">94.62</td>
+<td align="right">99.90</td>
+<td align="right">99.96</td>
+<td align="right">100.00</td>
+</tr>
+<tr class="odd">
+<td align="left">3</td>
+<td align="right">1</td>
+<td align="right">10</td>
+<td align="right">10</td>
+<td align="left">100.00</td>
+<td align="right">99.98</td>
+<td align="right">99.98</td>
+<td align="right">100.00</td>
+</tr>
+<tr class="even">
+<td align="left">3</td>
+<td align="right">1</td>
+<td align="right">30</td>
+<td align="right">30</td>
+<td align="left">99.65</td>
+<td align="right">100.00</td>
+<td align="right">100.00</td>
+<td align="right">100.00</td>
+</tr>
+<tr class="odd">
+<td align="left">3</td>
+<td align="right">1</td>
+<td align="right">10</td>
+<td align="right">30</td>
+<td align="left">99.69</td>
+<td align="right">100.00</td>
+<td align="right">99.99</td>
+<td align="right">100.00</td>
+</tr>
+<tr class="even">
+<td align="left">3</td>
+<td align="right">1</td>
+<td align="right">30</td>
+<td align="right">10</td>
+<td align="left">99.67</td>
+<td align="right">100.00</td>
+<td align="right">99.99</td>
+<td align="right">100.00</td>
+</tr>
+<tr class="odd">
+<td align="left">3</td>
+<td align="right">1</td>
+<td align="right">30</td>
+<td align="right">100</td>
+<td align="left">99.07</td>
+<td align="right">100.00</td>
+<td align="right">100.00</td>
+<td align="right">100.00</td>
+</tr>
+<tr class="even">
+<td align="left">3</td>
+<td align="right">2</td>
+<td align="right">10</td>
+<td align="right">10</td>
+<td align="left">99.56</td>
+<td align="right">99.56</td>
+<td align="right">99.47</td>
+<td align="right">99.95</td>
+</tr>
+<tr class="odd">
+<td align="left">3</td>
+<td align="right">2</td>
+<td align="right">30</td>
+<td align="right">30</td>
+<td align="left">96.43</td>
+<td align="right">100.00</td>
+<td align="right">100.00</td>
+<td align="right">100.00</td>
+</tr>
+<tr class="even">
+<td align="left">3</td>
+<td align="right">2</td>
+<td align="right">10</td>
+<td align="right">30</td>
+<td align="left">99.96</td>
+<td align="right">99.98</td>
+<td align="right">99.98</td>
+<td align="right">100.00</td>
+</tr>
+<tr class="odd">
+<td align="left">3</td>
+<td align="right">2</td>
+<td align="right">30</td>
+<td align="right">10</td>
+<td align="left">96.30</td>
+<td align="right">99.94</td>
+<td align="right">99.57</td>
+<td align="right">99.99</td>
+</tr>
+<tr class="even">
+<td align="left">3</td>
+<td align="right">2</td>
+<td align="right">30</td>
+<td align="right">100</td>
+<td align="left">97.52</td>
+<td align="right">100.00</td>
+<td align="right">100.00</td>
+<td align="right">100.00</td>
+</tr>
+<tr class="odd">
+<td align="left">4</td>
+<td align="right">1</td>
+<td align="right">10</td>
+<td align="right">10</td>
+<td align="left">99.98</td>
+<td align="right">99.96</td>
+<td align="right">99.95</td>
+<td align="right">100.00</td>
+</tr>
+<tr class="even">
+<td align="left">4</td>
+<td align="right">1</td>
+<td align="right">30</td>
+<td align="right">30</td>
+<td align="left">99.75</td>
+<td align="right">100.00</td>
+<td align="right">100.00</td>
+<td align="right">100.00</td>
+</tr>
+<tr class="odd">
+<td align="left">4</td>
+<td align="right">1</td>
+<td align="right">10</td>
+<td align="right">30</td>
+<td align="left">99.83</td>
+<td align="right">100.00</td>
+<td align="right">99.96</td>
+<td align="right">100.00</td>
+</tr>
+<tr class="even">
+<td align="left">4</td>
+<td align="right">1</td>
+<td align="right">30</td>
+<td align="right">10</td>
+<td align="left">99.83</td>
+<td align="right">100.00</td>
+<td align="right">99.99</td>
+<td align="right">100.00</td>
+</tr>
+<tr class="odd">
+<td align="left">4</td>
+<td align="right">1</td>
+<td align="right">30</td>
+<td align="right">100</td>
+<td align="left">98.74</td>
+<td align="right">100.00</td>
+<td align="right">100.00</td>
+<td align="right">100.00</td>
+</tr>
+<tr class="even">
+<td align="left">4</td>
+<td align="right">2</td>
+<td align="right">10</td>
+<td align="right">10</td>
+<td align="left">99.78</td>
+<td align="right">99.81</td>
+<td align="right">99.77</td>
+<td align="right">100.00</td>
+</tr>
+<tr class="odd">
+<td align="left">4</td>
+<td align="right">2</td>
+<td align="right">30</td>
+<td align="right">30</td>
+<td align="left">96.46</td>
+<td align="right">100.00</td>
+<td align="right">100.00</td>
+<td align="right">100.00</td>
+</tr>
+<tr class="even">
+<td align="left">4</td>
+<td align="right">2</td>
+<td align="right">10</td>
+<td align="right">30</td>
+<td align="left">98.35</td>
+<td align="right">99.96</td>
+<td align="right">99.96</td>
+<td align="right">100.00</td>
+</tr>
+<tr class="odd">
+<td align="left">4</td>
+<td align="right">2</td>
+<td align="right">30</td>
+<td align="right">10</td>
+<td align="left">97.85</td>
+<td align="right">99.97</td>
+<td align="right">99.83</td>
+<td align="right">100.00</td>
+</tr>
+<tr class="even">
+<td align="left">4</td>
+<td align="right">2</td>
+<td align="right">30</td>
+<td align="right">100</td>
+<td align="left">81.00</td>
+<td align="right">100.00</td>
+<td align="right">100.00</td>
+<td align="right">100.00</td>
+</tr>
+<tr class="odd">
+<td align="left">5</td>
+<td align="right">1</td>
+<td align="right">10</td>
+<td align="right">10</td>
+<td align="left">99.73</td>
+<td align="right">99.99</td>
+<td align="right">99.98</td>
+<td align="right">100.00</td>
+</tr>
+<tr class="even">
+<td align="left">5</td>
+<td align="right">1</td>
+<td align="right">30</td>
+<td align="right">30</td>
+<td align="left">99.20</td>
+<td align="right">100.00</td>
+<td align="right">100.00</td>
+<td align="right">100.00</td>
+</tr>
+<tr class="odd">
+<td align="left">5</td>
+<td align="right">1</td>
+<td align="right">10</td>
+<td align="right">30</td>
+<td align="left">98.44</td>
+<td align="right">100.00</td>
+<td align="right">99.99</td>
+<td align="right">100.00</td>
+</tr>
+<tr class="even">
+<td align="left">5</td>
+<td align="right">1</td>
+<td align="right">30</td>
+<td align="right">10</td>
+<td align="left">98.43</td>
+<td align="right">100.00</td>
+<td align="right">100.00</td>
+<td align="right">100.00</td>
+</tr>
+<tr class="odd">
+<td align="left">5</td>
+<td align="right">1</td>
+<td align="right">30</td>
+<td align="right">100</td>
+<td align="left">100.00</td>
+<td align="right">100.00</td>
+<td align="right">100.00</td>
+<td align="right">100.00</td>
+</tr>
+<tr class="even">
+<td align="left">5</td>
+<td align="right">2</td>
+<td align="right">10</td>
+<td align="right">10</td>
+<td align="left">99.38</td>
+<td align="right">99.98</td>
+<td align="right">99.97</td>
+<td align="right">100.00</td>
+</tr>
+<tr class="odd">
+<td align="left">5</td>
+<td align="right">2</td>
+<td align="right">30</td>
+<td align="right">30</td>
+<td align="left">95.89</td>
+<td align="right">100.00</td>
+<td align="right">100.00</td>
+<td align="right">100.00</td>
+</tr>
+<tr class="even">
+<td align="left">5</td>
+<td align="right">2</td>
+<td align="right">10</td>
+<td align="right">30</td>
+<td align="left">99.28</td>
+<td align="right">100.00</td>
+<td align="right">99.97</td>
+<td align="right">100.00</td>
+</tr>
+<tr class="odd">
+<td align="left">5</td>
+<td align="right">2</td>
+<td align="right">30</td>
+<td align="right">10</td>
+<td align="left">91.19</td>
+<td align="right">100.00</td>
+<td align="right">100.00</td>
+<td align="right">100.00</td>
+</tr>
+<tr class="even">
+<td align="left">5</td>
+<td align="right">2</td>
+<td align="right">30</td>
+<td align="right">100</td>
+<td align="left">100.00</td>
+<td align="right">100.00</td>
+<td align="right">100.00</td>
+<td align="right">100.00</td>
+</tr>
+<tr class="odd">
+<td align="left">1_5</td>
+<td align="right">1</td>
+<td align="right">10</td>
+<td align="right">10</td>
+<td align="left">99.74</td>
+<td align="right">100.00</td>
+<td align="right">100.00</td>
+<td align="right">100.00</td>
+</tr>
+<tr class="even">
+<td align="left">1_5</td>
+<td align="right">1</td>
+<td align="right">30</td>
+<td align="right">30</td>
+<td align="left">96.18</td>
+<td align="right">100.00</td>
+<td align="right">100.00</td>
+<td align="right">100.00</td>
+</tr>
+<tr class="odd">
+<td align="left">1_5</td>
+<td align="right">1</td>
+<td align="right">10</td>
+<td align="right">30</td>
+<td align="left">97.51</td>
+<td align="right">100.00</td>
+<td align="right">100.00</td>
+<td align="right">100.00</td>
+</tr>
+<tr class="even">
+<td align="left">1_5</td>
+<td align="right">1</td>
+<td align="right">30</td>
+<td align="right">10</td>
+<td align="left">99.43</td>
+<td align="right">100.00</td>
+<td align="right">100.00</td>
+<td align="right">100.00</td>
+</tr>
+<tr class="odd">
+<td align="left">1_5</td>
+<td align="right">1</td>
+<td align="right">30</td>
+<td align="right">100</td>
+<td align="left">100.00</td>
+<td align="right">100.00</td>
+<td align="right">100.00</td>
+<td align="right">100.00</td>
+</tr>
+<tr class="even">
+<td align="left">1_5</td>
+<td align="right">2</td>
+<td align="right">10</td>
+<td align="right">10</td>
+<td align="left">99.82</td>
+<td align="right">100.00</td>
+<td align="right">99.99</td>
+<td align="right">100.00</td>
+</tr>
+<tr class="odd">
+<td align="left">1_5</td>
+<td align="right">2</td>
+<td align="right">30</td>
+<td align="right">30</td>
+<td align="left">94.85</td>
+<td align="right">100.00</td>
+<td align="right">100.00</td>
+<td align="right">100.00</td>
+</tr>
+<tr class="even">
+<td align="left">1_5</td>
+<td align="right">2</td>
+<td align="right">10</td>
+<td align="right">30</td>
+<td align="left">99.72</td>
+<td align="right">100.00</td>
+<td align="right">100.00</td>
+<td align="right">100.00</td>
+</tr>
+<tr class="odd">
+<td align="left">1_5</td>
+<td align="right">2</td>
+<td align="right">30</td>
+<td align="right">10</td>
+<td align="left">97.98</td>
+<td align="right">100.00</td>
+<td align="right">100.00</td>
+<td align="right">100.00</td>
+</tr>
+<tr class="even">
+<td align="left">1_5</td>
+<td align="right">2</td>
+<td align="right">30</td>
+<td align="right">100</td>
+<td align="left">100.00</td>
+<td align="right">100.00</td>
+<td align="right">100.00</td>
+<td align="right">100.00</td>
+</tr>
 </tbody>
 </table>
-<p>Plot results</p>
-<p><img src="figure/cs_pre_testing_type_I_error.Rmd/unnamed-chunk-10-1.png" width="672" style="display: block; margin: auto;" /></p>
-<p>It looks like the pre-testing is doeing better than the t-test and u-test on controlling the type I error rate.</p>
-<p>Focus on Welch test (the recommended according to (<a href="#bib-Rasch2011-fc">Rasch, Kubinger, and Moder, 2011</a>)) and pre-testing</p>
-<p><img src="figure/cs_pre_testing_type_I_error.Rmd/unnamed-chunk-11-1.png" width="672" style="display: block; margin: auto;" /></p>
-<p>It looks like the pre-testing strategy has a somewhat higher type-I error rate in some situations. However, the Welch test seems what conservative in some situations too.</p>
+<div id="plots" class="section level3">
+<h3>Plots</h3>
+<p>Plot results for the simulations where the null-hypothesis is true</p>
+<p><img src="figure/cs_pre_testing_type_I_error.Rmd/unnamed-chunk-13-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>It looks like the pre-testing is doing better than the t-test and u-test on controlling the type I error rate, except in some situations when both the pre-testing and t-test go wrong considerably.</p>
+<p>Let’s focus on the Welch test (the recommended according to (<a href="#bib-Rasch2011-fc">Rasch, Kubinger, and Moder, 2011</a>)) and pre-testing</p>
+<p><img src="figure/cs_pre_testing_type_I_error.Rmd/unnamed-chunk-14-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/cs_pre_testing_type_I_error.Rmd/unnamed-chunk-15-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>It looks like the pre-testing strategy has a somewhat higher type-I error rate in some situations.</p>
 <p>Let’s look at the most extreme situations.</p>
-<pre><code># A tibble: 38 x 7
-   distribution_type var_ratio    n1    n2     w pre_test diff_pre_w
-               &lt;dbl&gt;     &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;    &lt;dbl&gt;      &lt;dbl&gt;
- 1              3.00      2.00  30.0  10.0  3.84     7.54      3.70 
- 2              2.00      2.00  30.0  10.0  4.76     7.73      2.97 
- 3              1.00      2.00  30.0  10.0  5.19     7.29      2.10 
- 4              2.00      2.00  30.0  30.0  4.17     5.34      1.17 
- 5              3.00      1.00  10.0  30.0  3.90     4.66      0.763
- 6              2.00      1.00  30.0  30.0  4.15     4.81      0.664
- 7              2.00      1.00  30.0 100    4.33     4.99      0.656
- 8              2.00      2.00  10.0  10.0  4.42     5.06      0.642
- 9              2.00      1.00  30.0  10.0  4.45     5.06      0.614
-10              3.00      1.00  30.0  10.0  4.02     4.62      0.603
-# ... with 28 more rows</code></pre>
-<p>It seems like the pre-testing scheme is doing worse when variances differ and the group with highest variance is the greatest.</p>
+<pre><code>   distribution_type var_ratio n1  n2 delta     w  pre_test diff_pre_w
+1                  5         2 30 100     0  4.63 69.300000  64.670000
+2                1_5         2 30 100     0  5.17 43.910000  38.740000
+3                  5         2 30  30     0  6.47 44.627271  38.157271
+4                1_5         2 30  30     0  6.92 26.751997  19.831997
+5                  5         2 10  30     0  4.05 19.421951  15.371951
+6                  5         2 30  10     0 12.26 26.973982  14.713982
+7                1_5         1 30 100     0  5.01 15.020000  10.010000
+8                1_5         2 10  30     0  5.51 13.572912   8.062912
+9                  5         2 10  10     0  8.07 12.571718   4.501718
+10               1_5         1 10  30     0  5.05  9.299946   4.249946
+11                 3         2 30  10     0  3.84  7.536392   3.696392
+12               1_5         1 30  30     0  5.35  9.038007   3.688007
+13                 2         2 30  10     0  4.76  7.726602   2.966602
+14               1_5         2 30  10     0 12.31 14.442904   2.132904
+15                 1         2 30  10     0  5.19  7.286654   2.096654
+16                 4         2 30  10     0  5.67  7.585126   1.915126
+17               1_5         2 10  10     0  8.67 10.487813   1.817813
+18                 5         1 10  10     0  2.99  4.187216   1.197216
+19                 2         2 30  30     0  4.17  5.339500   1.169500
+20                 3         1 10  30     0  3.90  4.662806   0.762806</code></pre>
+<p>It seems like the pre-testing scheme is doing worse when at least one of the groups is of distribution type 5 (high skewness and kurtosis), and when variances differ and the group with highest variance has the lowest sample size.</p>
+<div id="power" class="section level4">
+<h4>Power</h4>
+<p>Let’s also look at situations when the null-hypthesis is false</p>
+<p><img src="figure/cs_pre_testing_type_I_error.Rmd/unnamed-chunk-17-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>The power does not seem to differ too much.</p>
 </div>
+</div>
+</div>
+</div>
+<div id="conlcusion" class="section level1">
+<h1>Conlcusion</h1>
+<p>After re-analyzing the results from Rasch et al. and calculating type-I error rates and power for the strategy of pre-testing, it seems that the conclusion of the original paper stays unchanged: performing the Welch test has the best type-I error rate for most situations, and a comparable power.</p>
 </div>
 <div id="references" class="section level1">
 <h1>References</h1>
