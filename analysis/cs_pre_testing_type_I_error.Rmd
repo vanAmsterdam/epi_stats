@@ -80,9 +80,6 @@ DiagrammeR(
   WU [label = "Wilcoxon-U"];
   ttest [label = "t-test"]
   Welch [label = "Welch"]
-  alfaU [label = "Type I \n Wilcoxon-U"]
-  alfaT [label = "Type I \n t-test"]
-  alfaW [label = "Type I \n Welch"]
 
   sample -> ks_test
   ks_test -> normal; ks_test ->nonnormal
@@ -92,10 +89,6 @@ DiagrammeR(
   levene -> hetero
   homo -> ttest
   hetero -> Welch
-
-  WU -> alfaU
-  ttest -> alfaT
-  Welch -> alfaW
 
   subgraph{
     rank = same; WU, ttest
@@ -278,7 +271,7 @@ tab2 %>%
   ggtitle("Type I error rates when null-hypothesis is true", "By distrubution type")
 ```
 
-It looks like the pre-testing strategy has a somewhat higher type-I error rate 
+It looks like the pre-testing strategy has a much higher type-I error rate 
 in some situations.
 
 Let's look at the most extreme situations.
