@@ -1,0 +1,243 @@
+---
+title: "Pre-testing assumptions and type I error of two sample location tests"
+author: "Wouter van Amsterdam"
+date: 2018-02-28
+output: html_document
+---
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+```
+
+<!-- Update knitr chunk options -->
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+<!-- Insert the date the file was last updated -->
+```{r last-updated, echo=FALSE, results='asis'}
+```
+
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+```{r code-version, echo=FALSE, results='asis'}
+```
+
+<!-- Add your analysis here -->
+
+```{r}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE)
+library(epistats)
+library(magrittr)
+library(dplyr)
+library(here)
+```
+
+```{r}
+require(RefManageR)
+refs <- RefManageR::ReadBib(here("refs", "tierror.bib"))
+
+BibOptions(check.entries = FALSE, style = "markdown", cite.style = "authoryear",
+           bib.style = "numeric", hyperlink = "to.doc")
+```
+
+
+# Introduction
+
+This analysis is based on the paper by Rasch et al. on the value of pre-testing
+assumptions of two-sample location tests (T-test, Wilcoxon-Mann-Whitney U test,
+ Welch's-T-test) `r AutoCite(refs, "Rasch2011-fc")`.
+
+In the paper they test two ways of working:
+
+1. pre-test assumptions of preferred tests, namely Kolmogorov-Smirnov test for
+normality, and Levene's test for homogeneity of variances
+2. Always use a single test (T, Welch, or U)
+
+In a graph:
+
+```{r}
+require(DiagrammeR)
+DiagrammeR(
+'digraph no {
+  graph [layout = dot, rankdir = LR, overlap = true, fontsize = 10]
+
+  node [shape = circle]
+  sample [label = "Sample of pairs"];
+
+  node [shape = rectangle]
+  ks_test [label = "Kolmogoroff-Smirnov"]
+  levene [label ="Levene"]
+
+  node [shape = rectangle]
+  normal
+  nonnormal [label = "non normal"]
+  homo [label = "homogeneous variances"]
+  hetero [label = "non-homogeneous variances"]
+
+  node [shape = rectangle]
+  WU [label = "Wilcoxon-U"];
+  ttest [label = "t-test"]
+  Welch [label = "Welch"]
+  alfaU [label = "Type I \n Wilcoxon-U"]
+  alfaT [label = "Type I \n t-test"]
+  alfaW [label = "Type I \n Welch"]
+
+  sample -> ks_test
+  ks_test -> normal; ks_test ->nonnormal
+  nonnormal -> WU
+  normal -> levene
+  levene -> homo
+  levene -> hetero
+  homo -> ttest
+  hetero -> Welch
+
+  WU -> alfaU
+  ttest -> alfaT
+  Welch -> alfaW
+
+  subgraph{
+    rank = same; WU, ttest
+
+  }
+  subgraph {
+    rank = same; normal, nonnormal
+  }
+
+}'
+, "GrViz")
+
+```
+
+In their results, they reported the actual type I error rate of the 
+differents **tests** along 100.000 simulations over a set of continuous 
+probability density functions, parameterized with 4 [moments](https://en.wikipedia.org/wiki/Moment_(mathematics)#Significance_of_the_moments).
+
+Howerever, we can argue that what they actually should test is the type I 
+error rate of the total strategy of pre-testing. This requires a compositional
+type I error rate, weighted by the times a certain test was used.
+
+
+# Calculate strategy type I error rate
+
+## Get data
+
+We grabbed the data from their paper pdf with an online [pdf to excel tool](https://www.pdftoexcel.com/).
+After some manual deletion of rows and columns, the data was ready for import 
+into R
+
+```{r}
+require(readxl)
+tab2_1 <- readxl::read_excel(here("data", "rasch_table2.xlsx"), sheet = 2)
+head(tab2_1)
+tab2 <- tab2_1
+```
+
+Fill consecutive rows of distribution type and variance ratio with last 
+non-missing values
+
+```{r}
+tab2 %<>%
+  mutate_at(vars(distribution_type, var_ratio), funs(fill_recursive))
+head(tab2)
+```
+
+Lose the parentheses in some columns
+
+```{r}
+require(stringr)
+
+tab2 %<>% 
+  mutate_at(vars(pre_w_freq, pre_u_freq), funs(
+    str_replace_all(.,
+    pattern = "\\(|\\)", 
+    replacement = "") %>%
+      as.numeric))
+head(tab2)
+```
+
+Now calculate frequency of using T test as 100% minus W and U, and 
+check they add up to 100%
+
+```{r}
+tab2 %<>%
+  mutate(pre_t_freq = 100 - (pre_w_freq + pre_u_freq))
+tab2 %>%
+  transmute(pre_t_freq + pre_w_freq + pre_u_freq) %>%
+  table()
+```
+
+Calculate weighted type I error rate for strategy 1 with pre-testing
+
+```{r}
+tab2 %<>%
+  mutate(pre_test = 1e-2*(pre_t*pre_t_freq + pre_w*pre_w_freq + pre_u*pre_u_freq))
+```
+
+Look at improved results table:
+
+```{r, results = 'asis'}
+knitr::kable(
+  tab2 %>% select(distribution_type, var_ratio, n1, n2, pre_test, t, w, u)
+)
+```
+
+Plot results
+
+```{r}
+require(ggplot2)
+tab2 %>%
+  mutate(id = 1:n()) %>%
+  data.table::melt(id.vars = "id", measure.vars = c("t", "w", "u", "pre_test"),
+                   variable.name = "test", value.name = "type_I_error_rate") %>%
+  ggplot(aes(x = id, y = type_I_error_rate, col = test))  +
+  geom_line() + 
+  lims(y = c(0, 20))
+```
+
+It looks like the pre-testing is doeing better than the t-test and u-test on 
+controlling the type I error rate.
+
+Focus on Welch test (the recommended according to `r AutoCite(refs)`) and pre-testing
+
+```{r}
+require(ggplot2)
+tab2 %>%
+  mutate(id = 1:n()) %>%
+  data.table::melt(id.vars = "id", measure.vars = c("w", "pre_test"),
+                   variable.name = "test", value.name = "type_I_error_rate") %>%
+  ggplot(aes(x = id, y = type_I_error_rate, col = test))  +
+  geom_line() + 
+  lims(y = c(0, 20))
+
+```
+
+It looks like the pre-testing strategy has a somewhat higher type-I error rate 
+in some situations. However, the Welch test seems what conservative in some 
+situations too.
+
+Let's look at the most extreme situations.
+
+```{r}
+tab2 %>%
+  mutate(diff_pre_w = pre_test - w) %>%
+  arrange(desc(diff_pre_w)) %>%
+  select(distribution_type, var_ratio, n1, n2, w, pre_test, diff_pre_w) 
+```
+
+It seems like the pre-testing scheme is doing worse when variances differ 
+and the group with highest variance is the greatest.
+
+# References
+
+```{r, results='asis', echo = F}
+PrintBibliography(refs)
+```
+
+
+## Session information
+
+<!-- Insert the session information into the document -->
+```{r session-info}
+```
