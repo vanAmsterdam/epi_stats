@@ -124,9 +124,9 @@ error rate of the total strategy of pre-testing. This requires a compositional
 type I error rate, weighted by the times a certain test was used.
 
 
-# Calculate strategy type I error rate
+# Import and curate data
 
-## Get data
+## Get data into R
 
 We grabbed the data from their paper pdf with an online [pdf to excel tool](https://www.pdftoexcel.com/).
 After some manual deletion of rows and columns, the data was ready for import 
@@ -201,6 +201,7 @@ write.table(tab2, file = here("data", "rasch_table2_curated.txt"),
             sep = "\t")
 ```
 
+# Re-analyse results
 
 Calculate weighted type I error rate for strategy 1 with pre-testing
 
@@ -221,7 +222,7 @@ knitr::kable(
 )
 ```
 
-### Plots
+## Plots
 
 ```{r, echo = F}
 knitr::opts_chunk$set(echo = F)
@@ -296,7 +297,7 @@ groups is of distribution type 5 (high skewness and kurtosis),
 and when variances differ 
 and the group with highest variance has the lowest sample size.
 
-#### Power
+### Power
 
 Let's also look at situations when the null-hypthesis is false
 
@@ -322,7 +323,7 @@ tab2 %>%
 
 The power does not seem to differ too much. 
 
-# Conlcusion
+# Conclusion
 
 After re-analyzing the results from Rasch et al. and calculating type-I error 
 rates and power for the strategy of pre-testing, it seems that the 
