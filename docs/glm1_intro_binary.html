@@ -9,9 +9,11 @@
 <meta name="generator" content="pandoc" />
 
 
+<meta name="author" content="Wouter van Amsterdam" />
 
+<meta name="date" content="2018-03-05" />
 
-<title>Thoughts and assingments in epidemiology and statistics</title>
+<title>Intro to generalized linear models</title>
 
 <script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -19,6 +21,9 @@
 <script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
 <script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
 <script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
 <script src="site_libs/navigation-1.1/tabsets.js"></script>
 <link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
 <script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
@@ -164,6 +169,101 @@ $(document).ready(function () {
 
 
 
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+  padding-left: 25px;
+  text-indent: 0;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
 
 
 <div class="navbar navbar-default  navbar-fixed-top" role="navigation">
@@ -204,53 +304,89 @@ $(document).ready(function () {
 
 
 
-<h1 class="title toc-ignore">Thoughts and assingments in epidemiology and statistics</h1>
+<h1 class="title toc-ignore">Intro to generalized linear models</h1>
+<h4 class="author"><em>Wouter van Amsterdam</em></h4>
+<h4 class="date"><em>2018-03-05</em></h4>
 
 </div>
 
 
-<p>This website is made to share the assignments I worked out for statistic courses in the Epidemiology Graduate Program of the Julius Center, Utrecht, the Netherlands</p>
-<div id="blog-posts" class="section level1">
-<h1>Blog posts</h1>
-<p><a href="cs_pre_testing_type_I_error.html">pre-testing and type-I error rates: re-analysis of Rasch</a></p>
-<p><a href="circle_dance.html">the circle dance: strategy for positioning at equidistance in a group</a></p>
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+<!-- Update knitr chunk options -->
+<!-- Insert the date the file was last updated -->
+<p><strong>Last updated:</strong> 2018-03-05</p>
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+<p><strong>Code version:</strong> e9116ca</p>
+<!-- Add your analysis here -->
+<div id="setup" class="section level1">
+<h1>Setup</h1>
+<p>Tutor: Rebecca Stellato</p>
 </div>
-<div id="worked-out-assignments" class="section level1">
-<h1>Worked-out assignments</h1>
-<div id="classical-methods-in-data-analysis" class="section level2">
-<h2>Classical Methods in Data Analysis</h2>
-<p><a href="c_assignments_week1.html">assignments week 1</a></p>
-<p><a href="c_assignments_week2.html">assignments week 2</a></p>
-<p><a href="c_assignments_week3.html">assignments week 3</a></p>
-<p><a href="c_case_studies.html">case studies (not finished)</a></p>
+<div id="glm" class="section level1">
+<h1>GLM</h1>
+<ol style="list-style-type: decimal">
+<li>response follows probability distribution from exponential family</li>
+<li>linear predictor <span class="math inline">\(\eta_i\)</span></li>
+<li>link function describing mean outcome as function of linear predictor <span class="math inline">\(g(\mu_i)=\eta_i\)</span></li>
+</ol>
+<div id="parameter-estimation" class="section level2">
+<h2>Parameter estimation</h2>
+<p>In general: maximum likelihood estimation</p>
+<p>Linear model: ordinary least squares</p>
 </div>
-<div id="modern-methods-in-data-analysis" class="section level2">
-<h2>Modern Methods in Data Analysis</h2>
-<p><a href="mm_assignments_week1.html">assignments week 1</a></p>
-<p><a href="mm_assignments_week2.html">assignments week 2</a></p>
+<div id="assessing-fit" class="section level2">
+<h2>Assessing fit</h2>
+<p>Calculate likelihood of observed data; using <span class="math inline">\(p_i = \frac{y_i}{n_i}\)</span></p>
+<p>Residual deviance <span class="math inline">\(-2 * (l_C - l_S)\)</span></p>
+<p>Null deviance: <span class="math inline">\(-2 * (l_0 - l_C)\)</span>; with no predictors, just intercept</p>
+<p>Deviance is a likelihood ratio-test, which is approximately chi-squared distributed with df = difference in df of models</p>
+<p>When residual deviance &lt; degrees of freedom, no evidence of lack of fit.</p>
+<p>Not the same as: this is the correct/best model</p>
+<div id="residuals" class="section level3">
+<h3>Residuals</h3>
+<p>Problem: variance not independent of <span class="math inline">\(y\)</span></p>
+<p>Pearson residuals: <span class="math inline">\(r_p = \frac{y-\bar{\mu}}{\sqrt{var(\bar{\mu})}}\)</span></p>
+<p>Square and add gives Pearson’s Chi-squared</p>
+<p>Deviance residuals: residuals defined such that the squared residuals sum up to deviance</p>
+<p>also: response residuals, working residuals, jackknife residuals</p>
+<p>You can plot residuals against a non-included variable, if they show structure, it should probably be included in the model.</p>
+<ul>
+<li>jackknife residuals: leave one out, refit the model, evaluate deviance</li>
+<li>leverage: influence in X diraction</li>
+<li>cook’s distance: combine delta-beta ( leave on out, how much do the parameters change (combined))</li>
+</ul>
+<p>Faraway:</p>
+<ul>
+<li>half-normal plots (take absolute values of the different residuals), plot against half-normal distribution; straight line not necessary, but should be on a curve</li>
+</ul>
 </div>
-<div id="computational-statistics" class="section level2">
-<h2>Computational Statistics</h2>
-<p><a href="cs_assignments.html">assignments Advanced R</a></p>
-<p><a href="cs_assignments_sim.html">assignments Simulation Studies</a></p>
 </div>
-<div id="advanced-methods-in-causal-research" class="section level2">
-<h2>Advanced methods in causal research</h2>
-<p><a href="acr_assignments.html">assignments Advanced methods in causal research</a></p>
+<div id="session-information" class="section level2">
+<h2>Session information</h2>
+<!-- Insert the session information into the document -->
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 3.4.3 (2017-11-30)
+Platform: x86_64-apple-darwin15.6.0 (64-bit)
+Running under: macOS Sierra 10.12.6
+
+Matrix products: default
+BLAS: /Library/Frameworks/R.framework/Versions/3.4/Resources/lib/libRblas.0.dylib
+LAPACK: /Library/Frameworks/R.framework/Versions/3.4/Resources/lib/libRlapack.dylib
+
+locale:
+[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+loaded via a namespace (and not attached):
+ [1] compiler_3.4.3  backports_1.1.2 magrittr_1.5    rprojroot_1.3-2
+ [5] tools_3.4.3     htmltools_0.3.6 yaml_2.1.16     Rcpp_0.12.15   
+ [9] stringi_1.1.6   rmarkdown_1.8   knitr_1.19      git2r_0.21.0   
+[13] stringr_1.2.0   digest_0.6.15   evaluate_0.10.1</code></pre>
 </div>
-<div id="generalized-linear-models" class="section level2">
-<h2>Generalized linear models</h2>
-<p><a href="glm_assignments.html">assignments</a></p>
-</div>
-</div>
-<div id="notes-and-commmon-errors" class="section level1">
-<h1>Notes and commmon errors</h1>
-<p><strong>working directory</strong></p>
-<p>Due to how this website was made, the R-code ‘thinks’ it is in the <code>analysis</code> subdirectory, while the data sits in the <code>data</code> directory, which is found from the parent directory. Working with Rmarkdown and keeping track of the directory is not too easy at all. After modern methods, I switched to using the package <code>here</code>, which is specifically designed to target such problems.</p>
-<p>Before that I used the function <code>fromParentDir</code>, which allows you to call files from the parent directory. The function can be found in the package <code>epistats</code>, which can be installed with <code>devtools::install_github(&quot;vanAmsterdam/epistats&quot;)</code></p>
-<p>If <code>devtools</code> is not yet installed, first run <code>install.packages(&quot;devtools&quot;)</code></p>
-<p><strong>packages and functions</strong></p>
-<p>Sometimes different packages provide functions with the same names. To make sure you use the intended function (and to circumvent using <code>library(package)</code>), use <code>&lt;package&gt;::&lt;function&gt;</code> to use <code>&lt;function&gt;</code> from package <code>&lt;package&gt;</code>, like <code>epistats::fromParentdir</code></p>
 </div>
 
 <hr>
@@ -279,6 +415,8 @@ $(document).ready(function () {
 -->
 
 
+</div>
+</div>
 
 </div>
 

@@ -319,10 +319,10 @@ div.tocify {
 shared across the workflowr files. -->
 <!-- Update knitr chunk options -->
 <!-- Insert the date the file was last updated -->
-<p><strong>Last updated:</strong> 2018-02-28</p>
+<p><strong>Last updated:</strong> 2018-03-05</p>
 <!-- Insert the code version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
-<p><strong>Code version:</strong> 88ed7e8</p>
+<p><strong>Code version:</strong> e9116ca</p>
 <!-- Add your analysis here -->
 <pre class="r"><code>knitr::opts_chunk$set(echo = TRUE, warning = FALSE)
 library(epistats)
@@ -2304,6 +2304,23 @@ tab2 %&gt;%
 <p>Let’s also look at situations when the null-hypthesis is false</p>
 <p><img src="figure/cs_pre_testing_type_I_error.Rmd/unnamed-chunk-17-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>The power does not seem to differ too much.</p>
+<p>Let’s zoom in on the distributions that are not of type 5 to assess power versus type-I error rate</p>
+<p><img src="figure/cs_pre_testing_type_I_error.Rmd/unnamed-chunk-18-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>It looks like pre-testing has better power in the case of equal variances and non-normal distributions. Which is probably a consequence of the U-test having more power for non- normal distributions.</p>
+<p>Things start to go wrong when variances are unequal. Maybe this is due to unexpected behaviour of the Levene’s test.</p>
+<p>We could propose a third strategy based on the same data: only test for normality, not for equal variances. Assume unequal variances and use the Welch test for non-normal data.</p>
+</div>
+</div>
+<div id="strategy-3-only-test-normality" class="section level2">
+<h2>Strategy 3: only test normality</h2>
+<p><img src="figure/cs_pre_testing_type_I_error.Rmd/unnamed-chunk-20-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="strategy-4-only-test-equal-variances" class="section level2">
+<h2>Strategy 4: only test equal variances</h2>
+<p><img src="figure/cs_pre_testing_type_I_error.Rmd/unnamed-chunk-22-1.png" width="672" style="display: block; margin: auto;" /></p>
+<div id="all-together" class="section level3">
+<h3>All together</h3>
+<p><img src="figure/cs_pre_testing_type_I_error.Rmd/unnamed-chunk-23-1.png" width="672" style="display: block; margin: auto;" /></p>
 </div>
 </div>
 </div>

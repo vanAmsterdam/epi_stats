@@ -1,0 +1,1206 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+<meta name="author" content="Wouter van Amsterdam" />
+
+<meta name="date" content="2018-03-05" />
+
+<title>Assignments for Generalized Linear Methods</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/font-awesome-4.5.0/css/font-awesome.min.css" rel="stylesheet" />
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+
+<div class="container-fluid main-container">
+
+<!-- tabsets -->
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+</script>
+
+<!-- code folding -->
+
+
+
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+  padding-left: 25px;
+  text-indent: 0;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">epi_stats</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/jdblischak/workflowr">
+    <span class="fa fa-github"></span>
+     
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">Assignments for Generalized Linear Methods</h1>
+<h4 class="author"><em>Wouter van Amsterdam</em></h4>
+<h4 class="date"><em>2018-03-05</em></h4>
+
+</div>
+
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+<!-- Update knitr chunk options -->
+<!-- Insert the date the file was last updated -->
+<p><strong>Last updated:</strong> 2018-03-05</p>
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+<p><strong>Code version:</strong> e9116ca</p>
+<!-- Add your analysis here -->
+<div id="setup" class="section level1">
+<h1>Setup</h1>
+<pre class="r"><code>library(dplyr)
+library(data.table)
+library(magrittr)
+library(purrr)
+library(here) # for tracking working directory
+library(ggplot2)
+library(epistats)
+library(broom)</code></pre>
+</div>
+<div id="day-1" class="section level1">
+<h1>Day 1</h1>
+<div id="throat" class="section level2">
+<h2>1 Throat</h2>
+<blockquote>
+<p>Analyze the throat dataset (throat.txt or throat.sav) in R, SPSS, or both.</p>
+</blockquote>
+<div id="a." class="section level3">
+<h3>a.</h3>
+<blockquote>
+<p>Examine the relation between sore throat and duration of surgery in three ways: 1) make a scatterplot of sore throat by duration of surgery; 2) make histograms of duration split by sore throat; and 3) make a plot of proportion having sore throat by duration of surgery (you’ll need to categorize duration).</p>
+</blockquote>
+<blockquote>
+<p>In a survey of 35 patients having surgery with a general anesthetic, patients were asked whether or not they experienced a sore throat (throat=0 for no, throat=1 for yes). The duration of the surgery in minutes was also recorded, and the type of device used to secure the airway (0 = laryngeal mask airway; 1=tracheal tube)</p>
+</blockquote>
+<pre class="r"><code>throat &lt;- read.table(here(&quot;data&quot;, &quot;throat.txt&quot;), sep = &quot;;&quot;, header = T)
+str(throat)</code></pre>
+<pre><code>&#39;data.frame&#39;:   35 obs. of  4 variables:
+ $ Patient: int  1 2 3 4 5 6 7 8 9 10 ...
+ $ D      : int  45 15 40 83 90 25 35 65 95 35 ...
+ $ T      : int  0 0 0 1 1 1 0 0 0 0 ...
+ $ Y      : int  0 0 1 1 1 1 1 1 1 1 ...</code></pre>
+<p>Rename variables for easier interpretation</p>
+<pre class="r"><code>throat %&lt;&gt;%
+  transmute(
+    patient = Patient,
+    duration = D,
+    sore_throat = as.logical(`T`),
+    tracheal_tube = as.logical(Y))</code></pre>
+<p>Scatterplot</p>
+<pre class="r"><code>throat %&gt;%
+  ggplot(aes(x = duration, y = sore_throat)) + 
+  geom_point()</code></pre>
+<p><img src="figure/glm_assignments.Rmd/unnamed-chunk-4-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Histograms</p>
+<pre class="r"><code>throat %&gt;%
+  ggplot(aes(x = duration, fill = sore_throat)) + 
+  geom_histogram()</code></pre>
+<p><img src="figure/glm_assignments.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Proportion sore throats by category of duration.</p>
+<p>Let’s divide duration in 5 categories</p>
+<p>Calculate mean duration by quantile for proper plotting</p>
+<pre class="r"><code>throat %&lt;&gt;%
+  mutate(duration_group = quant(duration, n.tiles = 5))
+
+throat_grouped &lt;-throat %&gt;%
+  group_by(duration_group) %&gt;%
+  summarize(mean_duration = mean(duration), 
+         prop_throat = mean(sore_throat))</code></pre>
+<p>Plot them</p>
+<pre class="r"><code>throat_grouped %&gt;%
+  ggplot(aes(x = mean_duration, y = prop_throat)) + 
+  geom_point() +
+  lims(y = c(0,1))</code></pre>
+<p><img src="figure/glm_assignments.Rmd/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Now improved with errorbars</p>
+<p>In <code>epistats</code> ther is a function that returns a proportion with a confidence interval for logical variables (without using <code>n = length(x), x = sum(x)</code>)</p>
+<p>Group the data by duration group using <code>nest</code> from <code>tidyr</code> Perform the confidence interval estimation in each subset, pull out the proportions and confidence intervals.</p>
+<pre class="r"><code>require(tidyr)
+
+throat %&lt;&gt;%
+  mutate(duration_group = quant(duration, n.tiles = 5))
+
+throat_nested &lt;- throat %&gt;%
+  group_by(duration_group) %&gt;%
+  nest() %&gt;% 
+  mutate(
+    mean_duration = map(data, function(data) mean(data$duration)),
+    prop = map(data, function(data) binom.confint_logical(data$sore_throat))) %&gt;%
+  unnest(prop, mean_duration)
+
+throat_nested %&gt;%
+  ggplot(aes(x = mean_duration, y = mean)) + 
+  geom_errorbar(aes(ymin = lower, ymax = upper)) + 
+  lims(y = c(0,1)) + 
+  theme_minimal() + labs(y = &quot;proportion sore throat&quot;)</code></pre>
+<p><img src="figure/glm_assignments.Rmd/unnamed-chunk-8-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="b." class="section level3">
+<h3>b.</h3>
+<blockquote>
+<p>Fit a logistic regression model to explain the probability of sore throat as a function of duration of surgery. SPSS users: do this once using the Regression, Binary Logistic menu option, and a second time using the Generalized Linear Model menu option. Compare the results from both “methods” for estimating a logistic regression; are there differences in the parameter estimates, standard errors or maximum likelihood?</p>
+</blockquote>
+<pre class="r"><code>fit &lt;- glm(sore_throat ~ duration, data = throat, family = binomial(link = &quot;logit&quot;))
+summary(fit)</code></pre>
+<pre><code>
+Call:
+glm(formula = sore_throat ~ duration, family = binomial(link = &quot;logit&quot;), 
+    data = throat)
+
+Deviance Residuals: 
+   Min      1Q  Median      3Q     Max  
+-1.189  -1.149  -1.131   1.204   1.225  
+
+Coefficients:
+             Estimate Std. Error z value Pr(&gt;|z|)
+(Intercept) -0.136898   0.658830  -0.208    0.835
+duration     0.001734   0.012292   0.141    0.888
+
+(Dispersion parameter for binomial family taken to be 1)
+
+    Null deviance: 48.492  on 34  degrees of freedom
+Residual deviance: 48.472  on 33  degrees of freedom
+AIC: 52.472
+
+Number of Fisher Scoring iterations: 3</code></pre>
+</div>
+<div id="c." class="section level3">
+<h3>c.</h3>
+<blockquote>
+<p>Add the fitted logistic curve from (d) to one of the graphs in (a) (SPSS users: save the predicted probabilities from the model; use either a multiple line graph or an overlay scatterplot).</p>
+</blockquote>
+<pre class="r"><code>throat_nested %&lt;&gt;%
+  mutate(pred = predict(fit, newdata = data.frame(duration = mean_duration), 
+                        type = &quot;response&quot;))
+
+throat_nested %&gt;%
+  ggplot(aes(x = mean_duration, y = mean)) + 
+  geom_errorbar(aes(ymin = lower, ymax = upper)) + 
+  geom_line(aes(y = pred), lty = 2) + 
+  lims(y = c(0,1)) + 
+  theme_minimal() + labs(y = &quot;proportion sore throat&quot;)</code></pre>
+<p><img src="figure/glm_assignments.Rmd/unnamed-chunk-10-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+</div>
+<div id="throat-2" class="section level2">
+<h2>2. Throat 2</h2>
+<blockquote>
+<p>Continue with the analysis of the throat dataset in R, SPSS, or both (SPSS users: use the GLM menu for the modelling):</p>
+</blockquote>
+<div id="a.-1" class="section level3">
+<h3>a.</h3>
+<blockquote>
+<p>Examine the relation between sore throat and device, and between device and duration.</p>
+</blockquote>
+<pre class="r"><code>throat %&gt;%
+  select(sore_throat, tracheal_tube, duration) %&gt;%
+  mutate_if(is.logical, as.factor) %&gt;%
+  GGally::ggpairs()</code></pre>
+<p><img src="figure/glm_assignments.Rmd/unnamed-chunk-11-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Patients without a tracheal tube seem to have a sore throat more often.</p>
+<p>Patients with a tracheal tube seem to have a longer duration</p>
+</div>
+<div id="b.-1" class="section level3">
+<h3>b.</h3>
+<blockquote>
+<p>Fit a logistic regression model to explain the probability of sore throat as a function of type of device. Get the Wald and profile likelihood</p>
+</blockquote>
+<pre class="r"><code>fit2 &lt;- glm(sore_throat ~ tracheal_tube, data = throat, family = binomial(link = &quot;logit&quot;)) 
+summary(fit2)</code></pre>
+<pre><code>
+Call:
+glm(formula = sore_throat ~ tracheal_tube, family = binomial(link = &quot;logit&quot;), 
+    data = throat)
+
+Deviance Residuals: 
+    Min       1Q   Median       3Q      Max  
+-1.5353  -0.9508  -0.9508   0.8576   1.4224  
+
+Coefficients:
+                  Estimate Std. Error z value Pr(&gt;|z|)  
+(Intercept)         0.8109     0.6009   1.349   0.1772  
+tracheal_tubeTRUE  -1.3705     0.7467  -1.836   0.0664 .
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+(Dispersion parameter for binomial family taken to be 1)
+
+    Null deviance: 48.492  on 34  degrees of freedom
+Residual deviance: 44.889  on 33  degrees of freedom
+AIC: 48.889
+
+Number of Fisher Scoring iterations: 4</code></pre>
+<pre class="r"><code>confint(fit2)</code></pre>
+<pre><code>                      2.5 %     97.5 %
+(Intercept)       -0.310979 2.11680249
+tracheal_tubeTRUE -2.929278 0.04379487</code></pre>
+<p>Both Wald test and profile likelihood agree that tracheal tube is not significant.</p>
+</div>
+<div id="c.-1" class="section level3">
+<h3>c.</h3>
+<blockquote>
+<p>Fit the remaining models from the lecture and interpret the output.</p>
+</blockquote>
+<pre class="r"><code>fit2 &lt;- glm(sore_throat ~ tracheal_tube + duration, data = throat, family = binomial(link = &quot;logit&quot;))
+fit3 &lt;- glm(sore_throat ~ duration * tracheal_tube, data = throat, family = binomial(link = &quot;logit&quot;))
+
+summary(fit3)</code></pre>
+<pre><code>
+Call:
+glm(formula = sore_throat ~ duration * tracheal_tube, family = binomial(link = &quot;logit&quot;), 
+    data = throat)
+
+Deviance Residuals: 
+    Min       1Q   Median       3Q      Max  
+-1.9459  -0.7546  -0.5331   0.7840   2.0107  
+
+Coefficients:
+                           Estimate Std. Error z value Pr(&gt;|z|)   
+(Intercept)                 2.66116    1.49224   1.783  0.07453 . 
+duration                   -0.06208    0.04295  -1.445  0.14833   
+tracheal_tubeTRUE          -5.52029    2.01592  -2.738  0.00617 **
+duration:tracheal_tubeTRUE  0.10127    0.04791   2.114  0.03454 * 
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+(Dispersion parameter for binomial family taken to be 1)
+
+    Null deviance: 48.492  on 34  degrees of freedom
+Residual deviance: 37.908  on 31  degrees of freedom
+AIC: 45.908
+
+Number of Fisher Scoring iterations: 4</code></pre>
+<pre class="r"><code>AIC(fit2, fit3)</code></pre>
+<pre><code>     df      AIC
+fit2  3 49.10924
+fit3  4 45.90770</code></pre>
+<p>There seems to be a significant interaction between tracheal tube and duration, according to both the p-value from the fit summary and the AIC.</p>
+<p>Without the tracheal tube, the duration of the procedure does not seem to matter. The tracheal tube itselve is protective for sore throat. For patients with a tracheal tube, increased duration is associated with higher odds of sore throat</p>
+</div>
+<div id="section" class="section level3">
+<h3>3.</h3>
+<blockquote>
+<p>Optional in R: continue with the analysis of the throat dataset, and repeat the model diagnostics. For saving, “binning” and plotting the binned residuals, see the script provided.</p>
+</blockquote>
+<pre class="r"><code>plot(fit3)</code></pre>
+<p><img src="figure/glm_assignments.Rmd/unnamed-chunk-14-1.png" width="672" style="display: block; margin: auto;" /><img src="figure/glm_assignments.Rmd/unnamed-chunk-14-2.png" width="672" style="display: block; margin: auto;" /><img src="figure/glm_assignments.Rmd/unnamed-chunk-14-3.png" width="672" style="display: block; margin: auto;" /><img src="figure/glm_assignments.Rmd/unnamed-chunk-14-4.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Use binning (adapted from provided script)</p>
+<pre class="r"><code>throat %&lt;&gt;%
+  mutate(
+    residuals = residuals(fit3),
+    linpred = predict(fit3, type = &quot;link&quot;)
+  )
+
+throat %&gt;%
+  mutate(pred_cat = quant(linpred, n.tiles = 10)) %&gt;%
+  group_by(pred_cat) %&gt;%
+  summarize(residuals = mean(residuals),
+            linpred = mean(linpred)) %&gt;%
+  ggplot(aes(x = linpred, y = residuals)) +
+  geom_point()</code></pre>
+<p><img src="figure/glm_assignments.Rmd/unnamed-chunk-15-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>This should be unstructured.</p>
+</div>
+</div>
+<div id="section-1" class="section level2">
+<h2>4</h2>
+<blockquote>
+<p>The R script GLM computer lab1 analyses.R contains the beginnings of an analysis of the ICU dataset (ICU.RData, ICU.sav). Use and expand on this script in R (or use SPSS) to answer the following questions. a. (SPSS users note: this is not entirely possible, see answers to 1a&amp;c for compromise.) Examine the relation between status and systolic blood pressure (SYS). Try to make a graph of this relation, similar to the graph of status vs. age in the lecture notes (bottom left graph on slide 60). Compare this plot to the systolic blood pressure plot on slide 61 of the lecture notes. What is different in how this new plot has been made? b. Fit a logistic regression model using only systolic blood pressure (SYS) to predict status. What is the odds ratio for dying (status = dead) for a 10 unit increase in systolic blood pressure? c. What assumption does the model in 3(b) make about dying and SYS? Do you think that assumption is met? d. Examine the relation between status and level of consciousness (LOC) in a contingency table. What do you notice? What problems might this give in the model fitting? e. Fit a logistic regression model using LOC to predict status. Comment on the estimates and standard errors for the regression coefficients.</p>
+</blockquote>
+<blockquote>
+<p>This dataset will be considered for further analysis on days 2 and 3.</p>
+</blockquote>
+<pre class="r"><code># fit_all &lt;- ...
+# stepAIC(fit_all)
+
+# check assumptions (binned deviance, by variable)</code></pre>
+<p>This assignment was skipped due to time-limitations and it being discussed during the lecture.</p>
+</div>
+<div id="section-2" class="section level2">
+<h2>5.</h2>
+<blockquote>
+<p>Can we predict birth weight using gestational age? Is the prediction the same for boys and girls? a. Use the dataset bwt_gestage.csv to answer these questions. Note: sex = 1 are the boys, sex = 2 are the girls. b. Interpret your findings. c. Fit the final model from (a) using both the lm() and glm() functions in R. Compare the parameter estimates and standard errors from the two methods of fitting a linear model. d. Repeat (c) using both the Regression, Linear and the Generalized Linear Models procedures in SPSS. Compare the parameter estimates and standard errors from the two methods of fitting a linear model. What do you notice?</p>
+</blockquote>
+</div>
+<div id="section-3" class="section level2">
+<h2>6.</h2>
+<blockquote>
+<p>We wish to find factors that influence the probability that a low birth weight infant (&lt;1500 g) will experience a germinal matrix hemorrhage. A sample of 100 low birth weight newborns was retrospectively collected in a hospital in Boston, MA. Factors possibly indicative of a germinal matrix hemorrhage were extracted from a chart review and included sex, head circumference, systolic blood pressure and gestational age of the infant, and whether the mother suffered from toxemia during the pregnancy. Use the dataset lowbwt.txt to predict the probability of hemorrhage. (Note: the dichotomous variables are defined as follows: sex=1 is a male, tox=1 is toxemia, grmhem=1 hemorrhage.) a. Start by describing the data, get a sense of the relations between the potential explanatory variables and the outcome. b. Construct a model to predict occurrence of germinal matrix hemorrhage. c. Interpret your findings.</p>
+</blockquote>
+</div>
+<div id="section-4" class="section level2">
+<h2>7.</h2>
+<blockquote>
+<p>The dataset epilepsy in the R library HSAUR (or the SPSS file epilepsy.sav) contains data from a clinical trial on 59 patients suffering from epilepsy. Patients were randomized to groups receiving either an anti-epileptic drug or a placebo, in addition to standard chemotherapy. N.B. If you’re working in R and you’ve loaded the faraway library, unload it now! Otherwise you may end up with the wrong epilepsy data frame (both faraway and HSAUR contain data frames with different structures but the same name): detach(“package:faraway”). Get some information about this data frame by loading the HSAUR library and using help(epilepsy). This is data from a longitudinal trial; we will use only the data from the last two-week period. We are interested in whether the probability of seizure is higher in the treatment or control group in this period. a. Start by making a selection of the data for period 4 and making a new variable for seizure yes/no. b. Get some descriptive statistics for the data, get a sense of the relations between the potential explanatory variables and the dichotomous outcome seizure. c. What type of variable is seizure.rate? d. Give two reasons why a logistic regression model is not the most appropriate way to analyze this data.</p>
+</blockquote>
+</div>
+</div>
+<div id="day-2" class="section level1">
+<h1>Day 2</h1>
+<div id="section-5" class="section level2">
+<h2>1.</h2>
+<blockquote>
+<p>The R script ICU analyses day 2.R contains the beginnings of an analysis of the ICU dataset (ICU.RData, ICU.sav). Use and expand on this script in R (or use SPSS) to answer the following questions.</p>
+</blockquote>
+<p>Setup</p>
+<pre class="r"><code># Analyses of throat and ICU datasets for day 2 GLM course
+
+library(gmodels)
+library(splines)
+library(HSAUR)
+
+load(here(&quot;data&quot;, &quot;ICU.RData&quot;))
+str(ICU)</code></pre>
+<pre><code>&#39;data.frame&#39;:   200 obs. of  22 variables:
+ $ ID    : num  8 12 14 28 32 38 40 41 42 50 ...
+ $ STA   : Factor w/ 2 levels &quot;Alive&quot;,&quot;Dead&quot;: 1 1 1 1 1 1 1 1 1 1 ...
+ $ AGE   : num  27 59 77 54 87 69 63 30 35 70 ...
+ $ AGECAT: num  30 60 80 50 90 70 60 30 40 70 ...
+ $ SEX   : Factor w/ 2 levels &quot;Male&quot;,&quot;Female&quot;: 2 1 1 1 2 1 1 2 1 2 ...
+ $ RACE  : Factor w/ 3 levels &quot;White&quot;,&quot;Black&quot;,..: 1 1 1 1 1 1 1 1 2 1 ...
+ $ SER   : Factor w/ 2 levels &quot;Medical&quot;,&quot;Surgical&quot;: 1 1 2 1 2 1 2 1 1 2 ...
+ $ CAN   : Factor w/ 2 levels &quot;No&quot;,&quot;Yes&quot;: 1 1 1 1 1 1 1 1 1 2 ...
+ $ CRN   : Factor w/ 2 levels &quot;No&quot;,&quot;Yes&quot;: 1 1 1 1 1 1 1 1 1 1 ...
+ $ INF   : Factor w/ 2 levels &quot;No&quot;,&quot;Yes&quot;: 2 1 1 2 2 2 1 1 1 1 ...
+ $ CPR   : Factor w/ 2 levels &quot;No&quot;,&quot;Yes&quot;: 1 1 1 1 1 1 1 1 1 1 ...
+ $ SYS   : num  142 112 100 142 110 110 104 144 108 138 ...
+ $ HRA   : num  88 80 70 103 154 132 66 110 60 103 ...
+ $ PRE   : Factor w/ 2 levels &quot;No&quot;,&quot;Yes&quot;: 1 2 1 1 2 1 1 1 1 1 ...
+ $ TYP   : Factor w/ 2 levels &quot;Elective&quot;,&quot;Emergency&quot;: 2 2 1 2 2 2 1 2 2 1 ...
+ $ FRA   : Factor w/ 2 levels &quot;No&quot;,&quot;Yes&quot;: 1 1 1 2 1 1 1 1 1 1 ...
+ $ PO2   : Factor w/ 2 levels &quot;&gt; 60&quot;,&quot;&lt;= 60&quot;: 1 1 1 1 1 2 1 1 1 1 ...
+ $ PH    : Factor w/ 2 levels &quot;&gt;= 7.25&quot;,&quot;&lt; 7.25&quot;: 1 1 1 1 1 1 1 1 1 1 ...
+ $ PCO   : Factor w/ 2 levels &quot;&lt;= 45&quot;,&quot;&gt; 45&quot;: 1 1 1 1 1 1 1 1 1 1 ...
+ $ BIC   : Factor w/ 2 levels &quot;&gt;= 18&quot;,&quot;&lt; 18&quot;: 1 1 1 1 1 2 1 1 1 1 ...
+ $ CRE   : Factor w/ 2 levels &quot;&lt;= 2.0&quot;,&quot;&gt; 2.0&quot;: 1 1 1 1 1 1 1 1 1 1 ...
+ $ LOC   : Factor w/ 3 levels &quot;No Coma or Stupor&quot;,..: 1 1 1 1 1 1 1 1 1 1 ...
+ - attr(*, &quot;variable.labels&quot;)= Named chr  &quot;Identification Code&quot; &quot;Status&quot; &quot;Age in Years&quot; &quot;Age Class&quot; ...
+  ..- attr(*, &quot;names&quot;)= chr  &quot;ID&quot; &quot;STA&quot; &quot;AGE&quot; &quot;AGECAT&quot; ...
+ - attr(*, &quot;codepage&quot;)= int 1252</code></pre>
+<div id="a.-2" class="section level3">
+<h3>a.</h3>
+<blockquote>
+<p>Examine the relation between status (STA) and type of admission (TYP).</p>
+</blockquote>
+<pre class="r"><code>CrossTable(ICU$TYP, ICU$STA, prop.c=FALSE, prop.t=FALSE, prop.chisq=FALSE) </code></pre>
+<pre><code>
+ 
+   Cell Contents
+|-------------------------|
+|                       N |
+|           N / Row Total |
+|-------------------------|
+
+ 
+Total Observations in Table:  200 
+
+ 
+             | ICU$STA 
+     ICU$TYP |     Alive |      Dead | Row Total | 
+-------------|-----------|-----------|-----------|
+    Elective |        52 |         2 |        54 | 
+             |     0.963 |     0.037 |     0.270 | 
+-------------|-----------|-----------|-----------|
+   Emergency |       108 |        38 |       146 | 
+             |     0.740 |     0.260 |     0.730 | 
+-------------|-----------|-----------|-----------|
+Column Total |       160 |        40 |       200 | 
+-------------|-----------|-----------|-----------|
+
+ </code></pre>
+</div>
+<div id="b.-2" class="section level3">
+<h3>b.</h3>
+<blockquote>
+<p>Fit a logistic regression model using TYP to predict status. Express the results as OR and 95% CI.</p>
+</blockquote>
+<pre class="r"><code>icu.m1 &lt;- glm(formula = STA ~ TYP, family = binomial(link = &quot;logit&quot;), data=ICU)
+summary(icu.m1)</code></pre>
+<pre><code>
+Call:
+glm(formula = STA ~ TYP, family = binomial(link = &quot;logit&quot;), data = ICU)
+
+Deviance Residuals: 
+    Min       1Q   Median       3Q      Max  
+-0.7765  -0.7765  -0.7765  -0.2747   2.5674  
+
+Coefficients:
+             Estimate Std. Error z value Pr(&gt;|z|)    
+(Intercept)   -3.2581     0.7203  -4.523 6.08e-06 ***
+TYPEmergency   2.2136     0.7446   2.973  0.00295 ** 
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+(Dispersion parameter for binomial family taken to be 1)
+
+    Null deviance: 200.16  on 199  degrees of freedom
+Residual deviance: 184.52  on 198  degrees of freedom
+AIC: 188.52
+
+Number of Fisher Scoring iterations: 5</code></pre>
+<pre class="r"><code>exp(coefficients(icu.m1))</code></pre>
+<pre><code> (Intercept) TYPEmergency 
+  0.03846155   9.14814450 </code></pre>
+<pre class="r"><code>exp(confint(icu.m1))</code></pre>
+<pre><code>                   2.5 %     97.5 %
+(Intercept)  0.006293049  0.1235554
+TYPEmergency 2.658796276 57.5739571</code></pre>
+</div>
+<div id="c.-2" class="section level3">
+<h3>c.</h3>
+<blockquote>
+<p>Fit two binomial models producing the Risk Ratio and Risk Difference, with their 95% CI.</p>
+</blockquote>
+<pre class="r"><code># &quot;relative risk&quot; regression: link=log, family = binomial
+icu.m2 &lt;- glm(formula = STA ~ TYP, family = binomial(link = &quot;log&quot;), data=ICU)
+summary(icu.m2)</code></pre>
+<pre><code>
+Call:
+glm(formula = STA ~ TYP, family = binomial(link = &quot;log&quot;), data = ICU)
+
+Deviance Residuals: 
+    Min       1Q   Median       3Q      Max  
+-0.7765  -0.7765  -0.7765  -0.2747   2.5674  
+
+Coefficients:
+             Estimate Std. Error z value Pr(&gt;|z|)    
+(Intercept)   -3.2958     0.6938  -4.750 2.03e-06 ***
+TYPEmergency   1.9498     0.7077   2.755  0.00587 ** 
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+(Dispersion parameter for binomial family taken to be 1)
+
+    Null deviance: 200.16  on 199  degrees of freedom
+Residual deviance: 184.52  on 198  degrees of freedom
+AIC: 188.52
+
+Number of Fisher Scoring iterations: 6</code></pre>
+<pre class="r"><code>exp(coefficients(icu.m2))</code></pre>
+<pre><code> (Intercept) TYPEmergency 
+  0.03703704   7.02739702 </code></pre>
+<pre class="r"><code>exp(confint(icu.m2))</code></pre>
+<pre><code>                   2.5 %     97.5 %
+(Intercept)  0.006254798  0.1099454
+TYPEmergency 2.265999444 42.2886756</code></pre>
+<pre class="r"><code># &quot;risk difference&quot; regression: link=identity, family = binomial
+# Note: do not exponentiate coeff &amp; CI
+icu.m3 &lt;- glm(formula = STA ~ TYP, family = binomial(link = &quot;identity&quot;), data=ICU)
+summary(icu.m3)</code></pre>
+<pre><code>
+Call:
+glm(formula = STA ~ TYP, family = binomial(link = &quot;identity&quot;), 
+    data = ICU)
+
+Deviance Residuals: 
+    Min       1Q   Median       3Q      Max  
+-0.7765  -0.7765  -0.7765  -0.2747   2.5674  
+
+Coefficients:
+             Estimate Std. Error z value Pr(&gt;|z|)    
+(Intercept)   0.03704    0.02570   1.441     0.15    
+TYPEmergency  0.22324    0.04449   5.018 5.22e-07 ***
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+(Dispersion parameter for binomial family taken to be 1)
+
+    Null deviance: 200.16  on 199  degrees of freedom
+Residual deviance: 184.52  on 198  degrees of freedom
+AIC: 188.52
+
+Number of Fisher Scoring iterations: 2</code></pre>
+<pre class="r"><code># confint(icu.m3)
+confint.default(icu.m3)</code></pre>
+<pre><code>                   2.5 %     97.5 %
+(Intercept)  -0.01333321 0.08740729
+TYPEmergency  0.13604217 0.31043170</code></pre>
+<p>For the identity link, likihood profiling for confidence intervals does not work. Possibly due to inadmissable values in the range of the profile.</p>
+</div>
+<div id="d." class="section level3">
+<h3>d.</h3>
+<blockquote>
+<p>Fit two further binomial models using the probit link and the cloglog link.</p>
+</blockquote>
+<pre class="r"><code># probit link
+icu.m4 &lt;- glm(formula = STA ~ TYP, family = binomial(link = &quot;probit&quot;), data=ICU)
+summary(icu.m4)</code></pre>
+<pre><code>
+Call:
+glm(formula = STA ~ TYP, family = binomial(link = &quot;probit&quot;), 
+    data = ICU)
+
+Deviance Residuals: 
+    Min       1Q   Median       3Q      Max  
+-0.7765  -0.7765  -0.7765  -0.2747   2.5674  
+
+Coefficients:
+             Estimate Std. Error z value Pr(&gt;|z|)    
+(Intercept)   -1.7862     0.3175  -5.625 1.85e-08 ***
+TYPEmergency   1.1437     0.3367   3.397 0.000681 ***
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+(Dispersion parameter for binomial family taken to be 1)
+
+    Null deviance: 200.16  on 199  degrees of freedom
+Residual deviance: 184.52  on 198  degrees of freedom
+AIC: 188.52
+
+Number of Fisher Scoring iterations: 5</code></pre>
+<pre class="r"><code># cloglog link
+icu.m5 &lt;- glm(formula = STA ~ TYP, family = binomial(link = &quot;cloglog&quot;), data=ICU)
+summary(icu.m5)</code></pre>
+<pre><code>
+Call:
+glm(formula = STA ~ TYP, family = binomial(link = &quot;cloglog&quot;), 
+    data = ICU)
+
+Deviance Residuals: 
+    Min       1Q   Median       3Q      Max  
+-0.7765  -0.7765  -0.7765  -0.2747   2.5674  
+
+Coefficients:
+             Estimate Std. Error z value Pr(&gt;|z|)    
+(Intercept)   -3.2770     0.7071  -4.634 3.58e-06 ***
+TYPEmergency   2.0780     0.7257   2.864  0.00419 ** 
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+(Dispersion parameter for binomial family taken to be 1)
+
+    Null deviance: 200.16  on 199  degrees of freedom
+Residual deviance: 184.52  on 198  degrees of freedom
+AIC: 188.52
+
+Number of Fisher Scoring iterations: 6</code></pre>
+</div>
+<div id="e." class="section level3">
+<h3>e.</h3>
+<blockquote>
+<p>Decide which link gives the best fitting model, based on deviance or AIC</p>
+</blockquote>
+<pre class="r"><code>AIC(icu.m1, icu.m2, icu.m3, icu.m4, icu.m5)</code></pre>
+<pre><code>       df      AIC
+icu.m1  2 188.5246
+icu.m2  2 188.5246
+icu.m3  2 188.5246
+icu.m4  2 188.5246
+icu.m5  2 188.5246</code></pre>
+<p>All have equivalent AIC.</p>
+<pre class="r"><code>list(icu.m1, icu.m2, icu.m3, icu.m4, icu.m5) %&gt;%
+  map_dbl(deviance)</code></pre>
+<pre><code>[1] 184.5246 184.5246 184.5246 184.5246 184.5246</code></pre>
+<p>All have equivalent deviance</p>
+</div>
+</div>
+<div id="section-6" class="section level2">
+<h2>2.</h2>
+<blockquote>
+<p>Repeat the analyses 1a-d for the continuous variable SYS, being systolic blood pressure.</p>
+</blockquote>
+<p>The identity link required starting values to work</p>
+<pre class="r"><code>try(fit_id &lt;- glm(STA ~ SYS, data = ICU, family = binomial(link = &quot;identity&quot;),
+                  start = c(1, 1)))</code></pre>
+<p>The rest we can do in one line</p>
+<pre class="r"><code>links = list(&quot;logit&quot;, &quot;log&quot;, &quot;probit&quot;, &quot;cloglog&quot;)
+
+fits &lt;- links %&gt;%
+  map(function(link) glm(STA ~ SYS, data = ICU, family = binomial(link = link)))
+
+data.frame(link = unlist(links), 
+           aic = map_dbl(fits, AIC),
+           deviance = map_dbl(fits, AIC))</code></pre>
+<pre><code>     link      aic deviance
+1   logit 195.3351 195.3351
+2     log 193.5661 193.5661
+3  probit 196.2581 196.2581
+4 cloglog 194.5699 194.5699</code></pre>
+<div id="a.-3" class="section level3">
+<h3>a.</h3>
+<blockquote>
+<p>Decide which link now gives the best fitting model, based on deviance or AIC</p>
+</blockquote>
+<p>The log link gives the lowest AIC, so this is the best fit.</p>
+</div>
+<div id="b.-3" class="section level3">
+<h3>b.</h3>
+<blockquote>
+<p>Discuss the difference with 1e</p>
+</blockquote>
+<p>With this continous predictor, there is a difference in AICs between the models.</p>
+<p>In the previous case with only a single binary predictor, there are only two possible values for the predicted probability of survival, regardless of the link function <span class="math inline">\(p_0\)</span> for unexposed, <span class="math inline">\(p_1\)</span> for exposed. Each set of values for <span class="math inline">\(p_0\)</span> and <span class="math inline">\(p_1\)</span> gives rise to a single value of the resulting likelihood. Since all glm models are fitted according to the same criterion of maximum likelihood, they will all find the same values for <span class="math inline">\(p_0\)</span> and <span class="math inline">\(p_1\)</span>.</p>
+<p>We can check this by looking at the values of the predictions</p>
+<pre class="r"><code>list(icu.m1, icu.m2, icu.m3, icu.m4, icu.m5) %&gt;%
+  map(&quot;fitted.values&quot;) %&gt;%
+  map(unique)</code></pre>
+<pre><code>[[1]]
+[1] 0.26027397 0.03703705
+
+[[2]]
+[1] 0.26027397 0.03703704
+
+[[3]]
+[1] 0.26027397 0.03703704
+
+[[4]]
+[1] 0.26027397 0.03703704
+
+[[5]]
+[1] 0.26027397 0.03703704</code></pre>
+<p>In the case of the continous predictor, the predicted probability takes on more values, and now the different link functions start to matter for the model fit.</p>
+</div>
+<div id="c.-3" class="section level3">
+<h3>c.</h3>
+<blockquote>
+<p>The logistic model may be improved by introducing a non-linear effect of SYS. One possible way of achieving this is to add a quadratic term to the model. In R, you may also use a flexible natural spline model (use function ns from library splines in the model specification). Check whether model fit improves.</p>
+</blockquote>
+<pre class="r"><code>require(splines)
+fit_logit1 &lt;- glm(STA ~ SYS + I(SYS^2), data = ICU, family = binomial(link = &quot;logit&quot;))
+fit_logit2 &lt;- glm(STA ~ ns(SYS, df = 2), data = ICU, family = binomial(link = &quot;logit&quot;))
+fit_logit3 &lt;- glm(STA ~ ns(SYS, df = 3), data = ICU, family = binomial(link = &quot;logit&quot;))
+
+AIC(fit_logit1, fit_logit2, fit_logit3)</code></pre>
+<pre><code>           df      AIC
+fit_logit1  3 189.6764
+fit_logit2  3 190.4331
+fit_logit3  4 191.9052</code></pre>
+<p>The spline seems to increase model fit, however including more complicated splines does not.</p>
+</div>
+</div>
+<div id="section-7" class="section level2">
+<h2>3.</h2>
+<blockquote>
+<p>The dataset epilepsy.RData (or the SPSS file epilepsy.sav) contains data from a clinical trial on 59 patients suffering from epilepsy. Patients were randomized to groups receiving either an anti-epileptic drug or a placebo, in addition to standard chemotherapy. This is data from a longitudinal trial; we will use only the data from the last two-week period. We are interested in whether the seizure rate is higher in the treatment or control group in this period. This dataset has already been used in yesterday’s computer lab and today’s lecture.</p>
+</blockquote>
+<pre class="r"><code>load(here(&quot;data&quot;, &quot;epilepsy.RData&quot;))
+str(epilepsy)</code></pre>
+<pre><code>&#39;data.frame&#39;:   236 obs. of  6 variables:
+ $ treatmnt: Factor w/ 2 levels &quot;placebo&quot;,&quot;Progabide&quot;: 1 1 1 1 1 1 1 1 1 1 ...
+ $ base    : num  11 11 11 11 11 11 11 11 6 6 ...
+ $ age     : num  31 31 31 31 30 30 30 30 25 25 ...
+ $ seizr.rt: num  5 3 3 3 3 5 3 3 2 4 ...
+ $ period  : Factor w/ 4 levels &quot;1&quot;,&quot;2&quot;,&quot;3&quot;,&quot;4&quot;: 1 2 3 4 1 2 3 4 1 2 ...
+ $ subject : Factor w/ 59 levels &quot;1&quot;,&quot;2&quot;,&quot;3&quot;,&quot;4&quot;,..: 1 1 1 1 2 2 2 2 3 3 ...
+ - attr(*, &quot;variable.labels&quot;)= Named chr  &quot;treatment&quot; &quot;base&quot; &quot;age&quot; &quot;seizure.rate&quot; ...
+  ..- attr(*, &quot;names&quot;)= chr  &quot;treatmnt&quot; &quot;base&quot; &quot;age&quot; &quot;seizr.rt&quot; ...
+ - attr(*, &quot;codepage&quot;)= int 1252</code></pre>
+<div id="a.-4" class="section level3">
+<h3>a.</h3>
+<blockquote>
+<p>Start by making a selection of the data for period 4.</p>
+</blockquote>
+<pre class="r"><code>epi4 &lt;- epilepsy %&gt;% filter(period == &quot;4&quot;)
+str(epi4)</code></pre>
+<pre><code>&#39;data.frame&#39;:   59 obs. of  6 variables:
+ $ treatmnt: Factor w/ 2 levels &quot;placebo&quot;,&quot;Progabide&quot;: 1 1 1 1 1 1 1 1 1 1 ...
+ $ base    : num  11 11 6 8 66 27 12 52 23 10 ...
+ $ age     : num  31 30 25 36 22 29 31 42 37 28 ...
+ $ seizr.rt: num  3 3 5 4 21 7 2 12 5 0 ...
+ $ period  : Factor w/ 4 levels &quot;1&quot;,&quot;2&quot;,&quot;3&quot;,&quot;4&quot;: 4 4 4 4 4 4 4 4 4 4 ...
+ $ subject : Factor w/ 59 levels &quot;1&quot;,&quot;2&quot;,&quot;3&quot;,&quot;4&quot;,..: 1 2 3 4 5 6 7 8 9 10 ...
+ - attr(*, &quot;variable.labels&quot;)= Named chr  &quot;treatment&quot; &quot;base&quot; &quot;age&quot; &quot;seizure.rate&quot; ...
+  ..- attr(*, &quot;names&quot;)= chr  &quot;treatmnt&quot; &quot;base&quot; &quot;age&quot; &quot;seizr.rt&quot; ...
+ - attr(*, &quot;codepage&quot;)= int 1252</code></pre>
+</div>
+<div id="b.-4" class="section level3">
+<h3>b.</h3>
+<blockquote>
+<p>Repeat the analysis from today’s lecture. Comment on the impact of adjustment for the baseline seizure rate. Pay attention to the fact that this is a randomized trial.</p>
+</blockquote>
+<p>First some marginal distributions for treatment groups</p>
+<pre class="r"><code>epi4 %&gt;%
+  as.data.table() %&gt;%
+  melt.data.table(id.vars = c(&quot;subject&quot;, &quot;treatmnt&quot;), 
+                  measure.vars = c(&quot;base&quot;, &quot;age&quot;, &quot;seizr.rt&quot;)) %&gt;%
+  ggplot(aes(x = treatmnt, y = value)) + 
+  geom_boxplot() +
+  facet_wrap(~variable)</code></pre>
+<p><img src="figure/glm_assignments.Rmd/unnamed-chunk-30-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Looks like the covariates base and age are equally distributed among treatment groups, and seizure rate seems a bit lower in the treatment group.</p>
+<p>Now for the covariate-outcome distributions:</p>
+<pre class="r"><code>epi4 %&gt;%
+  ggplot(aes(x = base, y = seizr.rt)) + 
+  geom_point()</code></pre>
+<p><img src="figure/glm_assignments.Rmd/unnamed-chunk-31-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>epi4 %&gt;%
+  ggplot(aes(x = age, y = seizr.rt)) + 
+  geom_point()</code></pre>
+<p><img src="figure/glm_assignments.Rmd/unnamed-chunk-31-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Clear correlation between base rate and follow-up seizure rate. No clear marginal correlation between age and seizure rate at follow-up</p>
+<p>Model with poisson</p>
+<pre class="r"><code>fit1 &lt;- glm(seizr.rt ~ treatmnt, family = poisson, data = epi4)
+summary(fit1)</code></pre>
+<pre><code>
+Call:
+glm(formula = seizr.rt ~ treatmnt, family = poisson, data = epi4)
+
+Deviance Residuals: 
+    Min       1Q   Median       3Q      Max  
+-3.9911  -2.0175  -1.1319   0.4214  13.0233  
+
+Coefficients:
+                  Estimate Std. Error z value Pr(&gt;|z|)    
+(Intercept)        2.07497    0.06696  30.986   &lt;2e-16 ***
+treatmntProgabide -0.17142    0.09640  -1.778   0.0754 .  
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+(Dispersion parameter for poisson family taken to be 1)
+
+    Null deviance: 476.25  on 58  degrees of freedom
+Residual deviance: 473.08  on 57  degrees of freedom
+AIC: 664.85
+
+Number of Fisher Scoring iterations: 6</code></pre>
+<p>Adjusted for base rate</p>
+<pre class="r"><code>fit2 &lt;- glm(seizr.rt ~ treatmnt + log(base), family = poisson, data = epi4)
+summary(fit2)</code></pre>
+<pre><code>
+Call:
+glm(formula = seizr.rt ~ treatmnt + log(base), family = poisson, 
+    data = epi4)
+
+Deviance Residuals: 
+    Min       1Q   Median       3Q      Max  
+-3.6907  -1.2423  -0.0527   0.8498   3.5874  
+
+Coefficients:
+                  Estimate Std. Error z value Pr(&gt;|z|)    
+(Intercept)       -1.91906    0.25818  -7.433 1.06e-13 ***
+treatmntProgabide -0.19920    0.09640  -2.066   0.0388 *  
+log(base)          1.15056    0.06554  17.556  &lt; 2e-16 ***
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+(Dispersion parameter for poisson family taken to be 1)
+
+    Null deviance: 476.25  on 58  degrees of freedom
+Residual deviance: 147.75  on 56  degrees of freedom
+AIC: 341.51
+
+Number of Fisher Scoring iterations: 5</code></pre>
+<p>Effect seems somewhat stronger after adjustment for base-rate</p>
+</div>
+<div id="c.-4" class="section level3">
+<h3>c.</h3>
+<blockquote>
+<p>Examine the effects of further adjustment.</p>
+</blockquote>
+<pre class="r"><code>fit3 &lt;- glm(seizr.rt ~ treatmnt + log(base) + age, family = poisson, data = epi4)
+summary(fit3)</code></pre>
+<pre><code>
+Call:
+glm(formula = seizr.rt ~ treatmnt + log(base) + age, family = poisson, 
+    data = epi4)
+
+Deviance Residuals: 
+    Min       1Q   Median       3Q      Max  
+-3.5962  -1.1318   0.1552   0.8062   3.6635  
+
+Coefficients:
+                  Estimate Std. Error z value Pr(&gt;|z|)    
+(Intercept)       -2.33017    0.40583  -5.742 9.37e-09 ***
+treatmntProgabide -0.15726    0.10144  -1.550    0.121    
+log(base)          1.17365    0.06819  17.211  &lt; 2e-16 ***
+age                0.01100    0.00823   1.337    0.181    
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+(Dispersion parameter for poisson family taken to be 1)
+
+    Null deviance: 476.25  on 58  degrees of freedom
+Residual deviance: 145.98  on 55  degrees of freedom
+AIC: 341.74
+
+Number of Fisher Scoring iterations: 5</code></pre>
+<p>After adjusting for age, treatment is no longer significant.</p>
+<pre class="r"><code>AIC(fit1, fit2, fit3)</code></pre>
+<pre><code>     df      AIC
+fit1  2 664.8524
+fit2  3 341.5144
+fit3  4 341.7444</code></pre>
+<p>Adding age to the model results in a slightly worse fit according to the AIC.</p>
+<p>However, model fit is not the primary goal for causal research.</p>
+<p>Let’s look at model diagnostics of the fits</p>
+<pre class="r"><code>plot(fit2, which = 5)</code></pre>
+<p><img src="figure/glm_assignments.Rmd/unnamed-chunk-36-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>plot(fit3, which = 5)</code></pre>
+<p><img src="figure/glm_assignments.Rmd/unnamed-chunk-36-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Observation 49 seems to have a strong effect on the model</p>
+</div>
+</div>
+<div id="session-information" class="section level2">
+<h2>Session information</h2>
+<!-- Insert the session information into the document -->
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 3.4.3 (2017-11-30)
+Platform: x86_64-apple-darwin15.6.0 (64-bit)
+Running under: macOS Sierra 10.12.6
+
+Matrix products: default
+BLAS: /Library/Frameworks/R.framework/Versions/3.4/Resources/lib/libRblas.0.dylib
+LAPACK: /Library/Frameworks/R.framework/Versions/3.4/Resources/lib/libRlapack.dylib
+
+locale:
+[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+
+attached base packages:
+[1] tools     splines   stats     graphics  grDevices utils     datasets 
+[8] methods   base     
+
+other attached packages:
+ [1] HSAUR_1.3-9         gmodels_2.16.2      tidyr_0.8.0        
+ [4] bindrcpp_0.2        broom_0.4.3         epistats_0.1.0     
+ [7] ggplot2_2.2.1       here_0.1            purrr_0.2.4        
+[10] magrittr_1.5        data.table_1.10.4-3 dplyr_0.7.4        
+
+loaded via a namespace (and not attached):
+ [1] Rcpp_0.12.15       RColorBrewer_1.1-2 pillar_1.1.0      
+ [4] compiler_3.4.3     git2r_0.21.0       plyr_1.8.4        
+ [7] bindr_0.1          digest_0.6.15      evaluate_0.10.1   
+[10] tibble_1.4.2       gtable_0.2.0       nlme_3.1-131      
+[13] lattice_0.20-35    pkgconfig_2.0.1    rlang_0.1.6       
+[16] psych_1.7.8        GGally_1.3.2       parallel_3.4.3    
+[19] yaml_2.1.16        stringr_1.2.0      knitr_1.19        
+[22] gtools_3.5.0       tidyselect_0.2.3   rprojroot_1.3-2   
+[25] grid_3.4.3         reshape_0.8.7      glue_1.2.0        
+[28] R6_2.2.2           binom_1.1-1        foreign_0.8-69    
+[31] rmarkdown_1.8      gdata_2.18.0       reshape2_1.4.3    
+[34] MASS_7.3-48        backports_1.1.2    scales_0.5.0      
+[37] htmltools_0.3.6    mnormt_1.5-5       assertthat_0.2.0  
+[40] colorspace_1.3-2   labeling_0.3       stringi_1.1.6     
+[43] lazyeval_0.2.1     munsell_0.4.3     </code></pre>
+</div>
+</div>
+
+<hr>
+<p>
+    This <a href="http://rmarkdown.rstudio.com">R Markdown</a> site was created with <a href="https://github.com/jdblischak/workflowr">workflowr</a>
+</p>
+<hr>
+
+<!-- To enable disqus, uncomment the section below and provide your disqus_shortname -->
+
+<!-- disqus
+  <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+        var disqus_shortname = 'rmarkdown'; // required: replace example with your forum shortname
+
+        /* * * DON'T EDIT BELOW THIS LINE * * */
+        (function() {
+            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+-->
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
