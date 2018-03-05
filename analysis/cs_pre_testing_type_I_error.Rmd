@@ -316,6 +316,128 @@ tab2 %>%
 
 The power does not seem to differ too much. 
 
+Let's zoom in on the distributions that are not of type 5 to assess power 
+versus type-I error rate
+
+```{r}
+require(ggplot2)
+tab2 %>%
+  filter(!distribution_type %in% c("5", "1_5")) %>%
+  group_by(distribution_type, delta, var_ratio) %>% mutate(id = 1:n()) %>% ungroup() %>%
+  data.table::melt(id.vars = c("id", "distribution_type", "delta", "var_ratio"), 
+                   measure.vars = c("w", "pre_test"),
+                   variable.name = "test", value.name = "type_I_error_rate") %>% 
+  mutate(distribution_type = factor(distribution_type, 
+                            labels = paste0("dist ", levels(factor(distribution_type)))),
+         var_ratio = factor(var_ratio, levels = 1:2, labels = c("s1=s2", "s1!=s2")),
+         delta = factor(delta, levels = c(0, 1, 5), 
+                        labels = c("delta = 0", "delta = 1", "delta = 5")),
+         yref = ifelse(delta == "delta = 0", 5, 80)) %>%
+  ggplot(aes(x = id, y = type_I_error_rate, col = test))  +
+  geom_line() + 
+  geom_hline(aes(yintercept = yref), lty = 2, alpha = .8) +
+  facet_grid(delta~distribution_type+var_ratio, scales = "free_y") +
+  theme_minimal() + 
+  ggtitle("Type I error rates when null-hypothesis is true or false", 
+          "By distrubution type")
+```
+
+It looks like pre-testing has better power in the case of equal variances 
+and non-normal distributions.
+Which is probably a consequence of the U-test having more power for non-
+normal distributions.
+
+Things start to go wrong when variances are unequal. 
+Maybe this is due to unexpected behaviour of the Levene's test. 
+
+We could propose a third strategy based on the same data: 
+only test for normality, not for equal variances. 
+Assume unequal variances and use the Welch test for non-normal data.
+
+## Strategy 3: only test normality
+
+```{r}
+tab2 %<>%
+  mutate(pre_test_normality = (pre_w*pre_w_freq + pre_u*pre_u_freq) / (pre_w_freq + pre_u_freq))
+```
+
+
+```{r}
+require(ggplot2)
+tab2 %>%
+  group_by(distribution_type, delta, var_ratio) %>% mutate(id = 1:n()) %>% ungroup() %>%
+  data.table::melt(id.vars = c("id", "distribution_type", "delta", "var_ratio"), 
+                   measure.vars = c("w", "pre_test_normality"),
+                   variable.name = "test", value.name = "type_I_error_rate") %>% 
+  mutate(distribution_type = factor(distribution_type, 
+                            labels = paste0("dist ", levels(factor(distribution_type)))),
+         var_ratio = factor(var_ratio, levels = 1:2, labels = c("s1=s2", "s1!=s2")),
+         delta = factor(delta, levels = c(0, 1, 5), 
+                        labels = c("delta = 0", "delta = 1", "delta = 5")),
+         yref = ifelse(delta == "delta = 0", 5, 80)) %>%
+  ggplot(aes(x = id, y = type_I_error_rate, col = test))  +
+  geom_line() + 
+  geom_hline(aes(yintercept = yref), lty = 2, alpha = .8) +
+  facet_grid(delta~distribution_type+var_ratio, scales = "free_y") +
+  theme_minimal() + 
+  ggtitle("Type I error rates when null-hypothesis is true or false", 
+          "By distrubution type")
+```
+
+## Strategy 4: only test equal variances
+
+```{r}
+tab2 %<>%
+  mutate(pre_test_variance = (pre_w*pre_w_freq + pre_t*pre_t_freq) / (pre_w_freq + pre_t_freq))
+```
+
+
+```{r}
+require(ggplot2)
+tab2 %>%
+  group_by(distribution_type, delta, var_ratio) %>% mutate(id = 1:n()) %>% ungroup() %>%
+  data.table::melt(id.vars = c("id", "distribution_type", "delta", "var_ratio"), 
+                   measure.vars = c("w", "pre_test_variance"),
+                   variable.name = "test", value.name = "type_I_error_rate") %>% 
+  mutate(distribution_type = factor(distribution_type, 
+                            labels = paste0("dist ", levels(factor(distribution_type)))),
+         var_ratio = factor(var_ratio, levels = 1:2, labels = c("s1=s2", "s1!=s2")),
+         delta = factor(delta, levels = c(0, 1, 5), 
+                        labels = c("delta = 0", "delta = 1", "delta = 5")),
+         yref = ifelse(delta == "delta = 0", 5, 80)) %>%
+  ggplot(aes(x = id, y = type_I_error_rate, col = test))  +
+  geom_line() + 
+  geom_hline(aes(yintercept = yref), lty = 2, alpha = .8) +
+  facet_grid(delta~distribution_type+var_ratio, scales = "free_y") +
+  theme_minimal() + 
+  ggtitle("Type I error rates when null-hypothesis is true or false", 
+          "By distrubution type")
+```
+
+### All together
+
+```{r}
+require(ggplot2)
+tab2 %>%
+  group_by(distribution_type, delta, var_ratio) %>% mutate(id = 1:n()) %>% ungroup() %>%
+  data.table::melt(id.vars = c("id", "distribution_type", "delta", "var_ratio"), 
+                   measure.vars = c("w", "pre_test", "pre_test_normality", "pre_test_variance"),
+                   variable.name = "test", value.name = "type_I_error_rate") %>% 
+  mutate(distribution_type = factor(distribution_type, 
+                            labels = paste0("dist ", levels(factor(distribution_type)))),
+         var_ratio = factor(var_ratio, levels = 1:2, labels = c("s1=s2", "s1!=s2")),
+         delta = factor(delta, levels = c(0, 1, 5), 
+                        labels = c("delta = 0", "delta = 1", "delta = 5")),
+         yref = ifelse(delta == "delta = 0", 5, 80)) %>%
+  ggplot(aes(x = id, y = type_I_error_rate, col = test))  +
+  geom_line() + 
+  geom_hline(aes(yintercept = yref), lty = 2, alpha = .8) +
+  facet_grid(delta~distribution_type+var_ratio, scales = "free_y") +
+  theme_minimal() + 
+  ggtitle("Type I error rates when null-hypothesis is true or false", 
+          "By distrubution type")
+```
+
 # Conclusion
 
 After re-analyzing the results from Rasch et al. and calculating type-I error 

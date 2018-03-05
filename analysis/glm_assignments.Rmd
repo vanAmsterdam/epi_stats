@@ -1,0 +1,574 @@
+---
+title: "Assignments for Generalized Linear Methods"
+author: "Wouter van Amsterdam"
+date: 2018-03-05
+output: html_document
+---
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+```
+
+<!-- Update knitr chunk options -->
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+<!-- Insert the date the file was last updated -->
+```{r last-updated, echo=FALSE, results='asis'}
+```
+
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+```{r code-version, echo=FALSE, results='asis'}
+```
+
+<!-- Add your analysis here -->
+
+# Setup
+
+```{r}
+library(dplyr)
+library(data.table)
+library(magrittr)
+library(purrr)
+library(here) # for tracking working directory
+library(ggplot2)
+library(epistats)
+library(broom)
+```
+
+# Day 1
+
+## 1 Throat
+
+> Analyze the throat dataset (throat.txt or throat.sav) in R, SPSS, or both.
+
+### a.
+
+>Examine the relation between sore throat and duration of surgery in three ways: 1) make a scatterplot of sore throat by duration of surgery; 2) make histograms of duration split by sore throat; and 3) make a plot of proportion having sore throat by duration of surgery (you'll need to categorize duration).
+
+> In a survey of 35 patients having surgery with a general anesthetic, patients were asked whether or not they experienced a sore throat (throat=0 for
+no, throat=1 for yes).  The duration of the surgery in minutes was also recorded, and the type of device used to secure the airway (0 = laryngeal mask airway; 1=tracheal tube)
+
+```{r}
+throat <- read.table(here("data", "throat.txt"), sep = ";", header = T)
+str(throat)
+```
+
+Rename variables for easier interpretation
+
+```{r}
+throat %<>%
+  transmute(
+    patient = Patient,
+    duration = D,
+    sore_throat = as.logical(`T`),
+    tracheal_tube = as.logical(Y))
+```
+
+
+Scatterplot
+
+```{r}
+throat %>%
+  ggplot(aes(x = duration, y = sore_throat)) + 
+  geom_point()
+```
+
+Histograms
+
+```{r}
+throat %>%
+  ggplot(aes(x = duration, fill = sore_throat)) + 
+  geom_histogram()
+```
+
+Proportion sore throats by category of duration.
+
+Let's divide duration in 5 categories
+
+Calculate mean duration by quantile for proper plotting
+
+```{r}
+throat %<>%
+  mutate(duration_group = quant(duration, n.tiles = 5))
+
+throat_grouped <-throat %>%
+  group_by(duration_group) %>%
+  summarize(mean_duration = mean(duration), 
+         prop_throat = mean(sore_throat))
+```
+
+Plot them
+
+```{r}
+throat_grouped %>%
+  ggplot(aes(x = mean_duration, y = prop_throat)) + 
+  geom_point() +
+  lims(y = c(0,1))
+```
+
+Now improved with errorbars
+
+In `epistats` ther is a function that returns a proportion with a confidence interval 
+for logical variables (without using `n = length(x), x = sum(x)`)
+
+Group the data by duration group using `nest` from `tidyr`
+Perform the confidence interval estimation in each subset,
+pull out the proportions and confidence intervals.
+
+
+```{r}
+require(tidyr)
+
+throat %<>%
+  mutate(duration_group = quant(duration, n.tiles = 5))
+
+throat_nested <- throat %>%
+  group_by(duration_group) %>%
+  nest() %>% 
+  mutate(
+    mean_duration = map(data, function(data) mean(data$duration)),
+    prop = map(data, function(data) binom.confint_logical(data$sore_throat))) %>%
+  unnest(prop, mean_duration)
+
+throat_nested %>%
+  ggplot(aes(x = mean_duration, y = mean)) + 
+  geom_errorbar(aes(ymin = lower, ymax = upper)) + 
+  lims(y = c(0,1)) + 
+  theme_minimal() + labs(y = "proportion sore throat")
+
+
+```
+
+
+
+### b.
+
+> Fit a logistic regression model to explain the probability of sore throat as a function of duration of surgery. SPSS users: do this once using the Regression, Binary Logistic menu option, and a second time using the Generalized Linear Model menu option. Compare the results from both "methods" for estimating a logistic regression; are there differences in the parameter estimates, standard errors or maximum likelihood?
+
+```{r}
+fit <- glm(sore_throat ~ duration, data = throat, family = binomial(link = "logit"))
+summary(fit)
+```
+
+### c.
+
+> Add the fitted logistic curve from (d) to one of the graphs in (a) (SPSS users: save the predicted probabilities from the model; use either a multiple line graph or an overlay scatterplot).
+
+```{r}
+throat_nested %<>%
+  mutate(pred = predict(fit, newdata = data.frame(duration = mean_duration), 
+                        type = "response"))
+
+throat_nested %>%
+  ggplot(aes(x = mean_duration, y = mean)) + 
+  geom_errorbar(aes(ymin = lower, ymax = upper)) + 
+  geom_line(aes(y = pred), lty = 2) + 
+  lims(y = c(0,1)) + 
+  theme_minimal() + labs(y = "proportion sore throat")
+  
+```
+
+## 2. Throat 2
+
+> Continue with the analysis of the throat dataset in R, SPSS, or both (SPSS users: use the GLM menu for the modelling):
+
+### a.
+
+> Examine the relation between sore throat and device, and between device and duration.
+
+```{r}
+throat %>%
+  select(sore_throat, tracheal_tube, duration) %>%
+  mutate_if(is.logical, as.factor) %>%
+  GGally::ggpairs()
+```
+
+Patients without a tracheal tube seem to have a sore throat more often.
+
+Patients with a tracheal tube seem to have a longer duration
+
+### b.
+
+> Fit a logistic regression model to explain the probability of sore throat as a function of type of device. Get the Wald and profile likelihood 
+
+```{r}
+fit2 <- glm(sore_throat ~ tracheal_tube, data = throat, family = binomial(link = "logit")) 
+summary(fit2)
+confint(fit2)
+```
+
+Both Wald test and profile likelihood agree that tracheal tube is not significant.
+
+### c.
+
+> Fit the remaining models from the lecture and interpret the output.
+
+```{r}
+fit2 <- glm(sore_throat ~ tracheal_tube + duration, data = throat, family = binomial(link = "logit"))
+fit3 <- glm(sore_throat ~ duration * tracheal_tube, data = throat, family = binomial(link = "logit"))
+
+summary(fit3)
+AIC(fit2, fit3)
+```
+
+There seems to be a significant interaction between tracheal tube and duration,
+ according to both the p-value from the fit summary and the AIC.
+
+Without the tracheal tube, the duration of the procedure does not seem to matter.
+The tracheal tube itselve is protective for sore throat.
+For patients with a tracheal tube, increased duration is associated with 
+higher odds of sore throat
+
+
+### 3.
+
+> Optional in R: continue with the analysis of the throat dataset, and repeat the model diagnostics. For saving, "binning" and plotting the binned residuals, see the script provided.
+
+```{r}
+plot(fit3)
+```
+
+Use binning (adapted from provided script)
+
+```{r}
+throat %<>%
+  mutate(
+    residuals = residuals(fit3),
+    linpred = predict(fit3, type = "link")
+  )
+
+throat %>%
+  mutate(pred_cat = quant(linpred, n.tiles = 10)) %>%
+  group_by(pred_cat) %>%
+  summarize(residuals = mean(residuals),
+            linpred = mean(linpred)) %>%
+  ggplot(aes(x = linpred, y = residuals)) +
+  geom_point()
+
+```
+
+This should be unstructured.
+
+
+## 4
+
+> The R script GLM computer lab1 analyses.R contains the beginnings of an analysis of the ICU dataset (ICU.RData, ICU.sav). Use and expand on this script in R (or use SPSS) to answer the following questions.
+a.	(SPSS users note: this is not entirely possible, see answers to 1a&c for compromise.) Examine the relation between status and systolic blood pressure (SYS). Try to make a graph of this relation, similar to the graph of status vs. age in the lecture notes (bottom left graph on slide 60). Compare this plot to the systolic blood pressure plot on slide 61 of the lecture notes. What is different in how this new plot has been made?
+b.	Fit a logistic regression model using only systolic blood pressure (SYS) to predict status. What is the odds ratio for dying (status = dead) for a 10 unit increase in systolic blood pressure?
+c.	What assumption does the model in 3(b) make about dying and SYS? Do you think that assumption is met?
+d.	Examine the relation between status and level of consciousness (LOC) in a contingency table. What do you notice? What problems might this give in the model fitting?
+e.	Fit a logistic regression model using LOC to predict status. Comment on the estimates and standard errors for the regression coefficients.
+
+> This dataset will be considered for further analysis on days 2 and 3.
+
+```{r}
+# fit_all <- ...
+# stepAIC(fit_all)
+
+# check assumptions (binned deviance, by variable)
+
+
+```
+
+This assignment was skipped due to time-limitations and it being discussed during the lecture.
+
+## 5.
+
+> Can we predict birth weight using gestational age? Is the prediction the same for boys and girls?
+a.	Use the dataset bwt_gestage.csv to answer these questions. Note: sex = 1 are the boys, sex = 2 are the girls.
+b.	Interpret your findings.
+c.	Fit the final model from (a) using both the lm() and glm() functions in R. Compare the parameter estimates and standard errors from the two methods of fitting a linear model.
+d.	Repeat (c) using both the Regression, Linear and the Generalized Linear Models procedures in SPSS. Compare the parameter estimates and standard errors from the two methods of fitting a linear model. What do you notice?
+
+
+## 6. 
+
+> We wish to find factors that influence the probability that a low birth weight infant (<1500 g) will experience a germinal matrix hemorrhage. A sample of 100 low birth weight newborns was retrospectively collected in a hospital in Boston, MA. Factors possibly indicative of a germinal matrix hemorrhage were extracted from a chart review and included sex, head circumference, systolic blood pressure and gestational age of the infant, and whether the mother suffered from toxemia during the pregnancy. Use the dataset lowbwt.txt to predict the probability of hemorrhage. (Note: the dichotomous variables are defined as follows: sex=1 is a male, tox=1 is toxemia, grmhem=1 hemorrhage.)
+a.	Start by describing the data, get a sense of the relations between the potential explanatory variables and the outcome.
+b.	Construct a model to predict occurrence of germinal matrix hemorrhage.
+c.	Interpret your findings.
+
+## 7. 
+
+> The dataset epilepsy in the R library HSAUR (or the SPSS file epilepsy.sav) contains data from a clinical trial on 59 patients suffering from epilepsy. Patients were randomized to groups receiving either an anti-epileptic drug or a placebo, in addition to standard chemotherapy. N.B. If you're working in R and you've loaded the faraway library, unload it now! Otherwise you may end up with the wrong epilepsy data frame (both faraway and HSAUR contain data frames with different structures but the same name): detach("package:faraway"). Get some information about this data frame by loading the HSAUR library and using help(epilepsy). This is data from a longitudinal trial; we will use only the data from the last two-week period. We are interested in whether the probability of seizure is higher in the treatment or control group in this period.
+a.	Start by making a selection of the data for period 4 and making a new variable for seizure yes/no.
+b.	Get some descriptive statistics for the data, get a sense of the relations between the potential explanatory variables and the dichotomous outcome seizure.
+c.	What type of variable is seizure.rate?
+d.	Give two reasons why a logistic regression model is not the most appropriate way to analyze this data.
+
+
+
+# Day 2
+
+## 1.
+
+> The R script ICU analyses day 2.R contains the beginnings of an analysis of the ICU dataset (ICU.RData, ICU.sav). Use and expand on this script in R (or use SPSS) to answer the following questions.
+
+Setup 
+
+```{r}
+# Analyses of throat and ICU datasets for day 2 GLM course
+
+library(gmodels)
+library(splines)
+library(HSAUR)
+
+load(here("data", "ICU.RData"))
+str(ICU)
+
+```
+
+### a.
+
+> Examine the relation between status (STA) and type of admission (TYP). 
+
+```{r}
+CrossTable(ICU$TYP, ICU$STA, prop.c=FALSE, prop.t=FALSE, prop.chisq=FALSE) 
+```
+
+### b.
+
+> Fit a logistic regression model using TYP to predict status. Express the results as OR and 95% CI.
+
+```{r}
+icu.m1 <- glm(formula = STA ~ TYP, family = binomial(link = "logit"), data=ICU)
+summary(icu.m1)
+exp(coefficients(icu.m1))
+exp(confint(icu.m1))
+```
+
+### c.
+
+> Fit two binomial models producing the Risk Ratio and Risk Difference, with their 95% CI. 
+
+```{r}
+# "relative risk" regression: link=log, family = binomial
+icu.m2 <- glm(formula = STA ~ TYP, family = binomial(link = "log"), data=ICU)
+summary(icu.m2)
+exp(coefficients(icu.m2))
+exp(confint(icu.m2))
+
+# "risk difference" regression: link=identity, family = binomial
+# Note: do not exponentiate coeff & CI
+icu.m3 <- glm(formula = STA ~ TYP, family = binomial(link = "identity"), data=ICU)
+summary(icu.m3)
+# confint(icu.m3)
+confint.default(icu.m3)
+```
+
+For the identity link, likihood profiling for confidence intervals does not work.
+Possibly due to inadmissable values in the range of the profile.
+
+### d.
+
+> Fit two further binomial models using the probit link and the cloglog link. 
+
+```{r}
+# probit link
+icu.m4 <- glm(formula = STA ~ TYP, family = binomial(link = "probit"), data=ICU)
+summary(icu.m4)
+
+# cloglog link
+icu.m5 <- glm(formula = STA ~ TYP, family = binomial(link = "cloglog"), data=ICU)
+summary(icu.m5)
+```
+
+### e.
+
+> Decide which link gives the best fitting model, based on deviance or AIC
+
+```{r}
+AIC(icu.m1, icu.m2, icu.m3, icu.m4, icu.m5)
+```
+
+All have equivalent AIC.
+
+```{r}
+list(icu.m1, icu.m2, icu.m3, icu.m4, icu.m5) %>%
+  map_dbl(deviance)
+```
+
+All have equivalent deviance
+
+## 2.
+
+> Repeat the analyses 1a-d for the continuous variable SYS, being systolic blood pressure.
+
+The identity link required starting values to work
+
+```{r}
+try(fit_id <- glm(STA ~ SYS, data = ICU, family = binomial(link = "identity"),
+                  start = c(1, 1)))
+```
+
+The rest we can do in one line
+
+```{r}
+links = list("logit", "log", "probit", "cloglog")
+
+fits <- links %>%
+  map(function(link) glm(STA ~ SYS, data = ICU, family = binomial(link = link)))
+
+data.frame(link = unlist(links), 
+           aic = map_dbl(fits, AIC),
+           deviance = map_dbl(fits, AIC))
+```
+
+### a.
+
+> Decide which link now gives the best fitting model, based on deviance or AIC
+
+The log link gives the lowest AIC, so this is the best fit.
+
+### b.
+
+> Discuss the difference with 1e
+
+With this continous predictor, there is a difference in AICs between the models.
+
+In the previous case with only a single binary predictor, there are only 
+two possible values for the predicted probability of survival, regardless
+of the link function $p_0$ for unexposed, $p_1$ for exposed. 
+Each set of values for $p_0$ and $p_1$ gives rise to a single value of 
+the resulting likelihood.
+Since all glm models are fitted according to the same criterion of maximum 
+likelihood, they will all find the same values for $p_0$ and $p_1$.
+
+We can check this by looking at the values of the predictions
+
+```{r}
+list(icu.m1, icu.m2, icu.m3, icu.m4, icu.m5) %>%
+  map("fitted.values") %>%
+  map(unique)
+```
+
+In the case of the continous predictor, the predicted probability takes on 
+more values, and now the different link functions start to matter 
+for the model fit.
+
+### c.
+
+> The logistic model may be improved by introducing a non-linear effect of SYS. One possible way of achieving this is to add a quadratic term to the model. In R, you may also use a flexible natural spline model (use function ns from library splines in the model specification). Check whether model fit improves.
+
+```{r}
+require(splines)
+fit_logit1 <- glm(STA ~ SYS + I(SYS^2), data = ICU, family = binomial(link = "logit"))
+fit_logit2 <- glm(STA ~ ns(SYS, df = 2), data = ICU, family = binomial(link = "logit"))
+fit_logit3 <- glm(STA ~ ns(SYS, df = 3), data = ICU, family = binomial(link = "logit"))
+
+AIC(fit_logit1, fit_logit2, fit_logit3)
+```
+
+The spline seems to increase model fit, however including more complicated 
+splines does not.
+
+
+## 3.
+
+> The dataset epilepsy.RData (or the SPSS file epilepsy.sav) contains data from a clinical trial on 59 patients suffering from epilepsy. Patients were randomized to groups receiving either an anti-epileptic drug or a placebo, in addition to standard chemotherapy. This is data from a longitudinal trial; we will use only the data from the last two-week period. We are interested in whether the seizure rate is higher in the treatment or control group in this period. This dataset has already been used in yesterday's computer lab and today's lecture.
+
+```{r}
+load(here("data", "epilepsy.RData"))
+str(epilepsy)
+```
+
+
+### a.	
+
+> Start by making a selection of the data for period 4.
+
+```{r}
+epi4 <- epilepsy %>% filter(period == "4")
+str(epi4)
+```
+
+### b. 
+
+> Repeat the analysis from today's lecture. Comment on the impact of adjustment for the baseline seizure rate. Pay attention to the fact that this is a randomized trial.
+
+First some marginal distributions for treatment groups
+
+```{r}
+epi4 %>%
+  as.data.table() %>%
+  melt.data.table(id.vars = c("subject", "treatmnt"), 
+                  measure.vars = c("base", "age", "seizr.rt")) %>%
+  ggplot(aes(x = treatmnt, y = value)) + 
+  geom_boxplot() +
+  facet_wrap(~variable)
+```
+
+Looks like the covariates base and age are equally distributed among 
+treatment groups, and seizure rate seems a bit lower in the treatment group.
+
+Now for the covariate-outcome distributions:
+
+
+```{r}
+epi4 %>%
+  ggplot(aes(x = base, y = seizr.rt)) + 
+  geom_point()
+
+epi4 %>%
+  ggplot(aes(x = age, y = seizr.rt)) + 
+  geom_point()
+```
+
+Clear correlation between base rate and follow-up seizure rate.
+No clear marginal correlation between age and seizure rate at follow-up
+
+Model with poisson
+
+```{r}
+fit1 <- glm(seizr.rt ~ treatmnt, family = poisson, data = epi4)
+summary(fit1)
+```
+
+Adjusted for base rate
+
+```{r}
+fit2 <- glm(seizr.rt ~ treatmnt + log(base), family = poisson, data = epi4)
+summary(fit2)
+```
+
+Effect seems somewhat stronger after adjustment for base-rate
+
+### c.
+
+> Examine the effects of further adjustment.
+
+```{r}
+fit3 <- glm(seizr.rt ~ treatmnt + log(base) + age, family = poisson, data = epi4)
+summary(fit3)
+```
+
+After adjusting for age, treatment is no longer significant.
+
+```{r}
+AIC(fit1, fit2, fit3)
+```
+
+Adding age to the model results in a slightly worse fit according to the AIC.
+
+However, model fit is not the primary goal for causal research. 
+
+Let's look at model diagnostics of the fits
+
+```{r}
+plot(fit2, which = 5)
+plot(fit3, which = 5)
+```
+
+Observation 49 seems to have a strong effect on the model
+
+
+
+## Session information
+
+<!-- Insert the session information into the document -->
+```{r session-info}
+```

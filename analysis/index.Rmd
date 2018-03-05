@@ -28,9 +28,9 @@ statistic courses in the Epidemiology Graduate Program of the Julius Center, Utr
 
 ## Modern Methods in Data Analysis
 
-[assignments week 1](assignments_week1.html)
+[assignments week 1](mm_assignments_week1.html)
 
-[assignments week 2](assignments_week2.html)
+[assignments week 2](mm_assignments_week2.html)
 
 ## Computational Statistics
 
@@ -41,6 +41,10 @@ statistic courses in the Epidemiology Graduate Program of the Julius Center, Utr
 ## Advanced methods in causal research
 
 [assignments Advanced methods in causal research](acr_assignments.html)
+
+## Generalized linear models
+
+[assignments](glm_assignments.html)
 
 # Notes and commmon errors
 

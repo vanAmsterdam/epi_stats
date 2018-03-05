@@ -1,0 +1,91 @@
+---
+title: "Intro to generalized linear models"
+author: "Wouter van Amsterdam"
+date: 2018-03-05
+output: html_document
+---
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+```
+
+<!-- Update knitr chunk options -->
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+<!-- Insert the date the file was last updated -->
+```{r last-updated, echo=FALSE, results='asis'}
+```
+
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+```{r code-version, echo=FALSE, results='asis'}
+```
+
+<!-- Add your analysis here -->
+
+# Setup
+
+Tutor: Rebecca Stellato
+
+# GLM
+
+1. response follows probability distribution from exponential family
+2. linear predictor $\eta_i$
+3. link function describing mean outcome as function of linear predictor
+$g(\mu_i)=\eta_i$
+
+## Parameter estimation
+
+In general: maximum likelihood estimation
+
+Linear model: ordinary least squares
+
+## Assessing fit
+
+Calculate likelihood of observed data; using $p_i = \frac{y_i}{n_i}$
+
+Residual deviance $-2 * (l_C - l_S)$
+
+Null deviance: $-2 * (l_0 - l_C)$; with no predictors, just intercept
+
+Deviance is a likelihood ratio-test, which is approximately chi-squared 
+distributed with df = difference in df of models
+
+When residual deviance < degrees of freedom, no evidence of lack of fit.
+
+Not the same as: this is the correct/best model
+
+### Residuals
+
+Problem: variance not independent of $y$
+
+Pearson residuals: $r_p = \frac{y-\bar{\mu}}{\sqrt{var(\bar{\mu})}}$
+
+Square and add gives Pearson's Chi-squared
+
+Deviance residuals: residuals defined such that the squared residuals sum up to deviance
+
+also: response residuals, working residuals, jackknife residuals
+
+You can plot residuals against a non-included variable, if they show structure,
+ it should probably be included in the model.
+ 
+- jackknife residuals: leave one out, refit the model, evaluate deviance
+- leverage: influence in X diraction
+- cook's distance: combine delta-beta (
+leave on out, how much do the parameters change (combined))
+
+Faraway: 
+
+- half-normal plots (take absolute values of the different residuals),
+plot against half-normal distribution; straight line not necessary, but 
+should be on a curve
+
+## Session information
+
+<!-- Insert the session information into the document -->
+```{r session-info}
+```
