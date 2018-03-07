@@ -1,0 +1,189 @@
+---
+title: "Model diagnostics"
+author: "Wouter van Amsterdam"
+date: 2018-03-07
+output: html_document
+---
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+```
+
+<!-- Update knitr chunk options -->
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+<!-- Insert the date the file was last updated -->
+```{r last-updated, echo=FALSE, results='asis'}
+```
+
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+```{r code-version, echo=FALSE, results='asis'}
+```
+
+<!-- Add your analysis here -->
+
+# Setup
+
+Tutor: Cas Kruitwagen
+
+
+
+### Diagnostics for Poisson
+
+Log (y - pred(fit, x)) ~ log(pred(fit, x))
+
+#### Pearson residuals
+
+For contingency tables
+
+$$\chi^2 = \sum_j{\sqrt{\frac{(O_j-E_j)^2}{E_j}}}$$
+
+Over all cells in table $j$
+
+For GLM:
+
+$$\sum_i{\frac{y_i-\hat{\mu}}{var(\hat{\mu})}}$$
+
+For all observations $i$. 
+
+For poisson: $var(\mu) = \mu$ so this is the same as the $\chi^2$.
+
+This should be $\chi_2$ distributed with $df_{resid}$ degrees of freedom.
+
+
+#### Deviance residuals
+
+For logistic regression: likelihood of saturated is 1 (log-lik = 0)
+
+For poission this is not the case. You predict a distribution 
+of rates based on the observed rate, but it's always a distribution, 
+not a single value like in logistic regression
+
+Poisson:
+
+$$P(y|\mu) = \frac{\mu^ye^{-\mu}}{y!}$$
+
+Contribution to total deviance vs 'staturated' model taking actual observations.
+
+You need the distribution to calculate the likelihood.
+
+Take contribution to likelihood, based on the predicted probabily based on model and observed location:
+
+- $l_{sat,i} = log(P(y_i|\mu = y_i))$
+- $l_{red,i} = log(P(y_i|\mu = \eta_i))$
+
+Contribution of observation to likelihood
+
+$$Dev_i = sign(y_i - \eta_i)*\sqrt{2 (l_{red,i} - l_{sat,i})}$$
+
+Model deviance follows $chi^2$ distributions with $df_{resid}$ degrees 
+of freedom.
+
+Pearson and deviance residuals are pretty similar
+
+## Identify outliers
+
+Usually: with extreme residual
+
+Also: leverage, Cook's distance
+
+Influential observations: high residual and high influence on model
+
+
+### Jackknife residuals
+
+When an observation has a very high influence on the model, 
+the residual of this observation will be low.
+
+Jackknife -> residual when predicted based on all data except for that case;
+Then studentized (normalized to unit variance)
+
+### Leverage values
+
+Calculated with the 'hat matrix'
+
+Leverage of a case is the diagonal of the hat matrix.
+
+Leverage = How much a case influences its own predicted value
+
+Does not take into account (studentized / jackknife) residual
+
+### Cook's distance
+
+Summarizes delta betas of all coefficients if a single observation was omitted.
+
+Is like product of jackknife residuals and leverage
+
+Usually you want studentized residuals to be between -2 and 2
+
+Cook's recommendation: < 1 is o.k.
+
+Or: < sample size / 4
+
+## Dispersion / scale
+
+Chi-square distribution with n degrees of freedom has a mean of n, var = 2*n
+
+Both dependency of observations and missing covariates lead to overdispersion
+
+(Dependency of **clusters** can lead to underdispersion?)
+
+### Correcting
+
+Include a dispersion parameter > 1
+
+- residual deviance divided by residual df
+- Pearson $\chi^2$ / residual df (preferred choice)
+
+$$\hat{\phi} = \frac{\chi_{pearson}^2}{df_{resid}}$$
+
+
+Solution: take 'quasipoisson'
+
+These are 'non-robust'; sandwhich estimators are more robust
+
+This does not change the estimates, only the standard errors.
+
+Now you get 't' statistics for the coefficients (in Wald's test) instead 
+of 'z' statistics, since you also estimate the variance of the distribution 
+and not just the mean.
+
+
+You cannot get actual likelihood and AIC anymore, you cannot compare models,
+instead when you assume $\phi$ equal among distributions.
+
+Alternatives are:
+
+#### zero inflated poisson (ZIP) 
+
+(i.e. many zeros; e.g. non-drinkers in '
+how many units of alcohol did you drink last week')
+
+Uses a mixture distribution
+
+- a regular poisson distrubtion -> can give 'random' 0s
+- a degenerate distribution (with only 0s) -> gives 'structural' 0s
+
+#### negative binomial distribution
+
+Poisson distribution is not assumed fixed, but randomly drawn 
+from a Gamma distribution
+
+Parameters of the Gamma distribution will be estimated as well, 
+and determine the amount of overdispersion.
+
+What if still overdispresion?
+
+- Zero-inflated negative binomial distribution
+
+
+
+## Session information
+
+<!-- Insert the session information into the document -->
+```{r session-info}
+```

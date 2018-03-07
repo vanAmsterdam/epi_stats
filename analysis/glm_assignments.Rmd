@@ -402,7 +402,7 @@ The identity link required starting values to work
 
 ```{r}
 try(fit_id <- glm(STA ~ SYS, data = ICU, family = binomial(link = "identity"),
-                  start = c(1, 1)))
+                  start = c(mean(ICU$STA == "Dead"), 0)))
 ```
 
 The rest we can do in one line
@@ -412,6 +412,9 @@ links = list("logit", "log", "probit", "cloglog")
 
 fits <- links %>%
   map(function(link) glm(STA ~ SYS, data = ICU, family = binomial(link = link)))
+
+links <- c(links, "identity")
+fits[[length(fits)+1]]  <- fit_id
 
 data.frame(link = unlist(links), 
            aic = map_dbl(fits, AIC),
@@ -432,7 +435,7 @@ With this continous predictor, there is a difference in AICs between the models.
 
 In the previous case with only a single binary predictor, there are only 
 two possible values for the predicted probability of survival, regardless
-of the link function $p_0$ for unexposed, $p_1$ for exposed. 
+of the link function: $\hat{p}_0$ for unexposed, $\hat{p}_1$ for exposed. 
 Each set of values for $p_0$ and $p_1$ gives rise to a single value of 
 the resulting likelihood.
 Since all glm models are fitted according to the same criterion of maximum 
@@ -564,6 +567,124 @@ plot(fit3, which = 5)
 ```
 
 Observation 49 seems to have a strong effect on the model
+
+
+## Day 3 Model diagnostics
+
+### 1. epilepsy
+
+Covered in class
+
+```{r}
+library(HSAUR)
+data(epilepsy, package = "HSAUR")
+epi <- epilepsy[epilepsy$period==4,]
+summary(epi)
+```
+
+Plot marginal distributions
+
+```{r}
+epi %>%
+  select(-period) %>%
+  gather(-treatment, -subject, -seizure.rate, key = "variable", value = "value") %>%
+  ggplot(aes(x = value, y = seizure.rate)) +
+  geom_point() + geom_smooth() +
+  facet_wrap(~variable, scales = "free_x") + 
+  theme_minimal()
+```
+
+Look at extreme cases
+
+```{r}
+epi %>%
+  filter(seizure.rate == max(seizure.rate))
+```
+
+
+#### Linear model
+
+```{r}
+fit_lm <- lm(seizure.rate ~ age + base +treatment, data = epi)
+plot(fit_lm)
+```
+
+- no homoscedasticity
+- non-normal distrubtion of residuals
+
+#### Transform variables
+
+```{r}
+epi %>%
+  mutate(log_base = log(base + 0.5)) %>%
+  select(-period) %>%
+  gather(-treatment, -subject, -seizure.rate, key = "variable", value = "xvalue") %>%
+  mutate(log_sr = log(seizure.rate + 0.5)) %>%
+  gather(seizure.rate, log_sr, key = "outcome", value = "yvalue") %>%
+  ggplot(aes(x = xvalue, y = yvalue)) +
+  geom_point() + geom_smooth() +
+  facet_grid(outcome~variable, scales = "free") + 
+  theme_minimal()
+```
+
+
+```{r}
+fit_lm_log <- lm(log(seizure.rate + 0.5) ~ age + log(base + 0.5) + treatment, data = epi)
+plot(fit_lm_log)
+```
+
+#### Partial plot
+
+Linear relationship between residuals of a model without the variable
+
+
+Create a function for partial plots
+
+```{r}
+partial_residuals.lm <- function(fit, term, resid_type = "response") {
+  formula0  = formula(fit)
+  all_vars  = all.vars(formula0)
+  response  = all_vars[1]
+  all_terms = all_vars[-1]
+  new_terms = setdiff(all_terms, term)
+  
+  fit_resp <- lm(reformulate(new_terms, response), data = fit$model)
+  fit_term <- lm(reformulate(new_terms, term), data = fit$model)
+  
+  return(
+    data.frame(resid_response = resid(fit_resp, type = resid_type),
+               resid_term     = resid(fit_term, type = resid_type))
+  )
+}
+
+partial_plots.lm <- function(fit, terms = NULL) {
+  formula0  = formula(fit)
+  all_vars  = all.vars(formula0)
+  cat(all_vars)
+  response  = all_vars[1]
+  cat(response)
+  all_terms = all_vars[-1]
+  cat(all_terms)
+  terms = if (!is.null(terms)) {terms} else {all_terms}
+  cat(terms)
+  resid_data = pmap_df(list(terms), function(term) {
+    data.frame(term = term, 
+               partial_residuals.lm(fit, term))
+    })
+  
+  p = ggplot(resid_data, aes(x = resid_term, y = resid_response)) + 
+    geom_point() + geom_smooth() + 
+    facet_wrap(~term, scales = "free_x") + 
+    theme_minimal()
+  print(p)
+  
+  return(resid_data)
+  
+}
+
+partial_plots.lm(fit_lm)
+
+```
 
 
 
