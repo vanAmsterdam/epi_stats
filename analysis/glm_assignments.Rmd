@@ -660,13 +660,11 @@ partial_residuals.lm <- function(fit, term, resid_type = "response") {
 partial_plots.lm <- function(fit, terms = NULL) {
   formula0  = formula(fit)
   all_vars  = all.vars(formula0)
-  cat(all_vars)
   response  = all_vars[1]
-  cat(response)
   all_terms = all_vars[-1]
-  cat(all_terms)
+
   terms = if (!is.null(terms)) {terms} else {all_terms}
-  cat(terms)
+
   resid_data = pmap_df(list(terms), function(term) {
     data.frame(term = term, 
                partial_residuals.lm(fit, term))
@@ -675,7 +673,7 @@ partial_plots.lm <- function(fit, terms = NULL) {
   p = ggplot(resid_data, aes(x = resid_term, y = resid_response)) + 
     geom_point() + geom_smooth() + 
     facet_wrap(~term, scales = "free_x") + 
-    theme_minimal()
+    theme_minimal() + labs(y = paste0("Residual of ", response))
   print(p)
   
   return(resid_data)
@@ -686,6 +684,385 @@ partial_plots.lm(fit_lm)
 
 ```
 
+
+# Day 4. Non-standard models
+
+## 1. Matched case control 
+
+> A case-control study was performed to determine whether induced (and spontaneous) abortions could increase the risk of secondary infertility. Obstetric and gynaecologic histories were obtained from 100 women with secondary infertility admitted to a department of obstetrics and gynecology its division of fertility and sterility. For every patient, an attempt was made to find two healthy control subjects from the same hospital with matching for age, parity, and level of education. Two control subjects each were found for 83 of the index patients. The data can be found in infertility.csv. The numbers of (spontaneous or induced) abortions are coded as 0=0, 1=1, 2=2 or more.
+
+### a.
+
+> What type of study is this? What type of analysis do you prefer for this study design?
+
+Matched case control, can be analyzed with conditional logistic regression.
+
+### b.
+
+> Perform the analysis and interpret the results. Do previous (spontaneous or induced) abortions affect the risk of secondary infertility?
+
+Read in data
+
+```{r}
+infert <- read.csv(here("data", "infertility.csv"), sep = ";")
+str(infert)
+summary(infert)
+```
+
+Check stratum variable, which tells us the matced pairs
+
+```{r}
+table(infert$stratum)
+```
+
+Perform analysis
+
+```{r}
+require(survival)
+fit1 <- clogit(case ~  induced + spontaneous + strata(stratum),
+       data = infert, method = "exact")
+summary(fit1)
+```
+
+Both previous spontanious and previous induced abortions increase the risk 
+of infertility. 
+
+The odds ratio of induced abortions is 4.09, 
+the odds ratio of spontaneous abortions is 7.29
+
+
+
+
+### c.
+
+> How do we control for the potential confounding effects of age, parity and education?
+
+They are accounted for by the matching, 
+so no need to add them as covariates to the model
+
+## 2. Multinomial regression
+
+> Madsen (1976) investigated satisfaction with housing conditions in Copenhagen. Residents in selected areas living in rented homes built between 1960 and 1968 were questioned about their satisfaction and their degree of contact with other residents. The data can be found in the file housinglong.csv. The variable satisfaction is coded 1=low, 2=medium, 3=high; contact is coded 1=low and 2=high. Save your script/SPSS code, we will use this data again in Exercise 4.
+
+### a.
+
+> Summarize the data using appropriate tables and percentages to show the associations between levels of satisfaction and contact with other residents, levels of satisfaction and type of housing, and contact and type of housing.
+
+```{r}
+housinglong <- read.csv(here("data", "housinglong.csv"), sep = ";")
+str(housinglong)
+```
+
+There are three categorical variables, when can get all pairwise contingengy 
+tables with 3 tables
+
+```{r}
+require(gmodels)
+CrossTable(housinglong$type, housinglong$satisfaction, 
+           prop.c=FALSE,prop.t=FALSE,prop.chisq=FALSE)
+```
+
+Seems like people from tower block are most often in the highest satisfaction 
+categorty
+
+```{r}
+CrossTable(housinglong$type, housinglong$contact, 
+           prop.c=FALSE,prop.t=FALSE,prop.chisq=FALSE)
+```
+
+People living in 'house's have most contact with neighbours
+
+```{r}
+CrossTable(housinglong$contact, housinglong$satisfaction, 
+           prop.c=FALSE,prop.t=FALSE,prop.chisq=FALSE)
+```
+
+People with more contact are more often in the highest category of satisfaction.
+
+### b.
+
+> Use nominal (multinomial) logistic regression to model associations between level of satisfaction and the other two variables. Use the likelihood ratio test (LRT) to delete non-significant variables in order to obtain a parsimonious model that summarizes the patterns of the data.
+
+Drop1 trew an error ("Error in if (trace) { : argument is not interpretable as logical"),
+so we will make the models ourselves and perform LRtests
+
+```{r}
+require(nnet)
+fit0 <- multinom(satisfaction ~ 1, data = housinglong)
+fit1 <- multinom(satisfaction ~ type, data = housinglong)
+fit2 <- multinom(satisfaction ~ contact, data = housinglong)
+fit3 <- multinom(satisfaction ~ type + contact, data = housinglong)
+anova(fit3, fit2, test = "Chisq")
+anova(fit3, fit1, test = "Chisq")
+```
+
+Dropping either contact or type will lead to a significant decrease of the
+ likelihood, although the effect of dropping type is greater.
+
+### c.
+
+> Interpret the coefficients from the model in (b).
+
+```{r}
+summary(fit3)
+exp(coef(fit3))
+```
+
+The odds of being in satisfactory class 2 is 1.07 times higher than 
+the odds of being in class 1, for people in type house, compared to 
+type appartment, given the same level of contact. 
+
+The odds of being in satisfactory class 3 is 0.73 times 
+the odds of being in class 1, for people in type house, compared to 
+type appartment, given the same level of contact. 
+
+Possible extensions:
+
+- recode type to dummy variables, see if we can drop 1 of the 3 levels
+
+### d.
+
+> In SPSS is it not possible to get residuals for a multinomial or ordinal logistic regression. In R we can make our own "deviance residuals" as follows (assuming the dataset is called house, and the multinomial model from which we wish to estimate deviance residuals is called house.mlr.2):
+likl <- numeric(1681)
+for (i in 1:1681) likl[i] <-  fitted(house.mlr.2)[i,house$satisfaction[i]]
+Plot these deviance residuals against case number:
+plot(1:1681, -2*log(likl))
+
+```{r}
+likl <- numeric(1681)
+for (i in 1:1681) likl[i] <-  fitted(fit3)[i,housinglong$satisfaction[i]]
+plot(1:1681, -2*log(likl))
+```
+
+
+> We will start the afternoon session with a theoretical (non-computer) question. Discuss the following with a few of your neighbors. We will then discuss the question in the group before proceeding to the computer lab questions.
+
+## 3. Polypharmacy
+
+> A researcher wishes to gain insight into the independent management and use of polypharmacy (≥ 5 medications) by elderly home healthcare clients in relation to their cognitive and self-management skills.
+Three measurement tests were assessed: the Clock-Drawing test (CDT), the Self-Management Ability Scale (SMAS-30) and the independent Medication Management Score (iMMS).
+The iMMS instrument consists of 17 "yes/no" questions regarding independent medication management, where a "no" indicates lack of management ability in a particular area of medication management. The iMMS equals the number of questions that were answered with "no".
+The Clock-Drawing test ("Can you draw a clock and put the hands on 10 past 11?") purports to measure the cognitive abilities of the individual, and is scored on a scale from 1 to 5 (5 being best).
+The Self-Management Ability Scale (SMAS-30) consists of 30 questions on general self-management issues, and is scaled from 0 to 100.
+
+> The researcher wishes to predict the iMMS from the CDT and SMAS-30, as well as age and sex of the individual with a generalized linear model, using one of three probability distributions: the Gaussian, binomial or Poisson distribution.
+
+### a. 
+
+> Give at least one advantage and one disadvantage for each of these three approaches.
+
+iMMS is a bounded discrete variable, ranging from 0 to 17;
+
+- Gaussian: since the range of 0-17 with steps of 1 is not very small, 
+it may be approximated as a continous variable. Using the Guassian distribution 
+with GLM gives the regular linear regression, which has the easiest interpretation. 
+A downside is that the response is actually discrete and bounded
+
+- binomial: this seems like a logical choice of distribution for this problem.
+iMMS can be seen as the result of 17 bernoulli trials (yes/no), however,
+ it may be that the trials are not independent of each other 
+ (so scoring 'no' on a certain question will increase the probability of 
+ scoring 'no' on another question), and that the probability of 'success' 
+ on each question is not the same. This violates two of the assumptions of the
+ binomial distribution. Also, the resulting coefficients are not always easy 
+ interpretable depending on the chosen link function.
+
+- Poisson: the Poisson distribution is suitable for discrete (count) variables, 
+bounded by 0 as is the case here. A downside is that there exists an upper bound
+here. 
+
+### b.
+
+> Which specific graphs from the initial data analysis step and/or the model checking step would you need to help you choose among the three approaches?
+
+Plotting the marginal distribution of the outcome may be benificial. 
+When the mean of the distribution is in the center of the range and the distribution
+is approximately bell-shaped, the Gaussian approximation may be ok. However,
+this ultimately depends on the error distribution of the models.
+
+Plotting marginal distributions will not be very helpful, as each distribution 
+has assumptions on the error distribution and not the marginal distribution, 
+so probably model checking is best.
+
+- For all models:
+
+-- Calculate deviance, check which model has lowest deviance
+-- Look for influential observations based on the Cook's distance
+
+
+- Guassian
+
+-- Create a fit with both explanatory variables, plot
+-- QQ-plot of residuals
+-- y vs pred(y) to assess homoscedasticity
+-- make partial plots to assess linearity of the relationship
+
+- Binomial
+
+
+- Poisson
+
+-- calculate dispersion parameter
+
+## 4. Housing revisited
+
+> We will revisit the Madsen dataset on satisfaction with housing conditions (housinglong.csv). Recall: the variable satisfaction is coded 1=low, 2=medium, 3=high; contact is coded 1=low and 2=high. 
+
+### a.
+
+> In question 2 we analyzed the data using a multinomial logistic regression. Why was this not the most appropriate model for examining associations between levels of satisfaction and the other variables? Fit a more suitable model and compare the results with those from (b). See if you can reduce this model, again using the LRT.
+
+Multinomial regression assumes nominal outcome, so no order in the levels of the 
+outcome. In this case, we have that class 1 < class 2 < class 3, so we have 
+order. This information was disregarded by the multinomial model.
+
+Better may be proportional odds model
+
+```{r}
+housinglong <- read.csv(here("data", "housinglong.csv"), sep = ";")
+```
+
+```{r}
+require(MASS)
+# fit_po1 <- polr(factor(satisfaction) ~ contact, data = housinglong)
+# fit_po2 <- polr(factor(satisfaction) ~ type, data = housinglong)
+fit_po3 <- polr(factor(satisfaction) ~ type + contact, data = housinglong)
+
+drop1(fit_po3, test = "Chisq")
+```
+
+We cannot drop any of the explanatory variables.
+
+Compare with the multinomial regression models
+
+```{r}
+fit_mn3 <- multinom(satisfaction ~ type + contact, data = housinglong)
+
+fits <- list(multinomial = fit_mn3, proportional_odds = fit_po3)
+```
+
+```{r}
+fits %>%
+  map_df(function(fit) data.frame(deviance = fit$deviance,
+                                  df = fit$edf,
+                                  AIC = AIC(fit)), .id = "model")
+```
+
+### b.
+
+> Comment on the AIC and residual deviance of the models from Exercises 2b and 4a.
+
+The deviance of the multinomial model is lower. However, this model has 
+more estimated parameters, as it estimates coefficients for the explanatory 
+variables for 2 of the 3 levels of the response variable. 
+
+The proportional odds model assumes the same coefficients for differences 
+between class 1 and 2 and class 2 and 3, and therefore has more residual 
+degrees of freedom.
+
+This results in a lower AIC, and arguably a better fit. However, the difference 
+is small.
+
+### c.
+
+> R users: as in Exercise 2, try to save and plot the deviance residuals from the model in (a).
+
+```{r}
+nobs = fit_po3$nobs
+likl_po <- numeric(nobs)
+for (i in 1:nobs) likl_po[i] <- fit_po3$fitted.values[i, housinglong$satisfaction[i]]
+plot(1:nobs, -2*log(likl_po))
+```
+
+Try to compare models
+
+```{r}
+bind_rows(list(multinomial = data.frame(likl = likl), 
+               proportional_odds = data.frame(likl = likl_po)), .id = "model") %>%
+  mutate(loglik = -2*log(likl)) %>%
+  group_by(model) %>% 
+  mutate(index = 1:n(), 
+         satisfaction = housinglong$satisfaction) %>%
+  ggplot(aes(x = index, y = loglik, col = model)) +
+  geom_point() + facet_wrap(~satisfaction, labeller = "label_both")
+```
+
+
+### d.
+
+> In both SPSS and R, it is at least possible to get fitted probabilities. From the best model you obtained in (a), get the fitted probabilities per combination of type and contact. Use these to calculate the fitted frequencies (counts).
+Hint: in R, use the predict() function (and the option type="probs") on a new data frame containing all combinations of type and contact; in SPSS, try aggregating the predicted values over the categories of type & contact). Use the predicted probabilities to get predicted counts and find where the largest discrepancies are between observed frequencies and expected frequencies estimated from the model.
+
+Make a grid of the possible covariate combinations and predict probabilities.
+
+```{r}
+cov_grid <- expand.grid(
+  contact = unique(housinglong$contact),
+  type = sort(unique(housinglong$type))
+)
+
+grid_pred <- predict(fit_po3, newdata = cov_grid, type = "probs")
+row.names(grid_pred) <- paste0(cov_grid$type, "_contact", cov_grid$contact)
+grid_pred
+```
+
+Get the observed probabilities
+
+```{r}
+obs_probs <- prop.table(ftable(table(
+  housinglong$type, 
+  housinglong$contact, 
+  housinglong$satisfaction), 
+  col.vars = 3), margin = 1)
+obs_probs
+```
+
+Subtract to view differences
+
+```{r}
+diff_grid <- obs_probs - grid_pred
+diff_grid
+```
+
+Visualize (take absolute difference)
+
+```{r}
+image(t(abs(diff_grid)), xaxt = "n", yaxt = "n")
+axis(1, at = seq(0, 1, length.out = 3), labels = 1:3, las = 1)
+axis(2, at = seq(0, 1, length.out = 6), labels = rownames(grid_pred), las = 1)
+
+```
+
+### e. 
+
+> For the more advanced R user: included in the R solutions for today is code to check the proportional odds assumption for the model in part (d). To do this, we need to calculate the ln(odds) of satisfaction=1 vs 2&3 and of of satisfaction=1&2 vs 3 for each level of housing type and contact and graph these. 
+
+
+The advanced SPSS user can look at this link for code on checking the proportional odds assumption in SPSS http://www.ats.ucla.edu/stat/spss/dae/ologit.htm .
+
+
+## 5. Esophageal cancer
+
+> A retrospective case-control study of 200 male cases of esophageal cancer and 778 population controls was carried out in Ille-et-Vilaine (France). Interest is in the relation between tobacco consumption (tobhigh: 1 = 20+ g/day, 0 = less than 20 g/day) and esophageal cancer (case: 1 = case, 0 = control), while considering the possible confounding or effect- modifying effects of alcohol consumption (alchigh: 1 = 80+ g /day, 0 = < 80 g/day). The data can be found in bd1.sav or bd1.csv (separator = ",")
+
+### a.
+
+> What type of study is this? What type of analysis would you prefer for this study design?
+
+Case-control
+
+Logistic regression (the outcome is binary)
+
+### b.
+
+> Use this data to answer the research question, paying attention to the role (confounding?/effect modification?) of alcohol use.
+
+
+### c.
+
+>Do some model checking.
+
+Deviance, 
 
 
 ## Session information
