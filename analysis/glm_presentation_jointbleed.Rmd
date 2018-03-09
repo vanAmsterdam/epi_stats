@@ -303,28 +303,6 @@ fit_nbzip <- zeroinfl(jb ~ FVIII | age + FVIII, data = joint, dist = "negbin")
 AIC(fit_nbzip)
 ```
 
-
-```{r}
-summary(fit_nbzip)
-```
-
-```{r}
-cov_grid <- expand.grid(
-  FVIII = seq(0, 20, length.out = 100),
-  age = seq(0, 100, length.out = 100)
-)
-grid_predictions <- predict(fit_nbzip, newdata = cov_grid)
-preds <- data.frame(cov_grid, pred_count = grid_predictions)
-```
-
-
-```{r}
-preds %>%
-  ggplot(aes(x = age, y= FVIII, fill = pred_count)) + 
-  geom_tile()
-```
-
-
 ### Compare models
 
 ```{r}
@@ -342,12 +320,13 @@ Compare with AIC
 
 
 ```{r}
-fits %>%
+model_table <- fits %>%
   map_df(function(fit) data.frame(
     deviance = ifelse(is.null(deviance(fit)), NA, deviance(fit)),
     loglik = logLik(fit),
     AIC = AIC(fit)
     ), .id = "model")
+knitr::kable(model_table, digits = 1)
 ```
 
 
@@ -364,11 +343,72 @@ fits %>%
 
 ## Model diagnostics
 
-```{r}
-plot(fit_nb)
-```
 
 All observations fall within a Cook's distance of < 0.5
+
+
+
+
+```{r}
+sum_table <- summary(fit_nbzip)
+sum_table
+```
+
+```{r}
+cov_grid <- expand.grid(
+  FVIII = seq(0, 40, length.out = 100),
+  age = seq(0, 80, length.out = 100)
+)
+grid_predictions <- predict(fit_nbzip, newdata = cov_grid)
+preds <- data.frame(cov_grid, pred_count = grid_predictions)
+
+preds %>%
+  ggplot(aes(x = age, y = FVIII, fill = pred_count)) + 
+  geom_tile()
+```
+
+### Compare with observed counts
+
+```{r}
+joint %<>%
+  mutate(predicted_count = fit_nbzip$fitted.values,
+         resid = residuals(fit_nbzip, type = "response"),
+         pearson_resid = residuals(fit_nbzip, type = "pearson"))
+
+```
+
+
+```{r}
+joint %>%
+  ggplot(aes(x = age, y = FVIII, z = jb)) + 
+  stat_summary_hex(fun = function(x) mean(x), bins = 12) + 
+  ggtitle("mean number of joint bleeds")
+```
+
+
+```{r}
+joint %>%
+  ggplot(aes(x = age, y = FVIII, z = jb)) + 
+  stat_summary_hex(fun = function(x) mean(x > 0), bins = 12) + 
+  ggtitle("percentage of participants with at least 1 joint bleed per year")
+```
+
+```{r}
+joint %>%
+  gather(jb, predicted_count, key = "variable", value = "value") %>%
+  ggplot(aes(x = age, y = FVIII, z = value)) + 
+  stat_summary_hex(fun = function(x) mean(x), bins = 12) + 
+  facet_grid(variable~.)
+  ggtitle("mean number of joint bleeds")
+```
+
+```{r}
+joint %>%
+  ggplot(aes(x = age, y = FVIII, z = pearson_resid)) + 
+  stat_summary_hex(fun = function(x) mean(x), bins = 12) + 
+  ggtitle("Pearson residuals")
+```
+
 
 
 ## Discussion
