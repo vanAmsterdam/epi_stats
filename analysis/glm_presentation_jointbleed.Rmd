@@ -1,0 +1,382 @@
+---
+title: "Presentation Jointbleed"
+author: "Aernoud Fiolet, Koos van Kesteren, Wouter van Amsterdam"
+date: 2018-03-08
+output: html_document
+---
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+```
+
+<!-- Update knitr chunk options -->
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+<!-- Insert the date the file was last updated -->
+```{r last-updated, echo=FALSE, results='asis'}
+```
+
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+```{r code-version, echo=FALSE, results='asis'}
+```
+
+<!-- Add your analysis here -->
+
+# Setup R
+
+
+```{r}
+library(dplyr)
+library(data.table)
+library(magrittr)
+library(purrr)
+library(here) # for tracking working directory
+library(ggplot2); theme_set(theme_minimal())
+library(epistats)
+library(broom)
+```
+
+
+Get data
+
+```{r}
+joint <- read.table(here("data", "jointbleed.txt"), sep = ",", header = T)
+str(joint)
+```
+
+Table
+
+```{r}
+table(joint$jb)
+```
+
+
+Marginal outcome distribution
+
+```{r}
+joint %>%
+  ggplot(aes(x = jb)) + 
+  geom_histogram() + 
+  theme_minimal()
+```
+
+Very high count of zeros, zero inflated poisson
+
+## Curation
+
+Check for outliers
+
+```{r}
+require(tidyr)
+
+joint %>%
+  gather(key = "variable", value = "value") %>%
+  ggplot(aes(x = value)) + 
+  geom_histogram() +
+  facet_wrap(~variable)
+```
+
+Age has an outlier
+
+```{r}
+joint %>%
+  arrange(-age) %>% filter(row_number() < 10)
+```
+
+Remove this case, this must be an error. Highly probable that this is random
+
+```{r}
+joint %<>% filter(age < 120)
+```
+
+### Look at pairwise marginal distributions
+
+```{r}
+joint %>%
+  ggplot(aes(x = age, y = jb)) + 
+  geom_point()
+```
+
+```{r}
+joint %>%
+  ggplot(aes(x = age, y = FVIII)) + 
+  geom_point()
+```
+
+
+## Modeling
+
+Based on theoretical considerations, these models will be evaluated:
+
+- linear regression (with log-transform of response)
+- poisson (due to nature of outcome)
+- quasipoisson (to account for possible overdispersion)
+- zero-inflated poisson (based on the outcome distribution)
+- negative binomial
+
+Liklihood methods:
+
+- linear regression: ordinary least squares
+- poisson: maximum likelihood
+- quasipoisson: quasi-likelihood
+- zero-inflated poisson: maximum likelihood
+- negative binomial: maximum likelihood
+
+This means we can directly compare poisson, ZIP and negative binomial,
+but not quasi-poisson. 
+
+
+Strategy:
+
+For each link function and error distribution
+
+- fit model with age and FVIII and interaction
+- reduce model using likelihood ratio test
+- save final model
+
+### Variable transformations
+
+Add a log + 0.5 transformed jb to account for zeros
+Also log-transform FVIII as it is a ratio
+
+```{r}
+joint %<>% mutate(
+  jb_log = log(jb + 0.5),
+  FVIII_log = log(FVIII)
+  )
+```
+
+
+```{r}
+joint %>%
+  select(-age, -severity) %>%
+  gather(FVIII, FVIII_log, key = "variable", value = "xvalue") %>%
+  gather(jb, jb_log, key = "outcome", value = "yvalue") %>%
+  ggplot(aes(x = xvalue, y = yvalue)) +
+  geom_point() + geom_smooth() +
+  facet_grid(outcome~variable, scales = "free") + 
+  theme_minimal()
+
+```
+
+
+Remove zeros
+
+
+```{r}
+joint %>%
+  filter(jb > 0) %>%
+  ggplot(aes(x = FVIII, y = jb)) +
+  geom_point()
+```
+
+
+### poisson
+
+```{r}
+fit_pois <- glm(jb ~ age * FVIII, data = joint, family = poisson)
+drop1(fit_pois, test = "Chisq")
+fit_pois <- glm(jb ~ age + FVIII, data = joint, family = poisson)
+drop1(fit_pois, test = "Chisq")
+fit_pois <- glm(jb ~ FVIII, data = joint, family = poisson)
+drop1(fit_pois, test = "Chisq")
+dispersion(fit_pois)
+```
+
+### lm
+
+Create a likelihood function for the linear model, this makes the models 
+directly comparable
+
+
+
+
+```{r}
+fit_lm <- glm(jb_log ~ age * FVIII, data = joint)
+drop1(fit_lm, test = "Chisq")
+fit_lm <- glm(jb_log ~ age + FVIII, data = joint)
+drop1(fit_lm, test = "Chisq")
+fit_lm <- glm(jb_log ~ FVIII, data = joint)
+drop1(fit_lm, test = "Chisq")
+summary(glm(jb_log ~ FVIII, data = joint))
+```
+
+## quisipoisson
+
+```{r}
+fit_qpois <- glm(jb ~ age * FVIII, data = joint, family = quasipoisson)
+drop1(fit_qpois, test = "Chisq")
+fit_qpois <- glm(jb ~ age + FVIII, data = joint, family = quasipoisson)
+drop1(fit_qpois, test = "Chisq")
+fit_qpois <- glm(jb ~ FVIII, data = joint, family = quasipoisson)
+drop1(fit_qpois, test = "Chisq")
+```
+
+## zero-inflated poisson
+
+```{r}
+require(pscl)
+fit_zip <- zeroinfl(jb ~ age * FVIII, data = joint)
+AIC(fit_zip)
+fit_zip <- zeroinfl(jb ~ age * FVIII, data = joint, dist = "negbin")
+AIC(fit_zip)
+# drop1(fit_zip, test = "Chisq")
+fit_zip <- zeroinfl(jb ~ age * FVIII | FVIII, data = joint)
+AIC(fit_zip)
+# drop1(fit_zip, test = "Chisq")
+```
+
+No further reduction possible
+
+## negative binomial 
+
+```{r}
+require(MASS); select <- dplyr::select
+fit_nb <- glm.nb(jb ~ age * FVIII, data = joint)
+drop1(fit_nb, test = "Chisq")
+fit_nb <- glm.nb(jb ~ age + FVIII, data = joint)
+drop1(fit_nb, test = "Chisq")
+fit_nb <- glm.nb(jb ~ FVIII, data = joint)
+drop1(fit_nb, test = "Chisq")
+```
+
+Check non-linear terms
+
+Neither splines or polynomial terms improved AIC
+
+```{r}
+spline_dfs <- as.list(1:5)
+spline_dfs %>%
+  map_dbl(function(df) glm.nb(jb ~ splines::ns(FVIII, df = df), data = joint) %>%
+        AIC)
+spline_dfs %>%
+  map_dbl(function(df) glm.nb(jb ~ poly(FVIII, degree = df), data = joint) %>%
+        AIC)
+```
+
+```{r}
+glm.nb(jb ~ splines::ns(FVIII, df = 2), data = joint)
+glm.nb(jb ~ FVIII, data = joint)
+```
+
+### Zero-inflated negative binomial
+
+```{r}
+fit_nbzip <- zeroinfl(jb ~ age * FVIII, data = joint, dist = "negbin")
+drop1(fit_nbzip, test = "Chisq")
+fit_nbzip <- zeroinfl(jb ~ age + FVIII, data = joint, dist = "negbin")
+drop1(fit_nbzip, test = "Chisq")
+```
+
+First check covariates for zero distribution
+
+```{r}
+fit_nbzip <- zeroinfl(jb ~ age * FVIII | age * FVIII, data = joint, dist = "negbin")
+AIC(fit_nbzip)
+fit_nbzip <- zeroinfl(jb ~ age * FVIII | age + FVIII, data = joint, dist = "negbin")
+AIC(fit_nbzip)
+fit_nbzip <- zeroinfl(jb ~ age * FVIII | FVIII, data = joint, dist = "negbin")
+AIC(fit_nbzip)
+fit_nbzip <- zeroinfl(jb ~ age * FVIII | age, data = joint, dist = "negbin")
+AIC(fit_nbzip)
+fit_nbzip <- zeroinfl(jb ~ age * FVIII | 1, data = joint, dist = "negbin")
+AIC(fit_nbzip)
+
+```
+
+Check part for count distribution
+
+```{r}
+fit_nbzip <- zeroinfl(jb ~ age * FVIII | age + FVIII, data = joint, dist = "negbin")
+AIC(fit_nbzip)
+fit_nbzip <- zeroinfl(jb ~ age + FVIII | age + FVIII, data = joint, dist = "negbin")
+AIC(fit_nbzip)
+fit_nbzip <- zeroinfl(jb ~ age | age + FVIII, data = joint, dist = "negbin")
+AIC(fit_nbzip)
+fit_nbzip <- zeroinfl(jb ~ 1 | age + FVIII, data = joint, dist = "negbin")
+AIC(fit_nbzip)
+fit_nbzip <- zeroinfl(jb ~ FVIII | age + FVIII, data = joint, dist = "negbin")
+AIC(fit_nbzip)
+```
+
+
+```{r}
+summary(fit_nbzip)
+```
+
+```{r}
+cov_grid <- expand.grid(
+  FVIII = seq(0, 20, length.out = 100),
+  age = seq(0, 100, length.out = 100)
+)
+grid_predictions <- predict(fit_nbzip, newdata = cov_grid)
+preds <- data.frame(cov_grid, pred_count = grid_predictions)
+```
+
+
+```{r}
+preds %>%
+  ggplot(aes(x = age, y= FVIII, fill = pred_count)) + 
+  geom_tile()
+```
+
+
+### Compare models
+
+```{r}
+fits <- list(
+  poisson = fit_pois,
+  # lm = fit_lm,
+  # quasipoisson = fit_qpois,
+  zip = fit_zip,
+  negative_binomial = fit_nb,
+  zip_negative_binomial = fit_nbzip
+)
+```
+
+Compare with AIC
+
+
+```{r}
+fits %>%
+  map_df(function(fit) data.frame(
+    deviance = ifelse(is.null(deviance(fit)), NA, deviance(fit)),
+    loglik = logLik(fit),
+    AIC = AIC(fit)
+    ), .id = "model")
+```
+
+
+
+```{r}
+fits %>%
+  map_df(function(fit) data.frame(
+    deviance = ifelse(is.null(deviance(fit)), NA, deviance(fit)),
+    loglik = logLik(fit),
+    AIC = AIC(fit)
+    ), .id = "model")
+```
+
+
+## Model diagnostics
+
+```{r}
+plot(fit_nb)
+```
+
+All observations fall within a Cook's distance of < 0.5
+
+
+## Discussion
+
+Tried log-transform of FVIII
+
+## Session information
+
+<!-- Insert the session information into the document -->
+```{r session-info}
+```
