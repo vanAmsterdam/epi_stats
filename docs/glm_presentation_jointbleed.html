@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+<meta name="author" content="Aernoud Fiolet, Koos van Kesteren, Wouter van Amsterdam" />
+
+<meta name="date" content="2018-03-08" />
+
+<title>Presentation Jointbleed</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/font-awesome-4.5.0/css/font-awesome.min.css" rel="stylesheet" />
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+
+<div class="container-fluid main-container">
+
+<!-- tabsets -->
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+</script>
+
+<!-- code folding -->
+
+
+
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+  padding-left: 25px;
+  text-indent: 0;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">epi_stats</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/jdblischak/workflowr">
+    <span class="fa fa-github"></span>
+     
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">Presentation Jointbleed</h1>
+<h4 class="author"><em>Aernoud Fiolet, Koos van Kesteren, Wouter van Amsterdam</em></h4>
+<h4 class="date"><em>2018-03-08</em></h4>
+
+</div>
+
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+<!-- Update knitr chunk options -->
+<!-- Insert the date the file was last updated -->
+<p><strong>Last updated:</strong> 2018-03-09</p>
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+<p><strong>Code version:</strong> 7933ec9</p>
+<!-- Add your analysis here -->
+<div id="setup-r" class="section level1">
+<h1>Setup R</h1>
+<pre class="r"><code>library(dplyr)
+library(data.table)
+library(magrittr)
+library(purrr)
+library(here) # for tracking working directory
+library(ggplot2); theme_set(theme_minimal())
+library(epistats)
+library(broom)</code></pre>
+<p>Get data</p>
+<pre class="r"><code>joint &lt;- read.table(here(&quot;data&quot;, &quot;jointbleed.txt&quot;), sep = &quot;,&quot;, header = T)
+str(joint)</code></pre>
+<pre><code>&#39;data.frame&#39;:   297 obs. of  4 variables:
+ $ jb      : int  0 0 1 0 0 0 0 0 0 0 ...
+ $ age     : int  48 16 51 72 76 25 85 18 62 37 ...
+ $ FVIII   : int  10 7 12 9 5 5 2 7 10 5 ...
+ $ severity: int  0 0 0 0 0 0 1 0 0 0 ...</code></pre>
+<p>Table</p>
+<pre class="r"><code>table(joint$jb)</code></pre>
+<pre><code>
+  0   1   2   3   4   5  24  25  32 
+270  11   4   3   4   2   1   1   1 </code></pre>
+<p>Marginal outcome distribution</p>
+<pre class="r"><code>joint %&gt;%
+  ggplot(aes(x = jb)) + 
+  geom_histogram() + 
+  theme_minimal()</code></pre>
+<p><img src="figure/glm_presentation_jointbleed.Rmd/unnamed-chunk-4-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Very high count of zeros, zero inflated poisson</p>
+<div id="curation" class="section level2">
+<h2>Curation</h2>
+<p>Check for outliers</p>
+<pre class="r"><code>require(tidyr)
+
+joint %&gt;%
+  gather(key = &quot;variable&quot;, value = &quot;value&quot;) %&gt;%
+  ggplot(aes(x = value)) + 
+  geom_histogram() +
+  facet_wrap(~variable)</code></pre>
+<p><img src="figure/glm_presentation_jointbleed.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Age has an outlier</p>
+<pre class="r"><code>joint %&gt;%
+  arrange(-age) %&gt;% filter(row_number() &lt; 10)</code></pre>
+<pre><code>  jb age FVIII severity
+1  0 271    10        0
+2  0  87     8        0
+3  0  86     4        1
+4  0  85     2        1
+5  0  83     5        0
+6  0  83     9        0
+7  0  83    13        0
+8  0  78     4        1
+9  0  77    15        0</code></pre>
+<p>Remove this case, this must be an error. Highly probable that this is random</p>
+<pre class="r"><code>joint %&lt;&gt;% filter(age &lt; 120)</code></pre>
+<div id="look-at-pairwise-marginal-distributions" class="section level3">
+<h3>Look at pairwise marginal distributions</h3>
+<pre class="r"><code>joint %&gt;%
+  ggplot(aes(x = age, y = jb)) + 
+  geom_point()</code></pre>
+<p><img src="figure/glm_presentation_jointbleed.Rmd/unnamed-chunk-8-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>joint %&gt;%
+  ggplot(aes(x = age, y = FVIII)) + 
+  geom_point()</code></pre>
+<p><img src="figure/glm_presentation_jointbleed.Rmd/unnamed-chunk-9-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+</div>
+<div id="modeling" class="section level2">
+<h2>Modeling</h2>
+<p>Based on theoretical considerations, these models will be evaluated:</p>
+<ul>
+<li>linear regression (with log-transform of response)</li>
+<li>poisson (due to nature of outcome)</li>
+<li>quasipoisson (to account for possible overdispersion)</li>
+<li>zero-inflated poisson (based on the outcome distribution)</li>
+<li>negative binomial</li>
+</ul>
+<p>Liklihood methods:</p>
+<ul>
+<li>linear regression: ordinary least squares</li>
+<li>poisson: maximum likelihood</li>
+<li>quasipoisson: quasi-likelihood</li>
+<li>zero-inflated poisson: maximum likelihood</li>
+<li>negative binomial: maximum likelihood</li>
+</ul>
+<p>This means we can directly compare poisson, ZIP and negative binomial, but not quasi-poisson.</p>
+<p>Strategy:</p>
+<p>For each link function and error distribution</p>
+<ul>
+<li>fit model with age and FVIII and interaction</li>
+<li>reduce model using likelihood ratio test</li>
+<li>save final model</li>
+</ul>
+<div id="variable-transformations" class="section level3">
+<h3>Variable transformations</h3>
+<p>Add a log + 0.5 transformed jb to account for zeros Also log-transform FVIII as it is a ratio</p>
+<pre class="r"><code>joint %&lt;&gt;% mutate(
+  jb_log = log(jb + 0.5),
+  FVIII_log = log(FVIII)
+  )</code></pre>
+<pre class="r"><code>joint %&gt;%
+  select(-age, -severity) %&gt;%
+  gather(FVIII, FVIII_log, key = &quot;variable&quot;, value = &quot;xvalue&quot;) %&gt;%
+  gather(jb, jb_log, key = &quot;outcome&quot;, value = &quot;yvalue&quot;) %&gt;%
+  ggplot(aes(x = xvalue, y = yvalue)) +
+  geom_point() + geom_smooth() +
+  facet_grid(outcome~variable, scales = &quot;free&quot;) + 
+  theme_minimal()</code></pre>
+<p><img src="figure/glm_presentation_jointbleed.Rmd/unnamed-chunk-11-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Remove zeros</p>
+<pre class="r"><code>joint %&gt;%
+  filter(jb &gt; 0) %&gt;%
+  ggplot(aes(x = FVIII, y = jb)) +
+  geom_point()</code></pre>
+<p><img src="figure/glm_presentation_jointbleed.Rmd/unnamed-chunk-12-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="poisson" class="section level3">
+<h3>poisson</h3>
+<pre class="r"><code>fit_pois &lt;- glm(jb ~ age * FVIII, data = joint, family = poisson)
+drop1(fit_pois, test = &quot;Chisq&quot;)</code></pre>
+<pre><code>Single term deletions
+
+Model:
+jb ~ age * FVIII
+          Df Deviance    AIC     LRT Pr(&gt;Chi)
+&lt;none&gt;         779.97 864.82                 
+age:FVIII  1   780.45 863.30 0.48533    0.486</code></pre>
+<pre class="r"><code>fit_pois &lt;- glm(jb ~ age + FVIII, data = joint, family = poisson)
+drop1(fit_pois, test = &quot;Chisq&quot;)</code></pre>
+<pre><code>Single term deletions
+
+Model:
+jb ~ age + FVIII
+       Df Deviance    AIC    LRT Pr(&gt;Chi)    
+&lt;none&gt;      780.45 863.30                    
+age     1   781.63 862.48  1.173   0.2787    
+FVIII   1   852.44 933.29 71.990   &lt;2e-16 ***
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<pre class="r"><code>fit_pois &lt;- glm(jb ~ FVIII, data = joint, family = poisson)
+drop1(fit_pois, test = &quot;Chisq&quot;)</code></pre>
+<pre><code>Single term deletions
+
+Model:
+jb ~ FVIII
+       Df Deviance    AIC   LRT  Pr(&gt;Chi)    
+&lt;none&gt;      781.63 862.48                    
+FVIII   1   854.69 933.54 73.06 &lt; 2.2e-16 ***
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<pre class="r"><code>dispersion(fit_pois)</code></pre>
+<pre><code>[1] 12.57082</code></pre>
+</div>
+<div id="lm" class="section level3">
+<h3>lm</h3>
+<p>Create a likelihood function for the linear model, this makes the models directly comparable</p>
+<pre class="r"><code>fit_lm &lt;- glm(jb_log ~ age * FVIII, data = joint)
+drop1(fit_lm, test = &quot;Chisq&quot;)</code></pre>
+<pre><code>Single term deletions
+
+Model:
+jb_log ~ age * FVIII
+          Df Deviance   AIC scaled dev. Pr(&gt;Chi)
+&lt;none&gt;         103.19 538.1                     
+age:FVIII  1   103.19 536.1   0.0017255   0.9669</code></pre>
+<pre class="r"><code>fit_lm &lt;- glm(jb_log ~ age + FVIII, data = joint)
+drop1(fit_lm, test = &quot;Chisq&quot;)</code></pre>
+<pre><code>Single term deletions
+
+Model:
+jb_log ~ age + FVIII
+       Df Deviance    AIC scaled dev. Pr(&gt;Chi)  
+&lt;none&gt;      103.19 536.10                       
+age     1   103.23 534.20      0.1026  0.74870  
+FVIII   1   105.35 540.23      6.1307  0.01329 *
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<pre class="r"><code>fit_lm &lt;- glm(jb_log ~ FVIII, data = joint)
+drop1(fit_lm, test = &quot;Chisq&quot;)</code></pre>
+<pre><code>Single term deletions
+
+Model:
+jb_log ~ FVIII
+       Df Deviance   AIC scaled dev. Pr(&gt;Chi)  
+&lt;none&gt;      103.23 534.2                       
+FVIII   1   105.41 538.4      6.1972   0.0128 *
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<pre class="r"><code>summary(glm(jb_log ~ FVIII, data = joint))</code></pre>
+<pre><code>
+Call:
+glm(formula = jb_log ~ FVIII, data = joint)
+
+Deviance Residuals: 
+    Min       1Q   Median       3Q      Max  
+-0.2848  -0.2241  -0.1635  -0.1029   3.9199  
+
+Coefficients:
+             Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept) -0.393218   0.062878  -6.254 1.41e-09 ***
+FVIII       -0.015158   0.006078  -2.494   0.0132 *  
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+(Dispersion parameter for gaussian family taken to be 0.3511177)
+
+    Null deviance: 105.41  on 295  degrees of freedom
+Residual deviance: 103.23  on 294  degrees of freedom
+AIC: 534.2
+
+Number of Fisher Scoring iterations: 2</code></pre>
+</div>
+</div>
+<div id="quisipoisson" class="section level2">
+<h2>quisipoisson</h2>
+<pre class="r"><code>fit_qpois &lt;- glm(jb ~ age * FVIII, data = joint, family = quasipoisson)
+drop1(fit_qpois, test = &quot;Chisq&quot;)</code></pre>
+<pre><code>Single term deletions
+
+Model:
+jb ~ age * FVIII
+          Df Deviance scaled dev. Pr(&gt;Chi)
+&lt;none&gt;         779.97                     
+age:FVIII  1   780.45    0.038772   0.8439</code></pre>
+<pre class="r"><code>fit_qpois &lt;- glm(jb ~ age + FVIII, data = joint, family = quasipoisson)
+drop1(fit_qpois, test = &quot;Chisq&quot;)</code></pre>
+<pre><code>Single term deletions
+
+Model:
+jb ~ age + FVIII
+       Df Deviance scaled dev. Pr(&gt;Chi)  
+&lt;none&gt;      780.45                       
+age     1   781.63      0.0940  0.75917  
+FVIII   1   852.44      5.7666  0.01633 *
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<pre class="r"><code>fit_qpois &lt;- glm(jb ~ FVIII, data = joint, family = quasipoisson)
+drop1(fit_qpois, test = &quot;Chisq&quot;)</code></pre>
+<pre><code>Single term deletions
+
+Model:
+jb ~ FVIII
+       Df Deviance scaled dev. Pr(&gt;Chi)  
+&lt;none&gt;      781.63                       
+FVIII   1   854.69      5.8112  0.01592 *
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+</div>
+<div id="zero-inflated-poisson" class="section level2">
+<h2>zero-inflated poisson</h2>
+<pre class="r"><code>require(pscl)
+fit_zip &lt;- zeroinfl(jb ~ age * FVIII, data = joint)
+AIC(fit_zip)</code></pre>
+<pre><code>[1] 444.7131</code></pre>
+<pre class="r"><code>fit_zip &lt;- zeroinfl(jb ~ age * FVIII, data = joint, dist = &quot;negbin&quot;)
+AIC(fit_zip)</code></pre>
+<pre><code>[1] 295.3253</code></pre>
+<pre class="r"><code># drop1(fit_zip, test = &quot;Chisq&quot;)
+fit_zip &lt;- zeroinfl(jb ~ age * FVIII | FVIII, data = joint)
+AIC(fit_zip)</code></pre>
+<pre><code>[1] 442.4802</code></pre>
+<pre class="r"><code># drop1(fit_zip, test = &quot;Chisq&quot;)</code></pre>
+<p>No further reduction possible</p>
+</div>
+<div id="negative-binomial" class="section level2">
+<h2>negative binomial</h2>
+<pre class="r"><code>require(MASS); select &lt;- dplyr::select
+fit_nb &lt;- glm.nb(jb ~ age * FVIII, data = joint)
+drop1(fit_nb, test = &quot;Chisq&quot;)</code></pre>
+<pre><code>Single term deletions
+
+Model:
+jb ~ age * FVIII
+          Df Deviance    AIC     LRT Pr(&gt;Chi)
+&lt;none&gt;         67.325 298.24                 
+age:FVIII  1   67.389 296.30 0.06316   0.8016</code></pre>
+<pre class="r"><code>fit_nb &lt;- glm.nb(jb ~ age + FVIII, data = joint)
+drop1(fit_nb, test = &quot;Chisq&quot;)</code></pre>
+<pre><code>Single term deletions
+
+Model:
+jb ~ age + FVIII
+       Df Deviance    AIC     LRT  Pr(&gt;Chi)    
+&lt;none&gt;      67.337 296.30                      
+age     1   67.574 294.54  0.2364 0.6267967    
+FVIII   1   80.749 307.71 13.4115 0.0002501 ***
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<pre class="r"><code>fit_nb &lt;- glm.nb(jb ~ FVIII, data = joint)
+drop1(fit_nb, test = &quot;Chisq&quot;)</code></pre>
+<pre><code>Single term deletions
+
+Model:
+jb ~ FVIII
+       Df Deviance    AIC    LRT  Pr(&gt;Chi)    
+&lt;none&gt;      67.244 294.54                     
+FVIII   1   80.920 306.21 13.676 0.0002172 ***
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<p>Check non-linear terms</p>
+<p>Neither splines or polynomial terms improved AIC</p>
+<pre class="r"><code>spline_dfs &lt;- as.list(1:5)
+spline_dfs %&gt;%
+  map_dbl(function(df) glm.nb(jb ~ splines::ns(FVIII, df = df), data = joint) %&gt;%
+        AIC)</code></pre>
+<pre><code>Warning: glm.fit: fitted rates numerically 0 occurred
+
+Warning: glm.fit: fitted rates numerically 0 occurred</code></pre>
+<pre><code>[1] 296.5376 294.8631 296.8419 298.5633 299.6983</code></pre>
+<pre class="r"><code>spline_dfs %&gt;%
+  map_dbl(function(df) glm.nb(jb ~ poly(FVIII, degree = df), data = joint) %&gt;%
+        AIC)</code></pre>
+<pre><code>Warning: glm.fit: fitted rates numerically 0 occurred
+
+Warning: glm.fit: fitted rates numerically 0 occurred
+
+Warning: glm.fit: fitted rates numerically 0 occurred</code></pre>
+<pre><code>[1] 296.5376 294.6719 296.6444 297.5305 299.5097</code></pre>
+<pre class="r"><code>glm.nb(jb ~ splines::ns(FVIII, df = 2), data = joint)</code></pre>
+<pre><code>Warning: glm.fit: fitted rates numerically 0 occurred</code></pre>
+<pre><code>
+Call:  glm.nb(formula = jb ~ splines::ns(FVIII, df = 2), data = joint, 
+    init.theta = 0.05163026687, link = log)
+
+Coefficients:
+                (Intercept)  splines::ns(FVIII, df = 2)1  
+                    -0.5807                     -28.5957  
+splines::ns(FVIII, df = 2)2  
+                   -58.3855  
+
+Degrees of Freedom: 295 Total (i.e. Null);  293 Residual
+Null Deviance:      85.18 
+Residual Deviance: 67   AIC: 294.9</code></pre>
+<pre class="r"><code>glm.nb(jb ~ FVIII, data = joint)</code></pre>
+<pre><code>
+Call:  glm.nb(formula = jb ~ FVIII, data = joint, init.theta = 0.04795752412, 
+    link = log)
+
+Coefficients:
+(Intercept)        FVIII  
+     1.3131      -0.3236  
+
+Degrees of Freedom: 295 Total (i.e. Null);  294 Residual
+Null Deviance:      80.92 
+Residual Deviance: 67.24    AIC: 296.5</code></pre>
+<div id="zero-inflated-negative-binomial" class="section level3">
+<h3>Zero-inflated negative binomial</h3>
+<pre class="r"><code>fit_nbzip &lt;- zeroinfl(jb ~ age * FVIII, data = joint, dist = &quot;negbin&quot;)
+drop1(fit_nbzip, test = &quot;Chisq&quot;)</code></pre>
+<pre><code>Single term deletions
+
+Model:
+jb ~ age * FVIII
+          Df    AIC      LRT Pr(&gt;Chi)
+&lt;none&gt;       295.32                  
+age:FVIII  2 291.41 0.080486   0.9606</code></pre>
+<pre class="r"><code>fit_nbzip &lt;- zeroinfl(jb ~ age + FVIII, data = joint, dist = &quot;negbin&quot;)
+drop1(fit_nbzip, test = &quot;Chisq&quot;)</code></pre>
+<pre><code>Single term deletions
+
+Model:
+jb ~ age + FVIII
+       Df    AIC     LRT  Pr(&gt;Chi)    
+&lt;none&gt;    291.41                      
+age     2 297.31  9.9081  0.007055 ** 
+FVIII   2 310.51 23.1039 9.617e-06 ***
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<p>First check covariates for zero distribution</p>
+<pre class="r"><code>fit_nbzip &lt;- zeroinfl(jb ~ age * FVIII | age * FVIII, data = joint, dist = &quot;negbin&quot;)
+AIC(fit_nbzip)</code></pre>
+<pre><code>[1] 295.3253</code></pre>
+<pre class="r"><code>fit_nbzip &lt;- zeroinfl(jb ~ age * FVIII | age + FVIII, data = joint, dist = &quot;negbin&quot;)
+AIC(fit_nbzip)</code></pre>
+<pre><code>[1] 291.1756</code></pre>
+<pre class="r"><code>fit_nbzip &lt;- zeroinfl(jb ~ age * FVIII | FVIII, data = joint, dist = &quot;negbin&quot;)
+AIC(fit_nbzip)</code></pre>
+<pre><code>[1] 300.8118</code></pre>
+<pre class="r"><code>fit_nbzip &lt;- zeroinfl(jb ~ age * FVIII | age, data = joint, dist = &quot;negbin&quot;)
+AIC(fit_nbzip)</code></pre>
+<pre><code>[1] 302.0072</code></pre>
+<pre class="r"><code>fit_nbzip &lt;- zeroinfl(jb ~ age * FVIII | 1, data = joint, dist = &quot;negbin&quot;)
+AIC(fit_nbzip)</code></pre>
+<pre><code>[1] 302.239</code></pre>
+<p>Check part for count distribution</p>
+<pre class="r"><code>fit_nbzip &lt;- zeroinfl(jb ~ age * FVIII | age + FVIII, data = joint, dist = &quot;negbin&quot;)
+AIC(fit_nbzip)</code></pre>
+<pre><code>[1] 291.1756</code></pre>
+<pre class="r"><code>fit_nbzip &lt;- zeroinfl(jb ~ age + FVIII | age + FVIII, data = joint, dist = &quot;negbin&quot;)
+AIC(fit_nbzip)</code></pre>
+<pre><code>[1] 291.4058</code></pre>
+<pre class="r"><code>fit_nbzip &lt;- zeroinfl(jb ~ age | age + FVIII, data = joint, dist = &quot;negbin&quot;)
+AIC(fit_nbzip)</code></pre>
+<pre><code>[1] 301.5861</code></pre>
+<pre class="r"><code>fit_nbzip &lt;- zeroinfl(jb ~ 1 | age + FVIII, data = joint, dist = &quot;negbin&quot;)
+AIC(fit_nbzip)</code></pre>
+<pre><code>[1] 300.6746</code></pre>
+<pre class="r"><code>fit_nbzip &lt;- zeroinfl(jb ~ FVIII | age + FVIII, data = joint, dist = &quot;negbin&quot;)
+AIC(fit_nbzip)</code></pre>
+<pre><code>[1] 291.5206</code></pre>
+<pre class="r"><code>summary(fit_nbzip)</code></pre>
+<pre><code>
+Call:
+zeroinfl(formula = jb ~ FVIII | age + FVIII, data = joint, dist = &quot;negbin&quot;)
+
+Pearson residuals:
+     Min       1Q   Median       3Q      Max 
+-0.24427 -0.23604 -0.20637 -0.09123 12.13492 
+
+Count model coefficients (negbin with log link):
+            Estimate Std. Error z value Pr(&gt;|z|)    
+(Intercept)   1.8889     0.8076   2.339 0.019341 *  
+FVIII        -0.3841     0.1027  -3.740 0.000184 ***
+Log(theta)   -2.7993     0.2518 -11.115  &lt; 2e-16 ***
+
+Zero-inflation model coefficients (binomial with logit link):
+            Estimate Std. Error z value Pr(&gt;|z|)
+(Intercept) -160.808    258.676  -0.622    0.534
+age            6.501     10.627   0.612    0.541
+FVIII        -49.626     85.750  -0.579    0.563
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1 
+
+Theta = 0.0609 
+Number of iterations in BFGS optimization: 262 
+Log-likelihood: -139.8 on 6 Df</code></pre>
+<pre class="r"><code>cov_grid &lt;- expand.grid(
+  FVIII = seq(0, 20, length.out = 100),
+  age = seq(0, 100, length.out = 100)
+)
+grid_predictions &lt;- predict(fit_nbzip, newdata = cov_grid)
+preds &lt;- data.frame(cov_grid, pred_count = grid_predictions)</code></pre>
+<pre class="r"><code>preds %&gt;%
+  ggplot(aes(x = age, y= FVIII, fill = pred_count)) + 
+  geom_tile()</code></pre>
+<p><img src="figure/glm_presentation_jointbleed.Rmd/unnamed-chunk-25-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="compare-models" class="section level3">
+<h3>Compare models</h3>
+<pre class="r"><code>fits &lt;- list(
+  poisson = fit_pois,
+  # lm = fit_lm,
+  # quasipoisson = fit_qpois,
+  zip = fit_zip,
+  negative_binomial = fit_nb,
+  zip_negative_binomial = fit_nbzip
+)</code></pre>
+<p>Compare with AIC</p>
+<pre class="r"><code>fits %&gt;%
+  map_df(function(fit) data.frame(
+    deviance = ifelse(is.null(deviance(fit)), NA, deviance(fit)),
+    loglik = logLik(fit),
+    AIC = AIC(fit)
+    ), .id = &quot;model&quot;)</code></pre>
+<pre><code>                  model  deviance    loglik      AIC
+1               poisson 781.62633 -429.2380 862.4760
+2                   zip        NA -215.2401 442.4802
+3     negative_binomial  67.24413 -145.2688 296.5376
+4 zip_negative_binomial        NA -139.7603 291.5206</code></pre>
+<pre class="r"><code>fits %&gt;%
+  map_df(function(fit) data.frame(
+    deviance = ifelse(is.null(deviance(fit)), NA, deviance(fit)),
+    loglik = logLik(fit),
+    AIC = AIC(fit)
+    ), .id = &quot;model&quot;)</code></pre>
+<pre><code>                  model  deviance    loglik      AIC
+1               poisson 781.62633 -429.2380 862.4760
+2                   zip        NA -215.2401 442.4802
+3     negative_binomial  67.24413 -145.2688 296.5376
+4 zip_negative_binomial        NA -139.7603 291.5206</code></pre>
+</div>
+</div>
+<div id="model-diagnostics" class="section level2">
+<h2>Model diagnostics</h2>
+<pre class="r"><code>plot(fit_nb)</code></pre>
+<p><img src="figure/glm_presentation_jointbleed.Rmd/unnamed-chunk-29-1.png" width="672" style="display: block; margin: auto;" /><img src="figure/glm_presentation_jointbleed.Rmd/unnamed-chunk-29-2.png" width="672" style="display: block; margin: auto;" /><img src="figure/glm_presentation_jointbleed.Rmd/unnamed-chunk-29-3.png" width="672" style="display: block; margin: auto;" /><img src="figure/glm_presentation_jointbleed.Rmd/unnamed-chunk-29-4.png" width="672" style="display: block; margin: auto;" /></p>
+<p>All observations fall within a Cook’s distance of &lt; 0.5</p>
+</div>
+<div id="discussion" class="section level2">
+<h2>Discussion</h2>
+<p>Tried log-transform of FVIII</p>
+</div>
+<div id="session-information" class="section level2">
+<h2>Session information</h2>
+<!-- Insert the session information into the document -->
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 3.4.3 (2017-11-30)
+Platform: x86_64-apple-darwin15.6.0 (64-bit)
+Running under: macOS Sierra 10.12.6
+
+Matrix products: default
+BLAS: /Library/Frameworks/R.framework/Versions/3.4/Resources/lib/libRblas.0.dylib
+LAPACK: /Library/Frameworks/R.framework/Versions/3.4/Resources/lib/libRlapack.dylib
+
+locale:
+[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+ [1] MASS_7.3-48         pscl_1.5.2          bindrcpp_0.2       
+ [4] tidyr_0.8.0         broom_0.4.3         epistats_0.1.0     
+ [7] ggplot2_2.2.1       here_0.1            purrr_0.2.4        
+[10] magrittr_1.5        data.table_1.10.4-3 dplyr_0.7.4        
+
+loaded via a namespace (and not attached):
+ [1] Rcpp_0.12.15     pillar_1.1.0     compiler_3.4.3   git2r_0.21.0    
+ [5] plyr_1.8.4       bindr_0.1        tools_3.4.3      digest_0.6.15   
+ [9] evaluate_0.10.1  tibble_1.4.2     gtable_0.2.0     nlme_3.1-131    
+[13] lattice_0.20-35  pkgconfig_2.0.1  rlang_0.1.6      psych_1.7.8     
+[17] parallel_3.4.3   yaml_2.1.16      stringr_1.2.0    knitr_1.19      
+[21] tidyselect_0.2.3 rprojroot_1.3-2  grid_3.4.3       glue_1.2.0      
+[25] R6_2.2.2         foreign_0.8-69   rmarkdown_1.8    reshape2_1.4.3  
+[29] splines_3.4.3    backports_1.1.2  scales_0.5.0     htmltools_0.3.6 
+[33] mnormt_1.5-5     assertthat_0.2.0 colorspace_1.3-2 labeling_0.3    
+[37] stringi_1.1.6    lazyeval_0.2.1   munsell_0.4.3   </code></pre>
+</div>
+</div>
+
+<hr>
+<p>
+    This <a href="http://rmarkdown.rstudio.com">R Markdown</a> site was created with <a href="https://github.com/jdblischak/workflowr">workflowr</a>
+</p>
+<hr>
+
+<!-- To enable disqus, uncomment the section below and provide your disqus_shortname -->
+
+<!-- disqus
+  <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+        var disqus_shortname = 'rmarkdown'; // required: replace example with your forum shortname
+
+        /* * * DON'T EDIT BELOW THIS LINE * * */
+        (function() {
+            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+-->
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
