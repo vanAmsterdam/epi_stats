@@ -1,0 +1,308 @@
+---
+title: "Parial plot example"
+author: "Wouter van Amsterdam"
+date: 2018-03-10
+output: html_document
+---
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+```
+
+<!-- Update knitr chunk options -->
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+<!-- Insert the date the file was last updated -->
+```{r last-updated, echo=FALSE, results='asis'}
+```
+
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+```{r code-version, echo=FALSE, results='asis'}
+```
+
+<!-- Add your analysis here -->
+
+# Setup
+
+```{r}
+library(dplyr)
+library(data.table)
+library(magrittr)
+library(purrr)
+library(here) # for tracking working directory
+library(ggplot2)
+library(epistats)
+library(broom)
+
+```
+
+
+# Introduction
+
+Partial plots can be used to check assumptions of a model
+
+```{r}
+data("mtcars")
+```
+
+## Linear model data
+
+Correct linear assumptions
+
+```{r}
+set.seed(12345)
+nobs = 1000
+npred = 2
+
+corr_x1x2 = 0.
+x1 = rnorm(nobs)
+x2 = corr_x1x2 * x1 + (1-corr_x1x2)*rnorm(nobs)
+x = as.matrix(cbind(x1, x2))
+betas = c(1, 1)
+resid_noise = .3
+
+y = x %*%betas + rnorm(nobs, sd = resid_noise)
+```
+
+Show marginal plots
+
+```{r}
+plot(y, x1)
+plot(y, x2)
+
+```
+
+Seem perfectly linear
+
+Create linear model
+
+```{r}
+fit <- lm(y~x1 + x2)
+plot(fit)
+```
+
+Create partial plots
+
+```{r}
+partial_plots.lm(fit)
+```
+
+
+Now if x1 and x2 are dependent
+
+
+```{r}
+require(effects)
+set.seed(12345)
+nobs = 1000
+npred = 2
+
+corr_x1x2 = 0.5
+x1 = rnorm(nobs)
+x2 = corr_x1x2 * x1 + (1-corr_x1x2)*rnorm(nobs)
+x = as.matrix(cbind(x1, x2))
+betas = c(1, 1)
+resid_noise = .3
+
+y = x %*%betas + rnorm(nobs, sd = resid_noise)
+
+fit <- lm(y~x1+x2)
+# part2 <- partial_residuals.lm(fit, term = "x1")
+
+# plot(x1, residuals(fit, type = "partial")[,1])
+par(mfrow = c(1,2)); plot(y, x1); plot(y, x2); par(mfrow = c(1,1))
+partial_plots.lm(fit)
+# plot(Effect(focal.predictors = c("x1", "x2"), mod = fit))
+```
+
+
+```{r}
+set.seed(12345)
+nobs = 1000
+npred = 2
+
+corr_x1x2 = 0.8
+x1 = runif(nobs, min = 0, max = 2)
+x2 = exp(x1) + .0001*rnorm(nobs)
+x = as.matrix(cbind(x1, x2))
+betas = c(1, 1)
+resid_noise = .00001
+
+y = (x1^2)*(x2) + rnorm(nobs, sd = resid_noise)
+
+par(mfrow = c(1,2))
+plot(x1, y)
+plot(x2, y)
+par(mfrow = c(1,1))
+
+fit <- lm(y~x1+x2)
+partial_plots.lm(fit)
+```
+
+Now with a different relationship between x1 and x2
+
+```{r}
+set.seed(12345)
+nobs = 1000
+npred = 2
+
+a = 5; b = 2; gamma = 1
+x1 = rnorm(nobs)
+x2 = a * x1^3 - b * x1^2 + gamma * x1 + .1*rnorm(nobs)
+x = as.matrix(cbind(x1, x2))
+betas = c(1, 1)
+resid_noise = .3
+
+y = x %*% betas + rnorm(nobs, sd = resid_noise)
+
+fit <- lm(y~x1+x2)
+coef(fit)
+plot(fit, which = 2)
+partial_plots.lm(fit)
+```
+
+Now with a log relationship between x1 and x2
+
+```{r}
+set.seed(12345)
+nobs = 1000
+npred = 2
+
+x1 = rnorm(nobs)
+x2 = log(x1) + .1*rnorm(nobs)
+x = as.matrix(cbind(x1, x2))
+betas = c(1, 1)
+resid_noise = .3
+
+y = x %*% betas + rnorm(nobs, sd = resid_noise)
+
+fit <- lm(y~x1+x2)
+coef(fit)
+plot(fit, which = 2)
+partial_plots.lm(fit)
+```
+
+Now with a sine relationship between x1 and x2
+
+```{r}
+set.seed(12345)
+nobs = 1000
+npred = 2
+
+x1 = runif(nobs)
+x2 = x1 + sin(x1*2*2*pi) + .2*rnorm(nobs)
+x = as.matrix(cbind(x1, x2))
+betas = c(1, 1)
+resid_noise = .3
+plot(x1, x2)
+
+y = x %*% betas + rnorm(nobs, sd = resid_noise)
+
+fit <- lm(y~x1+x2)
+coef(fit)
+plot(fit, which = 2)
+partial_plots.lm(fit)
+```
+
+## Logistic regression
+
+Simulate data
+
+```{r}
+set.seed(12345)
+nobs = 1000
+npred = 2
+
+x1 = runif(nobs)
+x2 = runif(nobs)
+x3 = runif(nobs)
+x = as.matrix(cbind(x1, x2))
+betas = c(1, 1, 1)
+resid_noise = .3
+plot(x1, x2)
+
+eta = x1 + x2^2 + x3^3 + rnorm(nobs, sd = resid_noise)
+probs = 1 / (1 + exp(-eta))
+y = map_dbl(probs, function (p) sample(0:1, prob = c(1-p, p), size = 1))
+
+fit <- glm(y~x1+x2+x3, family = binomial(link = "logit"))
+coef(fit)
+plot(fit, which = 2)
+partial_plots.lm(fit)
+```
+
+
+```{r}
+partial_residuals.glm <- function(fit, term, type = "response") {
+  formula0  = formula(fit)
+  all_vars  = all.vars(formula0)
+  response  = all_vars[1]
+  all_terms = all_vars[-1]
+  new_terms = setdiff(all_terms, term)
+
+  fit_resp <- glm(reformulate(new_terms, response), data = fit$model,
+                  family = binomial(link = "logit"))
+  resp_logits = log(1 / (1 - residuals(fit_resp, type = "response")))
+  fit_term <- lm(reformulate(new_terms, term), data = fit$model)
+
+  return(
+    # data.frame(resid_response = resid(fit_resp, type = type),
+    #            resid_term     = resid(fit_term, type = type))
+    data.frame(resid_response = resp_logits,
+               resid_term     = resid(fit_term, type = type))
+  )
+}
+
+
+partial_plots.glm <- function(fit, terms = NULL, what = "resid") {
+  formula0  = formula(fit)
+  all_vars  = all.vars(formula0)
+  response  = all_vars[1]
+  all_terms = all_vars[-1]
+
+  terms = if (!is.null(terms)) {terms} else {all_terms}
+
+  resid_data = pmap_df(list(terms), function(term) {
+    data.frame(term = term,
+               partial_residuals.glm(fit, term), stringsAsFactors = F)
+  })
+
+  p = ggplot(resid_data, aes(x = resid_term, y = resid_response)) +
+    geom_point() + geom_smooth(method = "lm", alpha = 0.15) +
+    facet_wrap(~term, scales = "free_x") +
+    theme_minimal() +
+    labs(x = "Residual of partial model term ~ .",
+         y = paste0("Residual of partial model ", response, " ~ ."))
+
+  if (what == "resid") {
+    print(p)
+    return(resid_data)
+  } else if (what == "plot") {
+    return(p)
+  }
+}
+partial_plots.glm(fit)
+```
+
+
+```{r}
+require(effects)
+plot(predictorEffect(mod = fit, predictor = "x2"))
+```
+
+
+```{r}
+plot(resid(lm(x1~x2+x3)), residuals(fit, type = "partial")[,1])
+plot(x1, residuals(fit, type = "partial")[,1])
+```
+
+
+## Session information
+
+<!-- Insert the session information into the document -->
+```{r session-info}
+```

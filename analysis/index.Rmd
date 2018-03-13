@@ -46,6 +46,10 @@ statistic courses in the Epidemiology Graduate Program of the Julius Center, Utr
 
 [assignments](glm_assignments.html)
 
+## Prognostic research
+
+[assignments](pr_assignments.html)
+
 # Notes and commmon errors
 
 **working directory**

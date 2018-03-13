@@ -667,20 +667,21 @@ partial_plots.lm <- function(fit, terms = NULL) {
 
   resid_data = pmap_df(list(terms), function(term) {
     data.frame(term = term, 
-               partial_residuals.lm(fit, term))
+               partial_residuals.lm(fit, term), stringsAsFactors = F)
     })
   
   p = ggplot(resid_data, aes(x = resid_term, y = resid_response)) + 
-    geom_point() + geom_smooth() + 
+    geom_point() + geom_smooth(method = "lm", alpha = 0.15) + 
     facet_wrap(~term, scales = "free_x") + 
-    theme_minimal() + labs(y = paste0("Residual of ", response))
+    theme_minimal() + 
+    labs(x = "Residual of term ~ .",
+         y = paste0("Residual of ", response, " ~ ."))
   print(p)
   
   return(resid_data)
-  
 }
 
-partial_plots.lm(fit_lm)
+partial_plots.lm(lm(mpg ~ wt+disp + hp + qsec, data = mtcars))
 
 ```
 

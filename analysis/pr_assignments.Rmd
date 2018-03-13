@@ -1,0 +1,559 @@
+---
+title: "Assignments for prognostic research"
+author: "Wouter van Amsterdam"
+date: 2018-03-13
+output: html_document
+---
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+```
+
+<!-- Update knitr chunk options -->
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+<!-- Insert the date the file was last updated -->
+```{r last-updated, echo=FALSE, results='asis'}
+```
+
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+```{r code-version, echo=FALSE, results='asis'}
+```
+
+<!-- Add your analysis here -->
+
+# Setup R
+
+
+```{r, message = F}
+library(dplyr)
+library(data.table)
+library(magrittr)
+library(purrr)
+library(here) # for tracking working directory
+library(ggplot2)
+library(epistats)
+library(broom)
+```
+
+# Day 2. model development 1
+
+This excercise was intented for SPSS
+
+> In this practical exercise we will study the prognosis of patients with traumatic brain injury.
+We will assess the individual prognostic strength in univariable and multivariable analyses.
+The aim of the multivariable analysis is to adjust for correlation between prognostic factors,
+either to adjust for confounding (1) or to predict the prognosis with multiple predictors (2).
+The data are in SPSS format: "TBI.sav". See below for a description of the dataset.
+
+> Data set traumatic brain injury (TBI.sav, n=2159)
+Patients are from the International and US Tirilazad trials; distributed here for didactic
+purposes only. The primary outcome was 6 months Glasgow Outcome Scale (range 1 to 5).
+
+> Name	Description (coding: no/yes is coded as 0/1)	Development (n=2159)
+Trial	Study identification:
+74 = Tirilazad international (n=1118)
+75 = US (n=1041)	
+52%
+48%
+d.gos	Glasgow Outcome Scale at 6 months:
+1 = dead
+2 = vegetative
+3 = severe disability
+4 = moderate disability
+5 = good recovery	
+23%
+4%
+12%
+16%
+44%
+d.mort	Mortality at 6 months (0/1)	23%
+d.unfav	Unfavorable outcome at 6 months (0/1)	39%
+cause	Cause of injury
+3 = Road traffic accident
+4 = Motorbike
+5 = Assault
+6 = Domestic/fall
+9 = Other	
+39%
+20%
+6%
+17%
+18%
+age	Age, in years (median [interquartile range])	29 [21 - 42]
+d.motor	Admission motor score, range: 1 - 6 (median)	4
+d.pupil	Pupillary reactivity
+1=both reactive
+2=one reactive
+3= no reactive pupils 	
+70%
+14%
+16%
+pupil.i	Single imputed pupillary reactivity, 1;2;3 	70%/14%/16%
+hypoxia	Hypoxia before / at admission, 1=yes 	22%
+hypotens	Hypotension before / at admission, 1=yes	19%
+ctclass	Marshall CT classification, 1 - 6 (median)	2
+tsah	tSAH at CT, 1=yes	46%
+edh	EDH at CT, 1=yes 	13%
+cisterns	Compressed cisterns at CT, 0=no;1=slightly;2=fully	57%/26%/10%
+shift	Midline shift > 5 mm at CT, 1=yes	18%
+glucose	Glucose at admission, mmol/l (median [interquartile range])	8.2 [6.7 - 10.4]
+glucoset
+ph	Truncated glucose values (median [interquartile range])
+pH (median [interquartile range])	8.2 [6.7 - 10.4]
+7.4 [7.3 - 7.5]
+sodium	Sodium, mmol/l (median [interquartile range])	140 [137 - 142]
+sodiumt	Truncated sodium (median [interquartile range])	140 [137 - 142]
+hb	Hb, g/dl (median [interquartile range])	12.8 [10.9 - 14.3]
+hbt	Truncated hb (median [interquartile range])	12.8 [10.9 - 14.3]
+* d. variables denoted 'derived'.
+
+> Exercises
+
+Load in data
+
+```{r}
+require(haven)
+tbi <- read_spss(here("data", "TBI.sav"))
+str(tbi)
+```
+
+Coerce `labelled` variables into factors, as R works with factors and 
+`labelled` variables are foreign to R.
+
+Use the package `haven` with the function `as_factor` to get this done while 
+preserving factor labels.
+
+```{r}
+tbi %<>%
+  mutate_if(is.labelled, as_factor)
+str(tbi)
+```
+
+
+## 1) Cause of injury
+
+### a) 
+
+> Give the frequencies of the outcome (d.gos).
+What is the most commonly observed outcome?
+
+```{r}
+tabl(tbi$d.gos)
+```
+
+### b) 
+
+> Check the categorization in favorable vs unfavorable outcome (d.unfav variable).
+What is the overall risk of an unfavorable outcome? How was d.gos dichotomized?
+
+```{r}
+tabl(tbi$d.gos, tbi$d.unfav)
+```
+
+Overall risk of unfavorable outcome:
+
+```{r}
+mean(tbi$d.unfav)
+```
+
+### c) 
+
+> Give the frequencies of cause of injury.
+What is the most common cause of injury?
+
+```{r}
+tabl(tbi$cause)
+```
+
+
+### d) 
+
+> Study the univariable effect of the prognostic factor 'cause of injury' on 'unfavorable outcome'
+(with crosstabs). What is the risk of an unfavorable outcome for each cause of injury? (use option <cells>
+<percentages>)
+
+```{r}
+gmodels::CrossTable(tbi$cause, tbi$d.unfav, prop.chisq = F, prop.t = F, prop.c = F)
+```
+
+
+### e) 
+
+>Quantify the effect with a logistic regression model. <Analyze> <Regression> <Binary logistic>
+Specify cause of injury as a categorical covariate.
+
+Let's make sure that 'other' is the reference category
+
+```{r}
+tbi %<>% mutate(cause = relevel(cause, ref = "other"))
+```
+
+
+```{r}
+fit <- glm(d.unfav ~ cause, data = tbi, family = binomial("logit"))
+summary(fit)
+```
+
+> By default SPSS will use the last category ('Other') as the reference category.
+Which causes give the highest risk of unfavorable outcome, and which the lowest risk,
+according to the regression result?
+
+Motorbike is lowest, domestic/fall is highest. 
+These match with the cross-table. 
+Let's look at the predicted probabilities for each category
+
+```{r}
+cbind(levels(tbi$cause), predict(fit, newdata = data.frame(cause = levels(tbi$cause)),
+        type = "response"))
+```
+
+### f) 
+
+> Verify that the intercept estimate in e) corresponds to the risk for the "Other" cause category
+as noted in d). Is the exp(intercept) an "odds ratio" or simply an "odds"?
+
+With our fit the reference category is other
+
+```{r}
+o_int = exp(coef(fit)[1])
+o_int
+```
+
+To probability
+
+```{r}
+o_int / (1 + o_int)
+```
+
+This matches the observed probability for other.
+
+This is an actual 'odds'
+
+> Verify also that the risk for the category "Domestic/fall" is only slightly higher than that of the
+"Other" cause category, both according to the crosstable (d)) and the regression result in e).
+
+### g) 
+
+> Is the pattern of risk in d) and e) what you would expect? Can you think of confounders?
+Hint: What is the mean age for each cause of injury?
+
+You would expect the risk for traffic accidents to be higher. Let's include
+ age in the summary
+ 
+```{r}
+tbi %>%
+  group_by(cause) %>%
+  summarize(mean_age = mean(age), prop_unfavouroble = mean(d.unfav))
+```
+
+Motorbike and traffic have low age and low unfavourable outcomes
+
+### h) 
+
+> Now fit a multivariable model to adjust the effect of cause of injury for age.
+
+```{r}
+fit2 <- glm(d.unfav ~ cause + age, data = tbi, family = binomial("logit"))
+summary(fit2)
+```
+
+This model did not fit, the residual deviance is higher than the degrees of 
+freedom
+
+#### 1. 
+
+> Is the effect of cause still statistically significant? Hint: focus on the overall p-value, based
+on a 4 df test.
+
+We should take 6 degrees of freedom, as there are 6 parameters estimated
+
+```{r}
+anova(fit2, test = "Chisq")
+```
+
+Dropping cause will significantly decrease the goodness of fit, so yes.
+
+#### 2.
+
+> How do the effects of the different causes change?
+
+```{r}
+require(tidyr)
+fits <- list(without_age = fit, with_age = fit2)
+fits %>%
+  map_df(tidy, .id = "model") %>%
+  select(estimate, model, term) %>%
+  spread(key = c("model"), value = "estimate")
+```
+
+Assault and domestic become lower risk, motorbike and road traffic higher risk
+
+### i) 
+
+> What is your conclusion on the effect of "cause of injury"? Do you think "cause of injury"
+should be used for predictive purposes?
+
+Based on these data, yes. However, when adding more covariates, this may change.
+
+## 2) Prediction model: Risk of unfavourable outcome
+
+> We will now develop a simple prediction model with three predictors: motor score, pupillary
+reactivity and age.
+
+### a) 
+
+> Give some descriptive statistics of motor score, pupillary reactivity and age.
+
+```{r}
+tbi %>%
+  select(d.motor, d.pupil, age) %>%
+  summary()
+```
+
+> b) Assess the univariable effects of motor score, pupillary reactivity and age on the outcome
+(d.unfav) with a logistic regression model.
+
+```{r}
+terms <- c("d.motor", "d.pupil", "age")
+
+fits_uni <- terms %>%
+  map(function(term) glm(reformulate(term, "d.unfav"), 
+                         data = tbi, family = "binomial"))
+names(fits_uni) <- terms
+
+fits_uni %>%
+  map_df(tidy)
+```
+
+> What is the univariable effect of age on the risk of unfavorable outcome?
+
+```{r}
+exp(coef(fits_uni[["age"]]))
+```
+
+> What would be a good way to express the effect, using a linear scale?
+Hint: think of recoding age by decade.
+
+```{r}
+tbi %<>%
+  mutate(age_cat = cut(age, breaks = seq(from = 10*floor(min(age / 10)),
+                                         to = 10*ceiling(max(age / 10)), by = 10)))
+tbi %>%
+  glm(formula = d.unfav ~ age_cat, family = "binomial") %>%
+  summary()
+```
+
+If the effect of age were linear (on the log-odds scale), there would be a constant difference between 
+each consecutive category
+
+Alternatively, we could plot the log-odds per age category
+
+```{r}
+logit <- function(x) log(x / (1-x))
+tbi %>%
+  group_by(age_cat) %>%
+  mutate(p_unfav = mean(d.unfav),
+         p_unfav_lo = binom.confint_logical(d.unfav)$lower,
+         p_unfav_hi = binom.confint_logical(d.unfav)$upper,
+         logit_unfav = logit(p_unfav),
+         logit_unfav_lo = logit(p_unfav_lo),
+         logit_unfav_hi = logit(p_unfav_hi)
+         ) %>%
+  ggplot(aes(x = age_cat, ymin = logit_unfav_lo, y = logit_unfav, ymax = logit_unfav_hi)) + 
+  geom_errorbar()
+```
+
+Linearity does not look too bad on logit scale.
+
+I'm not sure whether calculating a confidence interval for the proportion and 
+then transforming with logit is the best way to go.
+
+### c) 
+
+> Now fit a multivariable model. Include in your model: motor score, pupillary reactivity and age (continuous).
+Note that there are missing values in the variable 'd.pupil', which have been filled in with a
+statistical imputation procedure in 'pupil.i'. Perform the analyses twice: once with 'pupillary reactivity' including missing values (d.pupil) and once with missing values imputed (pupil.i).
+What are the numbers of patients in each analysis? Are there differences in prognostic
+effects? 
+
+```{r}
+fit_mis <- glm(d.unfav ~ d.motor + d.pupil + age, data = tbi, family = "binomial")
+fit_imp <- glm(d.unfav ~ d.motor + pupil.i + age, data = tbi, family = "binomial")
+
+fits <- list(with_missings = fit_mis, imputed = fit_imp)
+fits %>%
+  map_df(tidy, .id = "model") %>%
+  select(model, term, estimate) %>%
+  spread(model, estimate)
+```
+
+The estimate for age stays the same, for motor is a little different.
+
+Overall the estimates are pretty much the same
+
+```{r}
+fits %>% map_df("df.null") + 1
+```
+
+### d) 
+
+> Can we interpret the change in age coefficient from univariable analysis to multivariable
+analysis if the number of subjects between the two analyses differ? Therefore: which variable for 'pupillary reactivity' do you prefer for modeling? Use this as the final multivariable model.
+
+The number of missings is relatively low compare to the total number of observations 
+(around 5%). If the missings are random and / or not associated with age or the 
+outcome, the coefficients would not change. Precision decreases a little bit.
+Best would be to use the imputed variable, but difference will be small.
+
+```{r}
+fits <- list(univariate = fits_uni[["age"]], 
+             with_missings = fit_mis, imputed = fit_imp)
+fits %>%
+  map_df(tidy, .id = "model") %>%
+  select(term, model, estimate) %>%
+  spread(model, estimate)
+```
+
+And for the p-value (precision):
+
+
+```{r}
+fits %>%
+  map_df(tidy, .id = "model") %>%
+  select(term, model, p.value) %>%
+  spread(model, p.value)
+```
+
+### e)
+
+> How many missing values are imputed in the variable 'pupil.i'? How many more cases can be
+analyzed by using 'pupil.i' rather than 'd.pupil'? 
+
+See above
+
+### f) 
+
+> The regression coefficients of the logistic model can be used to calculate the individual
+predicted risk of unfavorable outcome. Fit the model (as in d) again and use the option
+<save> <predicted values> <probabilities>.
+Note that your dataset (not the output screen) shows an extra column.
+
+Predicted probabilities are stored in the R object
+
+```{r}
+fit_imp$fitted.values[1:10]
+```
+
+### g) 
+
+> Look at the descriptives of the predicted risks. Is the range very narrow / reasonably wide?
+
+```{r}
+summary(fit_imp$fitted.values)
+```
+
+Looks like it covers a whide range of the 0-1 interval
+
+### h)
+
+> If the model is well calibrated, groups of patients with low predicted risks will include only few
+patients with unfavorable outcomes; groups of patients with high predicted risks many.
+To check this, group the patients by predicted risk (use "recode into different variable"):
+1: 0.00 - 0.15
+2: 0.15 - 0.30
+3: 0.30 - 0.40
+4: 0.40 - 0.60
+5: 0.60 - 1.00
+Give the observed proportions of patients with unfavourable outcome for each group (use
+crosstabs with option cells, percentage).
+
+Add predicted to data.frame
+
+```{r}
+tbi %<>% mutate(
+  pred_unfav = fit_imp$fitted.values,
+  pred_unfav_cat = cut(pred_unfav, breaks = c(0, .15, .3, .4, .6, 1)))
+```
+
+View results
+
+```{r}
+tbi %>%
+  group_by(pred_unfav_cat) %>%
+  summarize(observed_prob = mean(d.unfav))
+```
+
+These line up OK
+
+### i) 
+
+> Use the Hosmer-Lemeshow test to assess the calibration of the model as fitted in step d). By default, this test groups patients by deciles of risk. Does the test give a statistically significant result? Is that to be expected when a model is fitted and tested for fit in the same data?
+
+```{r}
+ResourceSelection::hoslem.test(x = tbi$d.unfav, y = tbi$pred_unfav, g = 10)
+```
+
+No rejection of null-hypothesis. Seems to fit OK.
+
+Howerever the fit was based on the data, so this may be overfitted.
+
+> What do you think would happen with calibration at external validation, i.e. predictions are made for another data set?
+
+Probably, calibration will be worse.
+
+However, we have 851 cases, and fitted 5 degrees of freedom, so overfitting 
+should be limited
+
+### j) 
+
+> Study the discriminative ability of the model with the ROC curve.
+Use <analyze> <ROC curve>.
+For comparison, make also a ROC curve for age alone as a single predictor.
+
+```{r}
+logit_roc <- function(fit, add = F, ...) {
+  if (!("glm" %in% class(fit)) & fit$family$family == "binomial" & fit$family$link == "logit") {
+    stop("only works for glm fits with family = binomial(link = 'logit')")
+  }
+  
+  formula0  = formula(fit)
+  all_vars  = all.vars(formula0)
+  response  = all_vars[1]
+  all_terms = all_vars[-1]
+
+  roc <- pROC::roc(fit$data[[response]], fit$fitted.values, ci = T)
+  pROC:::plot.roc.roc(roc, ci = T, add = add, ...)
+}
+logit_roc(fit_imp, main = "multivariate model")
+```
+
+
+```{r}
+logit_roc(fit_imp, main = "comparison with univariate model of only age")
+logit_roc(fits_uni[["age"]], add = T)
+```
+
+
+### k) 
+
+> What would you expect for the area under the ROC-curve) if the model were applied in a new data set (external validation)?
+
+A little worse.
+
+> What would you expect if the prognostic model is developed in a selection of patients with very narrow
+inclusion criteria with respect to important predictors such as age and motor score?
+
+It will do a worse, since contrasts are smaller.
+
+
+
+## Session information
+
+<!-- Insert the session information into the document -->
+```{r session-info}
+```
