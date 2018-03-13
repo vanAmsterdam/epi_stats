@@ -1,0 +1,1160 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+<meta name="author" content="Wouter van Amsterdam" />
+
+<meta name="date" content="2018-03-13" />
+
+<title>Assignments for prognostic research</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/font-awesome-4.5.0/css/font-awesome.min.css" rel="stylesheet" />
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+
+<div class="container-fluid main-container">
+
+<!-- tabsets -->
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+</script>
+
+<!-- code folding -->
+
+
+
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+  padding-left: 25px;
+  text-indent: 0;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">epi_stats</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/jdblischak/workflowr">
+    <span class="fa fa-github"></span>
+     
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">Assignments for prognostic research</h1>
+<h4 class="author"><em>Wouter van Amsterdam</em></h4>
+<h4 class="date"><em>2018-03-13</em></h4>
+
+</div>
+
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+<!-- Update knitr chunk options -->
+<!-- Insert the date the file was last updated -->
+<p><strong>Last updated:</strong> 2018-03-13</p>
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+<p><strong>Code version:</strong> fe4c128</p>
+<!-- Add your analysis here -->
+<div id="setup-r" class="section level1">
+<h1>Setup R</h1>
+<pre class="r"><code>library(dplyr)
+library(data.table)
+library(magrittr)
+library(purrr)
+library(here) # for tracking working directory
+library(ggplot2)
+library(epistats)
+library(broom)</code></pre>
+</div>
+<div id="day-2.-model-development-1" class="section level1">
+<h1>Day 2. model development 1</h1>
+<p>This excercise was intented for SPSS</p>
+<blockquote>
+<p>In this practical exercise we will study the prognosis of patients with traumatic brain injury. We will assess the individual prognostic strength in univariable and multivariable analyses. The aim of the multivariable analysis is to adjust for correlation between prognostic factors, either to adjust for confounding (1) or to predict the prognosis with multiple predictors (2). The data are in SPSS format: “TBI.sav”. See below for a description of the dataset.</p>
+</blockquote>
+<blockquote>
+<p>Data set traumatic brain injury (TBI.sav, n=2159) Patients are from the International and US Tirilazad trials; distributed here for didactic purposes only. The primary outcome was 6 months Glasgow Outcome Scale (range 1 to 5).</p>
+</blockquote>
+<blockquote>
+<p>Name Description (coding: no/yes is coded as 0/1) Development (n=2159) Trial Study identification: 74 = Tirilazad international (n=1118) 75 = US (n=1041)<br />
+52% 48% d.gos Glasgow Outcome Scale at 6 months: 1 = dead 2 = vegetative 3 = severe disability 4 = moderate disability 5 = good recovery<br />
+23% 4% 12% 16% 44% d.mort Mortality at 6 months (0/1) 23% d.unfav Unfavorable outcome at 6 months (0/1) 39% cause Cause of injury 3 = Road traffic accident 4 = Motorbike 5 = Assault 6 = Domestic/fall 9 = Other<br />
+39% 20% 6% 17% 18% age Age, in years (median [interquartile range]) 29 [21 - 42] d.motor Admission motor score, range: 1 - 6 (median) 4 d.pupil Pupillary reactivity 1=both reactive 2=one reactive 3= no reactive pupils<br />
+70% 14% 16% pupil.i Single imputed pupillary reactivity, 1;2;3 70%/14%/16% hypoxia Hypoxia before / at admission, 1=yes 22% hypotens Hypotension before / at admission, 1=yes 19% ctclass Marshall CT classification, 1 - 6 (median) 2 tsah tSAH at CT, 1=yes 46% edh EDH at CT, 1=yes 13% cisterns Compressed cisterns at CT, 0=no;1=slightly;2=fully 57%/26%/10% shift Midline shift &gt; 5 mm at CT, 1=yes 18% glucose Glucose at admission, mmol/l (median [interquartile range]) 8.2 [6.7 - 10.4] glucoset ph Truncated glucose values (median [interquartile range]) pH (median [interquartile range]) 8.2 [6.7 - 10.4] 7.4 [7.3 - 7.5] sodium Sodium, mmol/l (median [interquartile range]) 140 [137 - 142] sodiumt Truncated sodium (median [interquartile range]) 140 [137 - 142] hb Hb, g/dl (median [interquartile range]) 12.8 [10.9 - 14.3] hbt Truncated hb (median [interquartile range]) 12.8 [10.9 - 14.3] * d. variables denoted ‘derived’.</p>
+</blockquote>
+<blockquote>
+<p>Exercises</p>
+</blockquote>
+<p>Load in data</p>
+<pre class="r"><code>require(haven)
+tbi &lt;- read_spss(here(&quot;data&quot;, &quot;TBI.sav&quot;))
+str(tbi)</code></pre>
+<pre><code>Classes &#39;tbl_df&#39;, &#39;tbl&#39; and &#39;data.frame&#39;:   2159 obs. of  24 variables:
+ $ trial   :Class &#39;labelled&#39;  atomic [1:2159] 74 74 74 74 ...
+  .. ..- attr(*, &quot;label&quot;)= chr &quot;Study identification&quot;
+  .. ..- attr(*, &quot;format.spss&quot;)= chr &quot;A6&quot;
+  .. ..- attr(*, &quot;display_width&quot;)= int 4
+  .. ..- attr(*, &quot;labels&quot;)= Named chr [1:2] &quot;74&quot; &quot;75&quot;
+  .. .. ..- attr(*, &quot;names&quot;)= chr [1:2] &quot;Tirilazad International&quot; &quot;Tirilazad US&quot;
+ $ d.gos   :Class &#39;labelled&#39;  atomic [1:2159] 5 5 5 4 5 5 5 5 5 5 ...
+  .. ..- attr(*, &quot;label&quot;)= chr &quot;GOS at 6 months&quot;
+  .. ..- attr(*, &quot;format.spss&quot;)= chr &quot;F2.0&quot;
+  .. ..- attr(*, &quot;labels&quot;)= Named num [1:5] 1 2 3 4 5
+  .. .. ..- attr(*, &quot;names&quot;)= chr [1:5] &quot;dead&quot; &quot;vegetative&quot; &quot;severe disability&quot; &quot;moderate disability&quot; ...
+ $ d.mort  : atomic  0 0 0 0 0 0 0 0 0 0 ...
+  ..- attr(*, &quot;label&quot;)= chr &quot;Mortality at 6 months&quot;
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F2.0&quot;
+ $ d.unfav : atomic  0 0 0 0 0 0 0 0 0 0 ...
+  ..- attr(*, &quot;label&quot;)= chr &quot;Unfavorable outcome at 6 months&quot;
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F2.0&quot;
+ $ cause   :Class &#39;labelled&#39;  atomic [1:2159] 4 4 6 4 4 4 3 4 4 6 ...
+  .. ..- attr(*, &quot;label&quot;)= chr &quot;Cause of injury recoded&quot;
+  .. ..- attr(*, &quot;format.spss&quot;)= chr &quot;F2.0&quot;
+  .. ..- attr(*, &quot;display_width&quot;)= int 10
+  .. ..- attr(*, &quot;labels&quot;)= Named num [1:5] 3 4 5 6 9
+  .. .. ..- attr(*, &quot;names&quot;)= chr [1:5] &quot;Road traffic accident&quot; &quot;Motorbike&quot; &quot;Assault&quot; &quot;domestic/fall&quot; ...
+ $ age     : atomic  14 14 14 14 14 14 14 14 14 14 ...
+  ..- attr(*, &quot;label&quot;)= chr &quot;Age in years&quot;
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F2.0&quot;
+ $ d.motor : atomic  5 4 4 4 5 3 5 5 4 5 ...
+  ..- attr(*, &quot;label&quot;)= chr &quot;Admission motor score&quot;
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F2.0&quot;
+ $ d.pupil :Class &#39;labelled&#39;  atomic [1:2159] 1 1 1 1 1 1 1 1 1 2 ...
+  .. ..- attr(*, &quot;label&quot;)= chr &quot;Pupillary reactivity&quot;
+  .. ..- attr(*, &quot;format.spss&quot;)= chr &quot;F2.0&quot;
+  .. ..- attr(*, &quot;labels&quot;)= Named num [1:3] 1 2 3
+  .. .. ..- attr(*, &quot;names&quot;)= chr [1:3] &quot;both reactive&quot; &quot;one reactive&quot; &quot;no reactive pupils&quot;
+ $ pupil.i :Class &#39;labelled&#39;  atomic [1:2159] 1 1 1 1 1 1 1 1 1 2 ...
+  .. ..- attr(*, &quot;label&quot;)= chr &quot;Single imputed pupillary reactivity&quot;
+  .. ..- attr(*, &quot;format.spss&quot;)= chr &quot;F2.0&quot;
+  .. ..- attr(*, &quot;labels&quot;)= Named num [1:3] 1 2 3
+  .. .. ..- attr(*, &quot;names&quot;)= chr [1:3] &quot;both reactive&quot; &quot;one reactive&quot; &quot;no reactive pupils&quot;
+ $ hypoxia : atomic  0 0 1 0 0 0 0 0 0 0 ...
+  ..- attr(*, &quot;label&quot;)= chr &quot;Hypoxia before / at admission&quot;
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F2.0&quot;
+ $ hypotens: atomic  0 0 0 0 0 0 0 0 0 0 ...
+  ..- attr(*, &quot;label&quot;)= chr &quot;Hypotension before / at admission&quot;
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F2.0&quot;
+ $ ctclass : atomic  2 2 4 2 2 2 2 2 2 1 ...
+  ..- attr(*, &quot;label&quot;)= chr &quot;CT classification according to Marshall&quot;
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F2.0&quot;
+ $ tsah    : atomic  0 0 1 0 0 NA 1 1 NA 0 ...
+  ..- attr(*, &quot;label&quot;)= chr &quot;tSAH at CT&quot;
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F2.0&quot;
+ $ edh     : atomic  0 0 0 0 0 0 0 0 0 0 ...
+  ..- attr(*, &quot;label&quot;)= chr &quot;EDH at CT&quot;
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F2.0&quot;
+ $ cisterns: atomic  1 1 NA 1 1 1 1 2 1 1 ...
+  ..- attr(*, &quot;label&quot;)= chr &quot;Compressed cisterns at CT&quot;
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F2.0&quot;
+ $ shift   : atomic  0 0 NA 1 0 0 0 1 0 0 ...
+  ..- attr(*, &quot;label&quot;)= chr &quot;Midline shift &gt; 5 mm at CT&quot;
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F2.0&quot;
+ $ d.sysbpt: atomic  119 131 136 137 138 ...
+  ..- attr(*, &quot;label&quot;)= chr &quot;Systolic blood pressure (truncated, mm Hg)&quot;
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F4.0&quot;
+ $ glucose : atomic  7.7 7.4 7.56 5.7 6 ...
+  ..- attr(*, &quot;label&quot;)= chr &quot;Glucose at admission (mmol/l)&quot;
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F4.2&quot;
+ $ glucoset: atomic  7.7 7.4 7.56 5.7 6 ...
+  ..- attr(*, &quot;label&quot;)= chr &quot;Truncated glucose values&quot;
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F4.2&quot;
+ $ ph      : atomic  7.35 7.33 7.49 NA NA ...
+  ..- attr(*, &quot;label&quot;)= chr &quot;pH&quot;
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F4.2&quot;
+ $ sodium  : atomic  143 143 141 144 142 138 141 135 137 137 ...
+  ..- attr(*, &quot;label&quot;)= chr &quot;Sodium (mmol/l)&quot;
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F4.1&quot;
+ $ sodiumt : atomic  143 143 141 144 142 138 141 135 137 137 ...
+  ..- attr(*, &quot;label&quot;)= chr &quot;Truncated sodium&quot;
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F4.1&quot;
+ $ hb      : atomic  15 15 12.8 7.1 8.5 12.3 12.8 9.2 12.8 11 ...
+  ..- attr(*, &quot;label&quot;)= chr &quot;hb (g/dl)&quot;
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F4.1&quot;
+ $ hbt     : atomic  15 15 12.8 7.1 8.5 12.3 12.8 9.2 12.8 11 ...
+  ..- attr(*, &quot;label&quot;)= chr &quot;Truncated hb&quot;
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F4.1&quot;</code></pre>
+<p>Coerce <code>labelled</code> variables into factors, as R works with factors and <code>labelled</code> variables are foreign to R.</p>
+<p>Use the package <code>haven</code> with the function <code>as_factor</code> to get this done while preserving factor labels.</p>
+<pre class="r"><code>tbi %&lt;&gt;%
+  mutate_if(is.labelled, as_factor)
+str(tbi)</code></pre>
+<pre><code>Classes &#39;tbl_df&#39;, &#39;tbl&#39; and &#39;data.frame&#39;:   2159 obs. of  24 variables:
+ $ trial   : Factor w/ 2 levels &quot;Tirilazad International&quot;,..: 1 1 1 1 1 1 1 1 1 1 ...
+  ..- attr(*, &quot;label&quot;)= chr &quot;Study identification&quot;
+ $ d.gos   : Factor w/ 5 levels &quot;dead&quot;,&quot;vegetative&quot;,..: 5 5 5 4 5 5 5 5 5 5 ...
+  ..- attr(*, &quot;label&quot;)= chr &quot;GOS at 6 months&quot;
+ $ d.mort  : atomic  0 0 0 0 0 0 0 0 0 0 ...
+  ..- attr(*, &quot;label&quot;)= chr &quot;Mortality at 6 months&quot;
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F2.0&quot;
+ $ d.unfav : atomic  0 0 0 0 0 0 0 0 0 0 ...
+  ..- attr(*, &quot;label&quot;)= chr &quot;Unfavorable outcome at 6 months&quot;
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F2.0&quot;
+ $ cause   : Factor w/ 5 levels &quot;Road traffic accident&quot;,..: 2 2 4 2 2 2 1 2 2 4 ...
+  ..- attr(*, &quot;label&quot;)= chr &quot;Cause of injury recoded&quot;
+ $ age     : atomic  14 14 14 14 14 14 14 14 14 14 ...
+  ..- attr(*, &quot;label&quot;)= chr &quot;Age in years&quot;
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F2.0&quot;
+ $ d.motor : atomic  5 4 4 4 5 3 5 5 4 5 ...
+  ..- attr(*, &quot;label&quot;)= chr &quot;Admission motor score&quot;
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F2.0&quot;
+ $ d.pupil : Factor w/ 3 levels &quot;both reactive&quot;,..: 1 1 1 1 1 1 1 1 1 2 ...
+  ..- attr(*, &quot;label&quot;)= chr &quot;Pupillary reactivity&quot;
+ $ pupil.i : Factor w/ 3 levels &quot;both reactive&quot;,..: 1 1 1 1 1 1 1 1 1 2 ...
+  ..- attr(*, &quot;label&quot;)= chr &quot;Single imputed pupillary reactivity&quot;
+ $ hypoxia : atomic  0 0 1 0 0 0 0 0 0 0 ...
+  ..- attr(*, &quot;label&quot;)= chr &quot;Hypoxia before / at admission&quot;
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F2.0&quot;
+ $ hypotens: atomic  0 0 0 0 0 0 0 0 0 0 ...
+  ..- attr(*, &quot;label&quot;)= chr &quot;Hypotension before / at admission&quot;
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F2.0&quot;
+ $ ctclass : atomic  2 2 4 2 2 2 2 2 2 1 ...
+  ..- attr(*, &quot;label&quot;)= chr &quot;CT classification according to Marshall&quot;
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F2.0&quot;
+ $ tsah    : atomic  0 0 1 0 0 NA 1 1 NA 0 ...
+  ..- attr(*, &quot;label&quot;)= chr &quot;tSAH at CT&quot;
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F2.0&quot;
+ $ edh     : atomic  0 0 0 0 0 0 0 0 0 0 ...
+  ..- attr(*, &quot;label&quot;)= chr &quot;EDH at CT&quot;
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F2.0&quot;
+ $ cisterns: atomic  1 1 NA 1 1 1 1 2 1 1 ...
+  ..- attr(*, &quot;label&quot;)= chr &quot;Compressed cisterns at CT&quot;
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F2.0&quot;
+ $ shift   : atomic  0 0 NA 1 0 0 0 1 0 0 ...
+  ..- attr(*, &quot;label&quot;)= chr &quot;Midline shift &gt; 5 mm at CT&quot;
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F2.0&quot;
+ $ d.sysbpt: atomic  119 131 136 137 138 ...
+  ..- attr(*, &quot;label&quot;)= chr &quot;Systolic blood pressure (truncated, mm Hg)&quot;
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F4.0&quot;
+ $ glucose : atomic  7.7 7.4 7.56 5.7 6 ...
+  ..- attr(*, &quot;label&quot;)= chr &quot;Glucose at admission (mmol/l)&quot;
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F4.2&quot;
+ $ glucoset: atomic  7.7 7.4 7.56 5.7 6 ...
+  ..- attr(*, &quot;label&quot;)= chr &quot;Truncated glucose values&quot;
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F4.2&quot;
+ $ ph      : atomic  7.35 7.33 7.49 NA NA ...
+  ..- attr(*, &quot;label&quot;)= chr &quot;pH&quot;
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F4.2&quot;
+ $ sodium  : atomic  143 143 141 144 142 138 141 135 137 137 ...
+  ..- attr(*, &quot;label&quot;)= chr &quot;Sodium (mmol/l)&quot;
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F4.1&quot;
+ $ sodiumt : atomic  143 143 141 144 142 138 141 135 137 137 ...
+  ..- attr(*, &quot;label&quot;)= chr &quot;Truncated sodium&quot;
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F4.1&quot;
+ $ hb      : atomic  15 15 12.8 7.1 8.5 12.3 12.8 9.2 12.8 11 ...
+  ..- attr(*, &quot;label&quot;)= chr &quot;hb (g/dl)&quot;
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F4.1&quot;
+ $ hbt     : atomic  15 15 12.8 7.1 8.5 12.3 12.8 9.2 12.8 11 ...
+  ..- attr(*, &quot;label&quot;)= chr &quot;Truncated hb&quot;
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F4.1&quot;</code></pre>
+<div id="cause-of-injury" class="section level2">
+<h2>1) Cause of injury</h2>
+<div id="a" class="section level3">
+<h3>a)</h3>
+<blockquote>
+<p>Give the frequencies of the outcome (d.gos). What is the most commonly observed outcome?</p>
+</blockquote>
+<pre class="r"><code>tabl(tbi$d.gos)</code></pre>
+<pre><code>
+               dead          vegetative   severe disability 
+                503                  86                 262 
+moderate disability       good recovery                &lt;NA&gt; 
+                351                 957                   0 </code></pre>
+</div>
+<div id="b" class="section level3">
+<h3>b)</h3>
+<blockquote>
+<p>Check the categorization in favorable vs unfavorable outcome (d.unfav variable). What is the overall risk of an unfavorable outcome? How was d.gos dichotomized?</p>
+</blockquote>
+<pre class="r"><code>tabl(tbi$d.gos, tbi$d.unfav)</code></pre>
+<pre><code>                     
+                        0   1 &lt;NA&gt;
+  dead                  0 503    0
+  vegetative            0  86    0
+  severe disability     0 262    0
+  moderate disability 351   0    0
+  good recovery       957   0    0
+  &lt;NA&gt;                  0   0    0</code></pre>
+<p>Overall risk of unfavorable outcome:</p>
+<pre class="r"><code>mean(tbi$d.unfav)</code></pre>
+<pre><code>[1] 0.394164</code></pre>
+</div>
+<div id="c" class="section level3">
+<h3>c)</h3>
+<blockquote>
+<p>Give the frequencies of cause of injury. What is the most common cause of injury?</p>
+</blockquote>
+<pre class="r"><code>tabl(tbi$cause)</code></pre>
+<pre><code>
+Road traffic accident             Motorbike               Assault 
+                  848                   420                   134 
+        domestic/fall                 other                  &lt;NA&gt; 
+                  370                   387                     0 </code></pre>
+</div>
+<div id="d" class="section level3">
+<h3>d)</h3>
+<blockquote>
+<p>Study the univariable effect of the prognostic factor ‘cause of injury’ on ‘unfavorable outcome’ (with crosstabs). What is the risk of an unfavorable outcome for each cause of injury? (use option <cells> <percentages>)</p>
+</blockquote>
+<pre class="r"><code>gmodels::CrossTable(tbi$cause, tbi$d.unfav, prop.chisq = F, prop.t = F, prop.c = F)</code></pre>
+<pre><code>
+ 
+   Cell Contents
+|-------------------------|
+|                       N |
+|           N / Row Total |
+|-------------------------|
+
+ 
+Total Observations in Table:  2159 
+
+ 
+                      | tbi$d.unfav 
+            tbi$cause |         0 |         1 | Row Total | 
+----------------------|-----------|-----------|-----------|
+Road traffic accident |       530 |       318 |       848 | 
+                      |     0.625 |     0.375 |     0.393 | 
+----------------------|-----------|-----------|-----------|
+            Motorbike |       277 |       143 |       420 | 
+                      |     0.660 |     0.340 |     0.195 | 
+----------------------|-----------|-----------|-----------|
+              Assault |        87 |        47 |       134 | 
+                      |     0.649 |     0.351 |     0.062 | 
+----------------------|-----------|-----------|-----------|
+        domestic/fall |       200 |       170 |       370 | 
+                      |     0.541 |     0.459 |     0.171 | 
+----------------------|-----------|-----------|-----------|
+                other |       214 |       173 |       387 | 
+                      |     0.553 |     0.447 |     0.179 | 
+----------------------|-----------|-----------|-----------|
+         Column Total |      1308 |       851 |      2159 | 
+----------------------|-----------|-----------|-----------|
+
+ </code></pre>
+</div>
+<div id="e" class="section level3">
+<h3>e)</h3>
+<blockquote>
+<p>Quantify the effect with a logistic regression model. <Analyze> <Regression> <Binary logistic> Specify cause of injury as a categorical covariate.</p>
+</blockquote>
+<p>Let’s make sure that ‘other’ is the reference category</p>
+<pre class="r"><code>tbi %&lt;&gt;% mutate(cause = relevel(cause, ref = &quot;other&quot;))</code></pre>
+<pre class="r"><code>fit &lt;- glm(d.unfav ~ cause, data = tbi, family = binomial(&quot;logit&quot;))
+summary(fit)</code></pre>
+<pre><code>
+Call:
+glm(formula = d.unfav ~ cause, family = binomial(&quot;logit&quot;), data = tbi)
+
+Deviance Residuals: 
+    Min       1Q   Median       3Q      Max  
+-1.1092  -0.9695  -0.9124   1.2690   1.4679  
+
+Coefficients:
+                           Estimate Std. Error z value Pr(&gt;|z|)   
+(Intercept)                -0.21268    0.10224  -2.080   0.0375 * 
+causeRoad traffic accident -0.29814    0.12444  -2.396   0.0166 * 
+causeMotorbike             -0.44849    0.14511  -3.091   0.0020 **
+causeAssault               -0.40308    0.20790  -1.939   0.0525 . 
+causedomestic/fall          0.05017    0.14607   0.343   0.7313   
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+(Dispersion parameter for binomial family taken to be 1)
+
+    Null deviance: 2895.5  on 2158  degrees of freedom
+Residual deviance: 2877.0  on 2154  degrees of freedom
+AIC: 2887
+
+Number of Fisher Scoring iterations: 4</code></pre>
+<blockquote>
+<p>By default SPSS will use the last category (‘Other’) as the reference category. Which causes give the highest risk of unfavorable outcome, and which the lowest risk, according to the regression result?</p>
+</blockquote>
+<p>Motorbike is lowest, domestic/fall is highest. These match with the cross-table. Let’s look at the predicted probabilities for each category</p>
+<pre class="r"><code>cbind(levels(tbi$cause), predict(fit, newdata = data.frame(cause = levels(tbi$cause)),
+        type = &quot;response&quot;))</code></pre>
+<pre><code>  [,1]                    [,2]               
+1 &quot;other&quot;                 &quot;0.447028423772611&quot;
+2 &quot;Road traffic accident&quot; &quot;0.375000000000002&quot;
+3 &quot;Motorbike&quot;             &quot;0.340476190476219&quot;
+4 &quot;Assault&quot;               &quot;0.350746268656731&quot;
+5 &quot;domestic/fall&quot;         &quot;0.459459459459461&quot;</code></pre>
+</div>
+<div id="f" class="section level3">
+<h3>f)</h3>
+<blockquote>
+<p>Verify that the intercept estimate in e) corresponds to the risk for the “Other” cause category as noted in d). Is the exp(intercept) an “odds ratio” or simply an “odds”?</p>
+</blockquote>
+<p>With our fit the reference category is other</p>
+<pre class="r"><code>o_int = exp(coef(fit)[1])
+o_int</code></pre>
+<pre><code>(Intercept) 
+  0.8084112 </code></pre>
+<p>To probability</p>
+<pre class="r"><code>o_int / (1 + o_int)</code></pre>
+<pre><code>(Intercept) 
+  0.4470284 </code></pre>
+<p>This matches the observed probability for other.</p>
+<p>This is an actual ‘odds’</p>
+<blockquote>
+<p>Verify also that the risk for the category “Domestic/fall” is only slightly higher than that of the “Other” cause category, both according to the crosstable (d)) and the regression result in e).</p>
+</blockquote>
+</div>
+<div id="g" class="section level3">
+<h3>g)</h3>
+<blockquote>
+<p>Is the pattern of risk in d) and e) what you would expect? Can you think of confounders? Hint: What is the mean age for each cause of injury?</p>
+</blockquote>
+<p>You would expect the risk for traffic accidents to be higher. Let’s include age in the summary</p>
+<pre class="r"><code>tbi %&gt;%
+  group_by(cause) %&gt;%
+  summarize(mean_age = mean(age), prop_unfavouroble = mean(d.unfav))</code></pre>
+<pre><code># A tibble: 5 x 3
+  cause                 mean_age prop_unfavouroble
+  &lt;fct&gt;                    &lt;dbl&gt;             &lt;dbl&gt;
+1 other                     35.1             0.447
+2 Road traffic accident     29.5             0.375
+3 Motorbike                 31.4             0.340
+4 Assault                   35.3             0.351
+5 domestic/fall             41.0             0.459</code></pre>
+<p>Motorbike and traffic have low age and low unfavourable outcomes</p>
+</div>
+<div id="h" class="section level3">
+<h3>h)</h3>
+<blockquote>
+<p>Now fit a multivariable model to adjust the effect of cause of injury for age.</p>
+</blockquote>
+<pre class="r"><code>fit2 &lt;- glm(d.unfav ~ cause + age, data = tbi, family = binomial(&quot;logit&quot;))
+summary(fit2)</code></pre>
+<pre><code>
+Call:
+glm(formula = d.unfav ~ cause + age, family = binomial(&quot;logit&quot;), 
+    data = tbi)
+
+Deviance Residuals: 
+    Min       1Q   Median       3Q      Max  
+-1.6204  -0.9600  -0.8317   1.2374   1.7103  
+
+Coefficients:
+                            Estimate Std. Error z value Pr(&gt;|z|)    
+(Intercept)                -1.318676   0.162146  -8.133  4.2e-16 ***
+causeRoad traffic accident -0.129030   0.128343  -1.005   0.3147    
+causeMotorbike             -0.350214   0.148844  -2.353   0.0186 *  
+causeAssault               -0.421374   0.211557  -1.992   0.0464 *  
+causedomestic/fall         -0.137041   0.151044  -0.907   0.3643    
+age                         0.031325   0.003498   8.955  &lt; 2e-16 ***
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+(Dispersion parameter for binomial family taken to be 1)
+
+    Null deviance: 2895.5  on 2158  degrees of freedom
+Residual deviance: 2794.1  on 2153  degrees of freedom
+AIC: 2806.1
+
+Number of Fisher Scoring iterations: 4</code></pre>
+<p>This model did not fit, the residual deviance is higher than the degrees of freedom</p>
+<div id="section" class="section level4">
+<h4>1.</h4>
+<blockquote>
+<p>Is the effect of cause still statistically significant? Hint: focus on the overall p-value, based on a 4 df test.</p>
+</blockquote>
+<p>We should take 6 degrees of freedom, as there are 6 parameters estimated</p>
+<pre class="r"><code>anova(fit2, test = &quot;Chisq&quot;)</code></pre>
+<pre><code>Analysis of Deviance Table
+
+Model: binomial, link: logit
+
+Response: d.unfav
+
+Terms added sequentially (first to last)
+
+      Df Deviance Resid. Df Resid. Dev  Pr(&gt;Chi)    
+NULL                   2158     2895.5              
+cause  4   18.517      2154     2877.0 0.0009777 ***
+age    1   82.926      2153     2794.1 &lt; 2.2e-16 ***
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<p>Dropping cause will significantly decrease the goodness of fit, so yes.</p>
+</div>
+<div id="section-1" class="section level4">
+<h4>2.</h4>
+<blockquote>
+<p>How do the effects of the different causes change?</p>
+</blockquote>
+<pre class="r"><code>require(tidyr)
+fits &lt;- list(without_age = fit, with_age = fit2)
+fits %&gt;%
+  map_df(tidy, .id = &quot;model&quot;) %&gt;%
+  select(estimate, model, term) %&gt;%
+  spread(key = c(&quot;model&quot;), value = &quot;estimate&quot;)</code></pre>
+<pre><code>                        term    with_age without_age
+1                (Intercept) -1.31867601 -0.21268442
+2                        age  0.03132549          NA
+3               causeAssault -0.42137365 -0.40307610
+4         causedomestic/fall -0.13704111  0.05016549
+5             causeMotorbike -0.35021397 -0.44848846
+6 causeRoad traffic accident -0.12902965 -0.29814120</code></pre>
+<p>Assault and domestic become lower risk, motorbike and road traffic higher risk</p>
+</div>
+</div>
+<div id="i" class="section level3">
+<h3>i)</h3>
+<blockquote>
+<p>What is your conclusion on the effect of “cause of injury”? Do you think “cause of injury” should be used for predictive purposes?</p>
+</blockquote>
+<p>Based on these data, yes. However, when adding more covariates, this may change.</p>
+</div>
+</div>
+<div id="prediction-model-risk-of-unfavourable-outcome" class="section level2">
+<h2>2) Prediction model: Risk of unfavourable outcome</h2>
+<blockquote>
+<p>We will now develop a simple prediction model with three predictors: motor score, pupillary reactivity and age.</p>
+</blockquote>
+<div id="a-1" class="section level3">
+<h3>a)</h3>
+<blockquote>
+<p>Give some descriptive statistics of motor score, pupillary reactivity and age.</p>
+</blockquote>
+<pre class="r"><code>tbi %&gt;%
+  select(d.motor, d.pupil, age) %&gt;%
+  summary()</code></pre>
+<pre><code>    d.motor                    d.pupil          age       
+ Min.   :1.000   both reactive     :1430   Min.   :14.00  
+ 1st Qu.:3.000   one reactive      : 279   1st Qu.:22.00  
+ Median :4.000   no reactive pupils: 327   Median :30.00  
+ Mean   :3.991   NA&#39;s              : 123   Mean   :33.21  
+ 3rd Qu.:5.000                             3rd Qu.:43.00  
+ Max.   :6.000                             Max.   :79.00  </code></pre>
+<blockquote>
+<ol start="2" style="list-style-type: lower-alpha">
+<li>Assess the univariable effects of motor score, pupillary reactivity and age on the outcome (d.unfav) with a logistic regression model.</li>
+</ol>
+</blockquote>
+<pre class="r"><code>terms &lt;- c(&quot;d.motor&quot;, &quot;d.pupil&quot;, &quot;age&quot;)
+
+fits_uni &lt;- terms %&gt;%
+  map(function(term) glm(reformulate(term, &quot;d.unfav&quot;), 
+                         data = tbi, family = &quot;binomial&quot;))
+names(fits_uni) &lt;- terms
+
+fits_uni %&gt;%
+  map_df(tidy)</code></pre>
+<pre><code>                       term    estimate   std.error  statistic
+1               (Intercept)  2.27399375 0.177962699  12.777923
+2                   d.motor -0.68865430 0.044140229 -15.601512
+3               (Intercept) -0.87071813 0.057980412 -15.017454
+4       d.pupilone reactive  0.97834880 0.133192368   7.345382
+5 d.pupilno reactive pupils  1.71947266 0.133912687  12.840252
+6               (Intercept) -1.49482050 0.121854369 -12.267270
+7                       age  0.03161422 0.003328418   9.498274
+       p.value
+1 2.178073e-37
+2 7.109036e-55
+3 5.643444e-51
+4 2.051725e-13
+5 9.755630e-38
+6 1.357530e-34
+7 2.133986e-21</code></pre>
+<blockquote>
+<p>What is the univariable effect of age on the risk of unfavorable outcome?</p>
+</blockquote>
+<pre class="r"><code>exp(coef(fits_uni[[&quot;age&quot;]]))</code></pre>
+<pre><code>(Intercept)         age 
+  0.2242889   1.0321193 </code></pre>
+<blockquote>
+<p>What would be a good way to express the effect, using a linear scale? Hint: think of recoding age by decade.</p>
+</blockquote>
+<pre class="r"><code>tbi %&lt;&gt;%
+  mutate(age_cat = cut(age, breaks = seq(from = 10*floor(min(age / 10)),
+                                         to = 10*ceiling(max(age / 10)), by = 10)))
+tbi %&gt;%
+  glm(formula = d.unfav ~ age_cat, family = &quot;binomial&quot;) %&gt;%
+  summary()</code></pre>
+<pre><code>
+Call:
+glm(formula = d.unfav ~ age_cat, family = &quot;binomial&quot;, data = .)
+
+Deviance Residuals: 
+    Min       1Q   Median       3Q      Max  
+-1.5829  -0.9244  -0.8640   1.1334   1.5273  
+
+Coefficients:
+                Estimate Std. Error z value Pr(&gt;|z|)    
+(Intercept)    -0.789162   0.106175  -7.433 1.06e-13 ***
+age_cat(20,30] -0.003851   0.133811  -0.029   0.9770    
+age_cat(30,40]  0.313901   0.145060   2.164   0.0305 *  
+age_cat(40,50]  0.976200   0.155716   6.269 3.63e-10 ***
+age_cat(50,60]  0.893522   0.174017   5.135 2.83e-07 ***
+age_cat(60,70]  1.319790   0.253405   5.208 1.91e-07 ***
+age_cat(70,80]  1.705453   0.843370   2.022   0.0432 *  
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+(Dispersion parameter for binomial family taken to be 1)
+
+    Null deviance: 2895.5  on 2158  degrees of freedom
+Residual deviance: 2797.1  on 2152  degrees of freedom
+AIC: 2811.1
+
+Number of Fisher Scoring iterations: 4</code></pre>
+<p>If the effect of age were linear (on the log-odds scale), there would be a constant difference between each consecutive category</p>
+<p>Alternatively, we could plot the log-odds per age category</p>
+<pre class="r"><code>logit &lt;- function(x) log(x / (1-x))
+tbi %&gt;%
+  group_by(age_cat) %&gt;%
+  mutate(p_unfav = mean(d.unfav),
+         p_unfav_lo = binom.confint_logical(d.unfav)$lower,
+         p_unfav_hi = binom.confint_logical(d.unfav)$upper,
+         logit_unfav = logit(p_unfav),
+         logit_unfav_lo = logit(p_unfav_lo),
+         logit_unfav_hi = logit(p_unfav_hi)
+         ) %&gt;%
+  ggplot(aes(x = age_cat, ymin = logit_unfav_lo, y = logit_unfav, ymax = logit_unfav_hi)) + 
+  geom_errorbar()</code></pre>
+<p><img src="figure/pr_assignments.Rmd/unnamed-chunk-22-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Linearity does not look too bad on logit scale.</p>
+<p>I’m not sure whether calculating a confidence interval for the proportion and then transforming with logit is the best way to go.</p>
+</div>
+<div id="c-1" class="section level3">
+<h3>c)</h3>
+<blockquote>
+<p>Now fit a multivariable model. Include in your model: motor score, pupillary reactivity and age (continuous). Note that there are missing values in the variable ‘d.pupil’, which have been filled in with a statistical imputation procedure in ‘pupil.i’. Perform the analyses twice: once with ‘pupillary reactivity’ including missing values (d.pupil) and once with missing values imputed (pupil.i). What are the numbers of patients in each analysis? Are there differences in prognostic effects?</p>
+</blockquote>
+<pre class="r"><code>fit_mis &lt;- glm(d.unfav ~ d.motor + d.pupil + age, data = tbi, family = &quot;binomial&quot;)
+fit_imp &lt;- glm(d.unfav ~ d.motor + pupil.i + age, data = tbi, family = &quot;binomial&quot;)
+
+fits &lt;- list(with_missings = fit_mis, imputed = fit_imp)
+fits %&gt;%
+  map_df(tidy, .id = &quot;model&quot;) %&gt;%
+  select(model, term, estimate) %&gt;%
+  spread(model, estimate)</code></pre>
+<pre><code>                       term     imputed with_missings
+1               (Intercept)  0.35269097    0.43316634
+2                       age  0.03818688    0.03835085
+3                   d.motor -0.60344181   -0.62470224
+4 d.pupilno reactive pupils          NA    1.28566748
+5       d.pupilone reactive          NA    0.56684531
+6 pupil.ino reactive pupils  1.27120434            NA
+7       pupil.ione reactive  0.59098094            NA</code></pre>
+<p>The estimate for age stays the same, for motor is a little different.</p>
+<p>Overall the estimates are pretty much the same</p>
+<pre class="r"><code>fits %&gt;% map_df(&quot;df.null&quot;) + 1</code></pre>
+<pre><code>  with_missings imputed
+1          2036    2159</code></pre>
+</div>
+<div id="d-1" class="section level3">
+<h3>d)</h3>
+<blockquote>
+<p>Can we interpret the change in age coefficient from univariable analysis to multivariable analysis if the number of subjects between the two analyses differ? Therefore: which variable for ‘pupillary reactivity’ do you prefer for modeling? Use this as the final multivariable model.</p>
+</blockquote>
+<p>The number of missings is relatively low compare to the total number of observations (around 5%). If the missings are random and / or not associated with age or the outcome, the coefficients would not change. Precision decreases a little bit. Best would be to use the imputed variable, but difference will be small.</p>
+<pre class="r"><code>fits &lt;- list(univariate = fits_uni[[&quot;age&quot;]], 
+             with_missings = fit_mis, imputed = fit_imp)
+fits %&gt;%
+  map_df(tidy, .id = &quot;model&quot;) %&gt;%
+  select(term, model, estimate) %&gt;%
+  spread(model, estimate)</code></pre>
+<pre><code>                       term     imputed  univariate with_missings
+1               (Intercept)  0.35269097 -1.49482050    0.43316634
+2                       age  0.03818688  0.03161422    0.03835085
+3                   d.motor -0.60344181          NA   -0.62470224
+4 d.pupilno reactive pupils          NA          NA    1.28566748
+5       d.pupilone reactive          NA          NA    0.56684531
+6 pupil.ino reactive pupils  1.27120434          NA            NA
+7       pupil.ione reactive  0.59098094          NA            NA</code></pre>
+<p>And for the p-value (precision):</p>
+<pre class="r"><code>fits %&gt;%
+  map_df(tidy, .id = &quot;model&quot;) %&gt;%
+  select(term, model, p.value) %&gt;%
+  spread(model, p.value)</code></pre>
+<pre><code>                       term      imputed   univariate with_missings
+1               (Intercept) 1.214577e-01 1.357530e-34  6.789803e-02
+2                       age 5.853446e-25 2.133986e-21  2.955927e-23
+3                   d.motor 1.431263e-35           NA  2.731862e-35
+4 d.pupilno reactive pupils           NA           NA  2.458664e-18
+5       d.pupilone reactive           NA           NA  1.139903e-04
+6 pupil.ino reactive pupils 2.407998e-19           NA            NA
+7       pupil.ione reactive 2.916081e-05           NA            NA</code></pre>
+</div>
+<div id="e-1" class="section level3">
+<h3>e)</h3>
+<blockquote>
+<p>How many missing values are imputed in the variable ‘pupil.i’? How many more cases can be analyzed by using ‘pupil.i’ rather than ‘d.pupil’?</p>
+</blockquote>
+<p>See above</p>
+</div>
+<div id="f-1" class="section level3">
+<h3>f)</h3>
+<blockquote>
+<p>The regression coefficients of the logistic model can be used to calculate the individual predicted risk of unfavorable outcome. Fit the model (as in d) again and use the option <save> <predicted values> <probabilities>. Note that your dataset (not the output screen) shows an extra column.</p>
+</blockquote>
+<p>Predicted probabilities are stored in the R object</p>
+<pre class="r"><code>fit_imp$fitted.values[1:10]</code></pre>
+<pre><code>        1         2         3         4         5         6         7 
+0.1062243 0.1785122 0.1785122 0.1785122 0.1062243 0.2843433 0.1062243 
+        8         9        10 
+0.1062243 0.1785122 0.1766922 </code></pre>
+</div>
+<div id="g-1" class="section level3">
+<h3>g)</h3>
+<blockquote>
+<p>Look at the descriptives of the predicted risks. Is the range very narrow / reasonably wide?</p>
+</blockquote>
+<pre class="r"><code>summary(fit_imp$fitted.values)</code></pre>
+<pre><code>   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+0.06326 0.20825 0.34340 0.39416 0.54199 0.95926 </code></pre>
+<p>Looks like it covers a whide range of the 0-1 interval</p>
+</div>
+<div id="h-1" class="section level3">
+<h3>h)</h3>
+<blockquote>
+<p>If the model is well calibrated, groups of patients with low predicted risks will include only few patients with unfavorable outcomes; groups of patients with high predicted risks many. To check this, group the patients by predicted risk (use “recode into different variable”): 1: 0.00 - 0.15 2: 0.15 - 0.30 3: 0.30 - 0.40 4: 0.40 - 0.60 5: 0.60 - 1.00 Give the observed proportions of patients with unfavourable outcome for each group (use crosstabs with option cells, percentage).</p>
+</blockquote>
+<p>Add predicted to data.frame</p>
+<pre class="r"><code>tbi %&lt;&gt;% mutate(
+  pred_unfav = fit_imp$fitted.values,
+  pred_unfav_cat = cut(pred_unfav, breaks = c(0, .15, .3, .4, .6, 1)))</code></pre>
+<p>View results</p>
+<pre class="r"><code>tbi %&gt;%
+  group_by(pred_unfav_cat) %&gt;%
+  summarize(observed_prob = mean(d.unfav))</code></pre>
+<pre><code># A tibble: 5 x 2
+  pred_unfav_cat observed_prob
+  &lt;fct&gt;                  &lt;dbl&gt;
+1 (0,0.15]               0.135
+2 (0.15,0.3]             0.227
+3 (0.3,0.4]              0.314
+4 (0.4,0.6]              0.487
+5 (0.6,1]                0.766</code></pre>
+<p>These line up OK</p>
+</div>
+<div id="i-1" class="section level3">
+<h3>i)</h3>
+<blockquote>
+<p>Use the Hosmer-Lemeshow test to assess the calibration of the model as fitted in step d). By default, this test groups patients by deciles of risk. Does the test give a statistically significant result? Is that to be expected when a model is fitted and tested for fit in the same data?</p>
+</blockquote>
+<pre class="r"><code>ResourceSelection::hoslem.test(x = tbi$d.unfav, y = tbi$pred_unfav, g = 10)</code></pre>
+<pre><code>
+    Hosmer and Lemeshow goodness of fit (GOF) test
+
+data:  tbi$d.unfav, tbi$pred_unfav
+X-squared = 5.1937, df = 8, p-value = 0.7367</code></pre>
+<p>No rejection of null-hypothesis. Seems to fit OK.</p>
+<p>Howerever the fit was based on the data, so this may be overfitted.</p>
+<blockquote>
+<p>What do you think would happen with calibration at external validation, i.e. predictions are made for another data set?</p>
+</blockquote>
+<p>Probably, calibration will be worse.</p>
+<p>However, we have 851 cases, and fitted 5 degrees of freedom, so overfitting should be limited</p>
+</div>
+<div id="j" class="section level3">
+<h3>j)</h3>
+<blockquote>
+<p>Study the discriminative ability of the model with the ROC curve. Use <analyze> <ROC curve>. For comparison, make also a ROC curve for age alone as a single predictor.</p>
+</blockquote>
+<pre class="r"><code>logit_roc &lt;- function(fit, add = F, ...) {
+  if (!(&quot;glm&quot; %in% class(fit)) &amp; fit$family$family == &quot;binomial&quot; &amp; fit$family$link == &quot;logit&quot;) {
+    stop(&quot;only works for glm fits with family = binomial(link = &#39;logit&#39;)&quot;)
+  }
+  
+  formula0  = formula(fit)
+  all_vars  = all.vars(formula0)
+  response  = all_vars[1]
+  all_terms = all_vars[-1]
+
+  roc &lt;- pROC::roc(fit$data[[response]], fit$fitted.values, ci = T)
+  pROC:::plot.roc.roc(roc, ci = T, add = add, ...)
+}
+logit_roc(fit_imp, main = &quot;multivariate model&quot;)</code></pre>
+<p><img src="figure/pr_assignments.Rmd/unnamed-chunk-32-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>logit_roc(fit_imp, main = &quot;comparison with univariate model of only age&quot;)
+logit_roc(fits_uni[[&quot;age&quot;]], add = T)</code></pre>
+<p><img src="figure/pr_assignments.Rmd/unnamed-chunk-33-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="k" class="section level3">
+<h3>k)</h3>
+<blockquote>
+<p>What would you expect for the area under the ROC-curve) if the model were applied in a new data set (external validation)?</p>
+</blockquote>
+<p>A little worse.</p>
+<blockquote>
+<p>What would you expect if the prognostic model is developed in a selection of patients with very narrow inclusion criteria with respect to important predictors such as age and motor score?</p>
+</blockquote>
+<p>It will do a worse, since contrasts are smaller.</p>
+</div>
+</div>
+<div id="session-information" class="section level2">
+<h2>Session information</h2>
+<!-- Insert the session information into the document -->
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 3.4.3 (2017-11-30)
+Platform: x86_64-apple-darwin15.6.0 (64-bit)
+Running under: macOS Sierra 10.12.6
+
+Matrix products: default
+BLAS: /Library/Frameworks/R.framework/Versions/3.4/Resources/lib/libRblas.0.dylib
+LAPACK: /Library/Frameworks/R.framework/Versions/3.4/Resources/lib/libRlapack.dylib
+
+locale:
+[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+ [1] tidyr_0.8.0         bindrcpp_0.2        haven_1.1.1        
+ [4] broom_0.4.3         epistats_0.1.0      ggplot2_2.2.1      
+ [7] here_0.1            purrr_0.2.4         magrittr_1.5       
+[10] data.table_1.10.4-3 dplyr_0.7.4        
+
+loaded via a namespace (and not attached):
+ [1] gtools_3.5.0            tidyselect_0.2.3       
+ [3] reshape2_1.4.3          lattice_0.20-35        
+ [5] colorspace_1.3-2        htmltools_0.3.6        
+ [7] yaml_2.1.16             utf8_1.1.3             
+ [9] rlang_0.1.6             pillar_1.1.0           
+[11] foreign_0.8-69          glue_1.2.0             
+[13] binom_1.1-1             bindr_0.1              
+[15] plyr_1.8.4              stringr_1.2.0          
+[17] munsell_0.4.3           gtable_0.2.0           
+[19] psych_1.7.8             evaluate_0.10.1        
+[21] labeling_0.3            knitr_1.19             
+[23] forcats_0.2.0           ResourceSelection_0.3-2
+[25] parallel_3.4.3          Rcpp_0.12.15           
+[27] readr_1.1.1             scales_0.5.0           
+[29] backports_1.1.2         gdata_2.18.0           
+[31] mnormt_1.5-5            hms_0.4.1              
+[33] digest_0.6.15           stringi_1.1.6          
+[35] gmodels_2.16.2          grid_3.4.3             
+[37] rprojroot_1.3-2         cli_1.0.0              
+[39] tools_3.4.3             lazyeval_0.2.1         
+[41] tibble_1.4.2            crayon_1.3.4           
+[43] pkgconfig_2.0.1         Matrix_1.2-12          
+[45] MASS_7.3-48             pROC_1.10.0            
+[47] assertthat_0.2.0        rmarkdown_1.8          
+[49] R6_2.2.2                nlme_3.1-131           
+[51] git2r_0.21.0            compiler_3.4.3         </code></pre>
+</div>
+</div>
+
+<hr>
+<p>
+    This <a href="http://rmarkdown.rstudio.com">R Markdown</a> site was created with <a href="https://github.com/jdblischak/workflowr">workflowr</a>
+</p>
+<hr>
+
+<!-- To enable disqus, uncomment the section below and provide your disqus_shortname -->
+
+<!-- disqus
+  <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+        var disqus_shortname = 'rmarkdown'; // required: replace example with your forum shortname
+
+        /* * * DON'T EDIT BELOW THIS LINE * * */
+        (function() {
+            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+-->
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
