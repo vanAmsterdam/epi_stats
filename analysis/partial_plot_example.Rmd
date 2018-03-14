@@ -97,24 +97,25 @@ Now if x1 and x2 are dependent
 
 ```{r}
 require(effects)
-set.seed(12345)
+set.seed(123456)
 nobs = 1000
 npred = 2
 
-corr_x1x2 = 0.5
+corr_x1x2 = 0.3
 x1 = rnorm(nobs)
 x2 = corr_x1x2 * x1 + (1-corr_x1x2)*rnorm(nobs)
 x = as.matrix(cbind(x1, x2))
 betas = c(1, 1)
 resid_noise = .3
 
-y = x %*%betas + rnorm(nobs, sd = resid_noise)
+# y = x %*%betas + rnorm(nobs, sd = resid_noise)
+y = x1^2 / ifelse(x2 == 0, 1, x2) + rnorm(nobs, sd = resid_noise)
 
 fit <- lm(y~x1+x2)
 # part2 <- partial_residuals.lm(fit, term = "x1")
 
 # plot(x1, residuals(fit, type = "partial")[,1])
-par(mfrow = c(1,2)); plot(y, x1); plot(y, x2); par(mfrow = c(1,1))
+par(mfrow = c(1,2)); plot(y ~ x1); plot(y ~ x2); par(mfrow = c(1,1))
 partial_plots.lm(fit)
 # plot(Effect(focal.predictors = c("x1", "x2"), mod = fit))
 ```

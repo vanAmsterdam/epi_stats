@@ -490,6 +490,25 @@ tbi %>%
 
 These line up OK
 
+Let's plot calibration
+
+```{r}
+tbi %>%
+  mutate(pred_unfav_deciles = quant(pred_unfav, n.tiles = 10)) %>%
+  group_by(pred_unfav_deciles) %>%
+  summarize(observed_prob = mean(d.unfav),
+         observed_prob_lo = binom.confint_logical(d.unfav)$lower,
+         observed_prob_hi = binom.confint_logical(d.unfav)$upper) %>%
+  ggplot(aes(x = seq(0.05, .95, length.out = 10), 
+             ymin = observed_prob_lo, ymax = observed_prob_hi,
+             y = observed_prob)) +
+  geom_errorbar() + geom_point() + 
+  geom_abline(aes(slope = 1, intercept = 0), lty = 2) +
+  lims(y = c(0,1))
+```
+
+
+
 ### i) 
 
 > Use the Hosmer-Lemeshow test to assess the calibration of the model as fitted in step d). By default, this test groups patients by deciles of risk. Does the test give a statistically significant result? Is that to be expected when a model is fitted and tested for fit in the same data?
@@ -550,6 +569,362 @@ inclusion criteria with respect to important predictors such as age and motor sc
 
 It will do a worse, since contrasts are smaller.
 
+# Day 3
+
+> The aim of this practical is to introduce you to some of the more commonly used techniques to perform shrinkage and validation. In this practical you will use R (SPSS doesn’t have sufficient functionality).
+
+## TBI revisited
+
+> Start R
+This practical can be done in R-studio. Once R-studio is started make sure you open a new R-script (File -> New File -> R script). Start your script by including the following code to load the appropriate R-packages (copy, paste and run (Control+R)):
+
+### dependencies #
+
+
+```{r}
+require(glmnet)
+require(rms)
+require(ggplot2)
+require(logistf)
+
+```
+
+> If these packages haven’t been installed already, you may install them by using:
+install.packages("package name")
+Data
+The easiest way to work with data in R is to first assign a so-called working directory. For instance, if you want to use the folder: “H/prognostic_research/practical3”, you can use the following code:
+
+> setwd("H:/prognostic_research/practical3")
+We are going to use a slightly modified version of the Traumatic Brain Injury (TBI) data (TBIday3.RDS). If you haven’t done so already, download this data set (epidemiology-education.nl) and store it in your working directory. Then use these code lines to load these data in R and split it up into a development and a validation data set:
+
+### load development and validation data #
+
+
+```{r}
+tbi2 <- readRDS(here("data", "TBIday3.RDS"))
+devdata <- tbi2[tbi2$trial=="Tirilazad US",-1]
+valdata <- tbi2[tbi2$trial=="Tirilazad International",-1]
+
+```
+
+### Descriptive statistics
+> We are going to model mortality at 6 months (d.mort) as a function of ten prognostic factors: 1. age 2. hypoxia 3. hypotens 4. glucose 5. hb 6. d.sysbpt 7. edh 8. tsah 9. shift 10. pupil.dich (dichotomized to “both pupils reactive” (0) and “not both pupils reactive”" (1)). The definitions of these prognostic factor are found in the documents of the practical of day 2.
+
+> Q1: What are the numbers of events in both data sets? Are the numbers of events sufficient to warrant development and validation?
+Code:
+
+```{r}
+table(devdata$d.mort)
+table(valdata$d.mort)
+
+```
+
+> Answer: The number of events in the development data is 225 and in the validation data is 278. There seems enough data for a validation study (>200 events). Given that we have 10 candidate predictors (and we assume no interaction or non-linear relationships with the outcome), EPV = 22.5 for development, which is higher than the often suggested minimum (EPV=10) but lower than EPV=50. One may therefore expect that these models may suffer from some level of overfitting, especially when variable selection strategies are employed.
+
+### Q2 
+
+> Study the the distribution of the continuous predictor variables in the development data: age, glucose, hb and d.sysbpt. Are these variable normally distributed? If not: should we make adjustments?
+Code:
+
+```{r}
+# ggplot(aes(age, colour = as.factor(d.mort)),data=devdata)+geom_density()
+# ggplot(aes(glucose, colour = as.factor(d.mort)),data=devdata)+geom_density()
+# ggplot(aes(hb, colour = as.factor(d.mort)),data=devdata)+geom_density()
+# ggplot(aes(d.sysbpt, colour = as.factor(d.mort)),data=devdata)+geom_density()
+
+```
+
+Or we can do:
+
+```{r}
+pred_vars <- c("age", "hypoxia", "hypotens", "glucose", "hb", "d.sysbpt", "edh",
+               "tsah", "shift", "pupil.dich")
+num_vars  <- c("age", "glucose", "hb", "d.sysbpt")
+resp_var  <- c("d.mort")
+
+tbi2 %>%
+  select(num_vars, resp_var) %>% 
+  mutate(d.mort = factor(d.mort)) %>%
+  gather(-d.mort, key = "variable", value = "value") %>%
+  ggplot(aes(x = value, col = d.mort)) + 
+  geom_density() + 
+  facet_wrap(~variable, scales = "free")
+```
+
+
+> Answer: not all continuous predictor variables are normally distributed. There are, however, no direct assumptions made about the distribution of predictor variables in a logistic regression. No adjustments have to be made at this point.
+
+### Q3: 
+
+> Look at the univariable associations between the d.mort and binary predictor variables in the development data. Make cross-tables.
+Code:
+
+```{r}
+table(devdata$hypoxia,devdata$d.mort)
+table(devdata$hypotens,devdata$d.mort)
+table(devdata$edh,devdata$d.mort)
+table(devdata$tsah,devdata$d.mort)
+table(devdata$shift,devdata$d.mort)
+table(devdata$pupil.dich,devdata$d.mort)
+
+```
+
+> Develop prediction models by maximum likelihood
+
+### Q4
+
+> Develop a prediction model by maximum likelihood with all 10 predictors incorporated (no selection or shrinkage). What is the apparent area under the ROC curve (C statistic) for this model?
+Code:
+
+```{r}
+# logistic regression model (Full model)
+m1 <- d.mort~age+hypoxia+hypotens+glucose+hb+d.sysbpt+edh+tsah+shift+pupil.dich
+full_model <- lrm(as.formula(m1),data=devdata,x=T,y=T)
+full_model
+```
+
+> Answer: the apparent C statistics is 0.774.
+
+
+### Q5
+
+> Now use step-wise backward selection with alpha = .05. What is the apparent area under the ROC curve (C statistic) of this model? Which variables are dropped from the model? How does it compare to the full model?
+Code:
+
+```{r}
+# logistic regression model (backward selection)
+selection <- fastbw(full_model,rule="p",sls=.05)
+bw_model <- lrm(as.formula(paste("d.mort~",paste(selection$names.kept,collapse="+"))),data=devdata)
+bw_model
+```
+
+> Answer: hypotens, edh and hb were deleted from the final model. The apparent C statistic of the final model is 0.771, very close to the apparent C statistic of the full model.
+
+>  Perform internal validation using bootstrap
+Background
+Optimism (due to overfitting) can be investigated using the bootstrap. One bootstrap sample is a random sample with replacement of the original data. A bootstrap sample has the same dimensions, i.e. sample size, as the orginal data set. To study optimism: multiple bootstrap samples are generated (say, 1000 bootstrap samples). The prediction model is fitted on each of those samples. If variable selection is applied: this procedure is executed on each bootstrap sample. The predictive performance of these (final) bootstrap models are evaluated on the original data sample. The average of the bootrap performances provides an estimate of performance of the model in the original data sample that is corrected for optimism.
+
+> The above described bootstrap procedure is implemented in the validate function (rms library).
+
+### Q6
+
+> Perform an internal validation of the full model (Q4). For computational time reasons: take 200 bootstrap samples.
+
+```{r}
+# internal validation full model
+internalfull_model <- validate(full_model,B=200)
+internalfull_model
+```
+
+### Q7
+
+> Calculate the optimism corrected C statistic for the full model. Make use of the fact that: C = (Dxy/2)+0.5.
+
+```{r}
+internalfull_model[1,] / 2 + 0.5
+```
+
+> Answer: the bootstrap corrected estimate for the C statistic is about .762. This may vary slightly between executions because bootstrap sampling is a random process.
+
+### Q8
+
+> Perform an internal validation of the backward selection model. For computational time reasons: take 100 bootstrap samples. Hint: the selection must be executed on each bootstrap sample.
+Code:
+
+```{r}
+# internal validation backward selection model
+internvalbw_model <- validate(full_model,bw=T,rule="p",sls=.05,B=200)
+internvalbw_model
+```
+
+### Q9 
+
+> Calculate the optimism corrected C statistic for the backward selection model.
+
+```{r}
+internvalbw_model[1, ] / 2 + .5
+```
+
+
+> Answer: the bootstrap corrected estimate for the C statistic is about .756.
+
+### Q10
+
+> Does this internal validation exercise provide evidence of over- or underfitting? If so, which of these models are affected?
+Answer: the corrected calibration slopes (“Slope” in the output of the validation function) are around .942 (full model) and .928 (after backward selection). This indicates that the models suffer from some overfitting (Slope = 1 indicates no overfitting, Slope > 1 indicates underfitting).
+
+## Shrinkage using likelihood penalization
+
+### Background
+
+>maximum likelihood with or without stepwise selection is still the most commonly used approach for developing prediction models. However, it is long known that maximum likelihood estimation is not optimal for prediction purposes. For this, the maximum likelihood estimates need shrinkage.
+
+> Maximum likelihood estimation of the logistic model proceeds by maximizing the log-likelihood function:
+logL=∑iyilogπi+(1−yi)log(1−πi),
+where i stands for individual i, yi is the observed outcome for individual i and πi is the predicted outcome for individual i. There are several methods available to perform shrinkage. We here discuss three methods that are also known as penalized likelihood models. Each of these methods have the form:
+logL−p(⋅),
+where p(⋅) stands for a penalty function. Firth’s correction gives penalty: −1/2log|I(θ)|, where log|I(θ)| denotes the Fisher information matrix; Ridge gives penalty: p(⋅)=λ∑j=1β2j, where λ denotes a so-called tuning parameter and βj denotes regression coefficient j; and Lasso gives penalty p(⋅)=λ∑dfj=1|βj|. Estimating the tuning parameters (λ) for Lasso and Ridge is often done using a cross-validation approach. Details appear in a book called “The Elements of Statistical Learning” by Trevor Hastie et al.
+
+### Q11
+
+> Develop a model using Firth’s correction (all ten variables included). Compare the estimated regression coefficients to the full model (Q4).
+Code:
+
+```{r}
+require(logistf)
+# logistic regression model with Firth's correction (Full model)
+firth_model <- logistf(as.formula(m1),data=devdata,firth=T)
+firth_model
+```
+
+> Answer: the coefficients are slightly ‘shrunken’ towards to zero effect as compared to the orignal full model estimated with maximum likelihood.
+
+```{r}
+cbind(max_likelihood = coef(full_model), firth = coef(firth_model))
+```
+
+### Q13
+
+> Develop a model using Ridge (all ten variables included). Compare the estimated regression coefficients to the full model (Q4). Note: estimating this model may take some time.
+Code:
+
+```{r}
+# logistic Ridge regression model using leave-one-out cross-validation
+ridge_tuning_parameter <-cv.glmnet(
+  x=as.matrix(devdata[,-1]),
+  y=as.matrix(devdata[,1]),
+  family="binomial",type.measure="mse",
+  alpha=0,nfolds=nrow(devdata))$lambda.min
+
+ridge_model <-glmnet(
+  x=as.matrix(devdata[,-1]),
+  y=as.matrix(devdata[,1]),
+  family="binomial",
+  lambda=ridge_tuning_parameter,alpha=0)
+```
+
+> Answer: the coeffients can be seen using coef(ridge_model). When compared to the full model estimated with maximum likelihood, these coefficients are shrunken.
+
+```{r}
+cbind(max_likelihood = coef(full_model), 
+      firth = coef(firth_model), 
+      ridge = coef(ridge_model))
+
+```
+
+
+### Q14
+
+> Develop a model using Lasso (all ten variables included). Note: estimating this model may take some time.
+Code:
+
+```{r}
+# logistic Ridge regression model using leave-one-out cross-validation
+lasso_tuning_parameter <- cv.glmnet(
+  x=as.matrix(devdata[,-1]),
+  y=as.matrix(devdata[,1]),
+  family="binomial",type.measure="mse",
+  alpha=1,nfolds=nrow(devdata))$lambda.min
+
+lasso_model <-glmnet(
+  x=as.matrix(devdata[,-1]),
+  y=as.matrix(devdata[,1]),
+  family="binomial",
+  lambda=lasso_tuning_parameter,
+  alpha=1)
+
+```
+
+
+
+```{r}
+# fits <- list(
+#   max_likelihood = (full_model), 
+#       firth = (firth_model), 
+#       ridge = (ridge_model),
+#       lasso = (lasso_model))
+
+coef(lasso_model)
+
+```
+
+
+> Answer: the coefficients can be seen using coef(lasso_model). Notice that, unlike ridge, Lasso may perform automated selection by shrinking some variables to zero.
+
+## External validation
+
+### Q15 
+
+> study possible case-mix differences. Are there differences between the development and validation data?
+Example code
+
+```{r}
+# compare case-mix between development and validation data
+by(tbi2,tbi2$trial,function(x)colMeans(x[,-1]))
+by(tbi2,tbi2$trial,function(x)table(x$hypoxia))
+ggplot(tbi2,aes(hb,colour=trial))+geom_density()
+
+```
+
+> Answer: yes, there are differences in case-mix. For instance, hypoxia is more common in the development data than in the validation data.
+
+Or, using data.table
+
+```{r}
+setDT(tbi2)
+
+tbi2[, id := .I]
+tbi2 %>%
+  data.table::melt(id.vars = c("trial", "id")) %>%
+  .[, list(mean = mean(value), sd = sd(value)), by = c("trial", "variable")] %>%
+  data.table::melt(id.vars = c("trial", "variable"), 
+                   variable.name = "measure", value.name = "value") %>%
+  data.table::dcast(variable~trial+measure)
+
+```
+
+
+
+### Q16
+
+> evaluate the predictive performance at external validiation
+Code
+
+```{r}
+# external performance full model
+predfull_model <- predict(full_model, newdata=valdata, type = "fitted")
+
+val.prob(predfull_model,valdata$d.mort)
+```
+
+```{r}
+# external performance backward selection model
+predbw_model <- 1/(1+exp(-predict(bw_model, newdata=valdata)))
+val.prob(predbw_model,valdata$d.mort)
+
+```
+
+```{r}
+# external validation Firth's model
+X <- model.matrix(firth_model, data=valdata)
+predfirth_model <- 1/(1+exp(-X %*% coef(firth_model)))
+val.prob(predfirth_model,valdata$d.mort)
+
+```
+
+```{r}
+# external validation Ridge model
+predridge_model <- 1/(1+exp(-predict(ridge_model, newx=as.matrix(valdata[,-1]))))
+val.prob(predridge_model,valdata$d.mort)
+
+```
+
+```{r}
+# external validation Lasso model
+predlasso_model <- 1/(1+exp(-predict(lasso_model, newx=as.matrix(valdata[,-1]))))
+val.prob(predlasso_model,valdata$d.mort)
+
+```
 
 
 ## Session information
