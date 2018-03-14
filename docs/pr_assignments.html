@@ -315,10 +315,10 @@ div.tocify {
 shared across the workflowr files. -->
 <!-- Update knitr chunk options -->
 <!-- Insert the date the file was last updated -->
-<p><strong>Last updated:</strong> 2018-03-13</p>
+<p><strong>Last updated:</strong> 2018-03-14</p>
 <!-- Insert the code version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
-<p><strong>Code version:</strong> fe4c128</p>
+<p><strong>Code version:</strong> 849650c</p>
 <!-- Add your analysis here -->
 <div id="setup-r" class="section level1">
 <h1>Setup R</h1>
@@ -992,6 +992,20 @@ fits %&gt;%
 4 (0.4,0.6]              0.487
 5 (0.6,1]                0.766</code></pre>
 <p>These line up OK</p>
+<p>Let’s plot calibration</p>
+<pre class="r"><code>tbi %&gt;%
+  mutate(pred_unfav_deciles = quant(pred_unfav, n.tiles = 10)) %&gt;%
+  group_by(pred_unfav_deciles) %&gt;%
+  summarize(observed_prob = mean(d.unfav),
+         observed_prob_lo = binom.confint_logical(d.unfav)$lower,
+         observed_prob_hi = binom.confint_logical(d.unfav)$upper) %&gt;%
+  ggplot(aes(x = seq(0.05, .95, length.out = 10), 
+             ymin = observed_prob_lo, ymax = observed_prob_hi,
+             y = observed_prob)) +
+  geom_errorbar() + geom_point() + 
+  geom_abline(aes(slope = 1, intercept = 0), lty = 2) +
+  lims(y = c(0,1))</code></pre>
+<p><img src="figure/pr_assignments.Rmd/unnamed-chunk-31-1.png" width="672" style="display: block; margin: auto;" /></p>
 </div>
 <div id="i-1" class="section level3">
 <h3>i)</h3>
@@ -1031,10 +1045,10 @@ X-squared = 5.1937, df = 8, p-value = 0.7367</code></pre>
   pROC:::plot.roc.roc(roc, ci = T, add = add, ...)
 }
 logit_roc(fit_imp, main = &quot;multivariate model&quot;)</code></pre>
-<p><img src="figure/pr_assignments.Rmd/unnamed-chunk-32-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/pr_assignments.Rmd/unnamed-chunk-33-1.png" width="672" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>logit_roc(fit_imp, main = &quot;comparison with univariate model of only age&quot;)
 logit_roc(fits_uni[[&quot;age&quot;]], add = T)</code></pre>
-<p><img src="figure/pr_assignments.Rmd/unnamed-chunk-33-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/pr_assignments.Rmd/unnamed-chunk-34-1.png" width="672" style="display: block; margin: auto;" /></p>
 </div>
 <div id="k" class="section level3">
 <h3>k)</h3>
@@ -1046,6 +1060,802 @@ logit_roc(fits_uni[[&quot;age&quot;]], add = T)</code></pre>
 <p>What would you expect if the prognostic model is developed in a selection of patients with very narrow inclusion criteria with respect to important predictors such as age and motor score?</p>
 </blockquote>
 <p>It will do a worse, since contrasts are smaller.</p>
+</div>
+</div>
+</div>
+<div id="day-3" class="section level1">
+<h1>Day 3</h1>
+<blockquote>
+<p>The aim of this practical is to introduce you to some of the more commonly used techniques to perform shrinkage and validation. In this practical you will use R (SPSS doesn’t have sufficient functionality).</p>
+</blockquote>
+<div id="tbi-revisited" class="section level2">
+<h2>TBI revisited</h2>
+<blockquote>
+<p>Start R This practical can be done in R-studio. Once R-studio is started make sure you open a new R-script (File -&gt; New File -&gt; R script). Start your script by including the following code to load the appropriate R-packages (copy, paste and run (Control+R)):</p>
+</blockquote>
+<div id="dependencies" class="section level3">
+<h3>dependencies</h3>
+<pre class="r"><code>require(glmnet)
+require(rms)
+require(ggplot2)
+require(logistf)</code></pre>
+<blockquote>
+<p>If these packages haven’t been installed already, you may install them by using: install.packages(“package name”) Data The easiest way to work with data in R is to first assign a so-called working directory. For instance, if you want to use the folder: “H/prognostic_research/practical3”, you can use the following code:</p>
+</blockquote>
+<blockquote>
+<p>setwd(“H:/prognostic_research/practical3”) We are going to use a slightly modified version of the Traumatic Brain Injury (TBI) data (TBIday3.RDS). If you haven’t done so already, download this data set (epidemiology-education.nl) and store it in your working directory. Then use these code lines to load these data in R and split it up into a development and a validation data set:</p>
+</blockquote>
+</div>
+<div id="load-development-and-validation-data" class="section level3">
+<h3>load development and validation data</h3>
+<pre class="r"><code>tbi2 &lt;- readRDS(here(&quot;data&quot;, &quot;TBIday3.RDS&quot;))
+devdata &lt;- tbi2[tbi2$trial==&quot;Tirilazad US&quot;,-1]
+valdata &lt;- tbi2[tbi2$trial==&quot;Tirilazad International&quot;,-1]</code></pre>
+</div>
+<div id="descriptive-statistics" class="section level3">
+<h3>Descriptive statistics</h3>
+<blockquote>
+<p>We are going to model mortality at 6 months (d.mort) as a function of ten prognostic factors: 1. age 2. hypoxia 3. hypotens 4. glucose 5. hb 6. d.sysbpt 7. edh 8. tsah 9. shift 10. pupil.dich (dichotomized to “both pupils reactive” (0) and “not both pupils reactive”&quot; (1)). The definitions of these prognostic factor are found in the documents of the practical of day 2.</p>
+</blockquote>
+<blockquote>
+<p>Q1: What are the numbers of events in both data sets? Are the numbers of events sufficient to warrant development and validation? Code:</p>
+</blockquote>
+<pre class="r"><code>table(devdata$d.mort)</code></pre>
+<pre><code>
+  0   1 
+816 225 </code></pre>
+<pre class="r"><code>table(valdata$d.mort)</code></pre>
+<pre><code>
+  0   1 
+840 278 </code></pre>
+<blockquote>
+<p>Answer: The number of events in the development data is 225 and in the validation data is 278. There seems enough data for a validation study (&gt;200 events). Given that we have 10 candidate predictors (and we assume no interaction or non-linear relationships with the outcome), EPV = 22.5 for development, which is higher than the often suggested minimum (EPV=10) but lower than EPV=50. One may therefore expect that these models may suffer from some level of overfitting, especially when variable selection strategies are employed.</p>
+</blockquote>
+</div>
+<div id="q2" class="section level3">
+<h3>Q2</h3>
+<blockquote>
+<p>Study the the distribution of the continuous predictor variables in the development data: age, glucose, hb and d.sysbpt. Are these variable normally distributed? If not: should we make adjustments? Code:</p>
+</blockquote>
+<pre class="r"><code># ggplot(aes(age, colour = as.factor(d.mort)),data=devdata)+geom_density()
+# ggplot(aes(glucose, colour = as.factor(d.mort)),data=devdata)+geom_density()
+# ggplot(aes(hb, colour = as.factor(d.mort)),data=devdata)+geom_density()
+# ggplot(aes(d.sysbpt, colour = as.factor(d.mort)),data=devdata)+geom_density()</code></pre>
+<p>Or we can do:</p>
+<pre class="r"><code>pred_vars &lt;- c(&quot;age&quot;, &quot;hypoxia&quot;, &quot;hypotens&quot;, &quot;glucose&quot;, &quot;hb&quot;, &quot;d.sysbpt&quot;, &quot;edh&quot;,
+               &quot;tsah&quot;, &quot;shift&quot;, &quot;pupil.dich&quot;)
+num_vars  &lt;- c(&quot;age&quot;, &quot;glucose&quot;, &quot;hb&quot;, &quot;d.sysbpt&quot;)
+resp_var  &lt;- c(&quot;d.mort&quot;)
+
+tbi2 %&gt;%
+  select(num_vars, resp_var) %&gt;% 
+  mutate(d.mort = factor(d.mort)) %&gt;%
+  gather(-d.mort, key = &quot;variable&quot;, value = &quot;value&quot;) %&gt;%
+  ggplot(aes(x = value, col = d.mort)) + 
+  geom_density() + 
+  facet_wrap(~variable, scales = &quot;free&quot;)</code></pre>
+<p><img src="figure/pr_assignments.Rmd/unnamed-chunk-39-1.png" width="672" style="display: block; margin: auto;" /></p>
+<blockquote>
+<p>Answer: not all continuous predictor variables are normally distributed. There are, however, no direct assumptions made about the distribution of predictor variables in a logistic regression. No adjustments have to be made at this point.</p>
+</blockquote>
+</div>
+<div id="q3" class="section level3">
+<h3>Q3:</h3>
+<blockquote>
+<p>Look at the univariable associations between the d.mort and binary predictor variables in the development data. Make cross-tables. Code:</p>
+</blockquote>
+<pre class="r"><code>table(devdata$hypoxia,devdata$d.mort)</code></pre>
+<pre><code>   
+      0   1
+  0 615 123
+  1 201 102</code></pre>
+<pre class="r"><code>table(devdata$hypotens,devdata$d.mort)</code></pre>
+<pre><code>   
+      0   1
+  0 664 145
+  1 152  80</code></pre>
+<pre class="r"><code>table(devdata$edh,devdata$d.mort)</code></pre>
+<pre><code>   
+      0   1
+  0 742 210
+  1  74  15</code></pre>
+<pre class="r"><code>table(devdata$tsah,devdata$d.mort)</code></pre>
+<pre><code>   
+      0   1
+  0 505  86
+  1 311 139</code></pre>
+<pre class="r"><code>table(devdata$shift,devdata$d.mort)</code></pre>
+<pre><code>   
+      0   1
+  0 698 166
+  1 118  59</code></pre>
+<pre class="r"><code>table(devdata$pupil.dich,devdata$d.mort)</code></pre>
+<pre><code>   
+      0   1
+  0 602  99
+  1 214 126</code></pre>
+<blockquote>
+<p>Develop prediction models by maximum likelihood</p>
+</blockquote>
+</div>
+<div id="q4" class="section level3">
+<h3>Q4</h3>
+<blockquote>
+<p>Develop a prediction model by maximum likelihood with all 10 predictors incorporated (no selection or shrinkage). What is the apparent area under the ROC curve (C statistic) for this model? Code:</p>
+</blockquote>
+<pre class="r"><code># logistic regression model (Full model)
+m1 &lt;- d.mort~age+hypoxia+hypotens+glucose+hb+d.sysbpt+edh+tsah+shift+pupil.dich
+full_model &lt;- lrm(as.formula(m1),data=devdata,x=T,y=T)
+full_model</code></pre>
+<pre><code>Logistic Regression Model
+ 
+ lrm(formula = as.formula(m1), data = devdata, x = T, y = T)
+ 
+                       Model Likelihood     Discrimination    Rank Discrim.    
+                          Ratio Test           Indexes           Indexes       
+ Obs          1041    LR chi2     189.85    R2       0.257    C       0.774    
+  0            816    d.f.            10    g        1.260    Dxy     0.548    
+  1            225    Pr(&gt; chi2) &lt;0.0001    gr       3.524    gamma   0.548    
+ max |deriv| 1e-10                          gp       0.188    tau-a   0.186    
+                                            Brier    0.136                     
+ 
+            Coef    S.E.   Wald Z Pr(&gt;|Z|)
+ Intercept  -0.2539 0.9437 -0.27  0.7879  
+ age         0.0183 0.0065  2.80  0.0051  
+ hypoxia     0.5319 0.1809  2.94  0.0033  
+ hypotens    0.2444 0.2089  1.17  0.2421  
+ glucose     0.0853 0.0235  3.63  0.0003  
+ hb         -0.0579 0.0416 -1.39  0.1638  
+ d.sysbpt   -0.0218 0.0058 -3.79  0.0002  
+ edh        -0.3965 0.3277 -1.21  0.2264  
+ tsah        0.7960 0.1724  4.62  &lt;0.0001 
+ shift       0.7009 0.2039  3.44  0.0006  
+ pupil.dich  0.9201 0.1713  5.37  &lt;0.0001 
+ </code></pre>
+<blockquote>
+<p>Answer: the apparent C statistics is 0.774.</p>
+</blockquote>
+</div>
+<div id="q5" class="section level3">
+<h3>Q5</h3>
+<blockquote>
+<p>Now use step-wise backward selection with alpha = .05. What is the apparent area under the ROC curve (C statistic) of this model? Which variables are dropped from the model? How does it compare to the full model? Code:</p>
+</blockquote>
+<pre class="r"><code># logistic regression model (backward selection)
+selection &lt;- fastbw(full_model,rule=&quot;p&quot;,sls=.05)
+bw_model &lt;- lrm(as.formula(paste(&quot;d.mort~&quot;,paste(selection$names.kept,collapse=&quot;+&quot;))),data=devdata)
+bw_model</code></pre>
+<pre><code>Logistic Regression Model
+ 
+ lrm(formula = as.formula(paste(&quot;d.mort~&quot;, paste(selection$names.kept, 
+     collapse = &quot;+&quot;))), data = devdata)
+ 
+                       Model Likelihood     Discrimination    Rank Discrim.    
+                          Ratio Test           Indexes           Indexes       
+ Obs          1041    LR chi2     183.73    R2       0.250    C       0.772    
+  0            816    d.f.             7    g        1.226    Dxy     0.543    
+  1            225    Pr(&gt; chi2) &lt;0.0001    gr       3.409    gamma   0.543    
+ max |deriv| 3e-11                          gp       0.185    tau-a   0.184    
+                                            Brier    0.138                     
+ 
+            Coef    S.E.   Wald Z Pr(&gt;|Z|)
+ Intercept  -0.6634 0.7995 -0.83  0.4067  
+ age         0.0201 0.0065  3.11  0.0019  
+ hypoxia     0.5914 0.1774  3.33  0.0009  
+ glucose     0.0946 0.0231  4.10  &lt;0.0001 
+ d.sysbpt   -0.0252 0.0055 -4.60  &lt;0.0001 
+ tsah        0.7593 0.1706  4.45  &lt;0.0001 
+ shift       0.6492 0.2021  3.21  0.0013  
+ pupil.dich  0.9359 0.1706  5.49  &lt;0.0001 
+ </code></pre>
+<blockquote>
+<p>Answer: hypotens, edh and hb were deleted from the final model. The apparent C statistic of the final model is 0.771, very close to the apparent C statistic of the full model.</p>
+</blockquote>
+<blockquote>
+<p>Perform internal validation using bootstrap Background Optimism (due to overfitting) can be investigated using the bootstrap. One bootstrap sample is a random sample with replacement of the original data. A bootstrap sample has the same dimensions, i.e. sample size, as the orginal data set. To study optimism: multiple bootstrap samples are generated (say, 1000 bootstrap samples). The prediction model is fitted on each of those samples. If variable selection is applied: this procedure is executed on each bootstrap sample. The predictive performance of these (final) bootstrap models are evaluated on the original data sample. The average of the bootrap performances provides an estimate of performance of the model in the original data sample that is corrected for optimism.</p>
+</blockquote>
+<blockquote>
+<p>The above described bootstrap procedure is implemented in the validate function (rms library).</p>
+</blockquote>
+</div>
+<div id="q6" class="section level3">
+<h3>Q6</h3>
+<blockquote>
+<p>Perform an internal validation of the full model (Q4). For computational time reasons: take 200 bootstrap samples.</p>
+</blockquote>
+<pre class="r"><code># internal validation full model
+internalfull_model &lt;- validate(full_model,B=200)
+internalfull_model</code></pre>
+<pre><code>          index.orig training    test optimism index.corrected   n
+Dxy           0.5481   0.5628  0.5378   0.0250          0.5231 200
+R2            0.2573   0.2709  0.2463   0.0246          0.2327 200
+Intercept     0.0000   0.0000 -0.0693   0.0693         -0.0693 200
+Slope         1.0000   1.0000  0.9367   0.0633          0.9367 200
+Emax          0.0000   0.0000  0.0269   0.0269          0.0269 200
+D             0.1814   0.1922  0.1729   0.0193          0.1621 200
+U            -0.0019  -0.0019  0.0010  -0.0029          0.0010 200
+Q             0.1833   0.1941  0.1719   0.0222          0.1611 200
+B             0.1365   0.1344  0.1385  -0.0041          0.1406 200
+g             1.2596   1.3124  1.2232   0.0892          1.1704 200
+gp            0.1876   0.1920  0.1835   0.0085          0.1791 200</code></pre>
+</div>
+<div id="q7" class="section level3">
+<h3>Q7</h3>
+<blockquote>
+<p>Calculate the optimism corrected C statistic for the full model. Make use of the fact that: C = (Dxy/2)+0.5.</p>
+</blockquote>
+<pre class="r"><code>internalfull_model[1,] / 2 + 0.5</code></pre>
+<pre><code>     index.orig        training            test        optimism 
+      0.7740577       0.7814089       0.7689249       0.5124840 
+index.corrected               n 
+      0.7615738     100.5000000 </code></pre>
+<blockquote>
+<p>Answer: the bootstrap corrected estimate for the C statistic is about .762. This may vary slightly between executions because bootstrap sampling is a random process.</p>
+</blockquote>
+</div>
+<div id="q8" class="section level3">
+<h3>Q8</h3>
+<blockquote>
+<p>Perform an internal validation of the backward selection model. For computational time reasons: take 100 bootstrap samples. Hint: the selection must be executed on each bootstrap sample. Code:</p>
+</blockquote>
+<pre class="r"><code># internal validation backward selection model
+internvalbw_model &lt;- validate(full_model,bw=T,rule=&quot;p&quot;,sls=.05,B=200)</code></pre>
+<pre><code>
+        Backwards Step-down - Original Model
+
+ Deleted  Chi-Sq d.f. P      Residual d.f. P      AIC  
+ hypotens 1.37   1    0.2421 1.37     1    0.2421 -0.63
+ edh      1.55   1    0.2135 2.92     2    0.2327 -1.08
+ hb       3.11   1    0.0776 6.03     3    0.1102  0.03
+
+Approximate Estimates after Deleting Factors
+
+               Coef     S.E.  Wald Z         P
+Intercept  -0.64942 0.801306 -0.8104 4.177e-01
+age         0.01996 0.006477  3.0816 2.059e-03
+hypoxia     0.58772 0.178144  3.2992 9.697e-04
+glucose     0.09406 0.023146  4.0638 4.828e-05
+d.sysbpt   -0.02512 0.005497 -4.5691 4.898e-06
+tsah        0.75275 0.171494  4.3893 1.137e-05
+shift       0.64423 0.202169  3.1866 1.439e-03
+pupil.dich  0.92939 0.171200  5.4287 5.677e-08
+
+Factors in Final Model
+
+[1] age        hypoxia    glucose    d.sysbpt   tsah       shift     
+[7] pupil.dich</code></pre>
+<pre class="r"><code>internvalbw_model</code></pre>
+<pre><code>          index.orig training    test optimism index.corrected   n
+Dxy           0.5432   0.5553  0.5277   0.0277          0.5155 200
+R2            0.2497   0.2633  0.2369   0.0264          0.2233 200
+Intercept     0.0000   0.0000 -0.0789   0.0789         -0.0789 200
+Slope         1.0000   1.0000  0.9328   0.0672          0.9328 200
+Emax          0.0000   0.0000  0.0297   0.0297          0.0297 200
+D             0.1755   0.1868  0.1657   0.0211          0.1544 200
+U            -0.0019  -0.0019  0.0007  -0.0027          0.0007 200
+Q             0.1775   0.1887  0.1650   0.0238          0.1537 200
+B             0.1380   0.1364  0.1398  -0.0034          0.1414 200
+g             1.2265   1.2781  1.1839   0.0942          1.1323 200
+gp            0.1849   0.1905  0.1798   0.0107          0.1742 200
+
+Factors Retained in Backwards Elimination
+
+ age hypoxia hypotens glucose hb d.sysbpt edh tsah shift pupil.dich
+ *   *       *        *                       *    *     *         
+     *       *        *          *            *    *     *         
+     *                *          *            *    *     *         
+ *                    *          *            *          *         
+     *       *        *          *            *          *         
+ *   *                *          *            *          *         
+             *        *          *            *    *     *         
+ *   *                *       *  *            *    *     *         
+ *                    *          *        *   *    *     *         
+ *   *                *          *            *    *     *         
+             *        *          *            *    *     *         
+     *       *        *          *            *    *     *         
+ *   *                *       *  *            *    *     *         
+ *           *        *          *            *    *     *         
+                      *          *            *    *     *         
+                      *       *  *            *    *     *         
+ *   *                *       *  *            *    *     *         
+     *                *          *            *    *     *         
+ *   *                *          *            *    *     *         
+ *   *                *          *            *    *     *         
+ *                    *          *            *    *     *         
+ *   *                *          *            *    *     *         
+ *   *                *          *            *          *         
+ *   *                *          *            *    *     *         
+ *   *       *        *          *            *    *     *         
+ *   *                *       *  *                 *     *         
+ *   *                *          *            *    *     *         
+ *   *                        *  *            *          *         
+ *   *                *       *  *            *    *     *         
+     *                *          *            *    *     *         
+     *                *          *            *          *         
+             *        *          *            *    *     *         
+ *           *        *          *            *    *     *         
+             *        *          *            *    *     *         
+ *   *                *       *  *            *    *     *         
+ *   *       *        *          *            *    *     *         
+             *        *          *            *    *     *         
+             *        *          *        *   *    *     *         
+ *   *                *          *            *    *     *         
+ *   *                *       *  *            *    *     *         
+     *       *        *          *            *    *     *         
+ *   *                *       *  *            *    *     *         
+     *       *        *                       *    *     *         
+ *   *                *       *  *        *   *    *     *         
+ *   *                *       *               *    *     *         
+ *   *       *        *       *               *    *     *         
+ *   *       *        *          *            *    *     *         
+     *       *        *       *  *        *   *    *     *         
+ *   *                *          *        *   *    *     *         
+                      *       *  *        *   *    *     *         
+     *       *        *       *  *            *    *     *         
+     *       *        *          *            *    *     *         
+             *        *                       *    *     *         
+ *                    *       *  *            *    *     *         
+     *       *        *          *            *    *     *         
+     *       *        *          *            *    *     *         
+ *   *                *       *  *            *    *     *         
+ *   *       *        *       *  *            *    *     *         
+                      *          *            *    *     *         
+             *        *          *            *    *     *         
+     *       *        *          *            *    *     *         
+ *   *                *       *  *            *    *     *         
+     *                *          *            *    *     *         
+ *                    *          *            *    *     *         
+ *           *        *          *            *    *     *         
+     *                *          *            *    *     *         
+ *                    *          *            *          *         
+ *   *                *          *            *    *     *         
+ *                    *          *            *    *     *         
+ *   *                *          *            *    *     *         
+ *   *                *          *            *          *         
+ *   *                *       *  *        *   *          *         
+     *                *          *            *    *     *         
+     *                *       *  *            *    *     *         
+ *   *                *          *            *          *         
+ *                    *          *            *    *     *         
+ *   *                *          *            *    *     *         
+ *   *                *          *            *    *     *         
+     *                *       *  *            *    *     *         
+ *                    *          *            *    *     *         
+     *       *        *          *            *    *     *         
+     *                *          *            *    *     *         
+ *                    *       *  *            *    *     *         
+ *   *                *          *            *    *     *         
+ *   *                *       *  *            *          *         
+ *   *                *          *        *   *    *     *         
+ *   *       *        *          *            *    *     *         
+ *   *                *          *            *    *     *         
+ *   *                *       *  *            *    *     *         
+ *   *                *       *  *            *    *     *         
+     *                *       *  *            *    *     *         
+             *                *  *        *   *    *     *         
+     *                *          *            *    *     *         
+     *                *       *  *        *   *    *     *         
+     *                *          *            *    *     *         
+     *                *       *  *            *    *     *         
+ *   *       *        *       *  *            *    *     *         
+ *           *        *          *            *    *     *         
+ *                    *          *            *    *     *         
+     *                           *            *    *     *         
+ *   *                *          *            *    *     *         
+ *   *                *       *  *            *    *     *         
+     *       *        *       *               *    *     *         
+     *       *        *       *  *            *    *     *         
+ *   *                *          *            *    *     *         
+ *   *                *          *            *          *         
+ *   *                *          *            *    *     *         
+ *   *                *       *  *            *    *     *         
+ *   *                *          *            *    *     *         
+ *   *                *          *        *   *          *         
+     *                *       *  *            *    *     *         
+ *                    *       *  *            *    *     *         
+ *   *                *       *  *            *    *     *         
+     *                *       *  *            *    *     *         
+ *                    *          *            *    *     *         
+ *   *                *          *            *          *         
+ *   *                *          *            *    *     *         
+ *           *        *          *        *   *    *     *         
+ *   *                *          *            *          *         
+ *   *                *       *  *            *    *     *         
+ *   *                *          *            *    *     *         
+     *                *       *  *            *    *     *         
+ *   *                *       *  *            *    *     *         
+     *       *        *       *  *            *    *     *         
+ *   *                *          *            *    *     *         
+ *   *                *          *            *    *     *         
+ *   *                *       *  *            *    *     *         
+ *   *                *          *            *    *     *         
+ *   *                *          *            *    *     *         
+     *       *        *       *  *            *    *     *         
+ *                    *          *            *          *         
+     *                *       *  *            *    *     *         
+ *   *                *       *  *            *    *     *         
+ *   *       *                   *            *    *     *         
+ *                    *          *            *          *         
+ *   *                *          *            *    *     *         
+     *                *          *        *   *    *     *         
+ *   *                *          *        *   *    *     *         
+ *   *                *          *            *    *     *         
+     *                *          *            *    *     *         
+ *   *       *        *          *            *    *     *         
+ *   *                *       *  *            *    *     *         
+ *   *       *                   *            *    *     *         
+     *                *          *            *    *     *         
+     *       *        *          *            *    *     *         
+ *   *                *          *            *    *     *         
+ *           *        *          *            *    *     *         
+ *   *                *          *            *    *     *         
+ *   *       *        *          *            *    *     *         
+                      *          *            *    *     *         
+ *   *       *                   *            *    *     *         
+ *   *                *       *  *            *    *     *         
+ *   *       *                   *            *    *     *         
+ *   *                *       *  *            *    *     *         
+ *   *                *       *  *            *          *         
+ *   *                *          *            *    *     *         
+     *                *          *            *    *     *         
+ *   *                *          *            *    *     *         
+ *   *                *          *            *          *         
+ *           *        *          *            *    *     *         
+ *   *                *          *            *          *         
+ *   *       *        *          *            *    *     *         
+ *                    *       *  *        *   *    *     *         
+     *                *       *  *        *   *    *     *         
+ *   *       *        *          *            *    *     *         
+ *   *                *       *  *        *   *    *     *         
+ *   *                *          *        *   *    *     *         
+ *   *                *          *        *   *    *     *         
+ *   *                *          *            *          *         
+     *                *       *  *            *    *     *         
+                      *          *            *    *     *         
+     *                *       *  *            *    *     *         
+ *   *                *          *        *   *    *     *         
+ *           *        *          *        *   *    *     *         
+ *   *                *          *            *    *     *         
+ *   *                *          *            *    *     *         
+     *       *        *                       *    *     *         
+     *       *        *          *            *    *     *         
+ *   *                        *  *        *   *    *     *         
+ *   *                *          *            *    *     *         
+ *   *                *          *            *    *     *         
+ *   *       *        *          *        *   *    *     *         
+ *   *                        *  *            *    *     *         
+ *   *                *          *            *    *     *         
+ *   *                *       *  *        *   *    *     *         
+ *   *       *        *          *        *   *          *         
+ *   *                *          *            *    *     *         
+ *   *                *          *            *    *     *         
+ *   *                *          *            *    *     *         
+ *                    *       *  *        *   *    *     *         
+ *           *        *          *            *    *     *         
+     *                *       *  *            *    *     *         
+ *   *                *          *            *    *     *         
+     *                *       *  *            *    *     *         
+ *   *       *        *          *            *    *     *         
+ *   *                *          *            *    *     *         
+ *   *                *          *            *          *         
+ *   *                *       *  *        *   *    *     *         
+ *                    *          *            *          *         
+ *   *                *          *            *    *     *         
+
+Frequencies of Numbers of Factors Retained
+
+ 5  6  7  8  9 
+12 41 89 50  8 </code></pre>
+</div>
+<div id="q9" class="section level3">
+<h3>Q9</h3>
+<blockquote>
+<p>Calculate the optimism corrected C statistic for the backward selection model.</p>
+</blockquote>
+<pre class="r"><code>internvalbw_model[1, ] / 2 + .5</code></pre>
+<pre><code>     index.orig        training            test        optimism 
+      0.7715795       0.7776680       0.7638259       0.5138421 
+index.corrected               n 
+      0.7577374     100.5000000 </code></pre>
+<blockquote>
+<p>Answer: the bootstrap corrected estimate for the C statistic is about .756.</p>
+</blockquote>
+</div>
+<div id="q10" class="section level3">
+<h3>Q10</h3>
+<blockquote>
+<p>Does this internal validation exercise provide evidence of over- or underfitting? If so, which of these models are affected? Answer: the corrected calibration slopes (“Slope” in the output of the validation function) are around .942 (full model) and .928 (after backward selection). This indicates that the models suffer from some overfitting (Slope = 1 indicates no overfitting, Slope &gt; 1 indicates underfitting).</p>
+</blockquote>
+</div>
+</div>
+<div id="shrinkage-using-likelihood-penalization" class="section level2">
+<h2>Shrinkage using likelihood penalization</h2>
+<div id="background" class="section level3">
+<h3>Background</h3>
+<blockquote>
+<p>maximum likelihood with or without stepwise selection is still the most commonly used approach for developing prediction models. However, it is long known that maximum likelihood estimation is not optimal for prediction purposes. For this, the maximum likelihood estimates need shrinkage.</p>
+</blockquote>
+<blockquote>
+<p>Maximum likelihood estimation of the logistic model proceeds by maximizing the log-likelihood function: logL=∑iyilogπi+(1−yi)log(1−πi), where i stands for individual i, yi is the observed outcome for individual i and πi is the predicted outcome for individual i. There are several methods available to perform shrinkage. We here discuss three methods that are also known as penalized likelihood models. Each of these methods have the form: logL−p(⋅), where p(⋅) stands for a penalty function. Firth’s correction gives penalty: −1/2log|I(θ)|, where log|I(θ)| denotes the Fisher information matrix; Ridge gives penalty: p(⋅)=λ∑j=1β2j, where λ denotes a so-called tuning parameter and βj denotes regression coefficient j; and Lasso gives penalty p(⋅)=λ∑dfj=1|βj|. Estimating the tuning parameters (λ) for Lasso and Ridge is often done using a cross-validation approach. Details appear in a book called “The Elements of Statistical Learning” by Trevor Hastie et al.</p>
+</blockquote>
+</div>
+<div id="q11" class="section level3">
+<h3>Q11</h3>
+<blockquote>
+<p>Develop a model using Firth’s correction (all ten variables included). Compare the estimated regression coefficients to the full model (Q4). Code:</p>
+</blockquote>
+<pre class="r"><code>require(logistf)
+# logistic regression model with Firth&#39;s correction (Full model)
+firth_model &lt;- logistf(as.formula(m1),data=devdata,firth=T)
+firth_model</code></pre>
+<pre><code>logistf(formula = as.formula(m1), data = devdata, firth = T)
+Model fitted by Penalized ML
+Confidence intervals and p-values by Profile Likelihood 
+
+                   coef    se(coef)   lower 0.95  upper 0.95       Chisq
+(Intercept) -0.27013768 0.939190337 -2.101399116  1.57069188  0.08331424
+age          0.01814908 0.006520080  0.005389062  0.03088027  7.74391852
+hypoxia      0.52743276 0.180101206  0.173874221  0.87796228  8.49154615
+hypotens     0.24459416 0.208049998 -0.165820246  0.64744970  1.37668381
+glucose      0.08375997 0.023409911  0.038669281  0.13009905 13.35964125
+hb          -0.05700403 0.041403896 -0.138035973  0.02390951  1.90824278
+d.sysbpt    -0.02138948 0.005724866 -0.032728457 -0.01033559 14.60276525
+edh         -0.37102361 0.324303059 -1.035117305  0.23610654  1.39187602
+tsah         0.78491191 0.171403312  0.451409218  1.12256368 21.42151200
+shift        0.69423880 0.203061630  0.294512223  1.08807414 11.39642590
+pupil.dich   0.90856021 0.170509291  0.575653707  1.24227119 28.38276217
+                       p
+(Intercept) 7.728553e-01
+age         5.389373e-03
+hypoxia     3.568005e-03
+hypotens    2.406668e-01
+glucose     2.570975e-04
+hb          1.671586e-01
+d.sysbpt    1.327197e-04
+edh         2.380885e-01
+tsah        3.686122e-06
+shift       7.358554e-04
+pupil.dich  9.954776e-08
+
+Likelihood ratio test=188.3889 on 10 df, p=0, n=1041</code></pre>
+<blockquote>
+<p>Answer: the coefficients are slightly ‘shrunken’ towards to zero effect as compared to the orignal full model estimated with maximum likelihood.</p>
+</blockquote>
+<pre class="r"><code>cbind(max_likelihood = coef(full_model), firth = coef(firth_model))</code></pre>
+<pre><code>           max_likelihood       firth
+Intercept     -0.25394896 -0.27013768
+age            0.01834929  0.01814908
+hypoxia        0.53189103  0.52743276
+hypotens       0.24443357  0.24459416
+glucose        0.08526859  0.08375997
+hb            -0.05791975 -0.05700403
+d.sysbpt      -0.02179392 -0.02138948
+edh           -0.39645485 -0.37102361
+tsah           0.79602655  0.78491191
+shift          0.70091175  0.69423880
+pupil.dich     0.92005534  0.90856021</code></pre>
+</div>
+<div id="q13" class="section level3">
+<h3>Q13</h3>
+<blockquote>
+<p>Develop a model using Ridge (all ten variables included). Compare the estimated regression coefficients to the full model (Q4). Note: estimating this model may take some time. Code:</p>
+</blockquote>
+<pre class="r"><code># logistic Ridge regression model using leave-one-out cross-validation
+ridge_tuning_parameter &lt;-cv.glmnet(
+  x=as.matrix(devdata[,-1]),
+  y=as.matrix(devdata[,1]),
+  family=&quot;binomial&quot;,type.measure=&quot;mse&quot;,
+  alpha=0,nfolds=nrow(devdata))$lambda.min</code></pre>
+<pre><code>Warning: Option grouped=FALSE enforced in cv.glmnet, since &lt; 3 observations
+per fold</code></pre>
+<pre class="r"><code>ridge_model &lt;-glmnet(
+  x=as.matrix(devdata[,-1]),
+  y=as.matrix(devdata[,1]),
+  family=&quot;binomial&quot;,
+  lambda=ridge_tuning_parameter,alpha=0)</code></pre>
+<blockquote>
+<p>Answer: the coeffients can be seen using coef(ridge_model). When compared to the full model estimated with maximum likelihood, these coefficients are shrunken.</p>
+</blockquote>
+<pre class="r"><code>cbind(max_likelihood = coef(full_model), 
+      firth = coef(firth_model), 
+      ridge = coef(ridge_model))</code></pre>
+<pre><code>11 x 3 sparse Matrix of class &quot;dgCMatrix&quot;
+            max_likelihood       firth          s0
+(Intercept)    -0.25394896 -0.27013768 -0.40058227
+age             0.01834929  0.01814908  0.01616024
+hypoxia         0.53189103  0.52743276  0.48558752
+hypotens        0.24443357  0.24459416  0.25767463
+glucose         0.08526859  0.08375997  0.07768179
+hb             -0.05791975 -0.05700403 -0.05604972
+d.sysbpt       -0.02179392 -0.02138948 -0.01870553
+edh            -0.39645485 -0.37102361 -0.31366884
+tsah            0.79602655  0.78491191  0.69161047
+shift           0.70091175  0.69423880  0.61588306
+pupil.dich      0.92005534  0.90856021  0.82148405</code></pre>
+</div>
+<div id="q14" class="section level3">
+<h3>Q14</h3>
+<blockquote>
+<p>Develop a model using Lasso (all ten variables included). Note: estimating this model may take some time. Code:</p>
+</blockquote>
+<pre class="r"><code># logistic Ridge regression model using leave-one-out cross-validation
+lasso_tuning_parameter &lt;- cv.glmnet(
+  x=as.matrix(devdata[,-1]),
+  y=as.matrix(devdata[,1]),
+  family=&quot;binomial&quot;,type.measure=&quot;mse&quot;,
+  alpha=1,nfolds=nrow(devdata))$lambda.min</code></pre>
+<pre><code>Warning: Option grouped=FALSE enforced in cv.glmnet, since &lt; 3 observations
+per fold</code></pre>
+<pre class="r"><code>lasso_model &lt;-glmnet(
+  x=as.matrix(devdata[,-1]),
+  y=as.matrix(devdata[,1]),
+  family=&quot;binomial&quot;,
+  lambda=lasso_tuning_parameter,
+  alpha=1)</code></pre>
+<pre class="r"><code># fits &lt;- list(
+#   max_likelihood = (full_model), 
+#       firth = (firth_model), 
+#       ridge = (ridge_model),
+#       lasso = (lasso_model))
+
+coef(lasso_model)</code></pre>
+<pre><code>11 x 1 sparse Matrix of class &quot;dgCMatrix&quot;
+                     s0
+(Intercept) -0.28116274
+age          0.01786273
+hypoxia      0.52155721
+hypotens     0.23911329
+glucose      0.08413384
+hb          -0.05593184
+d.sysbpt    -0.02140241
+edh         -0.36101560
+tsah         0.78016590
+shift        0.68173252
+pupil.dich   0.90901921</code></pre>
+<blockquote>
+<p>Answer: the coefficients can be seen using coef(lasso_model). Notice that, unlike ridge, Lasso may perform automated selection by shrinking some variables to zero.</p>
+</blockquote>
+</div>
+</div>
+<div id="external-validation" class="section level2">
+<h2>External validation</h2>
+<div id="q15" class="section level3">
+<h3>Q15</h3>
+<blockquote>
+<p>study possible case-mix differences. Are there differences between the development and validation data? Example code</p>
+</blockquote>
+<pre class="r"><code># compare case-mix between development and validation data
+by(tbi2,tbi2$trial,function(x)colMeans(x[,-1]))</code></pre>
+<pre><code>tbi2$trial: Tirilazad International
+     d.mort         age     hypoxia    hypotens     glucose          hb 
+  0.2486583  33.6127013   0.1556351   0.1440072   8.6079944  11.8764758 
+   d.sysbpt         edh        tsah       shift  pupil.dich 
+130.0886673   0.1681574   0.5277281   0.2262970   0.2754919 
+-------------------------------------------------------- 
+tbi2$trial: Tirilazad US
+      d.mort          age      hypoxia     hypotens      glucose 
+  0.21613833  32.78001921   0.29106628   0.22286263   9.22702530 
+          hb     d.sysbpt          edh         tsah        shift 
+ 13.05240154 132.86975024   0.08549472   0.43227666   0.17002882 
+  pupil.dich 
+  0.32660903 </code></pre>
+<pre class="r"><code>by(tbi2,tbi2$trial,function(x)table(x$hypoxia))</code></pre>
+<pre><code>tbi2$trial: Tirilazad International
+
+  0   1 
+944 174 
+-------------------------------------------------------- 
+tbi2$trial: Tirilazad US
+
+  0   1 
+738 303 </code></pre>
+<pre class="r"><code>ggplot(tbi2,aes(hb,colour=trial))+geom_density()</code></pre>
+<p><img src="figure/pr_assignments.Rmd/unnamed-chunk-53-1.png" width="672" style="display: block; margin: auto;" /></p>
+<blockquote>
+<p>Answer: yes, there are differences in case-mix. For instance, hypoxia is more common in the development data than in the validation data.</p>
+</blockquote>
+<p>Or, using data.table</p>
+<pre class="r"><code>setDT(tbi2)
+
+tbi2[, id := .I]
+tbi2 %&gt;%
+  data.table::melt(id.vars = c(&quot;trial&quot;, &quot;id&quot;)) %&gt;%
+  .[, list(mean = mean(value), sd = sd(value)), by = c(&quot;trial&quot;, &quot;variable&quot;)] %&gt;%
+  data.table::melt(id.vars = c(&quot;trial&quot;, &quot;variable&quot;), 
+                   variable.name = &quot;measure&quot;, value.name = &quot;value&quot;) %&gt;%
+  data.table::dcast(variable~trial+measure)</code></pre>
+<pre><code>      variable Tirilazad International_mean Tirilazad International_sd
+ 1:     d.mort                    0.2486583                  0.4324287
+ 2:        age                   33.6127013                 14.5212252
+ 3:    hypoxia                    0.1556351                  0.3626713
+ 4:   hypotens                    0.1440072                  0.3512541
+ 5:    glucose                    8.6079944                  3.5763887
+ 6:         hb                   11.8764758                  2.7624993
+ 7:   d.sysbpt                  130.0886673                 16.0103923
+ 8:        edh                    0.1681574                  0.3741734
+ 9:       tsah                    0.5277281                  0.4994540
+10:      shift                    0.2262970                  0.4186208
+11: pupil.dich                    0.2754919                  0.4469618
+    Tirilazad US_mean Tirilazad US_sd
+ 1:        0.21613833       0.4118075
+ 2:       32.78001921      12.4776194
+ 3:        0.29106628       0.4544723
+ 4:        0.22286263       0.4163669
+ 5:        9.22702530       3.4573085
+ 6:       13.05240154       2.1583300
+ 7:      132.86975024      15.5752142
+ 8:        0.08549472       0.2797509
+ 9:        0.43227666       0.4956304
+10:        0.17002882       0.3758387
+11:        0.32660903       0.4691983</code></pre>
+</div>
+<div id="q16" class="section level3">
+<h3>Q16</h3>
+<blockquote>
+<p>evaluate the predictive performance at external validiation Code</p>
+</blockquote>
+<pre class="r"><code># external performance full model
+predfull_model &lt;- predict(full_model, newdata=valdata, type = &quot;fitted&quot;)
+
+val.prob(predfull_model,valdata$d.mort)</code></pre>
+<p><img src="figure/pr_assignments.Rmd/unnamed-chunk-55-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre><code>         Dxy      C (ROC)           R2            D     D:Chi-sq 
+5.613866e-01 7.806933e-01 2.626398e-01 1.940168e-01 2.179108e+02 
+         D:p            U     U:Chi-sq          U:p            Q 
+          NA 3.776862e-03 6.222531e+00 4.454454e-02 1.902400e-01 
+       Brier    Intercept        Slope         Emax          E90 
+1.498881e-01 2.421173e-01 1.048814e+00 6.937963e-02 6.591928e-02 
+        Eavg          S:z          S:p 
+2.628233e-02 1.519696e+00 1.285874e-01 </code></pre>
+<pre class="r"><code># external performance backward selection model
+predbw_model &lt;- 1/(1+exp(-predict(bw_model, newdata=valdata)))
+val.prob(predbw_model,valdata$d.mort)</code></pre>
+<p><img src="figure/pr_assignments.Rmd/unnamed-chunk-56-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre><code>         Dxy      C (ROC)           R2            D     D:Chi-sq 
+  0.53039997   0.76519998   0.23259825   0.16969935 190.72387412 
+         D:p            U     U:Chi-sq          U:p            Q 
+          NA   0.00486532   7.43942750   0.02424091   0.16483403 
+       Brier    Intercept        Slope         Emax          E90 
+  0.15412083   0.20965170   0.99847298   0.06774686   0.06643357 
+        Eavg          S:z          S:p 
+  0.02993510   2.18963239   0.02855091 </code></pre>
+<pre class="r"><code># external validation Firth&#39;s model
+X &lt;- model.matrix(firth_model, data=valdata)
+predfirth_model &lt;- 1/(1+exp(-X %*% coef(firth_model)))
+val.prob(predfirth_model,valdata$d.mort)</code></pre>
+<p><img src="figure/pr_assignments.Rmd/unnamed-chunk-57-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre><code>         Dxy      C (ROC)           R2            D     D:Chi-sq 
+5.610997e-01 7.805498e-01 2.631810e-01 1.944604e-01 2.184067e+02 
+         D:p            U     U:Chi-sq          U:p            Q 
+          NA 3.261937e-03 5.646845e+00 5.940228e-02 1.911985e-01 
+       Brier    Intercept        Slope         Emax          E90 
+1.498282e-01 2.434940e-01 1.063815e+00 6.752707e-02 6.474306e-02 
+        Eavg          S:z          S:p 
+2.445818e-02 1.265256e+00 2.057797e-01 </code></pre>
+<pre class="r"><code># external validation Ridge model
+predridge_model &lt;- 1/(1+exp(-predict(ridge_model, newx=as.matrix(valdata[,-1]))))
+val.prob(predridge_model,valdata$d.mort)</code></pre>
+<p><img src="figure/pr_assignments.Rmd/unnamed-chunk-58-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre><code>         Dxy      C (ROC)           R2            D     D:Chi-sq 
+5.621489e-01 7.810744e-01 2.585266e-01 1.906522e-01 2.141492e+02 
+         D:p            U     U:Chi-sq          U:p            Q 
+          NA 7.314438e-03 1.017754e+01 6.165594e-03 1.833378e-01 
+       Brier    Intercept        Slope         Emax          E90 
+1.507464e-01 3.874152e-01 1.176764e+00 8.917287e-02 8.295792e-02 
+        Eavg          S:z          S:p 
+2.881835e-02 8.649746e-01 3.870527e-01 </code></pre>
+<pre class="r"><code># external validation Lasso model
+predlasso_model &lt;- 1/(1+exp(-predict(lasso_model, newx=as.matrix(valdata[,-1]))))
+val.prob(predlasso_model,valdata$d.mort)</code></pre>
+<p><img src="figure/pr_assignments.Rmd/unnamed-chunk-59-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre><code>         Dxy      C (ROC)           R2            D     D:Chi-sq 
+5.608342e-01 7.804171e-01 2.615932e-01 1.931597e-01 2.169526e+02 
+         D:p            U     U:Chi-sq          U:p            Q 
+          NA 4.103177e-03 6.587352e+00 3.711715e-02 1.890565e-01 
+       Brier    Intercept        Slope         Emax          E90 
+1.500865e-01 2.637481e-01 1.068436e+00 7.152309e-02 6.881476e-02 
+        Eavg          S:z          S:p 
+2.645759e-02 1.397576e+00 1.622404e-01 </code></pre>
 </div>
 </div>
 <div id="session-information" class="section level2">
@@ -1067,38 +1877,53 @@ attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
 other attached packages:
- [1] tidyr_0.8.0         bindrcpp_0.2        haven_1.1.1        
- [4] broom_0.4.3         epistats_0.1.0      ggplot2_2.2.1      
- [7] here_0.1            purrr_0.2.4         magrittr_1.5       
-[10] data.table_1.10.4-3 dplyr_0.7.4        
+ [1] logistf_1.22        rms_5.1-2           SparseM_1.77       
+ [4] Hmisc_4.1-1         Formula_1.2-2       survival_2.41-3    
+ [7] lattice_0.20-35     glmnet_2.0-13       foreach_1.4.4      
+[10] Matrix_1.2-12       tidyr_0.8.0         bindrcpp_0.2       
+[13] haven_1.1.1         broom_0.4.3         epistats_0.1.0     
+[16] ggplot2_2.2.1       here_0.1            purrr_0.2.4        
+[19] magrittr_1.5        data.table_1.10.4-3 dplyr_0.7.4        
 
 loaded via a namespace (and not attached):
- [1] gtools_3.5.0            tidyselect_0.2.3       
- [3] reshape2_1.4.3          lattice_0.20-35        
- [5] colorspace_1.3-2        htmltools_0.3.6        
- [7] yaml_2.1.16             utf8_1.1.3             
- [9] rlang_0.1.6             pillar_1.1.0           
-[11] foreign_0.8-69          glue_1.2.0             
-[13] binom_1.1-1             bindr_0.1              
-[15] plyr_1.8.4              stringr_1.2.0          
-[17] munsell_0.4.3           gtable_0.2.0           
-[19] psych_1.7.8             evaluate_0.10.1        
-[21] labeling_0.3            knitr_1.19             
-[23] forcats_0.2.0           ResourceSelection_0.3-2
-[25] parallel_3.4.3          Rcpp_0.12.15           
-[27] readr_1.1.1             scales_0.5.0           
-[29] backports_1.1.2         gdata_2.18.0           
-[31] mnormt_1.5-5            hms_0.4.1              
-[33] digest_0.6.15           stringi_1.1.6          
-[35] gmodels_2.16.2          grid_3.4.3             
-[37] rprojroot_1.3-2         cli_1.0.0              
-[39] tools_3.4.3             lazyeval_0.2.1         
-[41] tibble_1.4.2            crayon_1.3.4           
-[43] pkgconfig_2.0.1         Matrix_1.2-12          
-[45] MASS_7.3-48             pROC_1.10.0            
-[47] assertthat_0.2.0        rmarkdown_1.8          
-[49] R6_2.2.2                nlme_3.1-131           
-[51] git2r_0.21.0            compiler_3.4.3         </code></pre>
+ [1] binom_1.1-1             splines_3.4.3          
+ [3] gtools_3.5.0            assertthat_0.2.0       
+ [5] latticeExtra_0.6-28     yaml_2.1.16            
+ [7] pillar_1.1.0            backports_1.1.2        
+ [9] quantreg_5.35           glue_1.2.0             
+[11] pROC_1.10.0             digest_0.6.15          
+[13] RColorBrewer_1.1-2      checkmate_1.8.5        
+[15] ResourceSelection_0.3-2 sandwich_2.4-0         
+[17] colorspace_1.3-2        htmltools_0.3.6        
+[19] plyr_1.8.4              psych_1.7.8            
+[21] pkgconfig_2.0.1         gmodels_2.16.2         
+[23] mvtnorm_1.0-7           scales_0.5.0           
+[25] gdata_2.18.0            MatrixModels_0.4-1     
+[27] git2r_0.21.0            tibble_1.4.2           
+[29] htmlTable_1.11.2        mgcv_1.8-23            
+[31] TH.data_1.0-8           nnet_7.3-12            
+[33] lazyeval_0.2.1          cli_1.0.0              
+[35] mnormt_1.5-5            crayon_1.3.4           
+[37] polspline_1.1.12        evaluate_0.10.1        
+[39] mice_2.46.0             nlme_3.1-131           
+[41] MASS_7.3-48             forcats_0.2.0          
+[43] foreign_0.8-69          tools_3.4.3            
+[45] hms_0.4.1               multcomp_1.4-8         
+[47] stringr_1.2.0           munsell_0.4.3          
+[49] cluster_2.0.6           compiler_3.4.3         
+[51] rlang_0.1.6             grid_3.4.3             
+[53] iterators_1.0.9         rstudioapi_0.7         
+[55] htmlwidgets_1.0         base64enc_0.1-3        
+[57] labeling_0.3            rmarkdown_1.8          
+[59] gtable_0.2.0            codetools_0.2-15       
+[61] reshape2_1.4.3          R6_2.2.2               
+[63] zoo_1.8-1               gridExtra_2.3          
+[65] knitr_1.19              utf8_1.1.3             
+[67] bindr_0.1               rprojroot_1.3-2        
+[69] readr_1.1.1             stringi_1.1.6          
+[71] parallel_3.4.3          Rcpp_0.12.15           
+[73] rpart_4.1-12            acepack_1.4.1          
+[75] tidyselect_0.2.3       </code></pre>
 </div>
 </div>
 
