@@ -315,10 +315,10 @@ div.tocify {
 shared across the workflowr files. -->
 <!-- Update knitr chunk options -->
 <!-- Insert the date the file was last updated -->
-<p><strong>Last updated:</strong> 2018-03-14</p>
+<p><strong>Last updated:</strong> 2018-03-15</p>
 <!-- Insert the code version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
-<p><strong>Code version:</strong> 849650c</p>
+<p><strong>Code version:</strong> 17a4738</p>
 <!-- Add your analysis here -->
 <div id="setup-r" class="section level1">
 <h1>Setup R</h1>
@@ -1858,6 +1858,395 @@ val.prob(predlasso_model,valdata$d.mort)</code></pre>
 2.645759e-02 1.397576e+00 1.622404e-01 </code></pre>
 </div>
 </div>
+</div>
+<div id="day-4.-time-to-event-data" class="section level1">
+<h1>Day 4. Time-to-event data</h1>
+<blockquote>
+<p>In this practical we are going to develop a prognostic model based on time-to-event data. The dataset is an abstraction of the SMART dataset, and contains the following variables: - TEVENT describing follow-up duration in days - EVENT occurrence of new vascular complications - SEX - AGE age of the patient at baseline, in years - CARDIAC previous cardiac vascular problems - BMI - HDL - CREAT creatinine value - IMT intima media thickness We use the dataset SMARTdev.sav for model development, and SMARTval.sav for validation of the model.</p>
+</blockquote>
+<div id="a.-model-development" class="section level2">
+<h2>A. MODEL DEVELOPMENT</h2>
+<div id="section-2" class="section level3">
+<h3>1.</h3>
+<blockquote>
+<p>Prepare the dataset before modelling. Check the distribution of the timing of events and the timing of censoring. Do you expect any problems in the modeling and in assessment of performance? Check the distribution of other variables. Create standardized versions of the continuous variables in the model (Age, BMI, HDL, CREAT, IMT) by normalization.</p>
+</blockquote>
+<p>Load data</p>
+<pre class="r"><code>require(haven)
+dev &lt;- haven::read_sav(here(&quot;data&quot;, &quot;SMARTdev.sav&quot;))
+val &lt;- haven::read_sav(here(&quot;data&quot;, &quot;SMARTval.sav&quot;))</code></pre>
+<p>For curation, we can conbine the datasets</p>
+<pre class="r"><code>smart &lt;- rbindlist(list(dev = dev, val = val), idcol = &quot;set&quot;)
+str(smart)</code></pre>
+<pre><code>Classes &#39;data.table&#39; and &#39;data.frame&#39;:  3735 obs. of  10 variables:
+ $ set    : chr  &quot;dev&quot; &quot;dev&quot; &quot;dev&quot; &quot;dev&quot; ...
+ $ TEVENT : atomic  3466 3465 3465 2445 3463 ...
+  ..- attr(*, &quot;label&quot;)= chr &quot;FU-duur tot vasculaire complicatie (klinisch) EP (in dagen)&quot;
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F5.0&quot;
+ $ EVENT  :Class &#39;labelled&#39;  atomic [1:3735] 0 0 0 1 0 0 1 1 1 1 ...
+  .. ..- attr(*, &quot;label&quot;)= chr &quot;Niet/wel vasculaire complicatie (klinisch) EP&quot;
+  .. ..- attr(*, &quot;format.spss&quot;)= chr &quot;F1.0&quot;
+  .. ..- attr(*, &quot;labels&quot;)= Named num [1:4] 0 1 2 3
+  .. .. ..- attr(*, &quot;names&quot;)= chr [1:4] &quot;FU afgekapt&quot; &quot;Vasculaire complicatie (klinisch) EP&quot; &quot;Lost to FU&quot; &quot;Overleden (anderszins)&quot;
+ $ SEX    : atomic  1 2 1 1 1 2 1 1 1 1 ...
+  ..- attr(*, &quot;label&quot;)= chr &quot;Geslacht&quot;
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F1.0&quot;
+ $ AGE    : atomic  71 46 59 76 57 52 66 72 75 53 ...
+  ..- attr(*, &quot;label&quot;)= chr &quot;Leeftijd (aantal voltooide jaren)&quot;
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F3.0&quot;
+ $ CARDIAC: atomic  1 0 1 1 1 0 0 1 1 0 ...
+  ..- attr(*, &quot;label&quot;)= chr &quot;Ooit cardiaal vaatlijden (inclusief voorgeschiedenis)&quot;
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F1.0&quot;
+ $ BMI    : atomic  23.9 24 26.2 29.6 29.6 ...
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F4.1&quot;
+ $ HDL    : atomic  0.94 1.26 1.28 1 0.81 0.95 0.87 1.32 0.58 0.95 ...
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F4.2&quot;
+ $ CREAT  : atomic  95 66 93 79 91 180 81 101 157 86 ...
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F6.2&quot;
+ $ IMT    : atomic  0.82 0.57 0.83 1.45 1.07 0.97 1.15 0.7 1.48 0.87 ...
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F4.2&quot;
+ - attr(*, &quot;.internal.selfref&quot;)=&lt;externalptr&gt; </code></pre>
+<p>Convert ‘labelled’ to factors</p>
+<pre class="r"><code>smart %&lt;&gt;% mutate_if(is.labelled, as_factor)
+str(smart)</code></pre>
+<pre><code>&#39;data.frame&#39;:   3735 obs. of  10 variables:
+ $ set    : chr  &quot;dev&quot; &quot;dev&quot; &quot;dev&quot; &quot;dev&quot; ...
+ $ TEVENT : atomic  3466 3465 3465 2445 3463 ...
+  ..- attr(*, &quot;label&quot;)= chr &quot;FU-duur tot vasculaire complicatie (klinisch) EP (in dagen)&quot;
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F5.0&quot;
+ $ EVENT  : Factor w/ 4 levels &quot;FU afgekapt&quot;,..: 1 1 1 2 1 1 2 2 2 2 ...
+  ..- attr(*, &quot;label&quot;)= chr &quot;Niet/wel vasculaire complicatie (klinisch) EP&quot;
+ $ SEX    : atomic  1 2 1 1 1 2 1 1 1 1 ...
+  ..- attr(*, &quot;label&quot;)= chr &quot;Geslacht&quot;
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F1.0&quot;
+ $ AGE    : atomic  71 46 59 76 57 52 66 72 75 53 ...
+  ..- attr(*, &quot;label&quot;)= chr &quot;Leeftijd (aantal voltooide jaren)&quot;
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F3.0&quot;
+ $ CARDIAC: atomic  1 0 1 1 1 0 0 1 1 0 ...
+  ..- attr(*, &quot;label&quot;)= chr &quot;Ooit cardiaal vaatlijden (inclusief voorgeschiedenis)&quot;
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F1.0&quot;
+ $ BMI    : atomic  23.9 24 26.2 29.6 29.6 ...
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F4.1&quot;
+ $ HDL    : atomic  0.94 1.26 1.28 1 0.81 0.95 0.87 1.32 0.58 0.95 ...
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F4.2&quot;
+ $ CREAT  : atomic  95 66 93 79 91 180 81 101 157 86 ...
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F6.2&quot;
+ $ IMT    : atomic  0.82 0.57 0.83 1.45 1.07 0.97 1.15 0.7 1.48 0.87 ...
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F4.2&quot;</code></pre>
+<p>Let’s look at the event variable</p>
+<pre class="r"><code>tabl(smart$EVENT)</code></pre>
+<pre><code>
+                         FU afgekapt Vasculaire complicatie (klinisch) EP 
+                                3292                                  443 
+                          Lost to FU               Overleden (anderszins) 
+                                   0                                    0 
+                                &lt;NA&gt; 
+                                   0 </code></pre>
+<p>We only have 2 levels for the event variable. Lets recode this to a logical</p>
+<pre class="r"><code>smart %&lt;&gt;% 
+  mutate(vasc = EVENT == &quot;Vasculaire complicatie (klinisch) EP&quot;) %&gt;%
+  as.data.table()
+tabl(smart$EVENT, smart$vasc)</code></pre>
+<pre><code>                                      
+                                       FALSE TRUE &lt;NA&gt;
+  FU afgekapt                           3292    0    0
+  Vasculaire complicatie (klinisch) EP     0  443    0
+  Lost to FU                               0    0    0
+  Overleden (anderszins)                   0    0    0
+  &lt;NA&gt;                                     0    0    0</code></pre>
+</div>
+<div id="check-survival-and-censoring-distribution" class="section level3">
+<h3>Check survival and censoring distribution</h3>
+<p>Survival of uncensored observations</p>
+<pre class="r"><code>require(ggfortify)
+smart %&gt;%
+  filter(vasc == T) %&gt;%
+  survfit(Surv(TEVENT, vasc)~1, data = .) %&gt;%
+  autoplot(ylim = c(0,1))</code></pre>
+<p><img src="figure/pr_assignments.Rmd/unnamed-chunk-65-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Censoring</p>
+<pre class="r"><code>require(ggfortify)
+smart %&gt;%
+  filter(vasc == F) %&gt;%
+  survfit(Surv(TEVENT, !vasc)~1, data = .) %&gt;%
+  autoplot(ylim = c(0,1))</code></pre>
+<p><img src="figure/pr_assignments.Rmd/unnamed-chunk-66-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Both in a picture</p>
+<pre class="r"><code>smart %&gt;%
+  mutate(dummy_event = T, 
+         status = factor(vasc, levels = c(T, F), labels = c(&quot;event&quot;, &quot;censored&quot;))) %&gt;%
+  survfit(Surv(TEVENT, dummy_event)~status, data = .) %&gt;%
+  autoplot()</code></pre>
+<p><img src="figure/pr_assignments.Rmd/unnamed-chunk-67-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Looks like most of the events occur before censoring, so should be OK</p>
+<p>Check distributions of covariates</p>
+<pre class="r"><code>all_covs &lt;- c(&quot;SEX&quot;, &quot;AGE&quot;, &quot;CARDIAC&quot;, &quot;BMI&quot;, &quot;HDL&quot;, &quot;CREAT&quot;, &quot;IMT&quot;)
+num_covs &lt;- c(&quot;AGE&quot;, &quot;BMI&quot;, &quot;HDL&quot;, &quot;CREAT&quot;, &quot;IMT&quot;)
+cat_covs &lt;- setdiff(all_covs, num_covs)
+allvars &lt;- c(all_covs, &quot;vasc&quot;)</code></pre>
+<pre class="r"><code>smart %&gt;%
+  melt.data.table(id.vars = c(&quot;set&quot;, &quot;EVENT&quot;), measure.vars = num_covs) %&gt;% 
+  ggplot(aes(x = value, fill = set)) +
+  geom_histogram(alpha = 0.8) + 
+  facet_wrap(~variable, scales = &quot;free&quot;)</code></pre>
+<p><img src="figure/pr_assignments.Rmd/unnamed-chunk-69-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Most variables look approximately normally distributed, except for creat, which is right-skewed. We can take the log.</p>
+<pre class="r"><code>smart %&lt;&gt;%
+  mutate(log_creat = log(CREAT)) %&gt;%
+  as.data.table()
+
+smart %&gt;%
+  ggplot(aes(x = log_creat, fill = set)) +
+  geom_histogram(alpha = 0.8)</code></pre>
+<p><img src="figure/pr_assignments.Rmd/unnamed-chunk-70-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="create-standardized-variables" class="section level3">
+<h3>Create standardized variables</h3>
+<pre class="r"><code>num_covs &lt;- c(num_covs, &quot;log_creat&quot;)
+std_covs &lt;- paste0(num_covs, &quot;_std&quot;)
+
+smart[, (std_covs):=map(.SD, scale), .SDcols = num_covs]
+smart[1:10, .SD, .SDcols = c(num_covs, std_covs)]</code></pre>
+<pre><code>    AGE   BMI  HDL CREAT  IMT log_creat     AGE_std    BMI_std     HDL_std
+ 1:  71 23.88 0.94    95 0.82  4.553877  1.09365050 -0.7306108 -0.78628233
+ 2:  46 24.00 1.26    66 0.57  4.189655 -1.29076193 -0.6992909  0.08384594
+ 3:  59 26.17 1.28    93 0.83  4.532599 -0.05086747 -0.1329235  0.13822896
+ 4:  76 29.59 1.00    79 1.45  4.369448  1.57053298  0.7596924 -0.62313328
+ 5:  57 29.64 0.81    91 1.07  4.510860 -0.24162046  0.7727423 -1.13977194
+ 6:  52 34.41 0.95   180 0.97  5.192957 -0.71850294  2.0177066 -0.75909082
+ 7:  66 24.24 0.87    81 1.15  4.394449  0.61676801 -0.6366512 -0.97662288
+ 8:  72 31.25 1.32   101 0.70  4.615121  1.18902700  1.1929504  0.24699500
+ 9:  75 27.68 0.58   157 1.48  5.056246  1.47515649  0.2611847 -1.76517663
+10:  53 22.40 0.95    86 0.87  4.454347 -0.62312645 -1.1168890 -0.75909082
+      CREAT_std    IMT_std log_creat_std
+ 1: -0.05264070 -0.4294153    0.11213674
+ 2: -0.49909020 -1.3655967   -1.09632628
+ 3: -0.08343032 -0.3919680    0.04153985
+ 4: -0.29895766  1.9297620   -0.49978561
+ 5: -0.11421994  0.5067662   -0.03059187
+ 6:  1.25591818  0.1322936    2.23255829
+ 7: -0.26816804  0.8063442   -0.41683308
+ 8:  0.03972817 -0.8787824    0.31533870
+ 9:  0.90183754  2.0421038    1.77896083
+10: -0.19119399 -0.2421790   -0.21809533</code></pre>
+<p>Tables of categoric variables</p>
+<pre class="r"><code>cat_covs</code></pre>
+<pre><code>[1] &quot;SEX&quot;     &quot;CARDIAC&quot;</code></pre>
+<pre class="r"><code>map(cat_covs, function(var) tabl(smart[[var]], smart$set))</code></pre>
+<pre><code>[[1]]
+      
+        dev  val &lt;NA&gt;
+  1    1989  815    0
+  2     630  301    0
+  &lt;NA&gt;    0    0    0
+
+[[2]]
+      
+        dev  val &lt;NA&gt;
+  0    1149  485    0
+  1    1470  631    0
+  &lt;NA&gt;    0    0    0</code></pre>
+</div>
+</div>
+<div id="develop-the-cox-model" class="section level2">
+<h2>2. Develop the Cox model</h2>
+<blockquote>
+<p>For now we will skip any variable selection, and include all potential predictors in the model. Create a Cox model using the variables in their original scale, and apply transformations (splines, log, etc) to continuous variables if necessary.</p>
+</blockquote>
+<p>Go back to development and validation set</p>
+<pre class="r"><code>dev &lt;- smart %&gt;% filter(set == &quot;dev&quot;)
+val &lt;- smart %&gt;% filter(set == &quot;val&quot;)</code></pre>
+<p>Let’s assess any non-linear efffets of the continous predictors. We will do this for all variables at the same time.</p>
+<p>Also possible would be to do this for each predictor separately.</p>
+<p>Let’s start with splines with 5 degrees of freedom for each predictor</p>
+<pre class="r"><code>require(rms)
+
+fit_all &lt;- cph(Surv(TEVENT, vasc) ~ 
+                 rcs(AGE_std, 5) + 
+                 rcs(BMI_std, 5) + 
+                 rcs(HDL_std, 5) + 
+                 rcs(log_creat_std, 5) +
+                 rcs(IMT_std, 5) + 
+                 SEX + CARDIAC, 
+               data = dev,
+               x = T, y = T, surv = T)
+anova(fit_all, test = &quot;Chisq&quot;)</code></pre>
+<pre><code>                Wald Statistics          Response: Surv(TEVENT, vasc) 
+
+ Factor          Chi-Square d.f. P     
+ AGE_std          38.17      4   &lt;.0001
+  Nonlinear        5.75      3   0.1243
+ BMI_std           6.89      4   0.1420
+  Nonlinear        6.27      3   0.0992
+ HDL_std           4.41      4   0.3531
+  Nonlinear        0.61      3   0.8931
+ log_creat_std    54.55      4   &lt;.0001
+  Nonlinear        3.10      3   0.3761
+ IMT_std          28.55      4   &lt;.0001
+  Nonlinear        0.78      3   0.8538
+ SEX               0.86      1   0.3534
+ CARDIAC           1.69      1   0.1934
+ TOTAL NONLINEAR  17.31     15   0.3009
+ TOTAL           200.68     22   &lt;.0001</code></pre>
+<p>For Age, bmi, hdl, creat and imt, the non-linear effects do not seem significant.</p>
+<pre class="r"><code>fit &lt;- cph(Surv(TEVENT, vasc) ~ 
+                 rcs(AGE_std, 4) + 
+                 rcs(BMI_std, 4) + 
+                 rcs(HDL_std, 4) + 
+                 rcs(log_creat_std, 4) +
+                 rcs(IMT_std, 4) + 
+                 SEX + CARDIAC, 
+               data = dev,
+               x = T, y = T, surv = T)
+anova(fit, test = &quot;Chisq&quot;)</code></pre>
+<pre><code>                Wald Statistics          Response: Surv(TEVENT, vasc) 
+
+ Factor          Chi-Square d.f. P     
+ AGE_std          37.41      3   &lt;.0001
+  Nonlinear        3.94      2   0.1392
+ BMI_std           6.56      3   0.0875
+  Nonlinear        5.99      2   0.0501
+ HDL_std           3.78      3   0.2858
+  Nonlinear        0.07      2   0.9633
+ log_creat_std    53.12      3   &lt;.0001
+  Nonlinear        2.45      2   0.2938
+ IMT_std          27.42      3   &lt;.0001
+  Nonlinear        0.33      2   0.8473
+ SEX               0.89      1   0.3465
+ CARDIAC           1.60      1   0.2053
+ TOTAL NONLINEAR  13.39     10   0.2024
+ TOTAL           198.46     17   &lt;.0001</code></pre>
+<pre class="r"><code>fit &lt;- cph(Surv(TEVENT, vasc) ~ 
+                 rcs(AGE_std, 3) + 
+                 rcs(BMI_std, 3) + 
+                 rcs(HDL_std, 3) + 
+                 rcs(log_creat_std, 3) +
+                 rcs(IMT_std, 3) + 
+                 SEX + CARDIAC, 
+               data = dev,
+               x = T, y = T, surv = T)
+anova(fit, test = &quot;Chisq&quot;)</code></pre>
+<pre><code>                Wald Statistics          Response: Surv(TEVENT, vasc) 
+
+ Factor          Chi-Square d.f. P     
+ AGE_std          38.78      2   &lt;.0001
+  Nonlinear        3.88      1   0.0490
+ BMI_std           2.40      2   0.3016
+  Nonlinear        2.10      1   0.1471
+ HDL_std           3.84      2   0.1464
+  Nonlinear        0.03      1   0.8671
+ log_creat_std    54.53      2   &lt;.0001
+  Nonlinear        1.22      1   0.2700
+ IMT_std          27.00      2   &lt;.0001
+  Nonlinear        0.15      1   0.7023
+ SEX               0.88      1   0.3479
+ CARDIAC           1.37      1   0.2414
+ TOTAL NONLINEAR   7.91      5   0.1611
+ TOTAL           194.28     12   &lt;.0001</code></pre>
+<p>For age, we should keep the splines</p>
+<pre class="r"><code>fit &lt;- cph(Surv(TEVENT, vasc) ~ 
+                 rcs(AGE_std, 3) + 
+                 BMI_std + 
+                 HDL_std + 
+                 log_creat_std +
+                 IMT_std + 
+                 SEX + CARDIAC, 
+               data = dev,
+               x = T, y = T, surv = T)
+anova(fit, test = &quot;Chisq&quot;)</code></pre>
+<pre><code>                Wald Statistics          Response: Surv(TEVENT, vasc) 
+
+ Factor        Chi-Square d.f. P     
+ AGE_std        37.70     2    &lt;.0001
+  Nonlinear      4.22     1    0.0401
+ BMI_std         0.37     1    0.5432
+ HDL_std         3.68     1    0.0551
+ log_creat_std  50.02     1    &lt;.0001
+ IMT_std        26.08     1    &lt;.0001
+ SEX             0.13     1    0.7200
+ CARDIAC         1.10     1    0.2939
+ TOTAL         185.82     8    &lt;.0001</code></pre>
+<p>We will keep all variables in the model, and only for age a non-linear term</p>
+<blockquote>
+<p>Check the PH assumption and residuals, and assess overall model fit. Which are the most important predictors in the model? EXTRA: Fit the model again, but now using the standardized version of the continuous variables. Where do you see the differences?</p>
+</blockquote>
+<p>PH assumption is proportionality of linear predictor for all time points</p>
+<p>We can test this with cox.zph, but this does not work for cph objects</p>
+<pre class="r"><code>cox.zph(coxph(Surv(TEVENT, vasc) ~ 
+                 rcs(AGE_std, 3) + 
+                 BMI_std + 
+                 HDL_std + 
+                 log_creat_std +
+                 IMT_std + 
+                 SEX + CARDIAC, 
+               data = dev)) %&gt;%
+  plot()</code></pre>
+<p><img src="figure/pr_assignments.Rmd/unnamed-chunk-78-1.png" width="672" style="display: block; margin: auto;" /><img src="figure/pr_assignments.Rmd/unnamed-chunk-78-2.png" width="672" style="display: block; margin: auto;" /><img src="figure/pr_assignments.Rmd/unnamed-chunk-78-3.png" width="672" style="display: block; margin: auto;" /><img src="figure/pr_assignments.Rmd/unnamed-chunk-78-4.png" width="672" style="display: block; margin: auto;" /><img src="figure/pr_assignments.Rmd/unnamed-chunk-78-5.png" width="672" style="display: block; margin: auto;" /><img src="figure/pr_assignments.Rmd/unnamed-chunk-78-6.png" width="672" style="display: block; margin: auto;" /><img src="figure/pr_assignments.Rmd/unnamed-chunk-78-7.png" width="672" style="display: block; margin: auto;" /><img src="figure/pr_assignments.Rmd/unnamed-chunk-78-8.png" width="672" style="display: block; margin: auto;" /></p>
+<p>The betas seem pretty equal accross time-points, except for cardiac</p>
+<p>Check overall fit</p>
+<pre class="r"><code>anova(fit, test = &quot;Chisq&quot;)</code></pre>
+<pre><code>                Wald Statistics          Response: Surv(TEVENT, vasc) 
+
+ Factor        Chi-Square d.f. P     
+ AGE_std        37.70     2    &lt;.0001
+  Nonlinear      4.22     1    0.0401
+ BMI_std         0.37     1    0.5432
+ HDL_std         3.68     1    0.0551
+ log_creat_std  50.02     1    &lt;.0001
+ IMT_std        26.08     1    &lt;.0001
+ SEX             0.13     1    0.7200
+ CARDIAC         1.10     1    0.2939
+ TOTAL         185.82     8    &lt;.0001</code></pre>
+<p>Removing <code>log_creat_std</code> will hurt the model fit the most.</p>
+<p>Overall fit is significant.</p>
+</div>
+<div id="obtaining-predicted-probabilities" class="section level2">
+<h2>3. Obtaining predicted probabilities</h2>
+<blockquote>
+<p>Let us assume that we are particularly interested in 3yr and 5yr risk estimates. Extract these predicted probabilities from your model for the patients in the development set. (Suggestion: look at the equation in slide 30)</p>
+</blockquote>
+<p>Get survival function</p>
+<pre class="r"><code>surv_fun &lt;- Survival(fit)
+pred_survivals &lt;- surv_fun(times = c(3,5) * 365, lp = fit$linear.predictors)</code></pre>
+<p>Plot baseline survival function for average patient with all covariates zero (which is not actually average since the categorical variables are not standardized)</p>
+<pre class="r"><code>base_surv &lt;- surv_fun(times = seq(from = min(dev$TEVENT), to = max(dev$TEVENT),
+                                  by = 1), lp = 0)
+plot(base_surv, type = &quot;l&quot;)</code></pre>
+<p><img src="figure/pr_assignments.Rmd/unnamed-chunk-81-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Or get baseline hazard</p>
+<pre class="r"><code>base_haz &lt;- basehaz(fit)
+plot(base_haz$time, base_haz$hazard, type = &quot;l&quot;)</code></pre>
+<p><img src="figure/pr_assignments.Rmd/unnamed-chunk-82-1.png" width="672" style="display: block; margin: auto;" /></p>
+<blockquote>
+<p>EXTRA: Use the same approach, but then for the model using the standardized variables. Where do you see the differences?</p>
+</blockquote>
+</div>
+<div id="assessing-model-performance" class="section level2">
+<h2>4. Assessing model performance</h2>
+<blockquote>
+<p>Assess discrimination using Harrell’s c statistic, both for the overall model, and for the 3 and 5 year predicted probabilities specifically.</p>
+</blockquote>
+<pre class="r"><code>rcorr.cens(x = -fit$linear.predictors, S = fit$y)[1]</code></pre>
+<pre><code>  C Index 
+0.6861534 </code></pre>
+<pre class="r"><code>rcorr.cens(x = -pred_survivals[,1], S = dev$vasc &amp; dev$TEVENT &lt; 3*365)[1]</code></pre>
+<pre><code>  C Index 
+0.7042643 </code></pre>
+<pre class="r"><code>rcorr.cens(x = -pred_survivals[,2], S = dev$vasc &amp; dev$TEVENT &lt; 5*365)[1]</code></pre>
+<pre><code>  C Index 
+0.7105941 </code></pre>
+<p>With survAUC</p>
+<pre class="r"><code>require(survAUC)
+chambless &lt;- AUC.cd(
+  Surv.rsp = fit$y, 
+  Surv.rsp.new = fit$y, 
+  lp = fit$linear.predictors,
+  lpnew = fit$linear.predictors,
+  times = seq(1, 10*365, by = 1))</code></pre>
+<pre class="r"><code>plot(chambless)</code></pre>
+<p><img src="figure/pr_assignments.Rmd/unnamed-chunk-85-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Assess calibration of the model by plotting the calibration plot using the groupkm function, for the 3 and 5 yr predictions. EXTRA: use the survAUC package to calculate the c-statistic using Chambless c at 3 years and 5 years, and to calculate the c statistic over time. Calculate the prediction error over time using the functions in the pec package. 5. Presentation of the model Present the results of the model in a risk score or a nomogram B MODEL VALIDATION To validate our model, we use the dataset SMARTval.sav. 1. Check characteristics Import the dataset SMARTval.sav and check the characteristics of the predictors and the events plus timing. Compare to the development dataset. Which differences do you see? Where do you think this might lead to problems? 2. Calculate predicted probabilities i) Calculate predicted probabilities for those patients using the model based on the original variables, for 3yr and 5 yr predictions. ii) Calculate these predicted probabilities after updating the average patient in your model. Now compare the probabilities obtained by i) and ii). Calculate the c statistics based on i) and ii) and compare. Create calibration plots based on i) and ii) and compare. 3. Recalibration and revision i) Recalibrate the model by updating the baseline hazard and the ‘average patient’. Calculate again the predicted probabilities for 3 yrs and 5 yrs, and the performance measures. ii) Revise the model by updating the baseline hazard, the ‘average patient’ and the slope. Calculate again the predicted probabilities for 3yrs and 5 yr, and the performance measures.</p>
+</div>
 <div id="session-information" class="section level2">
 <h2>Session information</h2>
 <!-- Insert the session information into the document -->
@@ -1877,13 +2266,14 @@ attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
 other attached packages:
- [1] logistf_1.22        rms_5.1-2           SparseM_1.77       
- [4] Hmisc_4.1-1         Formula_1.2-2       survival_2.41-3    
- [7] lattice_0.20-35     glmnet_2.0-13       foreach_1.4.4      
-[10] Matrix_1.2-12       tidyr_0.8.0         bindrcpp_0.2       
-[13] haven_1.1.1         broom_0.4.3         epistats_0.1.0     
-[16] ggplot2_2.2.1       here_0.1            purrr_0.2.4        
-[19] magrittr_1.5        data.table_1.10.4-3 dplyr_0.7.4        
+ [1] survAUC_1.0-5       ggfortify_0.4.2     logistf_1.22       
+ [4] rms_5.1-2           SparseM_1.77        Hmisc_4.1-1        
+ [7] Formula_1.2-2       survival_2.41-3     lattice_0.20-35    
+[10] glmnet_2.0-13       foreach_1.4.4       Matrix_1.2-12      
+[13] tidyr_0.8.0         bindrcpp_0.2        haven_1.1.1        
+[16] broom_0.4.3         epistats_0.1.0      ggplot2_2.2.1      
+[19] here_0.1            purrr_0.2.4         magrittr_1.5       
+[22] data.table_1.10.4-3 dplyr_0.7.4        
 
 loaded via a namespace (and not attached):
  [1] binom_1.1-1             splines_3.4.3          
