@@ -927,6 +927,330 @@ val.prob(predlasso_model,valdata$d.mort)
 ```
 
 
+# Day 4. Time-to-event data
+
+> In this practical we are going to develop a prognostic model based on time-to-event data. The dataset is an abstraction of the SMART dataset, and contains the following variables:
+- TEVENT describing follow-up duration in days
+- EVENT occurrence of new vascular complications
+- SEX
+- AGE age of the patient at baseline, in years
+- CARDIAC previous cardiac vascular problems
+- BMI
+- HDL
+- CREAT creatinine value
+- IMT intima media thickness
+We use the dataset SMARTdev.sav for model development, and SMARTval.sav for validation of the model.
+
+## A. MODEL DEVELOPMENT
+
+### 1. 
+
+> Prepare the dataset before modelling. Check the distribution of the timing of events and the timing of censoring. Do you expect any problems in the modeling and in assessment of performance? Check the distribution of other variables. Create standardized versions of the continuous variables in the model (Age, BMI, HDL, CREAT, IMT) by normalization.
+
+Load data
+
+```{r}
+require(haven)
+dev <- haven::read_sav(here("data", "SMARTdev.sav"))
+val <- haven::read_sav(here("data", "SMARTval.sav"))
+```
+
+For curation, we can conbine the datasets
+
+```{r}
+smart <- rbindlist(list(dev = dev, val = val), idcol = "set")
+str(smart)
+```
+
+Convert 'labelled' to factors
+
+```{r}
+smart %<>% mutate_if(is.labelled, as_factor)
+str(smart)
+```
+
+Let's look at the event variable
+
+```{r}
+tabl(smart$EVENT)
+```
+
+We only have 2 levels for the event variable. Lets recode this to a logical
+
+```{r}
+smart %<>% 
+  mutate(vasc = EVENT == "Vasculaire complicatie (klinisch) EP") %>%
+  as.data.table()
+tabl(smart$EVENT, smart$vasc)
+```
+
+### Check survival and censoring distribution
+
+Survival of uncensored observations
+
+```{r}
+require(ggfortify)
+smart %>%
+  filter(vasc == T) %>%
+  survfit(Surv(TEVENT, vasc)~1, data = .) %>%
+  autoplot(ylim = c(0,1))
+```
+
+Censoring
+
+```{r}
+require(ggfortify)
+smart %>%
+  filter(vasc == F) %>%
+  survfit(Surv(TEVENT, !vasc)~1, data = .) %>%
+  autoplot(ylim = c(0,1))
+```
+
+Both in a picture
+
+```{r}
+smart %>%
+  mutate(dummy_event = T, 
+         status = factor(vasc, levels = c(T, F), labels = c("event", "censored"))) %>%
+  survfit(Surv(TEVENT, dummy_event)~status, data = .) %>%
+  autoplot()
+```
+
+Looks like most of the events occur before censoring, so should be OK
+
+
+Check distributions of covariates
+
+```{r}
+all_covs <- c("SEX", "AGE", "CARDIAC", "BMI", "HDL", "CREAT", "IMT")
+num_covs <- c("AGE", "BMI", "HDL", "CREAT", "IMT")
+cat_covs <- setdiff(all_covs, num_covs)
+allvars <- c(all_covs, "vasc")
+```
+
+```{r}
+smart %>%
+  melt.data.table(id.vars = c("set", "EVENT"), measure.vars = num_covs) %>% 
+  ggplot(aes(x = value, fill = set)) +
+  geom_histogram(alpha = 0.8) + 
+  facet_wrap(~variable, scales = "free")
+```
+
+Most variables look approximately normally distributed, except for creat, 
+which is right-skewed. We can take the log.
+
+```{r}
+smart %<>%
+  mutate(log_creat = log(CREAT)) %>%
+  as.data.table()
+
+smart %>%
+  ggplot(aes(x = log_creat, fill = set)) +
+  geom_histogram(alpha = 0.8)
+```
+
+### Create standardized variables
+
+```{r}
+num_covs <- c(num_covs, "log_creat")
+std_covs <- paste0(num_covs, "_std")
+
+smart[, (std_covs):=map(.SD, scale), .SDcols = num_covs]
+smart[1:10, .SD, .SDcols = c(num_covs, std_covs)]
+```
+
+
+Tables of categoric variables
+
+```{r}
+cat_covs
+map(cat_covs, function(var) tabl(smart[[var]], smart$set))
+```
+
+## 2. Develop the Cox model
+
+> For now we will skip any variable selection, and include all potential predictors in the model. Create a Cox model using the variables in their original scale, and apply transformations (splines, log, etc) to continuous variables if necessary.
+
+Go back to development and validation set
+
+```{r}
+dev <- smart %>% filter(set == "dev")
+val <- smart %>% filter(set == "val")
+```
+
+Let's assess any non-linear efffets of the continous predictors.
+We will do this for all variables at the same time.
+
+Also possible would be to do this for each predictor separately.
+
+Let's start with splines with 5 degrees of freedom for each predictor
+
+```{r}
+require(rms)
+
+fit_all <- cph(Surv(TEVENT, vasc) ~ 
+                 rcs(AGE_std, 5) + 
+                 rcs(BMI_std, 5) + 
+                 rcs(HDL_std, 5) + 
+                 rcs(log_creat_std, 5) +
+                 rcs(IMT_std, 5) + 
+                 SEX + CARDIAC, 
+               data = dev,
+               x = T, y = T, surv = T)
+anova(fit_all, test = "Chisq")
+```
+
+For Age, bmi, hdl, creat and imt, the non-linear effects do not seem significant.
+
+```{r}
+fit <- cph(Surv(TEVENT, vasc) ~ 
+                 rcs(AGE_std, 4) + 
+                 rcs(BMI_std, 4) + 
+                 rcs(HDL_std, 4) + 
+                 rcs(log_creat_std, 4) +
+                 rcs(IMT_std, 4) + 
+                 SEX + CARDIAC, 
+               data = dev,
+               x = T, y = T, surv = T)
+anova(fit, test = "Chisq")
+
+```
+
+```{r}
+fit <- cph(Surv(TEVENT, vasc) ~ 
+                 rcs(AGE_std, 3) + 
+                 rcs(BMI_std, 3) + 
+                 rcs(HDL_std, 3) + 
+                 rcs(log_creat_std, 3) +
+                 rcs(IMT_std, 3) + 
+                 SEX + CARDIAC, 
+               data = dev,
+               x = T, y = T, surv = T)
+anova(fit, test = "Chisq")
+
+```
+
+For age, we should keep the splines
+
+```{r}
+fit <- cph(Surv(TEVENT, vasc) ~ 
+                 rcs(AGE_std, 3) + 
+                 BMI_std + 
+                 HDL_std + 
+                 log_creat_std +
+                 IMT_std + 
+                 SEX + CARDIAC, 
+               data = dev,
+               x = T, y = T, surv = T)
+anova(fit, test = "Chisq")
+```
+
+We will keep all variables in the model, and only for age a non-linear term
+
+> Check the PH assumption and residuals, and assess overall model fit. Which are the most important predictors in the model? EXTRA: Fit the model again, but now using the standardized version of the continuous variables. Where do you see the differences?
+
+PH assumption is proportionality of linear predictor for all time points
+
+We can test this with cox.zph, but this does not work for cph objects
+
+```{r}
+cox.zph(coxph(Surv(TEVENT, vasc) ~ 
+                 rcs(AGE_std, 3) + 
+                 BMI_std + 
+                 HDL_std + 
+                 log_creat_std +
+                 IMT_std + 
+                 SEX + CARDIAC, 
+               data = dev)) %>%
+  plot()
+```
+
+The betas seem pretty equal accross time-points, except for cardiac
+
+Check overall fit
+
+```{r}
+anova(fit, test = "Chisq")
+```
+
+Removing `log_creat_std` will hurt the model fit the most.
+
+Overall fit is significant.
+
+
+
+## 3. Obtaining predicted probabilities
+
+> Let us assume that we are particularly interested in 3yr and 5yr risk estimates. Extract these predicted probabilities from your model for the patients in the development set. (Suggestion: look at the equation in slide 30)
+
+Get survival function
+
+```{r}
+surv_fun <- Survival(fit)
+pred_survivals <- surv_fun(times = c(3,5) * 365, lp = fit$linear.predictors)
+```
+
+Plot baseline survival function for average patient with all covariates 
+zero (which is not actually average since the categorical variables are not standardized)
+
+```{r}
+base_surv <- surv_fun(times = seq(from = min(dev$TEVENT), to = max(dev$TEVENT),
+                                  by = 1), lp = 0)
+plot(base_surv, type = "l")
+```
+
+Or get baseline hazard
+
+```{r}
+base_haz <- basehaz(fit)
+plot(base_haz$time, base_haz$hazard, type = "l")
+```
+
+
+> EXTRA: Use the same approach, but then for the model using the standardized variables. Where do you see the differences?
+
+## 4. Assessing model performance
+
+> Assess discrimination using Harrell’s c statistic, both for the overall model, and for the 3 and 5 year predicted probabilities specifically.
+
+```{r}
+rcorr.cens(x = -fit$linear.predictors, S = fit$y)[1]
+rcorr.cens(x = -pred_survivals[,1], S = dev$vasc & dev$TEVENT < 3*365)[1]
+rcorr.cens(x = -pred_survivals[,2], S = dev$vasc & dev$TEVENT < 5*365)[1]
+```
+
+With survAUC
+
+```{r}
+require(survAUC)
+chambless <- AUC.cd(
+  Surv.rsp = fit$y, 
+  Surv.rsp.new = fit$y, 
+  lp = fit$linear.predictors,
+  lpnew = fit$linear.predictors,
+  times = seq(1, 10*365, by = 1))
+```
+
+```{r}
+plot(chambless)
+```
+
+
+Assess calibration of the model by plotting the calibration plot using the groupkm function, for the 3 and 5 yr predictions.
+EXTRA: use the survAUC package to calculate the c-statistic using Chambless c at 3 years and 5 years, and to calculate the c statistic over time. Calculate the prediction error over time using the functions in the pec package.
+5. Presentation of the model Present the results of the model in a risk score or a nomogram
+B MODEL VALIDATION
+To validate our model, we use the dataset SMARTval.sav.
+1. Check characteristics
+Import the dataset SMARTval.sav and check the characteristics of the predictors and the events plus timing. Compare to the development dataset. Which differences do you see? Where do you think this might lead to problems?
+2. Calculate predicted probabilities
+i) Calculate predicted probabilities for those patients using the model based on the original variables, for 3yr and 5 yr predictions.
+ii) Calculate these predicted probabilities after updating the average patient in your model.
+Now compare the probabilities obtained by i) and ii). Calculate the c statistics based on i) and ii) and compare. Create calibration plots based on i) and ii) and compare.
+3. Recalibration and revision
+i) Recalibrate the model by updating the baseline hazard and the ‘average patient’. Calculate again the predicted probabilities for 3 yrs and 5 yrs, and the performance measures.
+ii) Revise the model by updating the baseline hazard, the ‘average patient’ and the slope. Calculate again the predicted probabilities for 3yrs and 5 yr, and the performance measures.
+
 ## Session information
 
 <!-- Insert the session information into the document -->
