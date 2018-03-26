@@ -1,0 +1,108 @@
+---
+title: "Wouter van Amsterdam"
+author: "Cross-domain data fusion in deep learning"
+date: 2018-03-26
+output: html_document
+---
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+```
+
+<!-- Update knitr chunk options -->
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+<!-- Insert the date the file was last updated -->
+```{r last-updated, echo=FALSE, results='asis'}
+```
+
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+```{r code-version, echo=FALSE, results='asis'}
+```
+
+<!-- Add your analysis here -->
+
+---
+title: "Multi stream deep learning"
+author: "Wouter van Amsterdam"
+date: "3/26/2018"
+output: ioslides_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+# Ways of fusing data
+
+## Develop separate models
+
+```{r}
+require(DiagrammeR)
+grViz("multi_stream_nn_a.gv")
+grViz("multi_stream_nn_b.gv")
+```
+
+## Design 1: combine predictions only
+
+```{r}
+grViz("multi_stream_nn_prob_concat.gv")
+```
+
+Deep feature sets are developed to optimally predict the outcome based on 
+a **single** data domain
+
+## Design 2: concatenate features
+
+```{r}
+grViz("multi_stream_nn_feature_concat.gv")
+```
+
+Deep features from both models are integrated in a multi-variate (logistic) model
+
+## Design 3: fuse features in fully-connected layer
+
+```{r}
+grViz("multi_stream_nn_feature_fuse.gv")
+```
+
+Complex interactions between deep features are modeled and optimized 
+for prediction of the outcome
+
+
+## Note:
+
+Any design (at least 1 and 2) of fusion can be trained in different ways:
+
+- train separately, combine predictions or features
+- train separately, fine-tune / retune combined model
+- train on combined data sources from scratch
+
+The possible advantage of fine-tuning or trianing from scratch is that
+the 'deep features' that represent the original data sources are 
+specifically optimized for the task of predicting the outcome.
+
+When trained conjoined, the deep features will be none-redundant (or less redundant)
+
+If features from both models when trained separately turn out to be correlated
+ (maybe they both represent an important underlying biological process,
+ driving the image phenotypes of both modalities, albeit in very different 
+ 'visual' ways), combining the modalities will not add a lot.
+ 
+ When trained conjoinedly, the networks are forced to find a deep feature 
+ representation of their imput that **adds** predictive power, 
+ **given** the predictive information that is already gained through the other 
+ domain.
+
+
+
+
+## Session information
+
+<!-- Insert the session information into the document -->
+```{r session-info}
+```
