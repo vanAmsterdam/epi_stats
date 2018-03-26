@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+<meta name="author" content="Cross-domain data fusion in deep learning" />
+
+<meta name="date" content="2018-03-26" />
+
+<title>Wouter van Amsterdam</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<script src="site_libs/htmlwidgets-1.0/htmlwidgets.js"></script>
+<script src="site_libs/viz-0.3/viz.js"></script>
+<link href="site_libs/DiagrammeR-styles-0.2/styles.css" rel="stylesheet" />
+<script src="site_libs/grViz-binding-0.9.2/grViz.js"></script>
+<link href="site_libs/font-awesome-4.5.0/css/font-awesome.min.css" rel="stylesheet" />
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+
+<div class="container-fluid main-container">
+
+<!-- tabsets -->
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+</script>
+
+<!-- code folding -->
+
+
+
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+  padding-left: 25px;
+  text-indent: 0;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">epi_stats</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/jdblischak/workflowr">
+    <span class="fa fa-github"></span>
+     
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">Wouter van Amsterdam</h1>
+<h4 class="author"><em>Cross-domain data fusion in deep learning</em></h4>
+<h4 class="date"><em>2018-03-26</em></h4>
+
+</div>
+
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+<!-- Update knitr chunk options -->
+<!-- Insert the date the file was last updated -->
+<p><strong>Last updated:</strong> 2018-03-26</p>
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+<p><strong>Code version:</strong> 52230f9</p>
+<!-- Add your analysis here -->
+<div id="ways-of-fusing-data" class="section level1">
+<h1>Ways of fusing data</h1>
+<div id="develop-separate-models" class="section level2">
+<h2>Develop separate models</h2>
+<p><div id="htmlwidget-b8e0c2e2742a5382bafd" style="width:672px;height:480px;" class="grViz html-widget"></div>
+<script type="application/json" data-for="htmlwidget-b8e0c2e2742a5382bafd">{"x":{"diagram":"digraph nn1 {\n  graph [layout = dot, rankdir = LR, overlap = true, fontsize = 10, splines = false]\n\n  node [shape = rectangle]\n  pathology[label = \"Pathology slide\"]\n\n  node [style = dashed]\n  nn1[label = \"Convolutional neural network 1\"]\n  df1[label = \"Representation of pathology slide\\nwith `deep` features\"]\n\n  node [shape = circle, fixedsize = true, width = 0.9, label = \"\",\n  style = filled; color = orange]\n  x1; x2; x3\n\n  node [label = \"\"]\n  h1; h2; h3; h4; h5;\n\n  node [label = \"\"]\n  f1; f2; f3;\n\n  node [shape = doubleoctagon; style = filled; color = gold;\n  label = \"predicted\\noutcome\"]\n  y\n\n  pathology -> x2\n\n  subgraph {\n    rank = same; nn1; h1; h2; h3; h4; h5;\n  }\n\n  subgraph {\n    rank = same; df1; f1; f2; f3\n  }\n\n\n\n\n  x1 -> h1; x1 -> h2; x1 -> h3; x1 -> h4; x1 -> h5;\n  x2 -> h1; x2 -> h2; x2 -> h3; x2 -> h4; x2 -> h5;\n  x3 -> h1; x3 -> h2; x3 -> h3; x3 -> h4; x3 -> h5;\n\n  h1 -> f1; h1 -> f2; h1 -> f3;\n  h2 -> f1; h2 -> f2; h2 -> f3;\n  h3 -> f1; h3 -> f2; h3 -> f3;\n  h4 -> f1; h4 -> f2; h4 -> f3;\n  h5 -> f1; h5 -> f2; h5 -> f3;\n\n  f1 -> y; f2 -> y; f3 -> y\n\n  subgraph {\n  #  rank = same; pathology; y\n  }\n\n\n}","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script><div id="htmlwidget-0827bc00647663672df3" style="width:672px;height:480px;" class="grViz html-widget"></div>
+<script type="application/json" data-for="htmlwidget-0827bc00647663672df3">{"x":{"diagram":"digraph nn1 {\n  graph [layout = dot, rankdir = LR, overlap = true, fontsize = 10, splines = false]\n\n  node [shape = rectangle]\n  pathology[label = \"CT scan\"]\n\n  node [style = dashed]\n  nn1[label = \"Convolutional neural network 2\"]\n  df1[label = \"Representation of CT scan\\nwith `deep` features\"]\n\n  node [shape = circle, fixedsize = true, width = 0.9, label = \"\",\n  style = filled; color = darkgreen]\n  x1; x2; x3\n\n  node [label = \"\"]\n  h1; h2; h3; h4; h5;\n\n  node [label = \"\"]\n  f1; f2; f3;\n\n  node [shape = doubleoctagon; style = filled; color = gold;\n  label = \"predicted\\noutcome\"]\n  y\n\n  pathology -> x2\n\n  subgraph {\n    rank = same; nn1; h1; h2; h3; h4; h5;\n  }\n\n  subgraph {\n    rank = same; df1; f1; f2; f3\n  }\n\n\n\n\n  x1 -> h1; x1 -> h2; x1 -> h3; x1 -> h4; x1 -> h5;\n  x2 -> h1; x2 -> h2; x2 -> h3; x2 -> h4; x2 -> h5;\n  x3 -> h1; x3 -> h2; x3 -> h3; x3 -> h4; x3 -> h5;\n\n  h1 -> f1; h1 -> f2; h1 -> f3;\n  h2 -> f1; h2 -> f2; h2 -> f3;\n  h3 -> f1; h3 -> f2; h3 -> f3;\n  h4 -> f1; h4 -> f2; h4 -> f3;\n  h5 -> f1; h5 -> f2; h5 -> f3;\n\n  f1 -> y; f2 -> y; f3 -> y\n\n  subgraph {\n  #  rank = same; pathology; y\n  }\n\n\n}","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script></p>
+</div>
+<div id="design-1-combine-predictions-only" class="section level2">
+<h2>Design 1: combine predictions only</h2>
+<div id="htmlwidget-7453f7b5a563b28b397c" style="width:672px;height:480px;" class="grViz html-widget"></div>
+<script type="application/json" data-for="htmlwidget-7453f7b5a563b28b397c">{"x":{"diagram":"digraph nn1 {\n  graph [layout = dot, rankdir = LR, overlap = true, fontsize = 10, splines = false]\n\n  node [shape = rectangle]\n  pathology[label = \"Pathology slide\"]\n\n  node [shape = circle, fixedsize = true, width = 0.9, label = \"\",\n  style = filled; color = orange]\n  xa1; xa2; xa3\n\n  node [label = \"\"]\n  ha1; ha2; ha3; ha4; ha5;\n\n  node [label = \"\"]\n  fa1; fa2; fa3;\n\n  node [shape = doubleoctagon; style = filled; color = gold;\n  label = \"predicted\\noutcome\"]\n  ya\n\n  pathology -> xa2\n\n  xa1 -> ha1; xa1 -> ha2; xa1 -> ha3; xa1 -> ha4; xa1 -> ha5;\n  xa2 -> ha1; xa2 -> ha2; xa2 -> ha3; xa2 -> ha4; xa2 -> ha5;\n  xa3 -> ha1; xa3 -> ha2; xa3 -> ha3; xa3 -> ha4; xa3 -> ha5;\n\n  ha1 -> fa1; ha1 -> fa2; ha1 -> fa3;\n  ha2 -> fa1; ha2 -> fa2; ha2 -> fa3;\n  ha3 -> fa1; ha3 -> fa2; ha3 -> fa3;\n  ha4 -> fa1; ha4 -> fa2; ha4 -> fa3;\n  ha5 -> fa1; ha5 -> fa2; ha5 -> fa3;\n\n  fa1 -> ya; fa2 -> ya; fa3 -> ya\n\n  node [shape = rectangle; style = normal; color = black]\n  ct[label = \"CT scan\"]\n\n  node [shape = circle, fixedsize = true, width = 0.9, label = \"\",\n  style = filled; color = darkgreen]\n  xb1; xb2; xb3\n\n  node [label = \"\"]\n  hb1; hb2; hb3; hb4; hb5;\n\n  node [label = \"\"]\n  fb1; fb2; fb3;\n\n  node [shape = doubleoctagon; style = filled; color = gold;\n  label = \"predicted\\noutcome\"]\n  yb\n\n  node [shape = doubleoctagon; style = filled; color = gold;\n  label = \"predicted\\noutcome\"]\n  yc\n\n\n  ct -> xb2\n\n  xb1 -> hb1; xb1 -> hb2; xb1 -> hb3; xb1 -> hb4; xb1 -> hb5;\n  xb2 -> hb1; xb2 -> hb2; xb2 -> hb3; xb2 -> hb4; xb2 -> hb5;\n  xb3 -> hb1; xb3 -> hb2; xb3 -> hb3; xb3 -> hb4; xb3 -> hb5;\n\n  hb1 -> fb1; hb1 -> fb2; hb1 -> fb3;\n  hb2 -> fb1; hb2 -> fb2; hb2 -> fb3;\n  hb3 -> fb1; hb3 -> fb2; hb3 -> fb3;\n  hb4 -> fb1; hb4 -> fb2; hb4 -> fb3;\n  hb5 -> fb1; hb5 -> fb2; hb5 -> fb3;\n\n  fb1 -> yb; fb2 -> yb; fb3 -> yb\n  subgraph {\n    rank = same; fa1; fa2; fa3; fb1; fb2; fb3\n  }\n\n  ya -> yc; yb -> yc\n\n\n\n}","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script>
+<p>Deep feature sets are developed to optimally predict the outcome based on a <strong>single</strong> data domain</p>
+</div>
+<div id="design-2-concatenate-features" class="section level2">
+<h2>Design 2: concatenate features</h2>
+<div id="htmlwidget-cb0130ae5e5cdee79e22" style="width:672px;height:480px;" class="grViz html-widget"></div>
+<script type="application/json" data-for="htmlwidget-cb0130ae5e5cdee79e22">{"x":{"diagram":"digraph nn1 {\n  graph [layout = dot, rankdir = LR, overlap = true, fontsize = 10, splines = false]\n\n  node [shape = rectangle]\n  pathology[label = \"Pathology slide\"]\n\n  node [shape = circle, fixedsize = true, width = 0.9, label = \"\",\n  style = filled; color = orange]\n  xa1; xa2; xa3\n\n  node [label = \"\"]\n  ha1; ha2; ha3; ha4; ha5;\n\n  node [label = \"\"]\n  fa1; fa2; fa3;\n\n  node [shape = doubleoctagon; style = filled; color = gold;\n  label = \"predicted\\noutcome\"]\n  ya\n\n  pathology -> xa2\n\n  xa1 -> ha1; xa1 -> ha2; xa1 -> ha3; xa1 -> ha4; xa1 -> ha5;\n  xa2 -> ha1; xa2 -> ha2; xa2 -> ha3; xa2 -> ha4; xa2 -> ha5;\n  xa3 -> ha1; xa3 -> ha2; xa3 -> ha3; xa3 -> ha4; xa3 -> ha5;\n\n  ha1 -> fa1; ha1 -> fa2; ha1 -> fa3;\n  ha2 -> fa1; ha2 -> fa2; ha2 -> fa3;\n  ha3 -> fa1; ha3 -> fa2; ha3 -> fa3;\n  ha4 -> fa1; ha4 -> fa2; ha4 -> fa3;\n  ha5 -> fa1; ha5 -> fa2; ha5 -> fa3;\n\n  fa1 -> ya; fa2 -> ya; fa3 -> ya\n\n  node [shape = rectangle; style = normal; color = black]\n  ct[label = \"CT scan\"]\n\n  node [shape = circle, fixedsize = true, width = 0.9, label = \"\",\n  style = filled; color = darkgreen]\n  xb1; xb2; xb3\n\n  node [label = \"\"]\n  hb1; hb2; hb3; hb4; hb5;\n\n  node [label = \"\"]\n  fb1; fb2; fb3;\n\n  ct -> xb2\n\n  xb1 -> hb1; xb1 -> hb2; xb1 -> hb3; xb1 -> hb4; xb1 -> hb5;\n  xb2 -> hb1; xb2 -> hb2; xb2 -> hb3; xb2 -> hb4; xb2 -> hb5;\n  xb3 -> hb1; xb3 -> hb2; xb3 -> hb3; xb3 -> hb4; xb3 -> hb5;\n\n  hb1 -> fb1; hb1 -> fb2; hb1 -> fb3;\n  hb2 -> fb1; hb2 -> fb2; hb2 -> fb3;\n  hb3 -> fb1; hb3 -> fb2; hb3 -> fb3;\n  hb4 -> fb1; hb4 -> fb2; hb4 -> fb3;\n  hb5 -> fb1; hb5 -> fb2; hb5 -> fb3;\n\n  fb1 -> ya; fb2 -> ya; fb3 -> ya\n\n  subgraph {\n    rank = same; fa1; fa2; fa3; fb1; fb2; fb3\n  }\n\n\n}","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script>
+<p>Deep features from both models are integrated in a multi-variate (logistic) model</p>
+</div>
+<div id="design-3-fuse-features-in-fully-connected-layer" class="section level2">
+<h2>Design 3: fuse features in fully-connected layer</h2>
+<div id="htmlwidget-c86dedc542520f0b0ea0" style="width:672px;height:480px;" class="grViz html-widget"></div>
+<script type="application/json" data-for="htmlwidget-c86dedc542520f0b0ea0">{"x":{"diagram":"digraph nn1 {\n  graph [layout = dot, rankdir = LR, overlap = true, fontsize = 10, splines = false]\n\n  node [shape = rectangle]\n  pathology[label = \"Pathology slide\"]\n\n  node [shape = circle, fixedsize = true, width = 0.9, label = \"\",\n  style = filled; color = orange]\n  xa1; xa2; xa3\n\n  node [label = \"\"]\n  ha1; ha2; ha3; ha4; ha5;\n\n  node [label = \"\", color = purple]\n  fa1; fa2; fa3;\n\n  node [shape = doubleoctagon; style = filled; color = gold;\n  label = \"predicted\\noutcome\"]\n  ya\n\n  pathology -> xa2\n\n  xa1 -> ha1; xa1 -> ha2; xa1 -> ha3; xa1 -> ha4; xa1 -> ha5;\n  xa2 -> ha1; xa2 -> ha2; xa2 -> ha3; xa2 -> ha4; xa2 -> ha5;\n  xa3 -> ha1; xa3 -> ha2; xa3 -> ha3; xa3 -> ha4; xa3 -> ha5;\n\n  ha1 -> fa1; ha1 -> fa2; ha1 -> fa3;\n  ha2 -> fa1; ha2 -> fa2; ha2 -> fa3;\n  ha3 -> fa1; ha3 -> fa2; ha3 -> fa3;\n  ha4 -> fa1; ha4 -> fa2; ha4 -> fa3;\n  ha5 -> fa1; ha5 -> fa2; ha5 -> fa3;\n\n  fa1 -> ya; fa2 -> ya; fa3 -> ya\n\n  node [shape = rectangle; style = normal; color = black]\n  ct[label = \"CT scan\"]\n\n  node [shape = circle, fixedsize = true, width = 0.9, label = \"\",\n  style = filled; color = darkgreen]\n  xb1; xb2; xb3\n\n  node [label = \"\"]\n  hb1; hb2; hb3; hb4; hb5;\n\n  node [label = \"\"]\n  fa1; fa2; fa3;\n\n  ct -> xb2\n\n  xb1 -> hb1; xb1 -> hb2; xb1 -> hb3; xb1 -> hb4; xb1 -> hb5;\n  xb2 -> hb1; xb2 -> hb2; xb2 -> hb3; xb2 -> hb4; xb2 -> hb5;\n  xb3 -> hb1; xb3 -> hb2; xb3 -> hb3; xb3 -> hb4; xb3 -> hb5;\n\n  hb1 -> fa1; hb1 -> fa2; hb1 -> fa3;\n  hb2 -> fa1; hb2 -> fa2; hb2 -> fa3;\n  hb3 -> fa1; hb3 -> fa2; hb3 -> fa3;\n  hb4 -> fa1; hb4 -> fa2; hb4 -> fa3;\n  hb5 -> fa1; hb5 -> fa2; hb5 -> fa3;\n\n\n}","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script>
+<p>Complex interactions between deep features are modeled and optimized for prediction of the outcome</p>
+</div>
+<div id="note" class="section level2">
+<h2>Note:</h2>
+<p>Any design (at least 1 and 2) of fusion can be trained in different ways:</p>
+<ul>
+<li>train separately, combine predictions or features</li>
+<li>train separately, fine-tune / retune combined model</li>
+<li>train on combined data sources from scratch</li>
+</ul>
+<p>The possible advantage of fine-tuning or trianing from scratch is that the ‘deep features’ that represent the original data sources are specifically optimized for the task of predicting the outcome.</p>
+<p>When trained conjoined, the deep features will be none-redundant (or less redundant)</p>
+<p>If features from both models when trained separately turn out to be correlated (maybe they both represent an important underlying biological process, driving the image phenotypes of both modalities, albeit in very different ‘visual’ ways), combining the modalities will not add a lot.</p>
+<p>When trained conjoinedly, the networks are forced to find a deep feature representation of their imput that <strong>adds</strong> predictive power, <strong>given</strong> the predictive information that is already gained through the other domain.</p>
+</div>
+<div id="session-information" class="section level2">
+<h2>Session information</h2>
+<!-- Insert the session information into the document -->
+<pre><code>R version 3.4.3 (2017-11-30)
+Platform: x86_64-apple-darwin15.6.0 (64-bit)
+Running under: macOS Sierra 10.12.6
+
+Matrix products: default
+BLAS: /Library/Frameworks/R.framework/Versions/3.4/Resources/lib/libRblas.0.dylib
+LAPACK: /Library/Frameworks/R.framework/Versions/3.4/Resources/lib/libRlapack.dylib
+
+locale:
+[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+[1] DiagrammeR_0.9.2
+
+loaded via a namespace (and not attached):
+ [1] Rcpp_0.12.15       compiler_3.4.3     pillar_1.1.0      
+ [4] RColorBrewer_1.1-2 git2r_0.21.0       influenceR_0.1.0  
+ [7] plyr_1.8.4         bindr_0.1          viridis_0.5.0     
+[10] tools_3.4.3        digest_0.6.15      jsonlite_1.5      
+[13] viridisLite_0.3.0  gtable_0.2.0       evaluate_0.10.1   
+[16] tibble_1.4.2       rgexf_0.15.3       pkgconfig_2.0.1   
+[19] rlang_0.1.6        igraph_1.1.2       rstudioapi_0.7    
+[22] yaml_2.1.16        bindrcpp_0.2       gridExtra_2.3     
+[25] downloader_0.4     dplyr_0.7.4        stringr_1.2.0     
+[28] knitr_1.19         htmlwidgets_1.0    hms_0.4.1         
+[31] grid_3.4.3         rprojroot_1.3-2    glue_1.2.0        
+[34] R6_2.2.2           Rook_1.1-1         XML_3.98-1.9      
+[37] rmarkdown_1.8      ggplot2_2.2.1      tidyr_0.8.0       
+[40] purrr_0.2.4        readr_1.1.1        magrittr_1.5      
+[43] backports_1.1.2    scales_0.5.0       htmltools_0.3.6   
+[46] assertthat_0.2.0   colorspace_1.3-2   brew_1.0-6        
+[49] stringi_1.1.6      visNetwork_2.0.3   lazyeval_0.2.1    
+[52] munsell_0.4.3     </code></pre>
+</div>
+</div>
+
+<hr>
+<p>
+    This <a href="http://rmarkdown.rstudio.com">R Markdown</a> site was created with <a href="https://github.com/jdblischak/workflowr">workflowr</a>
+</p>
+<hr>
+
+<!-- To enable disqus, uncomment the section below and provide your disqus_shortname -->
+
+<!-- disqus
+  <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+        var disqus_shortname = 'rmarkdown'; // required: replace example with your forum shortname
+
+        /* * * DON'T EDIT BELOW THIS LINE * * */
+        (function() {
+            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+-->
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
