@@ -265,12 +265,18 @@ summary(fit2)
 This model did not fit, the residual deviance is higher than the degrees of 
 freedom
 
+Let's look if non-linear transformations of age are in place
+
+```{r}
+Hmisc::rcspline.plot(x = tbi$age, y = tbi$d.unfav,
+                     model = "logistic", adj = tbi %>% select(hbt, shift))
+```
+
+
 #### 1. 
 
 > Is the effect of cause still statistically significant? Hint: focus on the overall p-value, based
 on a 4 df test.
-
-We should take 6 degrees of freedom, as there are 6 parameters estimated
 
 ```{r}
 anova(fit2, test = "Chisq")
@@ -1083,6 +1089,16 @@ We will do this for all variables at the same time.
 
 Also possible would be to do this for each predictor separately.
 
+### Try to plot RCsplines
+
+```{r}
+rcspline.plot(x = dev$AGE_std, y = dev$TEVENT, event = dev$vasc,
+              model =  "cox", adj = dev %>% 
+                select(BMI_std, HDL_std, log_creat_std, IMT_std,
+                       SEX, CARDIAC))
+```
+
+
 Let's start with splines with 5 degrees of freedom for each predictor
 
 ```{r}
@@ -1196,7 +1212,9 @@ zero (which is not actually average since the categorical variables are not stan
 ```{r}
 base_surv <- surv_fun(times = seq(from = min(dev$TEVENT), to = max(dev$TEVENT),
                                   by = 1), lp = 0)
-plot(base_surv, type = "l")
+plot(basehaz(fit)[, 2], 1-basehaz(fit)[, 1], type = "l", col = "blue")
+
+lines(base_surv, type = "l")
 ```
 
 Or get baseline hazard

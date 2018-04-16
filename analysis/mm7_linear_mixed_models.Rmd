@@ -1,0 +1,214 @@
+---
+title: "Linear Mixed Models"
+author: "Wouter van Amsterdam"
+date: 2018-01-19
+output: html_document
+---
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+```
+
+<!-- Update knitr chunk options -->
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+<!-- Insert the date the file was last updated -->
+```{r last-updated, echo=FALSE, results='asis'}
+```
+
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+```{r code-version, echo=FALSE, results='asis'}
+```
+
+<!-- Add your analysis here -->
+
+## Intro
+
+Tutor: Jan van de Broek
+
+## Dependent data
+
+Think about the sampling unit (e.g. patient, cow). 
+
+1 person with multiple observations = 'dependent' data 
+
+### Formalism
+
+**Random independent variables**
+
+- independent variables $\epsilon_{i1}, \epsilon_{i2}, \epsilon_{i.} \sim{N(0,\sigma)}$,
+- $cor(\epsilon_{ij}, \epsilon_{ik}) = 0$ if $j \neq k$
+
+**Add common fixed effect**
+
+- $y_{ij} = \epsilon_{ij} + b_i$; $y_{ik} = \epsilon_{ik} + b_i$; 
+
+If $\epsilon$ were independent, so are $y$.
+
+(This is equivalent to the ANOVA)
+
+**Add a random number to both epsilons**
+
+- rondomness: take all possible outcomes under consideration with attached 
+probability distribution
+- consider $b_i$ as a random variable from a known / hypothesied distribution; 
+then you need to consider all possible 
+values and probability distribution
+
+This gives correlated data, due to the random effect.
+
+### Linear model with random and fixed effects
+
+With $i$ subjects, $j$ observations per subject
+
+$y_{ij} = \beta_0 + b_{0i} + \epsilon_{ij}$
+
+$b_{0i} \sim N(0,\sigma_{int})$
+
+Equivalent to ANOVA model, but 
+- group-effect = subject effect
+
+- $j$ counts over observation within subject, not subjects in group
+
+If you take subject effect as fixed, you cannot generalize to other subjects
+Taking subject-effect as random with a known distribution, will allow you 
+to generalize.
+
+As all $b_{0i}$ are drawn from the same distribution $N(0, \sigma_{int})$. The correlation 
+between intra-subject observation will be the same.
+This correlation structure is called the exchangeable correlation structure 
+(equivalent to compound symmetry).
+
+Target is not to get estimates of the subject-effects for individual subjects,
+but the distribution (variance) of the random subject effects
+
+### With regression
+
+Difference intercept the same slope, **analysis of covariance**
+
+$y_{ij} = \alpha_i + \beta x + \epsilon_{ij}$
+
+$y_{ij} = \alpha + (\alpha_i - \alpha) + \beta x + \epsilon_{ij}$
+
+$y_{ij} = \beta_0 + b_{0i} + \beta_1 x + \epsilon_{ij}$
+
+Where $b_{0i}$ as the random effect per subject, 
+$\beta_1$ the same for all subjects.
+
+- Random part: $b_{0i} + \epsilon_{ij}$
+- Fixed part: $\beta_0 + \beta_1 x$
+
+
+$b_{0i} \sim N(0, \sigma_{intercept})$ Variance of population of which you draw 'intercepts'
+
+We can also take a fixed intercept, and random slopes for each subject.
+Then $\beta_{i1} \sim N(0, \sigma_{slope})$
+
+Then the correlation between different time-points can be different.
+
+- $y_{i1} \sim 1*b_{1i}$ 
+- $y_{i2} \sim 2*b_{1i}$ 
+- $y_{i3} \sim 3*b_{1i}$ 
+- $y_{i4} \sim 4*b_{1i}$
+
+So correlation $cov(y_{i1}, y_{i2}) > cov(y_{i1}, y_{i3})$
+
+### Likelihood
+
+Random effects parts will be biased (variances $/\sqrt{n}$ vs $/\sqrt{n-1}$.
+
+Get transformed likelihood that does not depend on fixed effects.
+
+Restriced maximul likelihood estimating: REML
+
+Wrong way to do it: 
+
+Fixed model 1 -> transformation 1 -> random effects part 1
+Fixed model 2 -> transformation 2 -> random effects part 2
+
+Comparing models: both fixed parts, and random effects parts;
+Both can vary at the same time (which makes it impossible to see 
+if fixed parts are different and/or random effects are different)
+
+
+
+### Summary
+
+**In a mixed effects model:**
+
+- **random parts** models correlation structure (i.e. dependency, 
+e.g. random intercept or slope per subject) 
+- **fixed parts** models patterns in the data
+
+Modelling is sequential
+
+With full-model determine random part. Then get more parsimonious model 
+for fixed-model.
+
+Works with generalized linear models
+
+
+## With data
+
+```{r}
+require(dplyr)
+data("ChickWeight")
+str(ChickWeight)
+```
+
+
+```{r}
+library(nlme)
+fit1 <- lme(weight ~ factor(Time)+factor(Time):Diet, 
+           random = ~factor(Time)+1|Chick,
+           data = ChickWeight %>% filter(Time <= 6 & Diet %in% c(1,2)),
+           method = "REML") # REML is default value for method
+
+fit2 <- lme(weight ~ factor(Time)+factor(Time):Diet, 
+           random = ~factor(Time)-1|Chick,
+           data = ChickWeight %>% filter(Time <= 6 & Diet %in% c(1,2)),
+           method = "REML")
+
+fit3 <- lme(weight ~ factor(Time)+factor(Time):Diet, 
+           random = ~1|Chick,
+           data = ChickWeight %>% filter(Time <= 6 & Diet %in% c(1,2)),
+           method = "REML")
+
+summary(fit1)
+summary(fit2)
+```
+
+
+Without main effect of Diet, Diet is modeled as a nested effect.
+
+```{r}
+getVarCov(fit1, type = "marginal")
+```
+
+```{r}
+anova(fit1, fit2, fit3)
+```
+
+#### With lme4
+
+Does not work yet
+```{r, eval = F}
+library(lme4)
+
+fit1 <- 
+  ChickWeight %>%
+  filter(Time <= 10 & Diet %in% c(1,2)) %>%
+  lme4::lmer(formula = weight ~ Diet + 
+           (factor(Time)|Chick), REML = T)
+```
+
+
+## Session information
+
+<!-- Insert the session information into the document -->
+```{r session-info}
+```

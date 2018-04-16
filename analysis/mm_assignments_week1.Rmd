@@ -1,0 +1,1136 @@
+---
+title: "Assignments Modern Methods in Data Analysis, week 1"
+author: "Wouter van Amsterdam"
+date: 2018-01-08
+output: html_document
+---
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+```
+
+<!-- Update knitr chunk options -->
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+<!-- Insert the date the file was last updated -->
+```{r last-updated, echo=FALSE, results='asis'}
+```
+
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+```{r code-version, echo=FALSE, results='asis'}
+```
+
+<!-- Add your analysis here -->
+
+## Setup
+
+
+### Load some packages
+
+```{r, message = F}
+library(epistats) # contains 'fromParentDir' and other handy functions
+library(magrittr) # for 'piping'  '%>%'
+library(dplyr)    # for data mangling, selecting columns and filtering rows
+library(ggplot2)  # awesome plotting library
+library(stringr)  # for working with strings
+library(purrr)    # for the 'map' function, which is an alternative for lapply, sapply, mapply, etc.
+```
+
+For installing packages, type `install.packages(<package_name>)`, for instance:
+`install.packages(dplyr)`
+
+`epistats` is only available from GitHub, and can be installed as follows:
+
+```{r, eval = F}
+install.packages(devtools) # when not installed already
+devtools::install_github("vanAmsterdam/epistats")
+```
+
+
+
+## Day 1 Linear models
+
+> First read in the data:
+
+
+```{r}
+y <- c(87,86.5,89,88.5,87.5,88,86.5,87,85,86,85,83)
+dose <- c(5,6,7,8,9,10,5,6,7,8,9,10)
+group <- c(0,0,0,0,0,0,1,1,1,1,1,1)
+
+
+model.an <- glm(y~factor(group), family = gaussian)
+
+names(model.an)
+model.an$coefficients
+summary(model.an)
+```
+
+Fit without interaction
+
+```{r}
+model.anc <- glm(y~factor(group)+dose, family = gaussian)
+summary(model.anc)
+drop1(model.anc, test = "F")
+```
+
+Get interaction plot
+
+```{r}
+interaction.plot(dose, group, y, mean, ylab = "Blood pressure")
+```
+
+### Excercise 1
+
+```{r}
+load(fromParentDir("data/starfish.RData"))
+str(starfish)
+```
+
+#### a. create boxplot
+```{r}
+boxplot(metabole~location, data = starfish)
+```
+
+#### b. fit ANOVA
+```{r}
+fit <- lm(metabole~location, data = starfish)
+summary(fit)
+```
+
+#### c. create ANOVA table
+(requires some extra work, but this gets you in the direction)
+
+```{r}
+aov(fit)
+```
+
+#### d. test group differences
+
+From the summary it is clear that the mean metabole is 
+not significantly different between the two locations.
+
+We are testing:
+
+$$H_0: mean(metabole_{LocA}) = mean(metabole_{LocB}) = mean(metabole)$$
+
+Versus
+
+$$H_1: mean(metabole_{LocA}) \neq mean(metabole_{LocB})$$
+
+### 2. Hormone treatment and blood calcium
+
+I could not find the data file, so here is it:
+
+```{r}
+df <- data.frame(
+  sex = rep(rep(c("Female", "Male"), each = 5), 2),
+  hormone = rep(c(TRUE, FALSE), each = 10),
+  calcium = c(17, 18.9, 13.2, 14.6, 13.3,
+              16.5, 14.3, 10.9, 15.6, 8.9,
+              18.6, 16.2, 12.5, 15.1, 16.2,
+              17.1, 14.7, 15.3, 14.2, 12.8)
+  )
+
+df
+```
+
+#### a. create boxplot
+
+```{r}
+boxplot(calcium ~ sex + hormone, data = df)
+```
+
+#### b. fit ANOVA
+
+```{r}
+fit <- lm(calcium ~ factor(sex) + factor(hormone), data = df)
+```
+
+#### c. test hypothosis
+
+```{r}
+summary(fit)
+```
+
+For both grouping variables, there is no significant difference between the means of the calcium levels.
+
+#### e. estimate difference between hormone groups
+
+```{r}
+df %>%
+  group_by(hormone) %>%
+  summarize(mean(calcium))
+```
+
+### 3. Alligators
+
+Load data
+
+```{r}
+load(fromParentDir("data/alligator.RData"))
+str(alligator)
+```
+
+#### a. scatterplot
+
+```{r}
+plot(WEIGHT~LENGTH, data = alligator)
+```
+
+#### b. Scatterplot with log-transform
+
+```{r}
+plot(log(WEIGHT)~log(LENGTH), data = alligator)
+```
+
+#### c. compare
+
+The relationship between $ln(weight)$ and $ln(length)$ seems to 
+fit a straight line better.
+
+#### d. linear fit
+
+```{r}
+fit <- lm(log(WEIGHT)~log(LENGTH), data = alligator)
+fit$coefficients
+```
+
+This gives rise to the following equation:
+
+$$ln(Weight_i) = `r myround(fit$coefficients[0], 1)`*ln(Length_i) + `r myround(fit$coefficients[1], 1)`$$
+
+#### e. ANOVA table and conclusion
+
+```{r}
+aov(fit) %>% summary()
+```
+
+There seems to be a significant relationship between length and weight.
+
+Looking at the model fit 
+
+```{r}
+summary(fit)
+```
+
+The $R^2$ is very high, so most of the variation in weight 
+can be explained with length.
+
+### Excercise 4. Blood pressure and treatment
+
+*This excercise was skipped for now*
+It is not completely clear which dataset is referred to.
+
+```{r}
+bp <- data.frame(
+  treatment = rep(c("placebo", "treatment"), each = 6),
+  sbp = c(87,68.5,89,88.5,87.5,88,
+          86.5,87,85,86,85,83))
+```
+
+### 5. Low birth weight
+
+```{r}
+lowb <- read.table(file = fromParentDir("data/lowbirth.dat"),
+                   header = T)
+head(lowb)
+```
+
+#### a. fit model for bwt
+
+```{r}
+fit <- glm(bwt~ht*(smoke+age), family = gaussian, data = lowb)
+summary(fit)
+```
+
+#### b. interaction terms interpretation
+
+There seems to be no interaction between hypertension and 
+smoking. 
+In other words, the effects of both smoking and hypertension on 
+birthweight are independent of each other.
+
+There is a significant interaction between hypertension and age.
+
+The coefficient for hypertension decreases with increasing age 
+(since the sign of the interaction is negative). At first it seems 
+counter-intuitive that birthweight is higher when the mother has hypertension.
+However, upon inspection of the interaction, it is clear that the effect 
+of hypertension decreases with 130 for each year in age. So the hypothetical 
+mother of age 0 will have babies that are 2568 heavier than average when they 
+have hypertension. From 20 years onward, the effect of hypertension on 
+birtweight will be negative, as expected. Then, for increasing age, the
+ effect of hypertension on birth weight will keep on getting more negative.
+
+#### c. check dropping of interaction
+
+```{r}
+drop1(fit, test = "F")
+```
+
+The interaction between hypertension and smoking can be dropped.
+
+```{r}
+fit2 <- glm(bwt ~ ht * age + smoke, 
+            data = lowb, family = gaussian)
+summary(fit2)
+drop1(fit2, test = "F")
+```
+
+```{r}
+fit3 <- glm(bwt ~ ht + ht:age + smoke, 
+            data = lowb, family = gaussian)
+summary(fit3)
+drop1(fit3, test = "F")
+
+fit4 <- glm(bwt ~ ht:age + smoke, 
+            data = lowb, family = gaussian)
+summary(fit4)
+drop1(fit4, test = "F")
+
+```
+
+
+Now removing the group effect of smoke will significantly reduce 
+the F value of the model, 
+and also the interaction between hypertension and age cannot be reduced.
+
+This is the most parsimonious model we can get without losing
+goodness of fit.
+
+Birthweight decreases with smoking as expected, and decreases in the presence 
+of hypertension. For older mothers, the effect of hypertension gets stronger.
+
+## Day 2. Logistic regression part 1
+
+### R commands
+
+First the data file needs to be read in. The data is in episode.txt. It
+is a text file. The first lines are:
+
+    episode followup  cd4  age
+        0   24  125   35
+        0   12   50   34
+        1    6   30   37
+        0    6   80   36
+        0    3  170   35
+        0    6   95   26
+        0    4   35   44
+        0    3   50   42
+        2    6   25   64
+
+The first line contains the column names. This can be read in with the
+command **read.table()**. This results in a data frame object. A data
+frame contains several columns of data. These columns can be of
+different type: they can be a grouping variable, a continuous variable
+or a variable containing characters. We will call the data frame
+epi.dat:**epi.dat $<-$ read.table(file=“episode.txt”, header=TRUE)**.The
+header=TRUE states that the first line contains the column names.
+
+In this file the columns are separated by spaces. Often a different
+separator is used, for instance a comma, called a csv (comma separated
+value) file. Then one can use :\
+**read.table(file=“episode.txt”, header=TRUE, sep=“,”)**. To see what
+the names of the columns are: **names(epi.dat)**. To look at a specific
+column, e.g. cd4: **epi.dat\$cd4**. So if you want to use a variable
+from a data frame, use the name of that data frame, then a dollar sign’
+followed by the column name. In the cd4 column the cd4 values of the
+patients are stored. From this we need to make a new column which has a
+1 if the cd4 value is smaller than 200 and a zero otherwise. To do this
+use **cd4$<$200**. If you do this you see that you get a column with
+TRUE and FALSE in it. To make this a column with 0 and 1, multiply the
+statement with 1 and put the result in a column called immune: **immune
+$<-$ 1\*(cd4$<$200)**. This variable immune is in your workspace, not in
+the data frame. To get it in the data frame: **epi.dat
+$<-$data.frame(epi.dat,immune)**. The get rid of immune in the
+workspace: **rm(immune)**.
+
+Now we are ready to fit the models. If you do not like to type the name
+of the data frame, a dollar sign and the column name all of the time you
+can make it clear that you want to use the epi.dat data frame by :
+**attach(epi.dat)**. After this if you want to use a variable from this
+data frame just type the column name.
+
+If there is an exposure in the data file that is a group variable, coded
+other than 0-1, then you should tell this to R by using the function
+**factor()**. So **factor(group)** tells R that group is not a numeric
+variable but that its values should be used as group labels. To fit the
+logistic regression model with immune as an exposure variable use\
+**fit $<-$ glm(episode$\sim$immune,family=binomial)**\
+The command **summary(fit)** will give you the results.\
+For every patient also the follow-up time is recorded. It might
+sometimes be a good idea to model the odds per month follow-up, thus to
+use the model
+$ \ln \left( \frac{\pi}{1-\pi}\ /followup \right)=\alpha+\beta \cdot immune$.
+Rewriting gives :\
+$\ln \left(\frac{\pi}{1-\pi}\right)=\alpha+\beta \cdot immune+\ln(followup)$,
+that is followup is in the model without a coefficient attached to it.
+To achieve this in R the term **offset** is used:
+**glm(episode$\sim$immune+offset(log(followup)), family=binomial)**.\
+To fit the logistic regression model 3 use: **model3 $<-$
+glm(episode$\sim$immune+age,family=binomial)**.\
+model3 will contain the result. It will be an object of glm-type because
+you used glm to create it. To see what is in it use **names(model3)**
+and if you want to see something specific use e.g.
+**model3\$coefficients**. To get the tables from the text :
+**summary(model3)**. Profile confidence intervals can be obtained by:
+**confint(fit3)** and the wald intervals by **confint.default(fit3)**.
+The deviance residuals can be obtained by **residuals(model3)** and the
+fitted values by **fitted.values(model3)**.\
+Now you can leave out 1 variable from the model and look at the
+differences in AIC’s. You can do this by fitting all the different
+models and then comparing them. You can also use the function
+**drop1(fit)**. This function looks at the terms in fit, then leaves the
+terms out one by one and calculates for every term left out the AIC of
+the model. The command **drop1(fit, test=“Chisq”)** calculates the
+likelihood ratio test for every term left out. Then you can fit a model
+by leaving out the variable with the least influence and then start the
+procedure all over again using this last model as a starting point, etc.
+For the AIC this can also be done automatically: **step(model3)**.
+
+
+### 1. episode.txt
+
+
+    1.  Reproduce the output for the 2 models for episode from the text.
+        (First read in the data from episode.txt)
+
+We will use `dplyr` to assign a new column in the dataframe called 'immune'
+
+```{r}
+require(dplyr) # this makes sure that dplyr is loaded
+require(magrittr) # for handy piping
+
+epi <- read.table(file = fromParentDir("data/episode.txt"), header = T)
+
+epi %<>%
+  mutate(immune = cd4<200)
+
+head(epi)
+
+```
+
+Fit glm model
+
+```{r}
+fit <- glm(episode~immune, family = binomial, data = epi)
+summary(fit)
+```
+
+Fit glm model with offset for follow-up time
+
+```{r}
+fit2 <- glm(episode~immune+offset(followup), data = epi, family = binomial)
+summary(fit2)
+```
+
+This results in very different coefficients
+
+Fit model with age
+
+```{r}
+fit3 <- glm(episode~immune+age, family = binomial, data = epi)
+drop1(fit3, test = "Chisq")
+```
+
+Age does not seem to be important for modeling episode
+
+    2.  This datafile also contains the variable followup. This is the
+        time a patient is in the study. Fit a logistic regression model
+        with the log of the follow up time as an exposure variable and
+        compare this model with the one that only contains an intercept
+        using the AIC.
+        
+```{r}
+fit0 <- glm(episode~1, data = epi, family = binomial)
+fit1 <- glm(episode~log(followup), data = epi, family = binomial)
+
+AIC(fit0, fit1)
+```
+
+
+    3.  It is possible to fit a model with an exposure with a fixed
+        coefficient of 1. The way to do it is to use the function
+        offset: **glm(episode $\sim$
+        offset(log(followup)),family=binomial)**. Fit this model and
+        compare the AIC with the former one.
+
+```{r}
+fit2 <- glm(episode~offset(log(followup)), family = binomial, data = epi)
+AIC(fit1, fit2)
+```
+
+    4.  Write down the logistic regression model for the model with the
+        offset. Give an interpretation of this model.
+
+```{r}
+fit4 <- glm(episode~immune+offset(log(followup)), family = binomial, data = epi)
+summary(fit4)
+```
+
+Since we use the follow-up time as an offset, we are modeling the odds 
+of experiencing an event per year (since `followup` is in years)
+
+$$\ln{(\frac{\pi}{1-\pi}*\frac{1}{time}}) = \alpha + \beta*x$$
+
+So that makes
+
+$$\pi = \frac{1}{1+e^{-(\alpha + \beta*x + \ln(time))}}=\frac{1}{1+e^{-(\alpha + \beta*x)}/time}$$
+
+When time goes to infinity, probability of an event goes to 1, which makes sense.
+Also, the probability (density?) is greater for patients with compromised immune 
+status.
+
+
+```{r}
+odds_0 <- exp(predict(fit4, newdata = data.frame(immune = F, followup=10)))
+odds_1 <- exp(predict(fit4, newdata = data.frame(immune = T, followup=10)))
+odds_10000 <- exp(predict(fit4, newdata = data.frame(immune = F, followup=10000)))
+p0 = odds_0 / (1+odds_0)
+p1 = odds_1 / (1+odds_1)
+p10000 = odds_10000 / (1+odds_10000)
+```
+
+Given 10 year of follow-up, a patient with an intact immune system has 
+a probabilty of `r myround(100*p0, 1)`% for an event, while a patient 
+with compromized immune system has a probability of `r myround(100*p1, 1)`
+
+A patient with intact immune system and 10000 years of follow-up 
+has a probability of `r myround(100*p10000, 1)`%
+
+Note that we could also use `predict(fit4, newdata = ..., type = "response")` 
+to get the probabilities directly. However, this way we can show the relationship 
+with the logistic model.
+
+
+
+### 2. lowbirth.dat
+
+    1.  Read in the dataset lowbirth.dat
+
+```{r}
+lowb <- read.table(fromParentDir("data/lowbirth.dat"), header = T)
+```
+
+    2.  Fit three models, one with exposure age, one with exposure smoke
+        and one with exposure ht.
+
+Probably they want us to model `low` as an outcome
+
+```{r}
+fit1 <- glm(low ~ age, data = lowb, family = binomial)
+fit2 <- glm(low ~ smoke, data = lowb, family = binomial)
+fit3 <- glm(low ~ ht, data = lowb, family = binomial)
+```
+
+
+    3.  For all 3 models give an interpretation of the estimate of
+        $\beta$ for the specific exposure at hand.
+        
+```{r}
+lapply(list(fit1, fit2, fit3), coefficients)
+```
+
+Age has a negative $\beta$, so according to this model, the probability of 
+low birthweight will decrease with age (which probably is not true)
+
+    4.  Compare all 3 models to the model with only an intercept in it
+        using AIC. Calculate for each the likelihood ratio and give this
+        an interpretation.
+
+We will use `map` from `purrr`, which applies a function to each element of its 
+input.
+```{r}
+fit0 <- glm(low ~ 1, data = lowb, family = binomial)
+
+AIC(fit0, fit1, fit2, fit3)
+
+ls <- list(fit0, fit1, fit2, fit3) %>%
+  map(logLik) %>%
+  map_dbl(exp)
+
+lrs <- ls / ls[1]
+lrs
+```
+
+All AICs are close, but fit2 is the lowest and it is better than fit0.
+
+The likelihood ratio for fit2 (vs fit0) is also highest (11.4)
+
+    5.  Also compare the 3 models with each other by comparing AIC. Also
+        calculate likelihood ratios.
+
+```{r}
+ls[3] / ls[2]
+ls[3] / ls[4]
+ls[4] / ls[2]
+```
+
+fit2 > fit3 > fit1 according to both likelihood ratios and AIC.
+
+Since all models have exactly 1 predictor, this was to be expected.
+
+    6.  Which model fits the data best? Give your argumentation.
+
+fit2, it has the lowest AIC.
+
+### 3. pdd.csv
+
+    1.  Read in the data file pdd.csv
+
+```{r}
+pdd <- read.csv(fromParentDir("data/pdd.csv"))
+head(pdd)
+```
+
+
+        Note that this file is different from the other files. It
+        doesn’t have a 0-1 variable in it. Instead the data is grouped.
+        The column pdd contains the number of parrots with PDD and the
+        column $n$ contains the total number of parrots. So $n-pdd$ is
+        the number of parrots without PDD. As an example, line number 6
+        states: there were 16 male parrots, from the NOP, having no
+        arteriosclerosis, and 5 of these had PDD. To fit a logistic
+        regression model the dependent variable is not just one column.
+        It is a matrix containing the number of PDD-cases and the number
+        without PDD. So the dependent variable is :
+        **cbind(pdd,n-pdd)**. cbind stands for column bind: it binds
+        together two columns into a matrix. The model can now be fitted
+        with: **glm(cbind(pdd,n-pdd)$\sim$ exposure, family=binomial)**
+
+    2.  How many PDD cases are there from the NOP center (type:
+        **pdd\[nop==1\]**) and how many parrots in total? Answer the
+        same question for parrots not from the nop center. (type:
+        **pdd\[nop!=1\]**).
+
+For these situations, `dplyr` comes in handy        
+```{r}
+pdd %>%
+  group_by(nop) %>%
+  summarize(n_pdd = sum(pdd))
+```
+
+        If you want to know what the square brackets stand for, type:
+        **RSiteSearch(“indexing”,restrict=“docs”)** then go to “an
+        introduction to R” and then to chapter 2.7 and read it.
+
+    3.  Use the previous exercise to make a table of pdd by nop.
+
+```{r}
+pdd %>%
+  group_by(nop) %>%
+  summarize(n_pdd = sum(pdd), n_no_pdd = sum(n-pdd))
+```
+    4.  Calculate the odds ratio and give it an interpretation. Why does
+        the outcome seem logical?
+
+```{r}
+or <- (45*138)/(20*105)
+or
+```
+
+There are more parrots with pdd for NOP, therefore the odds ratio is greater 
+then 1.
+
+    5.  Fit the logistic regression model with nop as exposure and
+        compare the results with those from the previous question.
+
+```{r}
+fit <- glm(cbind(pdd, n-pdd) ~ nop, data = pdd, family = binomial)
+summary(fit)
+exp(fit$coefficients[2])
+```
+
+The odds ratio coincides with the odds ratio from the logistic regression model
+
+### 4. Dalmatian.cvs
+
+    1.  Read in the data file dalmatian.csv.
+
+```{r}
+dalmatian <- read.csv(fromParentDir("data/dalmatian.csv"))
+str(dalmatian)
+```
+
+
+    2.  Explain how the variable fhs deals with the heritability.
+
+This description is copied from Classical Methods in Data Analysis, 
+day 11 logistic regression:
+
+> In the years 1995 through 1998 a research was done among 1243 Dalmatian puppies. It was determined whether or not they were deaf in at least one ear. The research question was if deafness was related to pigmentation. In order to answer this it was measured whether or not there were many spots on the skin, whether or not they had a spot on the head and whether or not the dog had blue eyes. In addition one wants to determine if there was heredity involved. In order to look at this the family history score was determined. This is a method to cope with litter effects (heredity): for every puppy it was determined how many brothers or sisters were deaf. Call this number m. Then from the whole dataset the fraction of dogs that are deaf can be determined. This fraction is multiplied by litter size - 1. This is then the expected number of deaf brothers or sisters when there are no differences between litters. The family history score is now defined as fhs = m - fraction * (litter size - 1) Whether or not the puppy is deaf (0=no, 1=yes) deaf The number of spots on the skin (1=light, 2=moderate, 3=heavy) spot Whether or not the dog had blue eyes (0=no, 1=yes) blueeye Whether or not the dog had an spot on the head (0=no, 1=yes) headspot Gender (0=male, 1=female) gender Family history score fhs
+
+Basically it is the difference between the proportion of deaf dogs in a litter 
+minus the expected proportion of deaf dogs in that litter if all litters were 
+equal ('the marginal probability').
+
+    3.  Fit the logistic regression model for deaf, with fhs as an
+        exposure variable.
+        
+```{r}
+fit1 <- glm(deaf ~ fhs, data = dalmatian, family = binomial)
+summary(fit1)
+```
+
+
+    4.  Compare the AIC of the previous model with the model that only
+        contains a constant. Also calculate the likelihood ratio and
+        interpret the results.
+
+```{r}
+fit0 <- glm(deaf ~ 1, data = dalmatian, family = binomial)
+
+AIC(fit0, fit1)
+
+exp(as.numeric(logLik(fit1) - logLik(fit0)))
+```
+
+The AIC for the model with the hereditability variable is much lower, 
+and the likelihood ratio is over $10^13$, so it seems that hereditability 
+is important to explain the number of deaf dogs in a litter.
+
+Lets plot the distribution of fhs for deaf and non-deaf dogs:
+
+```{r}
+require(ggplot2)
+
+dalmatian %>%
+  mutate(deaf = factor(deaf)) %>% # treat deaf as factor variable
+  ggplot(aes(x = fhs, fill = deaf, col = deaf)) + 
+  geom_density(alpha = 0.5)
+```
+
+
+## Exercises 2
+
+### 1. osteochon.csv
+
+    1.  Read in the data file osteochon.csv
+    
+```{r}
+ost <- read.csv(fromParentDir("data/osteochon.csv"))
+str(ost)
+```
+
+    2.  Fit a logistic regression model with the exposure variables
+        food, ground and height.
+
+```{r}
+fit <- glm(oc ~ food + ground + height, data = ost, family = binomial)
+summary(fit)
+```
+
+
+    3.  Give for each exposure variable the likelihood ratio test, when
+        it is left out of the model. Decide which exposure should be
+        left out.
+
+```{r}
+drop1(fit, test = "Chisq")
+```
+
+Both `food` and `ground` can be removed from the model without significantly
+reducing the likelihood of the model. When we are doing stepwise elimination,
+we should first remove `food` from the model.
+
+    4.  Fit the model without that exposure and do the same with this
+        model as above. Continue until you decide nothing can be left
+        out anymore.
+
+```{r}
+fit2 <- glm(oc ~ ground + height, data = ost, family = binomial)
+drop1(fit2, test = "Chisq")
+
+```
+
+We can remove `ground` here as expected. Notice that the p-value 
+for removing `ground` from the model is exacty the same as in the previous step
+
+```{r}
+fit3 <- glm(oc ~ height, data = ost, family = binomial)
+drop1(fit3, test = "Chisq")
+
+```
+
+Only `height` remains, we can not remove that one.
+
+    5.  Describe the final model you are left with and interpret the
+        result.
+
+```{r}
+summary(fit3)
+```
+
+In our final model, we see that only `height` is included.
+When height increases, the odds of getting osteochondrosis increases.
+
+    6.  Give profile confidence intervals for the estimates in the final
+        model and
+
+```{r}
+confint(fit3)
+```
+
+From the help page `help(confint)` we can read that this function 
+calls method `confint.glm` from package `MASS`, which uses the profile 
+method (and not the Wald method), which we want.
+
+    7.  Write a short account of the analysis you just did. It should
+        contain what the analysis was and its results.
+
+Left to reader.
+
+### 2. episode.txt
+
+    1.  Read in the file episode.txt
+
+```{r}
+episode <- read.table(fromParentDir("data/episode.txt"), header = T)
+str(episode)
+```
+
+    2.  Fit the logistic regression model with exposures immune and age
+        and with log(followup) as an offset.
+
+```{r}
+fit <- glm(episode ~ cd4 + age + offset(log(followup)), data = episode, 
+           family = binomial)
+summary(fit)
+```
+
+
+    3.  Interpret the parameters and discuss the difference with the
+        model without the offset.
+
+```{r}
+fit2 <- glm(episode ~ cd4 + age, data = episode, 
+           family = binomial)
+summary(fit2)
+```
+
+In the model without the offset, only the intercept changes. 
+This indicates that the baseline risk is dependent on follow-up (which makes sense),
+but there seems to be no confounding effect of follow-up on CD4 or age.
+
+    4.  Can immune or age or both be left out? Use AIC to check this.
+
+```{r}
+drop1(fit2)
+```
+
+Age can be left out, it will make the AIC decrease
+
+### 3. osteochon.csv
+
+    1.  Read in the data file osteochon.csv
+
+```{r}
+ost <- read.csv(fromParentDir("data/osteochon.csv"), header = T)
+str(ost)
+```
+
+
+    2.  Fit the logistic regression model with exposures father, food,
+        ground and heigt. (Remember to use factor() for food, ground and
+        father)
+        
+```{r}
+fit <- glm(oc ~ factor(father)+factor(food)+factor(ground)+height, 
+           data = ost, family = binomial)
+summary(fit)
+```
+
+
+    3.  Use likelihood ratio tests to see which exposure can be left
+        out, then fit that model and again see which exposure can be
+        left out. Continue until no more exposures can be left out.
+
+```{r}
+drop1(fit, test = "Chisq")
+```
+
+Let's drop `food` as it has a LRT < 1
+
+```{r}
+fit2 <- glm(oc ~ factor(father)+factor(ground)+height, 
+           data = ost, family = binomial)
+drop1(fit2, test = "Chisq")
+```
+
+Let's drop `ground` since the $\chi^2$ test is not significant 
+(it does not significantly reduce the likelihood of our model)
+
+```{r}
+fit3 <- glm(oc ~ factor(father)+height, 
+           data = ost, family = binomial)
+drop1(fit3, test = "Chisq")
+```
+
+We cannot reduce the model any further.
+
+    4.  Discuss the final model. Give a possible interpretation of the
+        terms in the model and why they are likely to be related to
+        osteochondrosis.
+        
+Left for your own interpretation.
+
+    5.  Start off with the full model again and try to reduce it by
+        using AIC.
+
+
+```{r}
+drop1(fit)
+```
+
+Let's drop `father` as it decreases the AIC the most
+
+```{r}
+fit2 <- glm(oc ~ factor(food)+factor(ground)+height, 
+           data = ost, family = binomial)
+drop1(fit2)
+```
+
+Let's drop `food`
+
+```{r}
+fit3 <- glm(oc ~ factor(ground)+height, 
+           data = ost, family = binomial)
+drop1(fit3)
+```
+
+Let's drop `ground`. Losing this variable does not change the AIC more than 
+2, but is is a simpler model so it is preferrable by 'Ockham's razor'
+
+```{r}
+fit3 <- glm(oc ~ height, 
+           data = ost, family = binomial)
+drop1(fit3)
+
+```
+
+We cannot reduce the model any further without decreasing the likelihood.
+
+    6.  Is the final model the same as the one you got with the
+        likelihood ratio tests? Can you explain this?
+
+The `father` model takes up 29 degrees of freedom, because it has 30 uniqe values.
+This makes the model estimate 29 parameters (means for each group). 
+The AIC 'punishes' more complex models by adding 2 for each included predictor.
+
+    7.  Give the 95% profile confidence interval for height and give the
+        interpretation of this.
+
+```{r}
+confint(fit3)
+```
+
+This confidence interval does not include 0. This means that for any null 
+hypothesis of $\beta_{height}$ within this confidence interval, 
+we would not reject the null-hypothesis, given these data.
+
+### 4. lowbirth .dat
+
+This was skipped for now, see the previous excercise
+
+    1.  Fit the logistic regression model with exposures age, lwt, race,
+        smoke, ptl, ht, ui and ftv.
+
+    2.  Find out which exposures can be left out using AIC.
+
+    3.  Discuss the final model.
+
+    4.  Write a short report about your findings. Include the
+        statistical model you used, the method you used to reduce this
+        model and the final results (estimates and standard errors).
+
+## Day 5. Poisson and GLM
+
+### 1. Lung cancer
+
+> To the lung cancer count data from the text, fit the model $\ln(\mu)=\beta_0+\ln(population\;size/1000)+CITY+AGE  $. The offset is population size in thousands.
+
+```{r}
+lung <- read.table(fromParentDir("data/cancer"), header = T)
+str(lung)
+```
+
+```{r}
+fit <- glm(cases ~ offset(log(pop/1000)) + factor(city) + factor(age), 
+           data = lung, family = poisson)
+summary(fit)
+```
+
+> Make a plot of the deviance residuals against the fitted values and discuss this plot.
+
+```{r}
+plot(fit, which = 3)
+```
+
+For the lower predicted values, there are some observations with high deviance,
+ namely 12, 7 and 18. There does not seem to be a lot of structure in the 
+ residuals, which indicates that the model fit's the data pretty well.
+
+>  See which terms are needed in the model.
+
+```{r}
+drop1(fit)
+```
+
+Dropping `city` would decrease the AIC, so we can do that. Dropping `age` 
+increases the model by a great amount.
+
+```{r}
+fit2 <- glm(cases ~ offset(log(pop/1000)) + factor(age), 
+           data = lung, family = poisson)
+summary(fit2)
+```
+
+> Give the estimates of the best fitted model and give their profile likelihood intervals and discuss these.
+
+```{r}
+confint(fit2)
+```
+
+For each age group, the confidence interval does not include 0, 
+which implies a significant difference between the groups.
+
+The risk seems to increase monotonically up untill age catergory 5, after 
+which it decreases a little. 
+Let's see if there are enough observations in that category
+
+```{r}
+lung %>%
+  group_by(age) %>%
+  summarize(sum(pop))
+```
+
+The populution is not too small for this upper age category, 
+which gives us no reason to discard the possibility that risk goes down 
+a little for the upper age category.
+
+### 2. Coronary
+> The table above gives the number of coronary deaths for smokers and nonsmokers per age group. Read in the data.
+
+```{r}
+coronary <- read.table(fromParentDir("data/coronary"), header = T)
+str(coronary)
+```
+
+> Use a poisson model to analyze the data. Use the likelihood ratio tests to see which terms are needed in the model.
+
+```{r}
+fit <- glm(deaths ~ Age + Smoke + offset(log(Pyears/1000)), data = coronary,
+           family = poisson)
+summary(fit)
+drop1(fit, test = "Chisq")
+```
+
+
+We cannot reduce the model further without losing likelihood of our model
+
+> Give a careful interpretation of the estimates
+
+The rate of coronary events per person year increases with age, and is higher 
+for smokers. 
+
+> Are there age and smoke effects for the $\log($person years$)$. What can you say about the age effects and the smoke effects on the $\log($person years$)$
+
+```{r}
+fit2 <- glm(deaths ~ Age + Smoke, data = coronary, family = poisson)
+summary(fit2)
+```
+
+The estimate for age decreases and the estimate for smoke increases when 
+the offset of person years is disregarded. 
+
+This is an indication of confounding. As we can see immediately from the table,
+there are much less observed person years in the higher categories for age. 
+This reduces the number of deaths in these categories, and thus our estimate 
+of the effect of age.
+
+We also have observed more person years for smoking participants, 
+which increases the number of deaths in those categories and makes us 
+overestimate the effect of smoking on deaths if we disregard the person years
+offset.
+
+### 3. Eggs
+> In an experiment from 1996 the effects of crowding on reproductive properties of a certain species of leave beetle was examined. Cages of fixed size could contain either 1 male and 1 female or 5 males and 5 females. The temp variable contains the temperature which could be either 21 or 24. The TRT measurures the crowding which can be either "I" for cages with 1 female and ""G" for cages with 5 females. The variable of interest was the number of eggs  (NumEggs). A complicating feature is that in cages with 5 females, there is no easy way to indentify which females led a given eggmass.
+The variable unit can be disregarded 
+The data is in the file BeetleEggCrowding.txt .
+
+There is no real question in this description, but we will model the 
+number of eggs based on crowding and temperature. 
+For a sensible model interpretation, we will model the number of eggs per female,
+by including this as an offset.
+
+```{r}
+eggs <- read.table(fromParentDir("data/BeetleEggCrowding.txt"), header = T)
+str(eggs)
+```
+
+Lets set `Temp` to factor as it has only 2 levels.
+
+```{r}
+eggs %<>%
+  mutate(Temp = factor(Temp))
+```
+
+
+And create an offset variable for the number of females.
+
+This is a little tricky, first we assign the 'labels' 5 and 1 to the corresponding
+ groups 'G' and 'I'. 
+Then we tell R to treat this as a character (not a number, but more like a letter)
+Then we convert this to a numeric wich is what we want for it.
+
+There are different ways of doing this, but this works.
+
+One remark: internally, factors are represented as number in R. So each category 
+gets assigned an integer from 1 - nlevels. 
+Converting a factor variable to numeric directly will return the category number,
+but we wanted the actual '1' and '5', 
+so that's why we first need conversion to character and then to numeric
+
+```{r}
+eggs$females <- eggs$TRT %>%
+  factor(levels = c("G", "I"), labels = c(5, 1)) %>%
+  as.character() %>%
+  as.numeric()
+
+head(eggs)
+```
+
+Now lets model
+
+```{r}
+fit <- glm(NumEggs ~ Temp + TRT + offset(log(females)), data = eggs,
+           family = poisson)
+summary(fit)
+```
+
+We see that the number of eggs per female is higher in the 'I' group,
+so crowding reduces the number of eggs. Also, having a higher temperature 
+is leads to more eggs.
+
+Let's see if crowding and temperature interact.
+
+```{r}
+fit2 <- glm(NumEggs ~ Temp * TRT + offset(log(females)), data = eggs,
+           family = poisson)
+summary(fit2)
+```
+
+Yes they do. So now wee see that in the non-crowded situation, 
+a higher temperature does not increase the production as much as it 
+does in the crowded situation.
+
+## Session information
+
+<!-- Insert the session information into the document -->
+```{r session-info}
+```

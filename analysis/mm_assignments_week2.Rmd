@@ -1,0 +1,1486 @@
+---
+title: "Assignments Modern Methods in Data Analysis, week 2"
+author: "Wouter van Amsterdam"
+date: 2018-01-15
+output: html_document
+---
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+```
+
+<!-- Update knitr chunk options -->
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+<!-- Insert the date the file was last updated -->
+```{r last-updated, echo=FALSE, results='asis'}
+```
+
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+```{r code-version, echo=FALSE, results='asis'}
+```
+
+<!-- Add your analysis here -->
+
+## Setup
+
+### Load some packages
+
+```{r, message = F}
+library(epistats) # contains 'fromParentDir' and other handy functions
+library(magrittr) # for 'piping'  '%>%'
+library(dplyr)    # for data mangling, selecting columns and filtering rows
+library(ggplot2)  # awesome plotting library
+library(stringr)  # for working with strings
+library(purrr)    # for the 'map' function, which is an alternative for lapply, sapply, mapply, etc.
+```
+
+For installing packages, type `install.packages(<package_name>)`, for instance:
+`install.packages(dplyr)`
+
+`epistats` is only available from GitHub, and can be installed as follows:
+
+```{r, eval = F}
+install.packages(devtools) # when not installed already
+devtools::install_github("vanAmsterdam/epistats")
+```
+
+
+
+
+## Resampling
+> Most of the exercises below come from Moore and McCabe’s Introduction to Practical Statistics, (8th Ed) chapter 16; some have been adapted slightly.
+Note that for exercises 16.40 and further an R script with commands is available on Moodle. In the answers to the exercises, at the end of the current document, some extra explanation about the R commands is provided. You can also have a look at the following resource that explains most common bootstrap functions in R:
+http://www.statmethods.net/advstats/bootstrapping.html
+
+### Ex. 16.7 What is wrong?
+> Explain what is wrong with each of the following statements.
+
+#### (a) The bootstrap distribution is created by resampling with replacement from the population.
+
+It is created by resampling with replacement from the sample, not the population
+
+#### (b) The bootstrap distribution is created by resampling without replacement from the original sample.
+
+It is resampling with replacements
+
+#### (c) When generating the resamples, it is best to use a sample size larger than the size of the original sample.
+
+No, this will give falsly tight confidence bounds as you are simulating that 
+you have gathered a lot of data, while you have only simulated data.
+
+#### (d) The bootstrap distribution will be similar to the sampling distribution in shape, center, and spread.
+
+The bootstrap distribution is centered around the the sample mean, with sample 
+spread. These can be different from the population and thus different from the
+'true' sampling distribution
+
+### Ex. 16.40 Confidence interval for the average IQ score.
+> The distribution of the 60 IQ test scores in IQ.txt is roughly Normal (make a histogram and normal QQ-plot to check this), and the sample size is large enough that we expect a Normal sampling distribution. We will compare confidence intervals for the population mean IQ μ based on this sample.
+
+#### (a) Use the formula s/√n to find the standard error of the mean. Give the usual 95% confidence interval based on this standard error and the t distribution.
+
+```{r}
+iq <- read.table(fromParentDir("data/IQ.txt"), header = T)
+str(iq)
+
+qqnorm(iq$IQscore)
+```
+
+```{r}
+n    <- nrow(iq)
+mean <- mean(iq$IQscore)
+sd   <- sd(iq$IQscore)
+se   <- sd / sqrt(n)
+q_val<- qt(p = 0.025, df = n-1) 
+
+mean + c(-1, 1)*se*abs(q_val)
+```
+
+Compare with t-test
+
+```{r}
+t.test(iq$IQscore)$conf.int
+```
+
+
+> (b) Install the libraries boot and simpleboot and load them (using the facilities under the tab Packages in R or RStudio, or using the commands in the R script.)
+Bootstrap the mean of the IQ scores, with R = 10000 resamples. Make a histogram and Normal quantile plot of the bootstrap distribution. Does the bootstrap distribution appear Normal? What is the bootstrap standard error? Give the bootstrap t 95% confidence interval.
+
+Only need to do this once:
+```{r, eval = F, message = F}
+install.packages(c("boot", "simpleboot"))
+```
+
+```{r}
+library(boot)
+library(simpleboot)
+
+```
+
+```{r}
+set.seed(12345)
+bootresults <- one.boot(iq$IQscore, mean, R = 10000)
+
+mean(bootresults$t); sd(bootresults$t)
+
+qqnorm(bootresults$t)
+
+hist(bootresults$t)
+```
+
+Looks nicely normally distributed.
+
+Now for the 95% CI:
+
+```{r}
+mean(bootresults$t) + c(-1,1)*qt(0.025, df = nrow(iq)-1, lower.tail = F)*sd(bootresults$t)/sqrt(nrow(iq))
+```
+
+> (c) Give the 95% confidence percentile, BCa, and basic intervals. How well do your five confidence intervals  agree? Was bootstrapping needed to find a reasonable confidence interval, or was the formula-based confidence interval in (a) good enough?
+
+```{r}
+boot.ci(bootresults)
+```
+
+The bootstrapping intervals agree, they are all a little narrower than the 
+t-test based confidence interval, however the difference is small.
+
+This is an (approximately) normally distributed vriable, so the t-test 
+interval is accurate.
+
+### Ex. 16.65 A small-sample permutation test.
+
+> To illustrate the process, let’s perform a permutation test by hand for a small random subset of the DRP data (Example 16.11). Here are the data (different from those in the lecture):
+Treatment group	57 53
+Control group 		19 37 41 42
+(a) Calculate the difference in means xtreatment − xcontrol between the two groups. This
+is the observed value of the statistic.
+
+```{r}
+df <- data.frame(
+  treat = c("treat", "treat", "control", "control", "control", "control"),
+  x = c(57, 53, 19, 37, 41, 42)
+)
+
+diffx <- df %>% 
+  group_by(treat) %>% 
+  summarize(mean = mean(x)) %>%
+  pull(mean) %>%
+  diff()
+diffx
+```
+
+> (b) Resample: randomly shuffle the 6 scores, where the two first scores will have the treatment (1), and the last 4 have control (0). What is the difference in group
+means for this resample?
+
+```{r}
+set.seed(2)
+df %>%
+  mutate(treat = sample(treat)) %>% # shuffle treat
+  group_by(treat) %>%
+  summarize(mean = mean(x)) %>% # calculate mean by group
+  pull(mean) %>%
+  diff() # get difference
+```
+
+> (c) Repeat step (b) 1000 times to get 1000 resamples and 1000 values of the statistic. (Obviously you will not do this 1000 times by hand. Do it a few times by hand until you understand the procedure, then proceed with R.) Make a table of the distribution of these 1000 values. This is the permutation distribution for your resamples.
+
+```{r, cache = T}
+npermutations = 1000
+set.seed(2)
+
+diffs <- numeric(npermutations)
+
+for (i in 1:npermutations) {
+  diffs[i] <- df %>%
+    mutate(treat = sample(treat)) %>% # shuffle treat
+    group_by(treat) %>%
+    summarize(mean = mean(x)) %>% # calculate mean by group
+    pull(mean) %>%
+    diff() # get difference
+}
+```
+
+
+Look at the distribution of the differences
+```{r}
+hist(diffs)
+```
+
+
+> (d) What proportion of the 1000 statistic values were equal to or greater than the original value in part (a)? You have just estimated the one-sided P-value for the original 6 observations.
+
+```{r}
+mean(diffs >=diffx)
+```
+
+> (e) For this small data set, there are only 15 possible permutations of the data. As a result,
+we can calculate the exact P-value by counting the number of permutations with a statistic value greater than or equal to the original value and then dividing by 15. What is the exact P-value here?
+How close was your estimate?
+
+Create all permutations by making a matrix with all the possible positions 
+in the data where treatment can be located 
+
+```{r}
+treat_positions <- combn(6,2)
+treat_positions
+```
+
+Calculate differences
+
+```{r}
+possible_differences <- apply(treat_positions, 2, function(pos) {
+  mean(df$x[pos]) - mean(df$x[-pos])
+})
+sort(possible_differences)
+
+mean(possible_differences >= diffx)
+```
+
+The exact p-value is pretty close
+
+### 16.76 Comparing serum retinol levels. 
+>The formal medical term for vitamin A in the blood is serum retinol. Serum retinol has various beneficial effects, such as protecting against fractures. Medical researchers working with children in Papua New Guinea asked whether recent infections reduce the level of serum retinol. They classified children as recently infected or not on the basis of other blood tests, then measured serum retinol. Of the 90 children in the sample, 55 had been recently
+infected. Dataset retinol.txt gives the serum retinol levels for both groups, in micromoles per liter.
+(a) The researchers are interested in the proportional reduction in serum retinol. Verify that the mean for infected children is 0.620 and that the mean for uninfected children is 0.778.
+
+```{r}
+retinol <- read.table(fromParentDir("data/retinol.txt"), header = T)
+str(retinol)
+```
+
+```{r}
+retinol %>%
+  group_by(infected) %>%
+  summarize(mean(retinol))
+
+
+ratio <- retinol %>%
+  group_by(infected) %>%
+  summarize(mean = mean(retinol)) %>%
+  pull(mean) %>%
+  (function(x) (x/lag(x))[2])
+
+```
+
+
+
+> (b) There is no standard test for the null hypothesis that the ratio of the population means is 1. We can do a permutation test on the ratio of sample means. Carry out a one-sided test and report the P-value. Briefly describe the center and shape of the permutation distribution. Why do you expect the center to be close to 1?
+
+First let's calculate the number of possible permutations, to see if 
+calculating all permutations is feasible
+
+```{r}
+retinol %>% 
+  group_by(infected) %>% # group by infected
+  summarize(n = n())  # count number of infected
+
+choose(35+55, 55)
+```
+
+Getting all permutations is clearly infeasible, so let's do 1000
+
+```{r, cache = T}
+nperm  = 1000
+ratios = numeric(nperm)
+set.seed(2)
+
+for (i in 1:nperm) {
+  ratios[i] <-
+    retinol %>%
+      mutate(shuff_intected = sample(infected)) %>%
+      group_by(shuff_intected) %>%
+      summarize(mean = mean(retinol)) %>%
+      pull(mean) %>%
+      (function(x) (x / lag(x))[2]) # divide each element by the previous, take second element (which is the fraction if x is 2 numbers)
+}
+```
+
+```{r}
+hist(ratios)
+```
+
+Distributions looks pretty symmetric around 1, which is the null value 
+for a ratio
+
+```{r}
+qqnorm(ratios)
+```
+
+Pretty nice normal distribution
+
+Now for the P-value
+
+```{r}
+mean(ratios < ratio) 
+```
+
+With plot for observed ratio
+
+```{r}
+hist(ratios)
+abline(v = ratio, lty = 2)
+```
+
+### 16.77 Methods of resampling. 
+
+> In the previous exercise we did a permutation test for the hypothesis “no difference between infected and uninfected children” using the ratio of mean serum retinol levels to measure “difference.” We might also want a bootstrap confidence interval for the ratio of population means for infected and uninfected children. Describe carefully how resampling is done for the permutation test and for the bootstrap, paying attention to the difference between the two resampling methods.
+
+Permution tests are used to simulate a distribution for the null-hypothesis.
+For this unpaired case it means shuffling the outcome (infected), which 
+are expected to depend on the determinant (retinol). Under the null-hypothesis 
+there is no relationship between the determinant and the outcome, 
+so each possible configuration of outcomes is equially likely to occur. 
+A number of random configurations is simulated, and the test statistic is 
+calculated for each permution. This gives the distribution of the null-hypothesis.
+Based on this distribution, we can see how probable it is to find a value 
+for the statistic or more extreme, which is the exact definition of a p-value.
+So permutations give p-values
+
+Bootstrapping simulates drawing random samples from the population, but uses 
+the actual observed distribution in the sample as a proxy for the population 
+distribution (which is usually unknown if you're doing research). 
+Drawing re-samples from this sample distribution and calculating the test 
+statistic for each re-sample gives an idea of the range of possible values 
+of the statistic for a sample of the given size. This distrubution of the 
+sample statistic can be used to approximate the confidence interval, which 
+can (loosely) be defined as the range of values which a sample test statistic is 
+(e.g. 95%) likelily to fall in between, when taking many samples.
+
+### Calcium intake and blood pressure. (Exercise from previous edition)
+
+> Does added calcium intake reduce the blood pressure of black men? In a randomized comparative double-blind trial, 10 men were given a calcium supplement for twelve weeks and 11 others received a placebo. Whether or not blood pressure dropped was recorded for each subject. Here are the data:
+Treatment	 Subjects	Successes	Proportion
+Calcium 	10 		6 		0.60
+Placebo 	11 		4 		0.36
+Total 		21 		10 		0.48
+
+```{r}
+calcium <- data.frame(
+  treatment = rep(c(1, 0), c(10, 11)),
+  success   = rep(c(1, 0, 1, 0), c(6, 4, 4, 7))
+)
+calcium
+```
+
+
+> We want to use these sample data to test equality of the population proportions of successes. Carry out a permutation test. Describe the permutation distribution. The permutation test does not depend on a “nice” distribution shape. Give the P-value
+and report your conclusion.
+
+The question here is to randomly divide 10 successes over 21 subjects.
+
+The possible number of permutations:
+
+```{r}
+choose(21, 10)
+```
+
+This is doable.
+
+We can get all the permutations by assigning 10 'rownumbers' or positions 
+for the successes in the 21 participants.
+
+```{r}
+positions <- combn(21, 10)
+
+positions[, 1:5]
+```
+
+Let's make sure that all treated participants are in the first 10 rows. 
+
+The the number of successes in the treatment group is the number of times 
+a position of $\leq 10$ happens in the permuted positions. 
+Let's call this $n$, than the difference in ratios is $\frac{n}{10}-\frac{10-n}{11}$
+
+```{r}
+diffs <- apply(positions, 2, function(position) {
+  n = sum(position <= 10)
+  (n/10) - ((10-n)/11)
+})
+```
+
+Look at the distribution
+
+```{r}
+hist(diffs)
+```
+
+Compare with observed ratio to get a p-value
+
+```{r}
+diffx <- 6/10 - 4 / 11
+
+mean(diffx <= diffs)
+```
+
+
+Now check with pre-defined functions:
+
+```{r, cache = T}
+perm::permTS(calcium$success ~ calcium$treatment, alternative = "less", method = "exact.ce")
+fisher.test(calcium$success, calcium$treatment, alternative = "greater")
+```
+
+Our manual calculation coincides with Fisher's test and permTS method
+
+
+Internally, `permTS` does something similar as we did with the permutations
+It creates a 'cm' matrix with all possible combinations, the dimensions 
+of this matrix is 352716x21. Check the code with:
+
+`View(permute:::permTS.default)` which calls:
+`View(permute:::twosample.exact.ce)` which calls:
+`View(permute:::chooseMatrix)`
+
+Now let's do a more direct method, exploiting the fact that 
+every combination of $n$ successes in the treatment group 
+will yield the same results. 
+Note: this only works when 'success' is a binary variable, it 
+would not work in the more general case for continous outcomes.
+
+```{r}
+n1 = 10
+n2 = 11
+ns = 10
+diffx
+
+```
+
+```{r}
+perm_twogroup <- function(target, n1, n2, ns) {
+  
+  total_combinations <- choose(n1+n2, ns)
+  combinations <- integer(ns+1)
+  differences <- numeric(ns+1)
+  
+  for (n in 0:ns) {
+    i = n+1
+    
+    difference = n / n1 - (ns-n) / n2
+    ncombinations = choose(n1, n)*choose(n2, ns-n)
+    
+    differences[i] = difference
+    combinations[i]= ncombinations
+  }
+  
+  sum(combinations[differences>=target]) / total_combinations
+  
+}
+
+perm_twogroup(diffx, n1, n2, ns)
+```
+
+Lets compare computation speed:
+
+```{r, cache = T}
+
+system.time(perm::permTS(calcium$success ~ calcium$treatment, alternative = "less", method = "exact.ce"))
+system.time(fisher.test(calcium$success, calcium$treatment, alternative = "greater"))
+system.time(perm_twogroup(diffx, n1, n2, ns))
+
+```
+
+We can see that `permTS` is extremely slow, compared to `fisher.test` and the manual exact method.
+
+## Survival Exercises
+
+### 1. Leukemia
+
+>We will have a closer look at the data from the lecture, on remission times for leukemia:
+
+> Read in the dataset leukaemia.txt (saved as a flat text file), changing your working directory first or adding the path name to the file name:
+
+```{r}
+leuk<-read.table(fromParentDir("data/leukaemia.txt"), header = TRUE)
+```
+
+> a)	Fit five models (name them fit0 – fit4) with the following predictor variables: none (intercept only), GROUP, logWBCC, GROUP and logWBCC, GROUP*logWBCC.
+fit0<-coxph(Surv(TIME, STATUS)~1, data=leuk)
+etc.
+
+```{r}
+require(survival)
+fit0 <- coxph(Surv(TIME,  STATUS) ~ 1, data = leuk)
+fit1 <- coxph(Surv(TIME,  STATUS) ~ GROUP, data = leuk)
+fit2 <- coxph(Surv(TIME,  STATUS) ~ logWBCC, data = leuk)
+fit3 <- coxph(Surv(TIME,  STATUS) ~ GROUP + logWBCC, data = leuk)
+fit4 <- coxph(Surv(TIME,  STATUS) ~ GROUP * logWBCC, data = leuk)
+```
+
+> b)	Ask for the log-likelihood of the empty model: fit0$loglik
+Ask for the summaries of the 4 models fit1-fit4, and for their log-likelihoods.
+
+```{r}
+fit0$loglik
+```
+
+Let's combine the summaries of the models by converting them to data.frames 
+with `broom`, and bind them together with `rbindlist`
+```{r}
+fits <- list(fit1, fit2, fit3, fit4)
+
+summaries <- map(fits, broom::tidy) %>%
+  data.table::rbindlist(idcol = "model")
+
+summaries
+```
+
+> c) Interpret the coefficients of the models 1 through 4. What are you assuming with these models about the effect of group and logWBCC on the hazard of relapse?
+
+```{r}
+require(data.table)
+summaries[order(term)]
+```
+
+In models 1 and 3 there is a significant group effect of GROUP (decreased hazard). 
+In all models, logWBCC seems to have a significant effect.
+The interaction term of model 4 can be left out.
+
+Estimates higher than 0 correspond with increased hazards.
+The exponent of this estimate gives the hazard ratio (leaving the rest the same)
+
+Assumptions are proportional hazards, so the effects of group and logWBCC 
+on the hazard do not depend on time (the hazard ratios are constant in time).
+
+> d)	Calculate likelihood ratio test values and AIC’s (assume that the empty model, fit0, uses no degrees of freedom) 
+
+```{r}
+anova(fit0, fit1, fit2, fit3, fit4)
+AIC(fit0, fit1, fit2, fit3, fit4)
+```
+
+The lowest AIC is for fit3, both terms but no interaction. 
+We already observed earlier on that the interaction term in model 4 was not 
+significant, so it must be left out (AIC penalizes extra terms)
+
+> e)	Also compare the models via the likelihood ratio test, with commands like anova(fit1, fit3, test="Chisq")
+Note that not all comparisons are possible.
+
+```{r}
+anova(fit1, fit2, test = "Chisq")
+```
+
+The anova gives a result, but fit2 is not nested within fit1, so it's meaningless.s
+
+> f)	Decide which model is best. Interpret the coefficients of this best model.
+
+We already saw that model 3 has the lowest AIC, so we will pick that one
+
+```{r}
+summary(fit3)
+```
+
+Treatment reduces the hazard, logWBCC increases the hazard
+
+### 2. Nephrectomy
+
+> Researchers are interested in the influence of age nephrectomy on the survival of hypernephroma patients. Read the data below into R from the file nephrect.txt:
+
+```{r}
+neph<-read.table(fromParentDir("data/nephrect.txt"), header = TRUE)
+str(neph)
+```
+
+> Survival times of 36 hypernephroma patients classified according to age group and whether or not they have had a nephrectomy.
+
+> a)	Make Kaplan-Meier plots for the three age groups, and test whether there is an effect of age on survival time (not taking nephrectomy into account) using the Log-rank test.
+
+```{r}
+plot(survfit(Surv(survtime, status)~age, data = neph))
+```
+
+
+```{r}
+survdiff(Surv(survtime, status)~age, data = neph)
+```
+
+According to the log-rank test, there is a significant difference in survival 
+between age groups. (see documentation: the default for `rho` is 0, which 
+corresponds to the log-rank test)
+
+> b)	Test whether there is an effect of age on survival time (not taking nephrectomy into account) using the Likelihood Ratio test and the Wald test from a Cox Proportional Hazards regression model. (Define AGE as a categorical variable.) Compare this result to the log-rank test.
+
+```{r}
+fit1 <- coxph(Surv(survtime, status) ~ factor(age), data = neph)
+summary(fit1)
+```
+
+The log-rank gives the lowest p-value. Likelihood ratio test is not significant
+
+> c)	From the Cox PH output, give the hazard ratio of age class 2 vs 1 and 3 vs 1. Give the 95% confidence intervals for these hazard ratios. Interpret the results.
+
+```{r}
+broom::tidy(fit1) %>%
+  mutate_at(.vars = c("estimate", "conf.low", "conf.high"), exp)
+```
+
+Hazard ratios are the `estimate`s (exponentiated as required).
+For the 2 vs 1 hazard ratio, the confidence interval includes the null value 
+of 1, which coincides with the p.value of > 0.05
+
+> d)	Now take only nephrectomy as the explanatory variable. Make Kaplan-Meier plots for the two groups, test for a difference in nephrectomy status using the log-rank test.
+
+```{r}
+plot(survfit(Surv(survtime, status)~nephrect, data = neph))
+survdiff(Surv(survtime, status)~nephrect, data = neph)
+```
+
+> e)	Test whether there is an effect of nephrectomy using the likelihood ratio and Wald tests in a Cox PH model. Compare this result to the log-rank test. Give the hazard ratio of no nephrectomy vs nephrectomy. Calculate a 95% confidence interval for this hazard ratio.
+
+```{r}
+fit2 <- coxph(Surv(survtime, status)~nephrect, data = neph)
+summary(fit2)
+```
+
+```{r}
+exp(coef(fit2))
+exp(confint((fit2)))
+```
+
+Nefrectomy seems to have a lower hazard of dying
+
+> f)	Test for a difference in nephrectomy status using a Cox PH model again, but now for each of the three original age classes separately (hint: make 3 new data frames with selections of age groups). Does the effect of nephrecto¬my appear to be the same in each age class? (Optional: how would you test this, using Cox PH?)
+
+Let's do this with `dplyr` function `group_by`
+
+```{r}
+fits <- neph %>%
+  group_by(age) %>%
+  do(fit = coxph(Surv(survtime, status)~nephrect, data = .))
+
+broom::tidy(fits, fit)   
+```
+
+The estimate for nephrectomy is different in the different age groups, 
+however, the confidence intervals all overlap. 
+
+We can test this by using `age` as an interaction
+
+```{r}
+fit2 <- coxph(Surv(survtime, status)~nephrect*factor(age), data = neph)
+summary(fit2)
+```
+
+Interaction term is indeed not significant
+
+> g)	Check the Cox PH assumption for AGE by building a model with NEPHRECT as explanatory variable and AGE as stratum variable. Get a log-minus-log plot and check whether the resulting log cumulative hazard functions are approximately parallel.
+
+```{r}
+fit3 <- coxph(Surv(survtime, status)~nephrect + strata(factor(age)), data = neph)
+summary(fit3)
+```
+
+The fast way:
+```{r}
+plot(survfit(fit3), col = c("red", "blue", "black"), fun = "cloglog")
+```
+
+The lines cross, so this vialates our assumption of proportional hazards
+
+### 3. Myeloma
+
+> Read the data file myeloma.dat (a comma-separated file with headers at the top) into R and attach it:
+
+```{r}
+myel<-read.table(fromParentDir("data/myeloma.dat"), header = TRUE)
+str(myel)
+```
+
+> The dataset contains the following variables on 48 patients diagnosed with multiple myeloma:
+Variable	Description
+survtime	survival time from diagnosis multiple myeloma (months)
+status	censoring status (0=censored, 1=death from multiple myeloma)
+age	age (years)
+sex	sex (1=male, 2=female)
+bun	blood urea nitrogen
+ca	serum calcium
+hb	haemoglobin
+pc	percentage plasma cells in bone marrow
+bj	Bence-Jones protein in urine
+
+> The object of the research is to determine the best fitting Cox proportional hazards model to explain death from multiple myeloma.
+
+> a)	First, get some descriptive statistics on the data. Then get a sense of the individual variables’ effect on survival, by fitting a Cox PH model on each of the explanatory variables separately.
+
+```{r}
+summary(myel)
+```
+
+Let's model all variables separately (except for patient, time and status)
+
+```{r}
+vars <- setdiff(colnames(myel), c("patient", "time", "status"))
+
+fits <- map(vars, .f = function(var) {
+  fit = coxph(Surv(time, status)~get(var), data = myel)
+})
+names(fits) <- vars
+
+fits_summary <- map_dfr(fits, broom::tidy, .id = "var")
+fits_summary
+```
+
+> b)	Now, fit an empty model (no explanatory variables), and use the forward method (use the add1() function, the option test=”Chisq” for a likelihood ratio test, and the scope option to indicate which variables may be included) to build a final model.
+
+```{r}
+fit0 <- coxph(Surv(time, status)~1, data = myel)
+
+add1(fit0, scope = vars, test = "Chisq")
+
+fit1 <- coxph(Surv(time, status)~bun, data = myel)
+add1(fit1, scope = vars, test = "Chisq")
+
+fit2 <- coxph(Surv(time, status)~bun+hb, data = myel)
+add1(fit2, scope = vars, test = "Chisq")
+
+```
+
+No more significant improvements
+
+> c)	The re¬searchers also wish to know whether the effects of the risk factors might be modified by the age or sex of a patient, so, in the final model, test for possible interactions with these two.
+	Note: to fit the interaction term you will also have to fit the main effect (age or sex).
+
+```{r}
+fit3 <- coxph(Surv(time, status)~(bun+hb)*(age + sex), data = myel)
+summary(fit3)
+```
+
+There seems to be no significant interaction
+
+```{r}
+drop1(fit3)
+```
+
+Dropping the interactions improves the model, so final model is model 2
+
+d)	Interpret the coefficients from your final model (direction and size of the hazard ratios).
+
+```{r}
+summary(fit2)
+```
+
+`bun` increases the hazard of dying (see `exp(coef)` for hazard ratio)
+`hb` decreases the hazard of dying (see `exp(coef)` for hazard ratio)
+
+### 4. Nephrectomy SPSS
+
+> This exercise is a repeat of exercise 2, but in SPSS. Read the data from exercise 2 into SPSS (File, Read Text Data) from the file NEPHRECT.TXT.
+
+This one was skipped
+
+### 5. Myeloma SPSS
+
+>This exercise is a repeat of exercise 3, but in SPSS. Open the data file MYELOMA.POR. Use Utilities, Variables... to study the meaning of the variables in the data file.
+
+This one was skipped
+
+## Longitudinal data
+
+### Exercise 1:
+> We will start by reproducing the results of this morning’s lecture concerning the milk protein data:
+Start R, load the library nlme and access the data set Milk:
+
+```{r}
+library(nlme)
+data(Milk)
+summary(Milk)
+```
+
+>  In our analysis we will at first confine ourselves to time points 1 and 2:
+
+```{r}
+Milk12<-Milk[Milk$Time<3,]
+summary(Milk12)
+
+```
+
+
+> To calculate the mean for protein type the command
+
+> If we want to calculate the mean for the different weeks we can make use of the tapply function
+
+Or use `dplyr`
+
+```{r}
+tapply(Milk12$protein,Milk12$Time,mean)
+
+Milk12 %>%
+  group_by(Time) %>%
+  summarize(mean(protein))
+```
+
+> To avoid that we have to include the name of the dataset every time we name a variable, we will attach the data set to the search list:
+
+Let's not do this
+
+> So now R will also look in the dataset Milk12 to look for objects that you use in your commands. So after attaching the dataset it will suffice to write
+
+> Make a “spaghetti plot” of the protein data for weeks 1 and 2:
+
+```{r}
+with(Milk12,
+     interaction.plot(x.factor=Time,trace.factor=Cow,response=protein))
+```
+
+
+> We will now do a pooled T test and a paired T test on the data. Since cow “B20” has a missing protein value at time 2, we will delete this cow from the data set for now.
+
+```{r}
+Milk12complete<-Milk12 %>% filter(Cow!="B20")
+str(Milk12complete)
+```
+
+> (Note that dataset Milk12complete is added to the search list before Milk12, so R will look in Milk12Bcomplete first. Variables in Milk12 are “masked”.)
+
+```{r}
+t.test(protein~Time,var.equal=T, data = Milk12complete)
+t.test(protein~Time,paired=T, data = Milk12complete)
+```
+
+> Note that both T tests give highly significant results but the p value from the paired T test is much smaller: 2.6*10-7 vs. 4.6*10-10.
+
+> We can do equivalent analyses using ANOVA (Oneway and split-plot, respectively). This enables us to compare sums-of-squares of the ANOVA tables:
+
+```{r}
+summary(aov(protein~Time, data = Milk12complete))
+summary(aov(protein~Time+Error(Cow), data = Milk12complete))
+
+```
+
+> Note that SS(Residuals) of the One-way ANOVA is the same as the sum of the two SS residuals in the Split-plot ANOVA. It is split into a “between Cow” and “Within” part.
+
+> To get an idea about the distribution of protein for week 1 and week 2, we can produce a scatter plot and a boxplot by executing:
+
+```{r}
+plot(protein~Time, data = Milk12complete)
+boxplot(protein~Time, data = Milk12complete)
+
+```
+
+> If we want to calculate the mean protein per diet for every week and make a plot of them, we just have to execute the commands
+
+```{r}
+# tapply(protein,list(Diet,Time),mean)
+
+Milk12complete %>%
+  group_by(Diet, Time) %>%
+  summarize(mean(protein))
+
+with(Milk12complete,
+     interaction.plot(x.factor=Time,trace.factor=Diet,response=protein))
+
+  
+```
+
+
+```{r}
+# tapply(protein,list(Diet,Time),var)
+Milk12complete %>%
+  group_by(Time, Diet) %>%
+  summarize(mean = mean(protein), var = var(protein))
+```
+
+> shows that the variances per diet in week 1 are much larger than in week 2.
+
+> To produce histograms for the protein observations per diet per week
+
+```{r}
+library(lattice)		#Contains the function histogram
+histogram(~protein | Time*Diet, data = Milk12complete)
+
+```
+
+GGplot equivalent:
+
+```{r}
+Milk12complete %>%
+  ggplot(aes(x = protein)) +
+  geom_histogram() +
+  facet_grid(Diet~Time, scales = "fixed")
+```
+
+Comparing ggplot with lattice, we can see that the binwidth is pretty important
+
+Let's do 10 bins
+
+```{r}
+Milk12complete %>%
+  ggplot(aes(x = protein)) +
+  geom_histogram(bins = 10) +
+  facet_grid(Diet~Time, scales = "fixed")
+```
+
+
+> You can see that the histograms are more spread out in week 1.
+
+> We will now extend the analysis to the first 3 weeks, complete cases.
+
+```{r}
+# Milk123complete<-Milk[Milk$Time<4 & Milk$Cow!="B20",]
+Milk123complete<- Milk %>%
+  filter(Time<4 & Cow!="B20")
+with(Milk123complete,
+     interaction.plot(x.factor=Time,trace.factor=Diet,response=protein))
+
+```
+
+> Let’s first investigate the protein profiles per cow graphically. 
+(Normally we would have to tell R that our observations are grouped. We could accomplish this by creating a new groupedData set, where cow is our grouping variable: d.gr <-groupedData(protein~Time|Cow, data=Milk123complete)
+Here, the internal dataset Milk was already grouped.)
+
+> For a plot of all cows together (like the spaghetti interaction.plot), run
+
+
+`plot(Milk123complete,outer=~1,aspect=1,key=F)`
+
+This command does not work for me, probably because some package 
+makes some alteration to the plot function (it's not `lattice`).
+
+Let's do it 'by hand'
+
+```{r}
+Milk123complete %>%
+  ggplot(aes(x = Time, y = protein, col = Cow)) + 
+  geom_line() + 
+  theme(legend.position = "none")
+```
+
+(key=F suppresses the elaborate non-informative legend.)
+For the same plot, but now per diet group, run
+
+`plot(Milk123complete,outer=~Diet,layout=c(3,1),aspect=1,key=F)`
+
+Again this doesn't work, but GGplot2 can do the job
+
+
+```{r}
+Milk123complete %>%
+  ggplot(aes(x = Time, y = protein, col = Cow)) + 
+  geom_line() + 
+  facet_grid(~Diet, scales = "fixed") + 
+  theme(legend.position = "none")
+```
+
+> In the next part we will produce the slope as summary measure for each cow over the first three weeks of observation.
+To calculate our summary measure (the slope) for every cow we fit a linear model per cow. The “lmList” function (which works on groupedData objects) will calculate the slopes and intercepts for a linear regression model with protein as dependent variable and Time as predictor. This is done for each cow separately. The results are stored in the object “fits”. Typing “fits” then displays these results:
+
+```{r}
+fits<-lmList(protein~Time|Cow, data=Milk123complete)
+fits
+```
+
+> Note that there is a substantial amount of variation in intercepts and slopes. (It might be worthwhile to try to take this into account. We’ll do that tomorrow.)
+
+> And here is a “little trick” to extract the slopes for every cow (using the fact that the slope is the second coefficient of the first part of the output):
+
+```{r}
+slopes<-rep(0,78)
+for(i in 1:78)slopes[i]<-fits[[i]][1]$coefficients[2]
+```
+
+> (Note: the first of these two commands “initializes” slopes to be a vector consisting of 78 zeroes. The second command replaces these zeroes with the actual slopes.)
+
+Here's another way of doing this with the function `map` from `purrr`
+
+```{r}
+slopes2 <- fits %>% 
+  map("coefficients") %>% # grab coefficients
+  map_dbl(2)              # grab 2nd element
+
+cbind(slopes, slopes2)[1:10,]
+```
+
+This gives the same result, but depending on personal preference,
+the syntax may be a easier to read
+
+> From the output we see that the first 24 estimated lines belong to the cows on the Barley diet, the next 27 lines for the Mixed diet cows and the last 27 for cows on the Lupins diet.
+To link them to the diets, make a new variable:
+
+```{r}
+DIET<-factor(c(rep(0,24),rep(1,27),rep(2,27)),labels=c("B","BL","L"))
+```
+
+> To obtain the overall ANOVA table and estimates for the mean slope per diet:
+
+```{r}
+summary(aov(slopes~DIET))
+summary(lm(slopes~-1+DIET))
+
+```
+
+> If we do not use the slope as a summary measure, but take the observations themselves, we can again calculate means and variances by:
+
+```{r}
+# tapply(protein, list(Diet,Time), mean)
+# tapply(protein, list(Diet,Time), var)
+
+Milk123complete %>%
+  group_by(Time, Diet) %>%
+  summarize(mean(protein), var(protein))
+
+```
+
+> We can test the main effects and their interaction using ANOVA (either Twoway or split-plot) with diet and time as factors:
+
+```{r}
+summary(aov(protein~Diet*factor(Time), data = Milk123complete))
+summary(aov(protein~Diet*factor(Time)+Error(Cow), data = Milk123complete))
+
+```
+
+> And finally, to fit a linear mixed effects (LME) model with random intercept:
+
+```{r}
+lme.fit<-lme(fixed=protein~ Diet*factor(Time), random=~1|Cow, data = Milk123complete)
+anova(lme.fit)
+summary(lme.fit)
+
+```
+
+> From the estimates of the coefficient values, how can you calculate predictions for the protein values for each of the 3 diets, at each of the 3 time points?
+(Answer: add the appropriate coefficients to get:
+	Time 1	Time 2	Time 3
+Barley	3.889583	3.642500	3.507500
+Barley + lupins	3.861111	3.540000	3.345556
+Lupins	3.758148	3.427778	3.372963
+
+For each time-point add intercept the interaction terms.
+e.g. for lupins, time 3
+
+```{r}
+3.889583+(-.131435)+(-.382083)+(-.003102)
+```
+
+To get them all in 2 (or 3 for pretty printing) lines of codes:
+
+```{r}
+grid <- expand.grid(Diet = unique(Milk123complete$Diet), 
+                    Time = unique(factor(Milk123complete$Time)))
+grid$predictions <- predict(lme.fit, newdata = grid, level = 0)
+xtabs(predictions~Diet+Time, data = grid)
+```
+
+This works as follows:
+
+  - `expand.grid` creates a data.frame of all possible combinations of the supplied vectors
+  - `predict` will predict the protein based on the supplied model. 
+    - **`level = 0`** is needed, which means ignore grouping ('Cow'), otherwise 
+    the function will throw an error and ask for the grouping variable
+    (so you will have to provide a Cow name)
+  - `xtabs` is just to print it nicely
+
+
+> Clean up, by detaching the appropriate milk data files from the search list.
+
+We didn't attach, so no cleaning up required
+
+### Exercise 2:
+> The file Twisk1.dat contains longitudinal data concerning cholesterol measurements on several occasions. Furthermore, information about baseline values as well as time varying covariates is collected.
+id :		patient number
+chol:		serum cholesterol
+fitness:		max oxygen uptake (baseline)
+skinfold:	sum of four skin folds (time varying)
+smoke:	does the patient smoke? (time varying, 0=no, 1=yes)
+gender:	gender (factor, 1=male, 2=female)
+time:		time in weeks (1-6)
+
+> Read the data into an R object and summarize it by
+
+```{r}
+Twisk1<-read.table(fromParentDir("data/Twisk1.dat"),header=T)
+summary(Twisk1)
+
+```
+
+> Turn the variables id into a factor by `Twisk1$id<-factor(Twisk1$id)`
+Do the same for smoke and gender, and attach Twisk1 to the search list.
+
+Let's do this with `dplyr` for convenience
+
+```{r}
+Twisk1 %<>% 
+  mutate_at(vars(id, smoke, gender), factor)
+```
+
+> a.	Give mean and variance of the continuous variables chol, fitness and skinfold for all time points combined. 
+
+Here's how to do this with dplyr
+```{r}
+Twisk1 %>%
+  summarize_at(vars(chol, fitness, skinfold), funs(mean, var))
+```
+
+Here with dplyr, purrr and data.table 
+(admittably a little cumbersome, but this works for 30 variables and 20 functions too)
+```{r}
+Twisk1 %>%
+  select(chol, fitness, skinfold) %>%
+  map(function(x) data.frame(mean(x), var(x))) %>%
+  data.table::rbindlist(idcol = "variable")
+```
+
+> b.	Calculate these means and variances for every time point separately.
+
+Just 1 extra line compared to a)
+
+```{r}
+Twisk1 %>%
+  group_by(time) %>%
+  summarize_at(vars(chol, fitness, skinfold), funs(mean, var))
+```
+
+> c.	How many females are there in the sample? Use tapply with function table to obtain frequency tables at each time point..
+
+```{r}
+table(Twisk1$time, Twisk1$gender)
+```
+
+> d.	Use Twisk.gr<-groupedData(chol~time|id,data=Twisk1) to create a grouped dataset. Investigate graphically the individual profiles, also try to produce a graph where the profiles are shown by gender (outer=~gender). Warning: on some computers this may take some time, if you get bored press the escape key (several times).
+
+```{r}
+Twisk1 %>%
+  ggplot(aes(x = time, y = chol, col = id)) + 
+  geom_line() + 
+  theme(legend.position = "none")
+```
+
+```{r}
+Twisk1 %>%
+  ggplot(aes(x = time, y = chol, col = id)) + 
+  geom_line() + 
+  facet_grid(~gender) + 
+  theme(legend.position = "none")
+```
+
+> e.	Using a split plot ANOVA, test whether cholesterol levels change in time. (From question d, does a linear time effect seem feasible?)
+
+A linear time effect does not seem correct, based on the graph. We will 
+use time as a factor variable
+
+```{r}
+fit <- aov(chol~factor(time)+Error(id), data = Twisk1)
+summary(fit)
+```
+
+> f.	Is the effect of time for females the same as for males? Investigate by making an interaction plot and using split plot ANOVA.
+
+We can already observe the 'interaction' from the faceted plot from ggplot.
+The slope seems equal for both sexes, which indicates no interaction
+
+```{r}
+fit2 <- aov(chol~factor(time)*factor(gender)+Error(id), data = Twisk1)
+summary(fit2)
+```
+
+Here it seems that there is an important interaction with gender. 
+Maybe if we plot the means on each time point, this will become apparant
+
+```{r}
+Twisk1 %>% 
+  group_by(time, gender) %>%
+  summarize(chol = mean(chol)) %>%
+  ggplot(aes(x = time, y = chol, col = gender)) + 
+  geom_line()
+```
+
+> g.	Redo questions e and f using a linear mixed effect model with a random intercept. Compare the outputs and conclusions to those from e and f).
+
+First without interaction
+
+```{r}
+fit.lme <- lme(fixed = chol~factor(time), random = ~1|id, data = Twisk1)
+summary(fit.lme)
+```
+
+Now with interaction
+```{r}
+fit.lme2 <- lme(fixed = chol~factor(time)*gender, random = ~1|id, data = Twisk1)
+summary(fit.lme2)
+```
+
+Again, we have an indication of significant interaction between time and gender.
+
+> h.	After day 2: Formally compare the two LME model from part g, using AIC or a Likelihood Ratio test. (Note: we need to use ML instead of REML to get a valid comparison.) Also investigate a model with time and gender as main effects, without interaction. What happens if we leave out weeks 1 and 2?
+
+First re-fit the model with package `lme4`, which supports the ANOVA method
+by re-fitting accordinging to REML
+
+```{r}
+
+fit1 <- lme4::lmer(chol~factor(time) + (1|id), data = Twisk1)
+fit2 <- lme4::lmer(chol~factor(time)*gender + (1|id), data = Twisk1)
+fit3 <- lme4::lmer(chol~factor(time)+gender + (1|id), data = Twisk1)
+fit4 <- lme4::lmer(chol~factor(time)+gender + (1|id), data = Twisk1 %>% filter(time > 2))
+```
+
+Compare with ANOVA (observe the message of refitting with ML)
+
+Fit 2 is best, including interaction
+
+```{r}
+anova(fit1, fit2, fit3)
+```
+
+
+## Dependent data 2
+
+### 1. Milk
+
+> 1.  In the protein example in the handout there where 4 timepoints. In
+    the actual dataset there were much points. To select 7 timepoints
+    from the data:
+
+```{r}
+library(nlme)
+milk<-Milk[Milk$Time<8,]
+str(milk)
+```
+
+
+    1.  Fit the model with Diet and time as grouping variables, and
+        their interaction. For the random part take random intercepts
+        and random slopes.
+        
+```{r}
+require(lme4)
+fit1 <- lmer(protein~Diet*factor(Time) + (Time | Cow), data = milk)
+summary(fit1)
+```
+
+    2.  See, by fitting different models, which random effects are
+        needed in the model. (Just like in the text.)
+
+```{r}
+fit2 <- lmer(protein~Diet*factor(Time) + (Time - 1 | Cow), data = milk)
+fit3 <- lmer(protein~Diet*factor(Time) + (1 | Cow), data = milk)
+
+anova(fit1, fit2, fit3)
+```
+
+Fit1 is best, so both random slope and intercept are needed
+
+    3.  See, by fitting different models, what the fixed part of the
+        model is.
+
+```{r}
+fit4 <- lmer(protein~Diet+factor(Time) + (Time | Cow), data = milk)
+fit5 <- lmer(protein~Diet+Diet:factor(Time) + (Time | Cow), data = milk)
+fit6 <- lmer(protein~Diet + (Time | Cow), data = milk)
+fit7 <- lmer(protein~factor(Time) + (Time | Cow), data = milk)
+
+anova(fit1, fit4, fit5, fit6, fit7)
+```
+
+Fit4 has the lowest AIC, without interaction between time and diet
+
+    4.  Discuss the difference with the analysis from the text and
+        explain this.
+
+```{r}
+length(unique(Milk$Time))
+length(unique(milk$Time))
+```
+
+In the full dataset there are 19 unique datapoints, in the dataset we 
+used, this was restricted to 7. This could explain why the interaction 
+is not significant when there are only few timepoint 
+(maybe the interesting interaction is at later time-points)
+
+Try a plot
+
+```{r}
+Milk %>%
+  group_by(Time, Diet) %>%
+  summarize(protein = mean(protein)) %>%
+  ggplot(aes(x = Time, y = protein, col = Diet)) + 
+  geom_line() +
+  theme(legend.position = "none")
+```
+
+We can more or less see that the slopes start to differ after timepoint 7.
+
+Notice that individual cows were left out here
+
+### 2. 
+> 2.  In the nlme library there is a dataset on the body weights of rats,
+    measured over 64 days. The body weights of the rats (in grams) are
+    measured on day 1 and every seven days thereafter until day64, with
+    an extra measurement on day 44. The experiment started several weeks
+    before “day 1.” There are three groups of rats, each on a different
+    diet. The dataset is named BodyWeight. In this dataset Diet is a
+    factor, the other variables are numeric covariates.
+
+    1.  Attach the BodyWeight dataset, get information about this
+        dataset (help(BodyWeight)) and make a plot like figure 1 of the
+        handout.
+
+```{r}
+data("BodyWeight")
+str(BodyWeight)
+```
+
+Spaghetti plot:
+
+```{r}
+BodyWeight %>%
+  ggplot(aes(x = Time, y = weight, col = Rat)) + 
+  geom_line() + 
+  facet_wrap(~Diet) + 
+  theme(legend.position = "none")
+```
+
+    2.  Which random effects are needed in the model? Take for the fixed
+        part a model with Diet and Time as grouping variables, and their
+        interaction.
+
+Intercepts seem to differ by rat, slopes not too much. 
+Intercepts are all pretty different for diets (remember that the rats 
+were already on a diet for sometime before Time = 0)
+
+```{r}
+library(lme4)
+fit1 <- lmer(weight~Diet*factor(Time) + (1|Rat), data = BodyWeight)
+fit2 <- lmer(weight~Diet*factor(Time) + (Time - 1|Rat), data = BodyWeight)
+fit3 <- lmer(weight~Diet*factor(Time) + (Time|Rat), data = BodyWeight)
+
+AIC(fit1, fit2, fit3)
+```
+
+Fit3 is best, including random intercept and slope
+
+    3.  Check which fixed parts are needed in the model.
+
+```{r}
+fit4 <- lmer(weight~Diet+factor(Time) + (Time|Rat), data = BodyWeight)
+fit5 <- lmer(weight~Diet+Diet:factor(Time) + (Time|Rat), data = BodyWeight)
+fit6 <- lmer(weight~Diet + (Time|Rat), data = BodyWeight)
+fit7 <- lmer(weight~factor(Time) + (Time|Rat), data = BodyWeight)
+
+anova(fit3, fit4, fit5, fit6, fit7)
+```
+
+Fit 4 is best, with fixed effects for time and diet but no interaction
+
+    4.  Determine the correlation between the observations on the
+        different time points and discuss these.
+
+Go back to package `nlme` for this
+
+
+
+```{r}
+fit <- nlme::lme(fixed = weight~Diet+factor(Time),
+                  random = (~Time|Rat), 
+                  data = BodyWeight)
+
+covmat <- nlme::getVarCov(fit, individual = 1, type = "marginal")
+covmat
+```
+
+We can see that covariance decreases with increasing time difference. 
+We can plot this nicely:
+
+```{r}
+image(covmat[[1]])
+```
+
+In the edges of the matrix, the color is more yellow, which indicates 
+lower covariance
+
+    5.  Describe the analysis you did, and the conclusions that can be
+        drawn.
+
+Left to reader
+
+### 3. Osteochon
+> Read in the data file osteochon.csv.
+
+```{r}
+ost <- read.csv(fromParentDir("data/osteochon.csv"))
+str(ost)
+```
+
+Make father and food factors
+
+```{r}
+ost %<>%
+  mutate(father = factor(father), ground = factor(ground))
+```
+
+
+    1.  Fit a logistic regression model with independent variables
+        father, ground and height. (Remember to use factor() for father
+        and ground.)
+
+```{r}
+fit <- glm(oc~father+ground+height, data = ost,
+           family = binomial)
+```
+
+
+    2.  Discuss the estimates and standard errors for the fathers.
+
+```{r}
+summary(fit)
+```
+
+
+There are many fathers, none are significant. Some have high values, but 
+also very high standard errors.
+
+    3.  Now fit a logistic regression model with random father effects.
+
+This model wouldn't converge and suggested scaling, so height was 
+centered (to mean 0, variance unchanged)
+
+```{r}
+ost %<>% 
+  mutate(height_centered = scale(height, center = T, scale = F))
+
+fit2 <- lme4::glmer(oc ~ height_centered+food + (1|father), 
+                    data = ost,
+                    family = binomial)
+
+fit3 <- lme4::glmer(oc ~ height_centered+food + 
+                      (height_centered|father), 
+                    data = ost,
+                    family = binomial)
+
+summary(fit2)
+```
+
+    4.  Compare the AIC’s of both models and discuss which model fits
+        best. Also compare the estimates of height.
+
+```{r}
+AIC(fit, fit2, fit3)
+```
+
+AIC is the lowest for fit2. 
+The estimates of beta for height are pretty similar in both 
+models, but even stronger in fit2
+
+    5.  Discuss the effect of using random father effects.
+
+```{r}
+list(fit, fit2) %>%
+  map(logLik)
+```
+
+When looking at the likelihood of the models, fit has a better likelihood,
+ however, it 'spends' many degrees of freedom on estimating fixed effects 
+ for each father. The model with random effects (fit2) has a lot less 
+ parameters to estimate, which gives it a better AIC and makes it 
+ preferable to the model without random effects.
+
+
+## Session information
+
+<!-- Insert the session information into the document -->
+```{r session-info}
+```

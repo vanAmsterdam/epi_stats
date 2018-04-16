@@ -1,0 +1,196 @@
+---
+title: "Lecture notes resampling"
+author: "Wouter van Amsterdam"
+date: 2018-01-15
+output: html_document
+---
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+```
+
+<!-- Update knitr chunk options -->
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+<!-- Insert the date the file was last updated -->
+```{r last-updated, echo=FALSE, results='asis'}
+```
+
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+```{r code-version, echo=FALSE, results='asis'}
+```
+
+<!-- Add your analysis here -->
+
+## Introduction
+
+Tutor: Cas Kruitwagen
+
+### Resampling
+
+Drawing random samples from sample with replacement.
+
+Gives estimate of sampling distribution of sample statistic
+
+* Central limit theorem sampling distribution of the mean is approximately normal 
+* Always take same size, to reflect original variance. Otherwise too little variance.
+* Draw with replacement, otherwise allways the same sample
+
+
+For other statistics than mean, bootstrapping can give an idea of 
+the bias in the estimator and variance of sample statistics
+
+Bootstrapping gives estimates based on the sample distribution.
+
+Is good as long as the sample is large enough and i.i.d.
+
+For biased statistics: the bias that you see in boostrapping distribution, 
+is around the same as for the actual sample distribution
+
+Difference between mean in bootstrapped samples and sample mean reflects 
+the bias. I.E. the difference between sample statistic and true population parameters.
+
+
+Bootstrapping also gives an idea of the standard error
+
+### 1 sample
+
+### 2 independent samples
+
+Do independent bootstrapping in both populations
+
+Log-transform will give confidence intervals for ratio ($e^{a-b} = \frac{e^a}{e^b}$)
+of the geometric means (not the arithmetic mean).
+
+It works OK for getting p-value (stays pretty much the same). Confidence interval 
+is not informative of what you want to know.
+
+Use bootstrapping for confidence interval.
+p-value can be 'calculated' by looking at the coverage for which the CI includes
+thu null-value
+
+### 2 paired groups
+
+Make sure you keep the pairs together
+
+E.g. bootstrap the differences
+
+### Correlation
+
+R already uses Fisher's-Z transformation for confidence intervals.
+Accounts for skewness
+
+Fisher's Z-transformation assumes bivariate normal distribution.
+
+Bootstrapping does not require the normal assumption
+
+
+### Boostrapping confidence intervals
+
+#### percentile method
+
+#### bootstrap t ("normal")
+
+Estimate bias by $mean_{boot} - t_0$ where $t_0$ is the sample statistic
+Estiamte standard error of sample distribution with $sd_{boot}$
+
+Assume normal distribution of bootstrap samples
+
+$$t_0 - bias \pm Z_{\alpha/2}*sd_{boot}$$
+
+#### basic bootstrap CI
+
+Get confidence interval by:
+
+$t_0 - (high_percentile - t_0)$; $t_0 - (low_percentile -t_0)$
+
+This takes care of bias for asymmtric cases
+
+Asymmetry must reflect the bias
+
+For symmetric distributions, this reduces to regular percentile method
+
+
+#### bias corrected accelerated
+
+I uses the percentile method, but $\alpha$ is not eveny divided over the 
+two sides
+
+
+Bootstrapping usually gives a little too low coverage
+
+## Permutation tests
+
+Normally in statistics, you assume a null-hypothesis distribution for the 
+test statistic. 
+
+What if your sampling distribution is unknown?
+
+Bootstrapping distribution is constructed from the observerd data, 
+and this might not conform to the null hypothesis.
+
+Even if data come from null-distribution, then there could still be bias 
+(e.g. different mean in sample)
+
+
+Permutation test: randomly permute the classification.
+
+For paired data: keep pairs together, permute observations within an individual
+
+
+This gives a sampling distribution under null-hypothesis.
+
+
+One-sided p-value is just the fraction of permutations under which the observed
+statistic is the same or more extreme
+
+
+The number of possible permutations is ${n_1 + n_2}\choose{n_1}$ for 2 groups
+Number of possible permuations for $n$ observations of paired data is $2^n$
+
+If the number is low, it could be you never get a significant results
+If this becomes very high, just take a random sample of possible permutations
+'random sample' is more like a 'randomization test' rather than 'permutation test'.
+
+* For correlation between $x_{1, i}$ and $x_{2, i}$, keep the order of $x_{1}$, 
+permute $x_{2}$. Number of permutions is $n!$.
+
+
+Purmutation is a form of resampling without replacement
+
+### Familiar permutation tests
+
+Mann-Whitney test for 2 independent samples. Is a permutation test 
+of the ranks of all observations. Sampling distribution of the sum of ranks 
+of the smallest group is determined.
+
+Observed rank sum is compared to sampling distribution, p-value is calculated
+For large data: don't calculate all permutations but assume normal distribution
+of test statistic
+
+### Fisher Exact test
+
+Permute individual table entries randomly, keeping marginals the same.
+
+Famous lady tasting tea experiment. Guess if tea was added first, or milk.
+Lady knows the marginal distribution: n1 are milk first, n2 are tea first.
+Test statistic: number of "tea first" correct
+
+For this test, you don't need to get distribution from all permutations,
+the distribution is known: hypergeometric distribution
+
+$$P(R = r) = \frac{{n_1}\choose{r}{n_2}\choose{}}$$
+
+
+
+
+
+## Session information
+
+<!-- Insert the session information into the document -->
+```{r session-info}
+```

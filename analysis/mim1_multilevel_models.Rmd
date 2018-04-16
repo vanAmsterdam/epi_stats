@@ -1,0 +1,110 @@
+---
+title: "Intro to multi-level models"
+author: "Wouter van Amsterdam"
+date: 2018-04-16
+output: html_document
+---
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+```
+
+<!-- Update knitr chunk options -->
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+<!-- Insert the date the file was last updated -->
+```{r last-updated, echo=FALSE, results='asis'}
+```
+
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+```{r code-version, echo=FALSE, results='asis'}
+```
+
+<!-- Add your analysis here -->
+
+## Setup R-session
+
+
+```{r}
+library(dplyr)
+library(data.table)
+library(magrittr)
+library(purrr)
+library(here) # for tracking working directory
+library(ggplot2)
+library(epistats)
+library(broom)
+```
+
+```{r}
+scl <- read.table(here("data", "school.dat"), header = T)
+str(scl)
+```
+
+
+Possible approach
+
+- aggregate by school, regress on mean
+- do linear regression on all participants, ignoring clustering
+
+All data
+
+```{r}
+scl %>%
+  ggplot(aes(y = normexam, x = standlrt)) + 
+  geom_point()
+```
+
+
+Aggregate by school, take means
+
+```{r}
+scl %>%
+  group_by(school) %>%
+  summarize_at(vars(normexam, standlrt), funs(mean)) %>% 
+  ggplot(aes(y = normexam, x = standlrt)) + 
+  geom_point()
+```
+
+
+Aggregating creates possibility of "ecological fallacy"
+
+applying group level observations to individual level
+
+
+### Do regression by school
+
+```{r}
+require(tidyr)
+scl_nested <- scl %>% group_by(school) %>% nest()
+```
+
+
+
+### Problems with groups as interactions
+
+- many degrees of freedom taken
+- cannot generalize to other schools
+- sample size inflation
+- no single answer to coefficients
+
+## Mixed model
+
+Fixed effects: usually what you are interested in
+Random: only include a few, makes model much more complicated; the included groups are random samples from all groups
+
+Random effects for intercept and slope take up only 3 degrees of freedom
+Taken from normal distribution with mean 0 
+
+- variance of intercept, slope and covariance of these 2
+
+
+## Session information
+
+<!-- Insert the session information into the document -->
+```{r session-info}
+```
