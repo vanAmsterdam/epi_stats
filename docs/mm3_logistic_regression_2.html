@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+<meta name="author" content="Wouter van Amsterdam" />
+
+<meta name="date" content="2018-01-11" />
+
+<title>Logistic regression 2</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/font-awesome-4.5.0/css/font-awesome.min.css" rel="stylesheet" />
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+
+<div class="container-fluid main-container">
+
+<!-- tabsets -->
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+</script>
+
+<!-- code folding -->
+
+
+
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+  padding-left: 25px;
+  text-indent: 0;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">epi_stats</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/jdblischak/workflowr">
+    <span class="fa fa-github"></span>
+     
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">Logistic regression 2</h1>
+<h4 class="author"><em>Wouter van Amsterdam</em></h4>
+<h4 class="date"><em>2018-01-11</em></h4>
+
+</div>
+
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+<!-- Update knitr chunk options -->
+<!-- Insert the date the file was last updated -->
+<p><strong>Last updated:</strong> 2018-04-16</p>
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+<p><strong>Code version:</strong> 899ad0d</p>
+<!-- Add your analysis here -->
+<div id="tutor" class="section level2">
+<h2>Tutor</h2>
+<p>Jan van den Broek</p>
+</div>
+<div id="likelihood-ratio-test" class="section level2">
+<h2>Likelihood ratio test</h2>
+<p><span class="math display">\[2*(l_1 - l_0)\]</span></p>
+<p>Follows a <span class="math inline">\(\chi^2\)</span> distribution with <span class="math inline">\(n_{parameters_1} - n_{parameters_0}\)</span> degrees of freedom, when the sample size is not too small</p>
+<div id="deviance" class="section level3">
+<h3>Deviance</h3>
+<p>Calculate (log) likelihood for actual observered data</p>
+<p>Deviance</p>
+<p><span class="math display">\[D = 2 (l_{observations} - l_model)\]</span></p>
+<p>The model with the lowest deviance, is the closests to the actual data, so that is the best model.</p>
+<p>Comparing deviances of 2 models is exactly the same as likelihood ratio test statistic.</p>
+</div>
+<div id="wald-test" class="section level3">
+<h3>Wald test</h3>
+<p>Take <span class="math inline">\(\frac{\beta}{se(\beta)}\)</span> and use t-test.</p>
+<p>However, likelihood ratio test is better</p>
+</div>
+<div id="profile-of-log-likelihood" class="section level3">
+<h3>Profile of log-likelihood</h3>
+<p>Log-likelihood as function of model parameter. For each value of this parameter, the likelihood is maximized over all other parameters.</p>
+<p>The profile gives confidence-intervals.</p>
+<p>Interpretation: Those value for parameters <span class="math inline">\(b_0\)</span> that lead to the conclusion of not rejecting <span class="math inline">\(H_0\)</span>.</p>
+</div>
+<div id="profile-log-likelihood-confidence-intervals" class="section level3">
+<h3>Profile log-likelihood confidence intervals</h3>
+<p>Take <span class="math inline">\(L_1\)</span>, and <span class="math inline">\(L_0\)</span> for a model with a specific value for <span class="math inline">\(\beta\)</span>, say 0.</p>
+<p><span class="math display">\[H_0: \beta = \beta_0\]</span></p>
+<p><span class="math display">\[2(l_1 - l_0) = 2(l(a,b) - l(a, b = b_0))\]</span></p>
+<p>This follows a <span class="math inline">\(\chi^2\)</span> distribution with 1 degree of freedom, since <span class="math inline">\(l_0\)</span> has 1 parameter (<span class="math inline">\(a\)</span>), and <span class="math inline">\(l_1\)</span> has 2 parameters (<span class="math inline">\(a,b\)</span>)</p>
+<p>Get all the values of <span class="math inline">\(\beta_0\)</span> for which you do not reject <span class="math inline">\(H_0\)</span></p>
+<p>Based on the <span class="math inline">\(\chi^2\)</span> distribution, get the boundary for rejecting <span class="math inline">\(H_0\)</span>. Since <span class="math inline">\(l_1 = l(a, b)\)</span> is fixed, this depends only on <span class="math inline">\(l(a, b = b_0)\)</span>, and results in a boundary for <span class="math inline">\(l(a, b = b_0)\)</span>.</p>
+<p>This confidence bound inherits the properties of the likelihood profile, e.g. a-symmetry.</p>
+</div>
+<div id="residuals-for-logistic-regression" class="section level3">
+<h3>Residuals for logistic regression</h3>
+<p>Residual for observation <span class="math inline">\(i\)</span> with prediction <span class="math inline">\(p_i\)</span> is difference in likelihood based on <span class="math inline">\({p_i}\)</span>, versus likelihood based on <span class="math inline">\(y_i\)</span>. Deviance</p>
+<p><span class="math display">\[D(y_i) = 2 * (ln(y_i^{y_i}*(1-y_i)^{1-y_i}) - ln(p_i^{y_i}(1-p_i)^{1-y_i}))\]</span></p>
+<p>Then:</p>
+<p><span class="math display">\[res_{dev}=sign(y_i-p_i)*\sqrt{D(y_i)}\]</span></p>
+</div>
+<div id="inspect-residuals" class="section level3">
+<h3>Inspect residuals</h3>
+<p>Always two groups of residuals, due to 0-1 data and definition of residuals.</p>
+<p>Look at extreme residuals.</p>
+</div>
+<div id="stepwise-procedures" class="section level3">
+<h3>Stepwise procedures</h3>
+<p>Using p-values is wrong, we do not now how to calculate them.</p>
+<p>Anly use AIC.</p>
+<div id="use-mtcars-for-example" class="section level4">
+<h4>Use mtcars for example</h4>
+<pre class="r"><code>data(mtcars)
+
+fit &lt;- glm(am ~ mpg+cyl+disp+drat, data= mtcars, family = binomial)
+
+summary(fit)</code></pre>
+<pre><code>
+Call:
+glm(formula = am ~ mpg + cyl + disp + drat, family = binomial, 
+    data = mtcars)
+
+Deviance Residuals: 
+     Min        1Q    Median        3Q       Max  
+-1.81690  -0.34097  -0.04864   0.17467   1.74918  
+
+Coefficients:
+             Estimate Std. Error z value Pr(&gt;|z|)  
+(Intercept) -45.47048   22.84741  -1.990   0.0466 *
+mpg           0.60124    0.47441   1.267   0.2050  
+cyl           2.36515    1.33387   1.773   0.0762 .
+disp         -0.01922    0.01739  -1.105   0.2692  
+drat          6.22298    2.91299   2.136   0.0327 *
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+(Dispersion parameter for binomial family taken to be 1)
+
+    Null deviance: 43.230  on 31  degrees of freedom
+Residual deviance: 15.676  on 27  degrees of freedom
+AIC: 25.676
+
+Number of Fisher Scoring iterations: 7</code></pre>
+<pre class="r"><code>step(fit)</code></pre>
+<pre><code>Start:  AIC=25.68
+am ~ mpg + cyl + disp + drat
+
+       Df Deviance    AIC
+- disp  1   17.030 25.030
+&lt;none&gt;      15.676 25.676
+- mpg   1   18.866 26.866
+- cyl   1   20.492 28.492
+- drat  1   25.709 33.709
+
+Step:  AIC=25.03
+am ~ mpg + cyl + drat
+
+       Df Deviance    AIC
+&lt;none&gt;      17.030 25.030
+- cyl   1   20.578 26.578
+- mpg   1   21.617 27.618
+- drat  1   29.558 35.558</code></pre>
+<pre><code>
+Call:  glm(formula = am ~ mpg + cyl + drat, family = binomial, data = mtcars)
+
+Coefficients:
+(Intercept)          mpg          cyl         drat  
+   -49.4548       0.6378       1.6115       7.2595  
+
+Degrees of Freedom: 31 Total (i.e. Null);  28 Residual
+Null Deviance:      43.23 
+Residual Deviance: 17.03    AIC: 25.03</code></pre>
+</div>
+</div>
+</div>
+<div id="p-value-vs-likelihood" class="section level2">
+<h2>P-value vs likelihood</h2>
+<p>Likelihood: given these data, what is the likelihood of my model(s) P-value: given a null-hypothesis, what is the probability of my data under the null-model</p>
+<p>P-value only mean something for a truely i.i.d. sample</p>
+</div>
+<div id="session-information" class="section level2">
+<h2>Session information</h2>
+<!-- Insert the session information into the document -->
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 3.4.3 (2017-11-30)
+Platform: x86_64-apple-darwin15.6.0 (64-bit)
+Running under: macOS Sierra 10.12.6
+
+Matrix products: default
+BLAS: /Library/Frameworks/R.framework/Versions/3.4/Resources/lib/libRblas.0.dylib
+LAPACK: /Library/Frameworks/R.framework/Versions/3.4/Resources/lib/libRlapack.dylib
+
+locale:
+[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+loaded via a namespace (and not attached):
+ [1] compiler_3.4.3  backports_1.1.2 magrittr_1.5    rprojroot_1.3-2
+ [5] tools_3.4.3     htmltools_0.3.6 yaml_2.1.16     Rcpp_0.12.15   
+ [9] stringi_1.1.6   rmarkdown_1.8   knitr_1.19      git2r_0.21.0   
+[13] stringr_1.2.0   digest_0.6.15   evaluate_0.10.1</code></pre>
+</div>
+
+<hr>
+<p>
+    This <a href="http://rmarkdown.rstudio.com">R Markdown</a> site was created with <a href="https://github.com/jdblischak/workflowr">workflowr</a>
+</p>
+<hr>
+
+<!-- To enable disqus, uncomment the section below and provide your disqus_shortname -->
+
+<!-- disqus
+  <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+        var disqus_shortname = 'rmarkdown'; // required: replace example with your forum shortname
+
+        /* * * DON'T EDIT BELOW THIS LINE * * */
+        (function() {
+            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+-->
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

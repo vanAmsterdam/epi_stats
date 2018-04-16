@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+<meta name="author" content="Wouter van Amsterdam" />
+
+<meta name="date" content="2018-01-19" />
+
+<title>Linear Mixed Models</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/font-awesome-4.5.0/css/font-awesome.min.css" rel="stylesheet" />
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+
+<div class="container-fluid main-container">
+
+<!-- tabsets -->
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+</script>
+
+<!-- code folding -->
+
+
+
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+  padding-left: 25px;
+  text-indent: 0;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">epi_stats</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/jdblischak/workflowr">
+    <span class="fa fa-github"></span>
+     
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">Linear Mixed Models</h1>
+<h4 class="author"><em>Wouter van Amsterdam</em></h4>
+<h4 class="date"><em>2018-01-19</em></h4>
+
+</div>
+
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+<!-- Update knitr chunk options -->
+<!-- Insert the date the file was last updated -->
+<p><strong>Last updated:</strong> 2018-04-16</p>
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+<p><strong>Code version:</strong> 899ad0d</p>
+<!-- Add your analysis here -->
+<div id="intro" class="section level2">
+<h2>Intro</h2>
+<p>Tutor: Jan van de Broek</p>
+</div>
+<div id="dependent-data" class="section level2">
+<h2>Dependent data</h2>
+<p>Think about the sampling unit (e.g. patient, cow).</p>
+<p>1 person with multiple observations = ‘dependent’ data</p>
+<div id="formalism" class="section level3">
+<h3>Formalism</h3>
+<p><strong>Random independent variables</strong></p>
+<ul>
+<li>independent variables <span class="math inline">\(\epsilon_{i1}, \epsilon_{i2}, \epsilon_{i.} \sim{N(0,\sigma)}\)</span>,</li>
+<li><span class="math inline">\(cor(\epsilon_{ij}, \epsilon_{ik}) = 0\)</span> if <span class="math inline">\(j \neq k\)</span></li>
+</ul>
+<p><strong>Add common fixed effect</strong></p>
+<ul>
+<li><span class="math inline">\(y_{ij} = \epsilon_{ij} + b_i\)</span>; <span class="math inline">\(y_{ik} = \epsilon_{ik} + b_i\)</span>;</li>
+</ul>
+<p>If <span class="math inline">\(\epsilon\)</span> were independent, so are <span class="math inline">\(y\)</span>.</p>
+<p>(This is equivalent to the ANOVA)</p>
+<p><strong>Add a random number to both epsilons</strong></p>
+<ul>
+<li>rondomness: take all possible outcomes under consideration with attached probability distribution</li>
+<li>consider <span class="math inline">\(b_i\)</span> as a random variable from a known / hypothesied distribution; then you need to consider all possible values and probability distribution</li>
+</ul>
+<p>This gives correlated data, due to the random effect.</p>
+</div>
+<div id="linear-model-with-random-and-fixed-effects" class="section level3">
+<h3>Linear model with random and fixed effects</h3>
+<p>With <span class="math inline">\(i\)</span> subjects, <span class="math inline">\(j\)</span> observations per subject</p>
+<p><span class="math inline">\(y_{ij} = \beta_0 + b_{0i} + \epsilon_{ij}\)</span></p>
+<p><span class="math inline">\(b_{0i} \sim N(0,\sigma_{int})\)</span></p>
+<p>Equivalent to ANOVA model, but - group-effect = subject effect</p>
+<ul>
+<li><span class="math inline">\(j\)</span> counts over observation within subject, not subjects in group</li>
+</ul>
+<p>If you take subject effect as fixed, you cannot generalize to other subjects Taking subject-effect as random with a known distribution, will allow you to generalize.</p>
+<p>As all <span class="math inline">\(b_{0i}\)</span> are drawn from the same distribution <span class="math inline">\(N(0, \sigma_{int})\)</span>. The correlation between intra-subject observation will be the same. This correlation structure is called the exchangeable correlation structure (equivalent to compound symmetry).</p>
+<p>Target is not to get estimates of the subject-effects for individual subjects, but the distribution (variance) of the random subject effects</p>
+</div>
+<div id="with-regression" class="section level3">
+<h3>With regression</h3>
+<p>Difference intercept the same slope, <strong>analysis of covariance</strong></p>
+<p><span class="math inline">\(y_{ij} = \alpha_i + \beta x + \epsilon_{ij}\)</span></p>
+<p><span class="math inline">\(y_{ij} = \alpha + (\alpha_i - \alpha) + \beta x + \epsilon_{ij}\)</span></p>
+<p><span class="math inline">\(y_{ij} = \beta_0 + b_{0i} + \beta_1 x + \epsilon_{ij}\)</span></p>
+<p>Where <span class="math inline">\(b_{0i}\)</span> as the random effect per subject, <span class="math inline">\(\beta_1\)</span> the same for all subjects.</p>
+<ul>
+<li>Random part: <span class="math inline">\(b_{0i} + \epsilon_{ij}\)</span></li>
+<li>Fixed part: <span class="math inline">\(\beta_0 + \beta_1 x\)</span></li>
+</ul>
+<p><span class="math inline">\(b_{0i} \sim N(0, \sigma_{intercept})\)</span> Variance of population of which you draw ‘intercepts’</p>
+<p>We can also take a fixed intercept, and random slopes for each subject. Then <span class="math inline">\(\beta_{i1} \sim N(0, \sigma_{slope})\)</span></p>
+<p>Then the correlation between different time-points can be different.</p>
+<ul>
+<li><span class="math inline">\(y_{i1} \sim 1*b_{1i}\)</span></li>
+<li><span class="math inline">\(y_{i2} \sim 2*b_{1i}\)</span></li>
+<li><span class="math inline">\(y_{i3} \sim 3*b_{1i}\)</span></li>
+<li><span class="math inline">\(y_{i4} \sim 4*b_{1i}\)</span></li>
+</ul>
+<p>So correlation <span class="math inline">\(cov(y_{i1}, y_{i2}) &gt; cov(y_{i1}, y_{i3})\)</span></p>
+</div>
+<div id="likelihood" class="section level3">
+<h3>Likelihood</h3>
+<p>Random effects parts will be biased (variances <span class="math inline">\(/\sqrt{n}\)</span> vs <span class="math inline">\(/\sqrt{n-1}\)</span>.</p>
+<p>Get transformed likelihood that does not depend on fixed effects.</p>
+<p>Restriced maximul likelihood estimating: REML</p>
+<p>Wrong way to do it:</p>
+<p>Fixed model 1 -&gt; transformation 1 -&gt; random effects part 1 Fixed model 2 -&gt; transformation 2 -&gt; random effects part 2</p>
+<p>Comparing models: both fixed parts, and random effects parts; Both can vary at the same time (which makes it impossible to see if fixed parts are different and/or random effects are different)</p>
+</div>
+<div id="summary" class="section level3">
+<h3>Summary</h3>
+<p><strong>In a mixed effects model:</strong></p>
+<ul>
+<li><strong>random parts</strong> models correlation structure (i.e. dependency, e.g. random intercept or slope per subject)</li>
+<li><strong>fixed parts</strong> models patterns in the data</li>
+</ul>
+<p>Modelling is sequential</p>
+<p>With full-model determine random part. Then get more parsimonious model for fixed-model.</p>
+<p>Works with generalized linear models</p>
+</div>
+</div>
+<div id="with-data" class="section level2">
+<h2>With data</h2>
+<pre class="r"><code>require(dplyr)
+data(&quot;ChickWeight&quot;)
+str(ChickWeight)</code></pre>
+<pre><code>Classes &#39;nfnGroupedData&#39;, &#39;nfGroupedData&#39;, &#39;groupedData&#39; and &#39;data.frame&#39;:  578 obs. of  4 variables:
+ $ weight: num  42 51 59 64 76 93 106 125 149 171 ...
+ $ Time  : num  0 2 4 6 8 10 12 14 16 18 ...
+ $ Chick : Ord.factor w/ 50 levels &quot;18&quot;&lt;&quot;16&quot;&lt;&quot;15&quot;&lt;..: 15 15 15 15 15 15 15 15 15 15 ...
+ $ Diet  : Factor w/ 4 levels &quot;1&quot;,&quot;2&quot;,&quot;3&quot;,&quot;4&quot;: 1 1 1 1 1 1 1 1 1 1 ...
+ - attr(*, &quot;formula&quot;)=Class &#39;formula&#39;  language weight ~ Time | Chick
+  .. ..- attr(*, &quot;.Environment&quot;)=&lt;environment: R_EmptyEnv&gt; 
+ - attr(*, &quot;outer&quot;)=Class &#39;formula&#39;  language ~Diet
+  .. ..- attr(*, &quot;.Environment&quot;)=&lt;environment: R_EmptyEnv&gt; 
+ - attr(*, &quot;labels&quot;)=List of 2
+  ..$ x: chr &quot;Time&quot;
+  ..$ y: chr &quot;Body weight&quot;
+ - attr(*, &quot;units&quot;)=List of 2
+  ..$ x: chr &quot;(days)&quot;
+  ..$ y: chr &quot;(gm)&quot;</code></pre>
+<pre class="r"><code>library(nlme)
+fit1 &lt;- lme(weight ~ factor(Time)+factor(Time):Diet, 
+           random = ~factor(Time)+1|Chick,
+           data = ChickWeight %&gt;% filter(Time &lt;= 6 &amp; Diet %in% c(1,2)),
+           method = &quot;REML&quot;) # REML is default value for method
+
+fit2 &lt;- lme(weight ~ factor(Time)+factor(Time):Diet, 
+           random = ~factor(Time)-1|Chick,
+           data = ChickWeight %&gt;% filter(Time &lt;= 6 &amp; Diet %in% c(1,2)),
+           method = &quot;REML&quot;)
+
+fit3 &lt;- lme(weight ~ factor(Time)+factor(Time):Diet, 
+           random = ~1|Chick,
+           data = ChickWeight %&gt;% filter(Time &lt;= 6 &amp; Diet %in% c(1,2)),
+           method = &quot;REML&quot;)
+
+summary(fit1)</code></pre>
+<pre><code>Linear mixed-effects model fit by REML
+ Data: ChickWeight %&gt;% filter(Time &lt;= 6 &amp; Diet %in% c(1, 2)) 
+       AIC      BIC    logLik
+  569.7023 621.0114 -265.8511
+
+Random effects:
+ Formula: ~factor(Time) + 1 | Chick
+ Structure: General positive-definite, Log-Cholesky parametrization
+              StdDev    Corr                
+(Intercept)   0.7591715 (Intr) fc(T)2 fc(T)4
+factor(Time)2 3.3334221 0.509               
+factor(Time)4 3.6299054 0.388  0.772        
+factor(Time)6 6.8250079 0.187  0.455  0.865 
+Residual      0.9016205                     
+
+Fixed effects: weight ~ factor(Time) + factor(Time):Diet 
+                       Value Std.Error DF   t-value p-value
+(Intercept)         41.40000 0.2635584 81 157.08091  0.0000
+factor(Time)2        5.85000 0.7980458 81   7.33041  0.0000
+factor(Time)4       14.54375 0.8704857 81  16.70763  0.0000
+factor(Time)6       24.82898 1.5846995 81  15.66794  0.0000
+factor(Time)0:Diet2 -0.70000 0.4564966 81  -1.53342  0.1291
+factor(Time)2:Diet2  2.15000 1.5038361 81   1.42968  0.1567
+factor(Time)4:Diet2  3.85625 1.5885473 81   2.42753  0.0174
+factor(Time)6:Diet2  9.17102 2.7543575 81   3.32964  0.0013
+ Correlation: 
+                    (Intr) fc(T)2 fc(T)4 fc(T)6 f(T)0: f(T)2: f(T)4:
+factor(Time)2        0.113                                          
+factor(Time)4        0.056  0.730                                   
+factor(Time)6        0.018  0.442  0.831                            
+factor(Time)0:Diet2 -0.577 -0.065 -0.032 -0.011                     
+factor(Time)2:Diet2 -0.235 -0.550 -0.397 -0.238  0.407              
+factor(Time)4:Diet2 -0.197 -0.419 -0.557 -0.459  0.341  0.770       
+factor(Time)6:Diet2 -0.106 -0.265 -0.484 -0.577  0.184  0.478  0.832
+
+Standardized Within-Group Residuals:
+        Min          Q1         Med          Q3         Max 
+-1.47771978 -0.32984263 -0.02271753  0.30794810  1.89642815 
+
+Number of Observations: 118
+Number of Groups: 30 </code></pre>
+<pre class="r"><code>summary(fit2)</code></pre>
+<pre><code>Linear mixed-effects model fit by REML
+ Data: ChickWeight %&gt;% filter(Time &lt;= 6 &amp; Diet %in% c(1, 2)) 
+       AIC      BIC    logLik
+  569.7023 621.0114 -265.8511
+
+Random effects:
+ Formula: ~factor(Time) - 1 | Chick
+ Structure: General positive-definite, Log-Cholesky parametrization
+              StdDev    Corr                
+factor(Time)0 0.7988770 fc(T)0 fc(T)2 fc(T)4
+factor(Time)2 3.7849248 0.617               
+factor(Time)4 3.9943178 0.516  0.812        
+factor(Time)6 7.0108704 0.276  0.497  0.858 
+Residual      0.8666594                     
+
+Fixed effects: weight ~ factor(Time) + factor(Time):Diet 
+                       Value Std.Error DF   t-value p-value
+(Intercept)         41.40000 0.2635624 81 157.07854  0.0000
+factor(Time)2        5.85000 0.7980412 81   7.33045  0.0000
+factor(Time)4       14.54375 0.8704832 81  16.70767  0.0000
+factor(Time)6       24.82897 1.5846905 81  15.66803  0.0000
+factor(Time)0:Diet2 -0.70000 0.4565035 81  -1.53339  0.1291
+factor(Time)2:Diet2  2.15000 1.5038328 81   1.42968  0.1567
+factor(Time)4:Diet2  3.85625 1.5885508 81   2.42753  0.0174
+factor(Time)6:Diet2  9.17103 2.7543518 81   3.32965  0.0013
+ Correlation: 
+                    (Intr) fc(T)2 fc(T)4 fc(T)6 f(T)0: f(T)2: f(T)4:
+factor(Time)2        0.113                                          
+factor(Time)4        0.056  0.730                                   
+factor(Time)6        0.018  0.442  0.831                            
+factor(Time)0:Diet2 -0.577 -0.065 -0.032 -0.011                     
+factor(Time)2:Diet2 -0.235 -0.550 -0.397 -0.238  0.407              
+factor(Time)4:Diet2 -0.197 -0.419 -0.557 -0.459  0.341  0.770       
+factor(Time)6:Diet2 -0.106 -0.265 -0.484 -0.577  0.184  0.478  0.832
+
+Standardized Within-Group Residuals:
+        Min          Q1         Med          Q3         Max 
+-1.42044678 -0.31703810 -0.02182896  0.29601019  1.82286018 
+
+Number of Observations: 118
+Number of Groups: 30 </code></pre>
+<p>Without main effect of Diet, Diet is modeled as a nested effect.</p>
+<pre class="r"><code>getVarCov(fit1, type = &quot;marginal&quot;)</code></pre>
+<pre><code>Chick 1 
+Marginal variance covariance matrix
+       1       2       3       4
+1 1.3893  1.8643  1.6464  1.5431
+2 1.8643 15.0770 12.2710 13.1890
+3 1.6464 12.2710 16.7060 24.0310
+4 1.5431 13.1890 24.0310 49.9040
+  Standard Deviations: 1.1787 3.8829 4.0872 7.0642 </code></pre>
+<pre class="r"><code>anova(fit1, fit2, fit3)</code></pre>
+<pre><code>     Model df      AIC      BIC    logLik   Test  L.Ratio p-value
+fit1     1 19 569.7023 621.0114 -265.8511                        
+fit2     2 19 569.7023 621.0114 -265.8511                        
+fit3     3 10 657.7868 684.7916 -318.8934 2 vs 3 106.0845  &lt;.0001</code></pre>
+<div id="with-lme4" class="section level4">
+<h4>With lme4</h4>
+<p>Does not work yet</p>
+<pre class="r"><code>library(lme4)
+
+fit1 &lt;- 
+  ChickWeight %&gt;%
+  filter(Time &lt;= 10 &amp; Diet %in% c(1,2)) %&gt;%
+  lme4::lmer(formula = weight ~ Diet + 
+           (factor(Time)|Chick), REML = T)</code></pre>
+</div>
+</div>
+<div id="session-information" class="section level2">
+<h2>Session information</h2>
+<!-- Insert the session information into the document -->
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 3.4.3 (2017-11-30)
+Platform: x86_64-apple-darwin15.6.0 (64-bit)
+Running under: macOS Sierra 10.12.6
+
+Matrix products: default
+BLAS: /Library/Frameworks/R.framework/Versions/3.4/Resources/lib/libRblas.0.dylib
+LAPACK: /Library/Frameworks/R.framework/Versions/3.4/Resources/lib/libRlapack.dylib
+
+locale:
+[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+[1] bindrcpp_0.2 nlme_3.1-131 dplyr_0.7.4 
+
+loaded via a namespace (and not attached):
+ [1] Rcpp_0.12.15     lattice_0.20-35  assertthat_0.2.0 digest_0.6.15   
+ [5] rprojroot_1.3-2  grid_3.4.3       R6_2.2.2         backports_1.1.2 
+ [9] git2r_0.21.0     magrittr_1.5     evaluate_0.10.1  pillar_1.1.0    
+[13] rlang_0.1.6      stringi_1.1.6    rmarkdown_1.8    tools_3.4.3     
+[17] stringr_1.2.0    glue_1.2.0       yaml_2.1.16      compiler_3.4.3  
+[21] pkgconfig_2.0.1  htmltools_0.3.6  bindr_0.1        knitr_1.19      
+[25] tibble_1.4.2    </code></pre>
+</div>
+
+<hr>
+<p>
+    This <a href="http://rmarkdown.rstudio.com">R Markdown</a> site was created with <a href="https://github.com/jdblischak/workflowr">workflowr</a>
+</p>
+<hr>
+
+<!-- To enable disqus, uncomment the section below and provide your disqus_shortname -->
+
+<!-- disqus
+  <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+        var disqus_shortname = 'rmarkdown'; // required: replace example with your forum shortname
+
+        /* * * DON'T EDIT BELOW THIS LINE * * */
+        (function() {
+            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+-->
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
