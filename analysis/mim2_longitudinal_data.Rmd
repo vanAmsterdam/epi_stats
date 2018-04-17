@@ -1,0 +1,75 @@
+---
+title: "Modeling longitudinal Data"
+author: "Wouter van Amsterdam"
+date: 2018-04-17
+output: html_document
+---
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+```
+
+<!-- Update knitr chunk options -->
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+<!-- Insert the date the file was last updated -->
+```{r last-updated, echo=FALSE, results='asis'}
+```
+
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+```{r code-version, echo=FALSE, results='asis'}
+```
+
+<!-- Add your analysis here -->
+
+## Modeling time
+
+Either formulate with random effects, which determines the var-covar matrix
+
+Or: model fixed effects only, then model dependence of residuals
+
+Possible models:
+
+- independent or scaled identity
+- exchangeable or compound symmetry (fixed correlation between all measurements)
+-> gives intra-class correlation coefficient
+$\frac{\sigma^2}{\sigma_0^2}$; is identical to random intercept, no random slope;
+and identical to repeated measures anova
+
+- unstructured correlation (all are free)
+- autoregressive of order 1: AR(1) (correlations are $\rho ^{distance}$)
+- autoregressive of order 1: AR(1), can add heterogeneous variances
+- can take fractional powers to account for non-equally spaced observations
+
+Adding autocorrelation to linear mixed effect models:
+
+- correlation between residuals close together (high resid on T = t, also high resid on T = t + 1)
+- only works when you have enough time-points per persons
+
+Formulation:
+Recall model linear mixed model:
+𝑦_i𝑗=𝛽_0+𝛽_1 𝑋_1𝑖𝑗+_0𝑖+_1𝑖 𝑋_1𝑖𝑗+𝜀_𝑖𝑗
+In matrix formulation:
+𝒀_𝑖=𝑿_𝑖∙𝜷+𝒁_𝑖∙_𝑖+𝜺_𝑖
+where 𝑿_𝑖 is the covariate matrix of the fixed effect(s) and 𝒁_𝑖 the design matrix of the random effect(s)
+Variance-covariance matrix of repeated measures y:
+𝑉𝑎𝑟(𝒀_𝑖 )=𝒁_𝑖∙𝜮_∙〖𝒁_𝑖〗^′+〖𝜎_𝑒〗^2∙𝑰_(𝑛_𝑖 )
+
+
+Baseline measurements:
+
+- in the setting ofSee Fox for notation
+
+ a trial, baseline measurement is more like a covariate than an outcome
+
+- in observational study: first measurement is just the first outcome
+
+## Session information
+
+<!-- Insert the session information into the document -->
+```{r session-info}
+```

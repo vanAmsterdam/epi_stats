@@ -1,0 +1,959 @@
+---
+title: "Assignments Mixed models"
+author: "Wouter van Amsterdam"
+date: 2018-04-16
+output: html_document
+---
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+```
+
+<!-- Update knitr chunk options -->
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+<!-- Insert the date the file was last updated -->
+```{r last-updated, echo=FALSE, results='asis'}
+```
+
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+```{r code-version, echo=FALSE, results='asis'}
+```
+
+<!-- Add your analysis here -->
+
+
+## Setup R environment
+
+
+```{r}
+library(dplyr)
+library(data.table)
+library(magrittr)
+library(purrr)
+library(here) # for tracking working directory
+library(ggplot2)
+library(epistats)
+library(broom)
+```
+
+# Day 1
+
+## 1. schools
+
+```{r}
+london <- read.table(here("data", "school.dat"), header = T)
+str(london)
+```
+
+
+First clean up the data a bit so that factor variables are coded as such
+
+```{r}
+factor_vars <- c("gender", "schgend", "schav")
+london %<>% mutate_at(vars(factor_vars), funs(as.factor))
+```
+
+
+All data
+
+```{r}
+london %>%
+  ggplot(aes(y = normexam, x = standlrt)) + 
+  geom_point()
+```
+
+
+Linear model
+
+```{r}
+london %>%
+  lm(normexam ~ standlrt, data = .) %>%
+  summary()
+```
+
+
+Get individual scatterplots
+
+```{r, cache = T}
+london %>%
+  ggplot(aes(y = normexam, x = standlrt)) + 
+  geom_point() +
+  facet_wrap(~school)
+
+```
+
+
+Perform lm in each school
+
+We can use split from base R and combine this with map to apply 
+lm to each element of the list
+
+```{r}
+coefs <- london %>%
+  split(f = .[["school"]]) %>%
+  map(function(data) lm(normexam~standlrt, data = data)) %>%
+  map_df(tidy)
+coefs %>%
+  group_by(term) %>%
+  summarize(mean(estimate), sd(estimate))
+```
+
+Here is a nice way of doing this with purrr, tidyr and dplyr (completely 
+tidyverse)
+
+```{r}
+require(tidyr)
+london_nested <- london %>% group_by(school) %>% nest()
+
+get_coef <- function(coefs, coef = "(Intercept)") {
+  stopifnot(is.data.frame(coefs))
+  coefs[coefs$term == coef, "estimate"]
+}
+
+london_nested %>%
+  mutate(fit = map(data, ~lm(normexam~standlrt, data = .x)),
+         coefs = map(fit, tidy),
+         intercept = as.numeric(map(coefs, ~get_coef(.x))),
+         slope     = as.numeric(map(coefs, ~get_coef(.x, "standlrt")))) %>%
+  summarize_at(vars(intercept, slope), funs(mean, sd))
+
+```
+
+
+Using data.table
+
+.. and broom::tidy in 1 throw
+
+```{r}
+setDT(london)
+coefs <- london[, {
+  fit = lm(normexam ~ standlrt, data = .SD)
+  tidy(fit)
+  }, by = "school"]
+coefs[, list(mean = mean(estimate), sd = sd(estimate)), by = "term"]
+```
+
+
+.. with step of list of fits
+
+```{r}
+setDT(london)
+fits <- london[, list(fit = list(lm(normexam ~ standlrt, data = .SD))), 
+               by = "school"]
+fits[[2]] %>% 
+  map_df(tidy) %>%
+  group_by(term) %>%
+  summarize(mean(estimate), sd(estimate))
+
+```
+
+### 2.
+
+> Continue with reproducing the analysis of the schools dataset (school.dat or school.sav) so far.
+
+#### a.	
+
+> Fit a linear mixed model with random intercept to predict exam scores using the LRT scores.
+
+```{r}
+require(lme4)
+lmer(normexam ~ standlrt + (1 | school), data = london, REML = F)
+```
+
+
+#### b.
+
+> Add a random slope to the model in (a). Interpret this model.
+
+```{r}
+lmer(normexam ~ standlrt + (standlrt | school), data = london, REML = F)
+```
+
+On average, children with average baseline score, score avarage on the normalized 
+exams. There is a positive correlation with baseline score and normalized exam.
+Schools differ in overall normalized exam scores, and the correlation between 
+baseline score and normalized exam score differs between schools
+
+
+## 3.
+
+> Finish the analysis of the schools dataset (school.dat or school.sav).
+
+### a.	
+
+> Add child- and school-level explanatory variables. Interpret the model.
+
+```{r}
+lmer(normexam ~ standlrt + gender + schgend + schav + (standlrt | school), data = london,
+     REML = F) %>% 
+  summary()
+```
+
+### b.	
+
+> For the model in (a), we will write a brief description of the statistical model used. Fill in the blanks:
+
+"A linear mixed effects model was estimated, using fixed effects for baseline score,
+gender, school gender and school average; A random intercept and a random effect of baseline score per school were added to correct for clustering on school level."
+
+## 4.
+
+> Part c of this question will be used in the quiz this afternoon. Please save or print the output and have it on hand (together with this exercise) when you complete the quiz.
+
+> A multi-center, randomized, double-blind clinical trial was done to compare two treatments for hypertension. One treatment was a new drug (1 = Carvedilol) and the other was a standard drug for controlling hypertension (2 = Nifedipine). Twenty-nine centers participated in the trial and patients were randomized in order of entry. One pre-randomization and four post-treatment visits were made. Here, we will concentrate on the last recorded measurement of diastolic blood pressure (primary endpoint: dbp). The data can be found in the SPSS data file dbplast.sav. Read the data into R or SPSS. The research question is which of the two medicines (treat) is more effective in reducing DBP. Since baseline (pre-randomization) DBP (dbp) will likely be associated with post-treatment DBP and will reduce the variation in the outcome (thereby increasing our power to detect a treatment effect), we wish to include it here as a covariate.
+
+Read in the data
+
+```{r}
+bp <- haven::read_spss(here("data", "dbplast.sav"))
+str(bp)
+```
+
+Curate
+
+```{r}
+factor_vars <- c("center", "patient", "treat")
+bp %<>% mutate_at(vars(factor_vars), funs(as.factor))
+```
+
+### a.	
+
+> Make some plots to describe the patterns of the data.
+
+```{r}
+summary(bp)
+```
+
+
+First scatter plot an pre-and post bp;
+
+Let's assume that dbp1 = pre
+
+```{r}
+bp %>%
+  ggplot(aes(x = dbp1, y = dbp)) + 
+  geom_point()
+```
+
+Now per treatment
+
+
+```{r}
+bp %>%
+  ggplot(aes(x = dbp1, y = dbp)) + 
+  geom_point() + 
+  facet_wrap(~treat)
+
+```
+
+Look at marginal distributions per treatment
+
+```{r}
+bp %>% 
+  as.data.table() %>%
+  data.table::melt(id.vars = c("patient", "treat"), measure.vars = c("dbp", "dbp1")) %>%
+  ggplot(aes(x = 1, y = value, fill = treat)) + 
+  geom_boxplot(alpha = .5) + 
+  facet_wrap(~variable)
+```
+
+
+### b.	
+
+> Fit a model to answer the research question, using maximum likelihood estimation, taking into account that patients within centers may have correlated data. Interpret the coefficients of the model.
+
+```{r}
+lmer(dbp ~ dbp1 + treat + (1 | center), data = bp, REML = F) %>%
+  summary()
+```
+
+
+### c.
+
+> Make a new baseline dbp variable, centered around its mean. Re-fit the model in (b) using the centered baseline blood pressure variable, using maximum likelihood estimation, and interpret the parameters of this new model.
+
+```{r}
+fit <- bp %>%
+  mutate(dbp_center = dbp1 - mean(dbp1)) %>%
+  lmer(dbp ~ dbp_center + treat + (1 | center), data = ., REML = F)
+
+fit %>%
+  summary()
+```
+
+
+## 5.
+
+> In a small crossover study two drugs, A and B, are compared for their effect on the diastolic blood pressure (DBP). Each patient in the study receives the two treatments in a random order and separated in time (“wash-out” period) so that one treatment does not influence the blood pressure measurement obtained after administering the other treatment (i.e. to rule out carry-over effect) . The data are given in the data file crossover.sav and crossover.dat.
+
+> Note that subject 4 has only the measurement for drug A and that subject 16 has only the measurement for drug B.
+
+Read in data and curate
+
+```{r}
+bpco <- read.table(here("data", "crossover.dat"), header = T)
+
+bpco %<>% 
+  set_colnames(tolower(colnames(bpco)))
+
+factor_vars <- c("period", "drug")
+
+bpco %<>% mutate_at(vars(factor_vars), funs(as.factor))
+
+str(bpco)
+```
+
+
+### a.
+
+> Use descriptive statistics to get a feel for the data. Which drug seems to be better at reducing DBP?
+
+```{r}
+setDT(bpco)
+bpco[, list(mean_bp = mean(y)), by = "drug,period"]
+```
+
+Drug 1 seems to reduce blood pressure, while drug 2 seems to increase.
+
+In a spaghetti plot
+
+
+```{r}
+bpco %>%
+  ggplot(aes(x = drug, y = y, group = patient)) + 
+  geom_line(alpha = .8) + theme_minimal()
+
+
+```
+
+
+### b.
+
+> Fit a model to the data, looking at drug and period effect and correcting for the fact that (most) patients have more than one DBP measurement. Which variable(s) do you choose as random?
+
+```{r}
+fit <- lmer(y ~ drug + period + (1 | patient), data = bpco, REML = F)
+fit %>% summary()
+```
+
+### c.
+
+> Interpret the results of the model. Is there a significant difference between the two drugs?	Is there a significant period effect?
+
+Drug 2 seems to increase blood pressure (be less effective)
+
+Perdiod effect is negative, which could indicate regression to the mean
+(participants are included when having a (sometimes random) high blood pressure)
+
+For significance:
+
+```{r}
+confint(fit)
+```
+
+Yes from profile likelihood intervals, therapy difference is significant, 
+but not period
+
+### d. 
+
+> What other hypothesis might we want to test here?
+
+maybe interaction between drug and period?
+
+## 6.
+
+> A secondary question regarding the school exam data (exercises 1 & 2) was proposed in the lecture. Use SPSS or R (or both) to address the question: is the difference between boys and girls the same for single-sex and mixed-gender schools?  (Note: you’ll need to make a new variable for single-gender (schgend = 2 or 3) vs mixed-gender (schgend = 1) schools before proceeding with the analysis.)
+
+
+```{r}
+london %>%
+  mutate(mixed_school = schgend == 1) %>%
+  lmer(normexam ~ standlrt + gender * mixed_school + schav + (standlrt | school), data = .,
+     REML = F) %>% 
+  summary()
+```
+
+In the mixed school, there seems to be no difference between genders
+
+## 7. (Challenge)
+
+> Tomorrow we will spend the morning session examining different ways of analyzing the Reisby dataset. This is a longitudinal dataset on 66 patients with endogenous or exogenous depression. Patients are measured every week starting at baseline; from week 1 on, they were all treated with imipramine. The outcome is the score on the Hamilton Depression Rating Scale (HDRS), a score based on a questionnaire administered by a health care professional. The score ranges - theoretically - from 0 (no depressive symptoms) to 52, where scores higher than 20 indicate moderate to very severe depression. The questions of interest are how the HDRS score changes over time for the patients, and whether the patterns of HDRS over time differ for patients with endogenous and exogenous depression. The data is available in both a “wide” and a “long” format: reisby_wide.sav and reisby_long.sav .
+
+Read in data and curate
+
+```{r}
+reisby_wide <- haven::read_spss(here("data", "reisby_wide.sav"))
+reisby_long <- haven::read_spss(here("data", "reisby_long.sav"))
+
+factor_vars <- c("id")
+logical_vars <- c("endo")
+
+reisby_wide %<>% mutate_at(vars(factor_vars), funs(as.factor))
+reisby_long %<>% mutate_at(vars(factor_vars), funs(as.factor))
+reisby_wide %<>% mutate_at(vars(logical_vars), funs(as.logical))
+reisby_long %<>% mutate_at(vars(logical_vars), funs(as.logical))
+
+str(reisby_wide)
+str(reisby_long)
+
+```
+
+### a.
+
+> We heard this morning that longitudinal data is also multi-level data. How many levels do we have here? What does each level represent?
+
+Level 1: patient + timepoint
+Level 2: patient
+
+### b.
+
+> Use descriptive statistics (means, SDs, graphs) to get a feel for the data, concentrating on the patterns (individual and/or group) of HDRS over time (note that there are two versions of the dataset given, one “wide” and one “long”. For some graphs and descriptive statistics, one version may be easier to use than the other.
+
+Let's look at spaghetti plots
+
+```{r}
+reisby_long %>% 
+  ggplot(aes(x = week, y = hdrs, group = id)) + 
+  geom_line() + facet_wrap(~endo, labeller = label_both)
+```
+
+All seem to go down.
+
+Slope seems pretty similar for both treatments, but not intercept
+
+### c. What do you notice about the mean HDRS score over time? And the variation?
+
+Mean goes down, sd seems to go up
+
+```{r}
+setDT(reisby_long)
+reisby_long[, list(n_patients = uniqueN(id),
+                   mean_hdrs = mean(hdrs, na.rm = T), 
+                   sd_hdrs = sd(hdrs, na.rm = T)), 
+            by = "week"]
+```
+
+### d. 
+
+> Time was measured at 6 discrete moments. How would you want to incorporate time in the fixed part of the model: as discrete or continuous? Explain your answer.
+
+Probably as continous, all moments are equally spaced. This requires less 
+degrees of freedom
+
+### e.
+
+> If you were to include a random intercept in the model, for which level would you include an intercept?
+
+Patient
+
+### f. 
+
+> Do you think it is necessary to include time in the random part of the model? Why or why not?
+ 
+Does not make a lot of sense. 
+
+It's not like the time-points are a random draw of all possible time-points to measure at
+
+# Day 2
+
+## 1.
+
+> Repeat the linear mixed models analyses of the Reisby dataset, using time as a continuous variable. There are two versions of the dataset: “wide format” (reisby_wide.sav), meaning that all observations are in separate rows, and “long format” (reisby_long.sav), with observations from different time points on a separate line (so 6 lines per patient). Some of the descriptive analyses are easier to do when the data is in “wide format”, and others when the data is in “long format”. The mixed models need to be run on the data in “long” format.
+R users can use the foreign library to read in reisby_wide.sav, and either also read in the reisby_long.sav dataset or use the reshape() function to go from wide to long (see R script for help).
+
+
+> a.	Do some initial data analysis: get descriptive statistics and make plots of the data (note that most of the descriptive statistics – means, SDs, correlations – are easier to get in the wide version of the data, while the spaghetti plots and individual plots are easier to get from the wide version.
+
+See above
+
+### b. 
+
+> Can you think of a few possible hypotheses about the effect of endo?
+
+Different intercept, different slope
+
+### c.
+
+> Repeat the mixed model analyses of the Reisby dataset: model depression score (HDRS) as a function of time (linear), endo/exo and the interaction of the two. Use a model with only a random intercept per patient, and a model with a random intercept plus a random slope for time.
+
+```{r}
+require(lme4)
+lmer(hdrs ~ week * endo + (1|id), data = reisby_long) %>% summary()
+lmer(hdrs ~ week * endo + (week|id), data = reisby_long) %>% summary()
+
+```
+
+### d.
+
+> Which model from (d) do you think fits the data better, and why?
+
+More terms always fits better according to likelihood.
+
+The residual standard deviation of the model with random intercept and slope 
+is lower, so seems to fit better
+
+### e.
+
+> Interpret the second model from (c).
+f.	Save your script/syntax for the next exercises!
+
+## 2.
+
+> Model the variance-covariance matrix for the Reisby dataset.
+
+### a.
+
+> Try different covariance pattern models (CPM) and mixed models to capture the correlation present in the dataset.
+
+First get the observed var-covar matrix
+
+```{r}
+obs_vcov <- reisby_long %>%
+  data.table::dcast(id ~ week, value.var = "hdrs") %>% 
+  as.data.frame() %>% .[, -1] %>%
+  var(., use = "pairwise.complete.obs")
+obs_vcov
+
+vcovs <- list(observed = obs_vcov)
+
+obs_vcov %>% 
+  data.table::melt() %>%
+  ggplot(aes(x = Var1, y = Var2, fill = value)) + 
+  geom_tile() + scale_y_continuous(trans = "reverse")
+```
+
+
+
+Using mean imputed dataframe
+
+```{r}
+mean_impute_vector <- function(x) {
+  if (nna(x) == 0) return(x)
+  x[is.na(x)] <- mean(x, na.rm = T)
+  return(x)
+}
+
+mean_impute <- function(data) {
+  n_missings <- nna(data)
+  vars_with_missings <- names(n_missings)[n_missings > 0]
+  if (length(vars_with_missings) == 0) return(data)
+  data %>% mutate_at(vars(vars_with_missings), funs(mean_impute_vector))
+}
+
+reisby_imp <- mean_impute(reisby_long)
+```
+
+First model without dependence
+
+```{r}
+fit0 <- lm(hdrs ~ week * endo, data = reisby_imp)
+```
+
+
+```{r}
+reisby_long %>%
+  mutate(resid = residuals(fit0))
+```
+
+```{r}
+require(nlme)
+lme(fixed = hdrs ~ week * endo, random = ~ 1 | id, data = reisby_long,
+    na.action = "na.omit", method = "ML") %>% summary()
+```
+
+With independent compound symmetry structure
+
+```{r}
+melt_vcov <- function(vcov) {
+  if (is.list(vcov)) vcov = vcov[[1]]
+  vcov %>%
+    as.numeric() %>%
+    matrix(., nrow = dim(vcov)[1]) %>%
+    data.table::melt() %>%
+    set_colnames(c("axis1", "axis2", "value"))
+}
+melt_vcov(obs_vcov)
+```
+
+
+```{r}
+fit_cs <- gls(hdrs ~ week*endo, correlation=corCompSymm(form = ~ 1 | id), data=reisby_long, na.action="na.omit", method="ML")
+vcov_cs <- getVarCov(fit_cs, type = "marginal")
+vcov_cs
+
+vcovs[["compound_symmerty"]] <- vcov_cs
+
+```
+
+With random intercept only
+
+```{r}
+fit_ri <- lme(fixed = hdrs ~ week*endo, random = ~1|id, data = reisby_long,
+              method = "ML", na.action = "na.omit")
+
+vcov_ri <- getVarCov(fit_ri, type = "marginal")
+vcov_ri
+
+vcovs[["random_intercept"]] <- vcov_ri
+
+```
+
+With autoregressive residual correlation structure
+
+```{r}
+fit_ar <- gls(hdrs ~ week*endo, correlation = corAR1(form = ~1 | id),
+              data = reisby_long, na.action = "na.omit", method = "ML")
+vcov_ar <- getVarCov(fit_ar, type = "marginal")
+vcov_ar
+
+vcovs[["auto_regressive"]] <- vcov_ar
+```
+
+
+With autoregressive residual correlation structure and heterogeneous variances
+
+It's a bit more complicated to get the variance-covariance matrix
+
+```{r}
+fit_har <- gls(hdrs ~ week*endo, correlation = corAR1(form = ~1 | id),
+                 weights = varIdent(form = ~1|week),
+              data = reisby_long, na.action = "na.omit", method = "ML")
+summary(fit_har)
+
+cormat_har <- corMatrix(fit_har$modelStruct$corStruct)[[1]]
+var_struct_har <- 1+c(0, as.numeric(fit_har$modelStruct$varStruct))
+sigma_har <- fit_har$sigma
+
+vcov_har <- matrix(numeric(0), nrow = 6, ncol = 6)
+
+for (i in 1:nrow(cormat_har)) {
+  for (j in 1:ncol(cormat_har)) {
+    vcov_har[i, j] = sigma_har^2 * cormat_har[i, j] * var_struct_har[i] * var_struct_har[j]
+  }
+}
+vcov_har
+
+vcovs[["heterogeneous_AR"]] <- vcov_har
+```
+
+
+With unstructured correlation (has the most free parameters)
+
+```{r}
+fit_unr <- gls(hdrs ~ week*endo, correlation = corSymm(form = ~1|id),
+               weights = varIdent(form = ~1|week),
+               data = reisby_long, na.action = "na.omit", method = "ML")
+
+cormat_unr <- corMatrix(fit_unr$modelStruct$corStruct)[[1]]
+var_struct_unr <- 1+c(0, as.numeric(fit_unr$modelStruct$varStruct))
+sigma_unr <- fit_unr$sigma
+
+vcov_unr <- matrix(numeric(0), nrow = 6, ncol = 6)
+
+for (i in 1:nrow(cormat_unr)) {
+  for (j in 1:ncol(cormat_unr)) {
+    vcov_unr[i, j] = sigma_unr^2 * cormat_unr[i, j] * var_struct_unr[i] * var_struct_unr[j]
+  }
+}
+vcov_unr
+
+vcovs[["unstructured_correlation"]] <- vcov_unr
+```
+
+
+
+
+Using continous AR
+
+```{r}
+fit_car <- lme(fixed = hdrs ~ week*endo, random = ~week|id,
+               correlation = corCAR1(form = ~ week | id),
+               data = reisby_long, na.action = "na.omit", method = "ML")
+vcovs[["continous_autoregressive"]] <- getVarCov(fit_car, type = "margin")
+
+
+```
+
+
+
+Plot them to compare
+
+```{r}
+vcovs %>%
+  map_df(melt_vcov, .id = "model") %>%
+  mutate(model = relevel(factor(model), "observed")) %>%
+  ggplot(aes(x = axis1, y = axis2, fill = value)) + 
+  geom_tile() + scale_y_continuous(trans = "reverse") + 
+  facet_wrap(~model)
+```
+
+### b.
+
+> Using the corMatrix() and getVarCov() functions in R (or the option Statistics – Covariance of residuals in the menu,  /PRINT=R in the syntax), we can take a look the estimated correlation or variance-covariance structures for most of the models in (a). Which structures seem more realistic for this data? Which structures seem less realistic?
+
+### c.
+
+> Save your script/syntax for the next exercises!
+
+> Some tips for SPSS users:
+(See the extra slides on Moodle.) 
+Since we want to explicitly choose the correlation structure, we will not include a random intercept, but instead model impose a structure on the repeated observations within each patient:
+Using the long version of the dataset, go to Analyze, Mixed Models, Linear. In the first screen of the Linear Mixed Models menu, put ID in Subjects and WEEK in Repeated. As Repeated Covariance Type, choose either Compound symmetry (with and without Correlation Metric), Unstructured (with Correlation Metric for interpretability), or AR(1) (with and without heterogeneous variances)
+Use a fixed model with ENDO, WEEK and their interaction, and no random effects. Choose Method=ML under Estimation.
+
+
+## 3.
+
+> In this exercise we repeat the rest of the analyses of the Reisby dataset.
+
+### a.
+
+> Take a look at the modelled (assumed) covariance matrices for the LMEs from Exercise 1. Compare these to the observed covariance matrix of the outcomes above, and to some of the CPMs above. Which model(s) do you think best fit the observed data?
+
+offcourse unstructured correlation but it has too many free parameters
+
+heterogeneous autoregressive and continous autoregressive fit best from the rest
+
+### b. 
+
+> Re-analyze the Reisby data, using the baseline HDRS as an adjustment variable (note: you must first remove the HDRS at week = 0 from your dataset before running the mixed model!). Compare the estimates of the fixed and random effects. What changed, and what did not?
+
+
+```{r}
+reisby_base <- reisby_long %>%
+  group_by(id) %>%
+  mutate(hdrs_baseline = hdrs[week == 0]) %>%
+  ungroup() %>%
+  filter(week > 0)
+```
+
+```{r}
+fit_har_base <- gls(hdrs ~ week*endo + hdrs_baseline,
+                    correlation = corAR1(form = ~1 | id),
+                    weights = varIdent(form = ~1 | week),
+                    data = reisby_base, 
+                    method = "ML", na.action = "na.omit")
+summary(fit_har)
+
+summary(fit_har_base)
+```
+
+
+## 4. (Optional)
+
+> If you wish, go back to reisby_wide.sav and use this dataset to perform a repeated measures ANOVA. Recall the objections to this analysis from the lecture. How many subjects are used in the analysis? And what assumptions does this analysis make? How realistic are those assumptions for this study?
+
+Skipped for now
+
+> Tips for SPSS users:
+Go to Analyze, General Linear Model, Repeated measures, type WEEK as Within Subject Factor Name , with 6 levels, and click Define. Choose hdrs.0 – hdrs.5 as Within-Subject Variables, and ENDO as Between-Subjects Factor. OK.
+(Note: the results might differ slightly from those from R in the lecture notes.)
+
+
+## 5.
+
+> On page 25 of Mixed-Effects Models in R (Appendix to An R Companion to Applied Regression, Second Edition) by John Fox and Sanford Weisberg (see link on Moodle) you will find section 2.4, “An Illustrative Application to Longitudinal Data”.
+In this exercise you will try to reproduce the results presented there. (Note that you can copy all commands from the article and paste them into R or RStudio.)
+Concentrate only on the models and the interpretation. The anova() commands, comparing the models, may be skipped over, as may be the table on page 32 (starting at line 6). Do try out the compareCoefs() function around the middle of page 32!
+Whether you choose to skip the anova() commands for now or not, please add method=”ML” to the first lme() command (since the rest of the models are “updated” from the first model, they will all be fit using ML estimation).
+
+Get the data
+
+```{r}
+require(car)
+head(Blackmore, 10)
+```
+
+### a.
+
+> Examine the time variable (age). What is different about this time variable, compared to, say, time in the Reisby data?
+
+```{r}
+table(Blackmore$age)
+
+nobs <- Blackmore %>%
+  group_by(subject) %>%
+  summarize(nobs = uniqueN(age))
+table(nobs$nobs)
+```
+
+Here are the number of observations per subject.
+
+Age is different from time in Reisby in that it is no just a relative time-indicator
+to some general starting point, but the absolute value carries meaning also.
+
+It seems to be sampled at 2 year differences, and then an in between value 
+for each subject
+
+### b.
+
+> Why is age-8 used in the models?
+
+To standardize
+
+### c.
+
+> Interpret the coefficients of the 5th model (bm.lme.5).
+
+Reproduce:
+
+```{r}
+Blackmore %<>% mutate(log.exercise = log2(exercise + 5/60))
+bm_lme_5 <- lme(fixed = exercise ~ age*group, random = ~1 | subject,
+                correlation = corCAR1(form = ~age | subject),
+                data = Blackmore, method = "ML")
+summary(bm_lme_5)
+```
+
+Exercise seems lower in patients, and the correlation between age and 
+exercise is higher in controls
+
+Within subject variation seems higher than between subject.
+
+correlations over time are correlated with phi = 0.73 (which is not too low I guess)
+
+slope and intercept are negatively correlated, as is more often the case
+
+## d.	
+
+> Write a “statistical methods” second in which you describe, in a few sentences, how the results for the 5th model (bm.lme.5) were obtained. (For today: do not worry about explaining how you chose model 5.) Be as concise - yet complete - as possible.
+
+Skipped for now
+
+> Notes for SPSS users:
+-	The data have been saved under blackmoor.csv. Be careful to read the subject number as a string variable, and not as numeric!
+-	The log2 function does not exist in SPSS, but you can get from a loge to a log2 using the following trick: compute log2x = ln(x)/ln(2).
+-	In SPSS you can save both fixed and individual predicted values. For the fixed, click on “Save” and choose under “Fixed Predicted values” the option “Predicted values”. 
+-	For models 4-6: the cAR(1) correlation structure for residuals is not available in SPSS. Use the AR(1) structure (not that you will then get slightly different results). 
+
+
+## 6.
+
+> The data contained in the file stroke.csv are from an experiment to promote the recovery of stroke patients. There were three experimental groups:
+A was a new occupational therapy intervention;
+B was the existing stroke rehabilitation program conducted in the same hospital where A was conducted;
+C was the usual care regime for stroke patients provided in a different hospital.
+There were 8 patients in each experimental group. The response variable was a measure of functional ability, the Bartel index: higher scores correspond to better outcomes and the maximum score is 100. Each program lasted for 8 weeks. All subjects were evaluated at the start of the program and at weekly intervals until the end of the program. The hypothesis was that the patients in group A would do better than those in group B or C.
+
+### a.
+
+> Thinking about the design of the study (and without yet looking at the data), what approach(es) would you use to model this data? Think about both the fixed part of the model (to answer the research question) and the random part of the model (to account for correlated measurements).
+
+Fixed parts: treatment and time, including interaction, and if available: baseline Bartel, age, sex
+Random parts: intercept and slope (with time) by patient; we have regular time intervals, we could use them as a linear trend 
+
+or: treat time as categorical if there is no linear relationship, then use
+Correlation part: correlation on time-axis by patient
+a good bet may be heterogeneous autocorrelation
+
+### b.
+
+> How would you treat the first Bartel index evaluation?
+
+as a covariate
+
+### c.
+
+> Get descriptive statistics of the measurements and examine correlations of measurements over time.
+
+Load data and curate
+
+```{r}
+stroke <- read.csv(here("data", "stroke_mim.csv"), sep = ",")
+stroke %<>% mutate(Subject = factor(Subject))
+str(stroke)
+```
+
+Let's go to long
+
+```{r}
+stroke_long <- data.table::melt(stroke, id.vars = c("Subject", "Group"),
+                                variable.name = "week", value.name = "bartel")
+stroke_long %<>%
+  mutate(week_int = as.integer(stringr::str_extract(week, "[0-9]")))
+```
+
+
+```{r}
+setDT(stroke_long)
+stroke_long[, list(mean = mean(bartel), sd = sd(bartel)), by = "week,Group"]
+```
+
+
+Get the var-covariance matrix over times
+
+```{r}
+vcov_obs <- var(stroke[, 3:10])
+vcov_obs 
+vcov_obs %>%
+  melt_vcov() %>%
+  ggplot(aes(x = axis1, y = axis2, fill = value)) + 
+  geom_tile() + scale_y_continuous(trans = "reverse")
+```
+
+Variance increases with time
+
+### d. 
+
+> Make a spaghetti plot of the data (don’t forget to restructure the data!).
+
+```{r}
+stroke_long %>%
+  ggplot(aes(x = week_int, y = bartel, col = Subject, group = Subject)) + 
+  geom_line() + facet_wrap(~Group)
+```
+
+Most seem to increase. 
+Group A starts a little lower but shows relatively steep increase
+
+Pretty different slopes, pretty different intercepts.
+
+Effect is pretty much linear
+
+### e.
+
+> Fit the model you think would best describe the patterns in the data.
+
+We will go for random slope and intercept, taking the first bartel as baseline
+
+```{r}
+stroke_base <- stroke_long %>%
+  group_by(Subject) %>%
+  mutate(bartel_baseline = bartel[week_int == 8]) %>%
+  ungroup() %>%
+  filter(week_int > 1)
+```
+
+
+Random part with both slope and intercept did not converge, so now only intercept
+
+
+```{r}
+fit <- lme(fixed = bartel ~ Group*week_int + bartel_baseline,
+           random = ~ 1 | Subject,
+           data = stroke_base,
+           method = "ML")
+summary(fit)
+```
+
+### f.
+
+> Summarize and interpret the results in part (e).
+
+Group B and C start out better than A, but Group A increases faster
+
+Inter and intra subject variation with regards to intercept are approximately 
+equal
+
+
+
+## Session information
+
+<!-- Insert the session information into the document -->
+```{r session-info}
+```
