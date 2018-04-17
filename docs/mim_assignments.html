@@ -1,0 +1,2260 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+<meta name="author" content="Wouter van Amsterdam" />
+
+<meta name="date" content="2018-04-16" />
+
+<title>Assignments Mixed models</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/font-awesome-4.5.0/css/font-awesome.min.css" rel="stylesheet" />
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+
+<div class="container-fluid main-container">
+
+<!-- tabsets -->
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+</script>
+
+<!-- code folding -->
+
+
+
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+  padding-left: 25px;
+  text-indent: 0;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">epi_stats</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/jdblischak/workflowr">
+    <span class="fa fa-github"></span>
+     
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">Assignments Mixed models</h1>
+<h4 class="author"><em>Wouter van Amsterdam</em></h4>
+<h4 class="date"><em>2018-04-16</em></h4>
+
+</div>
+
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+<!-- Update knitr chunk options -->
+<!-- Insert the date the file was last updated -->
+<p><strong>Last updated:</strong> 2018-04-17</p>
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+<p><strong>Code version:</strong> 4999f2a</p>
+<!-- Add your analysis here -->
+<div id="setup-r-environment" class="section level2">
+<h2>Setup R environment</h2>
+<pre class="r"><code>library(dplyr)
+library(data.table)
+library(magrittr)
+library(purrr)
+library(here) # for tracking working directory
+library(ggplot2)
+library(epistats)
+library(broom)</code></pre>
+</div>
+<div id="day-1" class="section level1">
+<h1>Day 1</h1>
+<div id="schools" class="section level2">
+<h2>1. schools</h2>
+<pre class="r"><code>london &lt;- read.table(here(&quot;data&quot;, &quot;school.dat&quot;), header = T)
+str(london)</code></pre>
+<pre><code>&#39;data.frame&#39;:   4059 obs. of  9 variables:
+ $ school  : int  1 1 1 1 1 1 1 1 1 1 ...
+ $ student : int  1 2 3 4 5 6 7 8 9 10 ...
+ $ normexam: num  0.261 0.134 -1.724 0.968 0.544 ...
+ $ standlrt: num  0.619 0.206 -1.365 0.206 0.371 ...
+ $ gender  : int  1 1 0 1 1 0 0 0 1 0 ...
+ $ schgend : int  1 1 1 1 1 1 1 1 1 1 ...
+ $ avslrt  : num  0.166 0.166 0.166 0.166 0.166 ...
+ $ schav   : int  2 2 2 2 2 2 2 2 2 2 ...
+ $ vrband  : int  1 2 3 2 2 1 3 2 2 3 ...</code></pre>
+<p>First clean up the data a bit so that factor variables are coded as such</p>
+<pre class="r"><code>factor_vars &lt;- c(&quot;gender&quot;, &quot;schgend&quot;, &quot;schav&quot;)
+london %&lt;&gt;% mutate_at(vars(factor_vars), funs(as.factor))</code></pre>
+<p>All data</p>
+<pre class="r"><code>london %&gt;%
+  ggplot(aes(y = normexam, x = standlrt)) + 
+  geom_point()</code></pre>
+<p><img src="figure/mim_assignments.Rmd/unnamed-chunk-4-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Linear model</p>
+<pre class="r"><code>london %&gt;%
+  lm(normexam ~ standlrt, data = .) %&gt;%
+  summary()</code></pre>
+<pre><code>
+Call:
+lm(formula = normexam ~ standlrt, data = .)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-2.65617 -0.51847  0.01265  0.54397  2.97399 
+
+Coefficients:
+             Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept) -0.001195   0.012642  -0.095    0.925    
+standlrt     0.595055   0.012730  46.744   &lt;2e-16 ***
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+Residual standard error: 0.8054 on 4057 degrees of freedom
+Multiple R-squared:   0.35, Adjusted R-squared:  0.3499 
+F-statistic:  2185 on 1 and 4057 DF,  p-value: &lt; 2.2e-16</code></pre>
+<p>Get individual scatterplots</p>
+<pre class="r"><code>london %&gt;%
+  ggplot(aes(y = normexam, x = standlrt)) + 
+  geom_point() +
+  facet_wrap(~school)</code></pre>
+<p><img src="figure/mim_assignments.Rmd/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Perform lm in each school</p>
+<p>We can use split from base R and combine this with map to apply lm to each element of the list</p>
+<pre class="r"><code>coefs &lt;- london %&gt;%
+  split(f = .[[&quot;school&quot;]]) %&gt;%
+  map(function(data) lm(normexam~standlrt, data = data)) %&gt;%
+  map_df(tidy)
+coefs %&gt;%
+  group_by(term) %&gt;%
+  summarize(mean(estimate), sd(estimate))</code></pre>
+<pre><code># A tibble: 2 x 3
+  term        `mean(estimate)` `sd(estimate)`
+  &lt;chr&gt;                  &lt;dbl&gt;          &lt;dbl&gt;
+1 (Intercept)          -0.0681          0.519
+2 standlrt              0.425           0.939</code></pre>
+<p>Here is a nice way of doing this with purrr, tidyr and dplyr (completely tidyverse)</p>
+<pre class="r"><code>require(tidyr)
+london_nested &lt;- london %&gt;% group_by(school) %&gt;% nest()
+
+get_coef &lt;- function(coefs, coef = &quot;(Intercept)&quot;) {
+  stopifnot(is.data.frame(coefs))
+  coefs[coefs$term == coef, &quot;estimate&quot;]
+}
+
+london_nested %&gt;%
+  mutate(fit = map(data, ~lm(normexam~standlrt, data = .x)),
+         coefs = map(fit, tidy),
+         intercept = as.numeric(map(coefs, ~get_coef(.x))),
+         slope     = as.numeric(map(coefs, ~get_coef(.x, &quot;standlrt&quot;)))) %&gt;%
+  summarize_at(vars(intercept, slope), funs(mean, sd))</code></pre>
+<pre><code># A tibble: 1 x 4
+  intercept_mean slope_mean intercept_sd slope_sd
+           &lt;dbl&gt;      &lt;dbl&gt;        &lt;dbl&gt;    &lt;dbl&gt;
+1        -0.0681      0.425        0.519    0.939</code></pre>
+<p>Using data.table</p>
+<p>.. and broom::tidy in 1 throw</p>
+<pre class="r"><code>setDT(london)
+coefs &lt;- london[, {
+  fit = lm(normexam ~ standlrt, data = .SD)
+  tidy(fit)
+  }, by = &quot;school&quot;]
+coefs[, list(mean = mean(estimate), sd = sd(estimate)), by = &quot;term&quot;]</code></pre>
+<pre><code>          term        mean        sd
+1: (Intercept) -0.06812356 0.5191847
+2:    standlrt  0.42457747 0.9394058</code></pre>
+<p>.. with step of list of fits</p>
+<pre class="r"><code>setDT(london)
+fits &lt;- london[, list(fit = list(lm(normexam ~ standlrt, data = .SD))), 
+               by = &quot;school&quot;]
+fits[[2]] %&gt;% 
+  map_df(tidy) %&gt;%
+  group_by(term) %&gt;%
+  summarize(mean(estimate), sd(estimate))</code></pre>
+<pre><code># A tibble: 2 x 3
+  term        `mean(estimate)` `sd(estimate)`
+  &lt;chr&gt;                  &lt;dbl&gt;          &lt;dbl&gt;
+1 (Intercept)          -0.0681          0.519
+2 standlrt              0.425           0.939</code></pre>
+<div id="section" class="section level3">
+<h3>2.</h3>
+<blockquote>
+<p>Continue with reproducing the analysis of the schools dataset (school.dat or school.sav) so far.</p>
+</blockquote>
+<div id="a." class="section level4">
+<h4>a.</h4>
+<blockquote>
+<p>Fit a linear mixed model with random intercept to predict exam scores using the LRT scores.</p>
+</blockquote>
+<pre class="r"><code>require(lme4)
+lmer(normexam ~ standlrt + (1 | school), data = london, REML = F)</code></pre>
+<pre><code>Linear mixed model fit by maximum likelihood  [&#39;lmerMod&#39;]
+Formula: normexam ~ standlrt + (1 | school)
+   Data: london
+      AIC       BIC    logLik  deviance  df.resid 
+ 9365.213  9390.447 -4678.606  9357.213      4055 
+Random effects:
+ Groups   Name        Std.Dev.
+ school   (Intercept) 0.3035  
+ Residual             0.7521  
+Number of obs: 4059, groups:  school, 65
+Fixed Effects:
+(Intercept)     standlrt  
+   0.002387     0.563370  </code></pre>
+</div>
+<div id="b." class="section level4">
+<h4>b.</h4>
+<blockquote>
+<p>Add a random slope to the model in (a). Interpret this model.</p>
+</blockquote>
+<pre class="r"><code>lmer(normexam ~ standlrt + (standlrt | school), data = london, REML = F)</code></pre>
+<pre><code>Linear mixed model fit by maximum likelihood  [&#39;lmerMod&#39;]
+Formula: normexam ~ standlrt + (standlrt | school)
+   Data: london
+      AIC       BIC    logLik  deviance  df.resid 
+ 9328.840  9366.693 -4658.420  9316.840      4053 
+Random effects:
+ Groups   Name        Std.Dev. Corr
+ school   (Intercept) 0.3007       
+          standlrt    0.1206   0.50
+ Residual             0.7441       
+Number of obs: 4059, groups:  school, 65
+Fixed Effects:
+(Intercept)     standlrt  
+   -0.01151      0.55673  </code></pre>
+<p>On average, children with average baseline score, score avarage on the normalized exams. There is a positive correlation with baseline score and normalized exam. Schools differ in overall normalized exam scores, and the correlation between baseline score and normalized exam score differs between schools</p>
+</div>
+</div>
+</div>
+<div id="section-1" class="section level2">
+<h2>3.</h2>
+<blockquote>
+<p>Finish the analysis of the schools dataset (school.dat or school.sav).</p>
+</blockquote>
+<div id="a.-1" class="section level3">
+<h3>a.</h3>
+<blockquote>
+<p>Add child- and school-level explanatory variables. Interpret the model.</p>
+</blockquote>
+<pre class="r"><code>lmer(normexam ~ standlrt + gender + schgend + schav + (standlrt | school), data = london,
+     REML = F) %&gt;% 
+  summary()</code></pre>
+<pre><code>Linear mixed model fit by maximum likelihood  [&#39;lmerMod&#39;]
+Formula: normexam ~ standlrt + gender + schgend + schav + (standlrt |  
+    school)
+   Data: london
+
+     AIC      BIC   logLik deviance df.resid 
+  9300.4   9369.8  -4639.2   9278.4     4048 
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-3.8339 -0.6343  0.0231  0.6768  3.4136 
+
+Random effects:
+ Groups   Name        Variance Std.Dev. Corr
+ school   (Intercept) 0.07077  0.2660       
+          standlrt    0.01470  0.1213   0.50
+ Residual             0.55016  0.7417       
+Number of obs: 4059, groups:  school, 65
+
+Fixed effects:
+            Estimate Std. Error t value
+(Intercept) -0.26477    0.08152  -3.248
+standlrt     0.55155    0.02005  27.506
+gender1      0.16713    0.03382   4.942
+schgend2     0.18697    0.09769   1.914
+schgend3     0.15702    0.07774   2.020
+schav2       0.06689    0.08528   0.784
+schav3       0.17427    0.09868   1.766
+
+Correlation of Fixed Effects:
+         (Intr) stndlr gendr1 schgn2 schgn3 schav2
+standlrt  0.205                                   
+gender1  -0.182 -0.037                            
+schgend2 -0.340  0.002  0.157                     
+schgend3 -0.253  0.025 -0.235  0.230              
+schav2   -0.761 -0.035 -0.014  0.061  0.000       
+schav3   -0.648 -0.080 -0.018  0.061 -0.083  0.622</code></pre>
+</div>
+<div id="b.-1" class="section level3">
+<h3>b.</h3>
+<blockquote>
+<p>For the model in (a), we will write a brief description of the statistical model used. Fill in the blanks:</p>
+</blockquote>
+<p>“A linear mixed effects model was estimated, using fixed effects for baseline score, gender, school gender and school average; A random intercept and a random effect of baseline score per school were added to correct for clustering on school level.”</p>
+</div>
+</div>
+<div id="section-2" class="section level2">
+<h2>4.</h2>
+<blockquote>
+<p>Part c of this question will be used in the quiz this afternoon. Please save or print the output and have it on hand (together with this exercise) when you complete the quiz.</p>
+</blockquote>
+<blockquote>
+<p>A multi-center, randomized, double-blind clinical trial was done to compare two treatments for hypertension. One treatment was a new drug (1 = Carvedilol) and the other was a standard drug for controlling hypertension (2 = Nifedipine). Twenty-nine centers participated in the trial and patients were randomized in order of entry. One pre-randomization and four post-treatment visits were made. Here, we will concentrate on the last recorded measurement of diastolic blood pressure (primary endpoint: dbp). The data can be found in the SPSS data file dbplast.sav. Read the data into R or SPSS. The research question is which of the two medicines (treat) is more effective in reducing DBP. Since baseline (pre-randomization) DBP (dbp) will likely be associated with post-treatment DBP and will reduce the variation in the outcome (thereby increasing our power to detect a treatment effect), we wish to include it here as a covariate.</p>
+</blockquote>
+<p>Read in the data</p>
+<pre class="r"><code>bp &lt;- haven::read_spss(here(&quot;data&quot;, &quot;dbplast.sav&quot;))
+str(bp)</code></pre>
+<pre><code>Classes &#39;tbl_df&#39;, &#39;tbl&#39; and &#39;data.frame&#39;:   193 obs. of  5 variables:
+ $ patient: atomic  3 4 5 7 8 9 10 13 14 18 ...
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F7.0&quot;
+ $ center : atomic  5 5 29 3 3 3 3 36 36 36 ...
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F8.0&quot;
+ $ dbp    : atomic  109 87 85 100 80 90 100 80 85 100 ...
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F10.0&quot;
+  ..- attr(*, &quot;display_width&quot;)= int 10
+ $ dbp1   : atomic  117 100 105 114 105 100 102 100 100 100 ...
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F8.0&quot;
+ $ treat  : atomic  2 1 1 1 2 2 1 2 1 1 ...
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F8.0&quot;
+  ..- attr(*, &quot;display_width&quot;)= int 10</code></pre>
+<p>Curate</p>
+<pre class="r"><code>factor_vars &lt;- c(&quot;center&quot;, &quot;patient&quot;, &quot;treat&quot;)
+bp %&lt;&gt;% mutate_at(vars(factor_vars), funs(as.factor))</code></pre>
+<div id="a.-2" class="section level3">
+<h3>a.</h3>
+<blockquote>
+<p>Make some plots to describe the patterns of the data.</p>
+</blockquote>
+<pre class="r"><code>summary(bp)</code></pre>
+<pre><code>    patient        center        dbp              dbp1       treat  
+ 3      :  1   1      :27   Min.   : 70.00   Min.   : 95.0   1:100  
+ 4      :  1   31     :24   1st Qu.: 85.00   1st Qu.:100.0   2: 93  
+ 5      :  1   14     :16   Median : 90.00   Median :102.0          
+ 7      :  1   36     :15   Mean   : 91.05   Mean   :102.7          
+ 8      :  1   7      :12   3rd Qu.: 98.00   3rd Qu.:105.0          
+ 9      :  1   5      : 9   Max.   :140.00   Max.   :120.0          
+ (Other):187   (Other):90                                           </code></pre>
+<p>First scatter plot an pre-and post bp;</p>
+<p>Let’s assume that dbp1 = pre</p>
+<pre class="r"><code>bp %&gt;%
+  ggplot(aes(x = dbp1, y = dbp)) + 
+  geom_point()</code></pre>
+<p><img src="figure/mim_assignments.Rmd/unnamed-chunk-17-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Now per treatment</p>
+<pre class="r"><code>bp %&gt;%
+  ggplot(aes(x = dbp1, y = dbp)) + 
+  geom_point() + 
+  facet_wrap(~treat)</code></pre>
+<p><img src="figure/mim_assignments.Rmd/unnamed-chunk-18-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Look at marginal distributions per treatment</p>
+<pre class="r"><code>bp %&gt;% 
+  as.data.table() %&gt;%
+  data.table::melt(id.vars = c(&quot;patient&quot;, &quot;treat&quot;), measure.vars = c(&quot;dbp&quot;, &quot;dbp1&quot;)) %&gt;%
+  ggplot(aes(x = 1, y = value, fill = treat)) + 
+  geom_boxplot(alpha = .5) + 
+  facet_wrap(~variable)</code></pre>
+<p><img src="figure/mim_assignments.Rmd/unnamed-chunk-19-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="b.-2" class="section level3">
+<h3>b.</h3>
+<blockquote>
+<p>Fit a model to answer the research question, using maximum likelihood estimation, taking into account that patients within centers may have correlated data. Interpret the coefficients of the model.</p>
+</blockquote>
+<pre class="r"><code>lmer(dbp ~ dbp1 + treat + (1 | center), data = bp, REML = F) %&gt;%
+  summary()</code></pre>
+<pre><code>Linear mixed model fit by maximum likelihood  [&#39;lmerMod&#39;]
+Formula: dbp ~ dbp1 + treat + (1 | center)
+   Data: bp
+
+     AIC      BIC   logLik deviance df.resid 
+  1393.7   1410.1   -691.9   1383.7      188 
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-2.1666 -0.7244 -0.0745  0.5536  5.0417 
+
+Random effects:
+ Groups   Name        Variance Std.Dev.
+ center   (Intercept)  7.98    2.825   
+ Residual             70.67    8.406   
+Number of obs: 193, groups:  center, 27
+
+Fixed effects:
+            Estimate Std. Error t value
+(Intercept)  74.1014    13.5245   5.479
+dbp1          0.1747     0.1306   1.338
+treat2       -1.1179     1.2205  -0.916
+
+Correlation of Fixed Effects:
+       (Intr) dbp1  
+dbp1   -0.997       
+treat2 -0.122  0.080</code></pre>
+</div>
+<div id="c." class="section level3">
+<h3>c.</h3>
+<blockquote>
+<p>Make a new baseline dbp variable, centered around its mean. Re-fit the model in (b) using the centered baseline blood pressure variable, using maximum likelihood estimation, and interpret the parameters of this new model.</p>
+</blockquote>
+<pre class="r"><code>fit &lt;- bp %&gt;%
+  mutate(dbp_center = dbp1 - mean(dbp1)) %&gt;%
+  lmer(dbp ~ dbp_center + treat + (1 | center), data = ., REML = F)
+
+fit %&gt;%
+  summary()</code></pre>
+<pre><code>Linear mixed model fit by maximum likelihood  [&#39;lmerMod&#39;]
+Formula: dbp ~ dbp_center + treat + (1 | center)
+   Data: .
+
+     AIC      BIC   logLik deviance df.resid 
+  1393.7   1410.1   -691.9   1383.7      188 
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-2.1666 -0.7244 -0.0745  0.5536  5.0417 
+
+Random effects:
+ Groups   Name        Variance Std.Dev.
+ center   (Intercept)  7.98    2.825   
+ Residual             70.67    8.406   
+Number of obs: 193, groups:  center, 27
+
+Fixed effects:
+            Estimate Std. Error t value
+(Intercept)  92.0438     1.0566   87.11
+dbp_center    0.1747     0.1306    1.34
+treat2       -1.1179     1.2205   -0.92
+
+Correlation of Fixed Effects:
+           (Intr) dbp_cn
+dbp_center -0.068       
+treat2     -0.548  0.080</code></pre>
+</div>
+</div>
+<div id="section-3" class="section level2">
+<h2>5.</h2>
+<blockquote>
+<p>In a small crossover study two drugs, A and B, are compared for their effect on the diastolic blood pressure (DBP). Each patient in the study receives the two treatments in a random order and separated in time (“wash-out” period) so that one treatment does not influence the blood pressure measurement obtained after administering the other treatment (i.e. to rule out carry-over effect) . The data are given in the data file crossover.sav and crossover.dat.</p>
+</blockquote>
+<blockquote>
+<p>Note that subject 4 has only the measurement for drug A and that subject 16 has only the measurement for drug B.</p>
+</blockquote>
+<p>Read in data and curate</p>
+<pre class="r"><code>bpco &lt;- read.table(here(&quot;data&quot;, &quot;crossover.dat&quot;), header = T)
+
+bpco %&lt;&gt;% 
+  set_colnames(tolower(colnames(bpco)))
+
+factor_vars &lt;- c(&quot;period&quot;, &quot;drug&quot;)
+
+bpco %&lt;&gt;% mutate_at(vars(factor_vars), funs(as.factor))
+
+str(bpco)</code></pre>
+<pre><code>&#39;data.frame&#39;:   36 obs. of  4 variables:
+ $ patient: int  1 1 2 2 3 3 4 5 5 6 ...
+ $ period : Factor w/ 2 levels &quot;1&quot;,&quot;2&quot;: 1 2 1 2 1 2 2 1 2 1 ...
+ $ drug   : Factor w/ 2 levels &quot;1&quot;,&quot;2&quot;: 1 2 2 1 1 2 1 2 1 1 ...
+ $ y      : int  100 112 116 114 108 110 104 114 114 98 ...</code></pre>
+<div id="a.-3" class="section level3">
+<h3>a.</h3>
+<blockquote>
+<p>Use descriptive statistics to get a feel for the data. Which drug seems to be better at reducing DBP?</p>
+</blockquote>
+<pre class="r"><code>setDT(bpco)
+bpco[, list(mean_bp = mean(y)), by = &quot;drug,period&quot;]</code></pre>
+<pre><code>   drug period  mean_bp
+1:    1      1 105.2222
+2:    2      2 113.0000
+3:    2      1 114.3750
+4:    1      2 103.7778</code></pre>
+<p>Drug 1 seems to reduce blood pressure, while drug 2 seems to increase.</p>
+<p>In a spaghetti plot</p>
+<pre class="r"><code>bpco %&gt;%
+  ggplot(aes(x = drug, y = y, group = patient)) + 
+  geom_line(alpha = .8) + theme_minimal()</code></pre>
+<p><img src="figure/mim_assignments.Rmd/unnamed-chunk-24-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="b.-3" class="section level3">
+<h3>b.</h3>
+<blockquote>
+<p>Fit a model to the data, looking at drug and period effect and correcting for the fact that (most) patients have more than one DBP measurement. Which variable(s) do you choose as random?</p>
+</blockquote>
+<pre class="r"><code>fit &lt;- lmer(y ~ drug + period + (1 | patient), data = bpco, REML = F)
+fit %&gt;% summary()</code></pre>
+<pre><code>Linear mixed model fit by maximum likelihood  [&#39;lmerMod&#39;]
+Formula: y ~ drug + period + (1 | patient)
+   Data: bpco
+
+     AIC      BIC   logLik deviance df.resid 
+   280.7    288.6   -135.3    270.7       31 
+
+Scaled residuals: 
+     Min       1Q   Median       3Q      Max 
+-2.28988 -0.42035 -0.02943  0.44467  1.49483 
+
+Random effects:
+ Groups   Name        Variance Std.Dev.
+ patient  (Intercept) 80.65    8.981   
+ Residual             52.95    7.277   
+Number of obs: 36, groups:  patient, 19
+
+Fixed effects:
+            Estimate Std. Error t value
+(Intercept)  104.955      2.983   35.18
+drug2          9.360      2.471    3.79
+period2       -1.250      2.474   -0.51
+
+Correlation of Fixed Effects:
+        (Intr) drug2 
+drug2   -0.388       
+period2 -0.427 -0.058</code></pre>
+</div>
+<div id="c.-1" class="section level3">
+<h3>c.</h3>
+<blockquote>
+<p>Interpret the results of the model. Is there a significant difference between the two drugs? Is there a significant period effect?</p>
+</blockquote>
+<p>Drug 2 seems to increase blood pressure (be less effective)</p>
+<p>Perdiod effect is negative, which could indicate regression to the mean (participants are included when having a (sometimes random) high blood pressure)</p>
+<p>For significance:</p>
+<pre class="r"><code>confint(fit)</code></pre>
+<pre><code>                2.5 %     97.5 %
+.sig01       5.175850  13.883011
+.sigma       5.401934  10.524648
+(Intercept) 98.926994 110.967097
+drug2        4.230320  14.449692
+period2     -6.383679   3.846716</code></pre>
+<p>Yes from profile likelihood intervals, therapy difference is significant, but not period</p>
+</div>
+<div id="d." class="section level3">
+<h3>d.</h3>
+<blockquote>
+<p>What other hypothesis might we want to test here?</p>
+</blockquote>
+<p>maybe interaction between drug and period?</p>
+</div>
+</div>
+<div id="section-4" class="section level2">
+<h2>6.</h2>
+<blockquote>
+<p>A secondary question regarding the school exam data (exercises 1 &amp; 2) was proposed in the lecture. Use SPSS or R (or both) to address the question: is the difference between boys and girls the same for single-sex and mixed-gender schools? (Note: you’ll need to make a new variable for single-gender (schgend = 2 or 3) vs mixed-gender (schgend = 1) schools before proceeding with the analysis.)</p>
+</blockquote>
+<pre class="r"><code>london %&gt;%
+  mutate(mixed_school = schgend == 1) %&gt;%
+  lmer(normexam ~ standlrt + gender * mixed_school + schav + (standlrt | school), data = .,
+     REML = F) %&gt;% 
+  summary()</code></pre>
+<pre><code>Linear mixed model fit by maximum likelihood  [&#39;lmerMod&#39;]
+Formula: 
+normexam ~ standlrt + gender * mixed_school + schav + (standlrt |  
+    school)
+   Data: .
+
+     AIC      BIC   logLik deviance df.resid 
+  9300.4   9369.8  -4639.2   9278.4     4048 
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-3.8339 -0.6343  0.0231  0.6768  3.4136 
+
+Random effects:
+ Groups   Name        Variance Std.Dev. Corr
+ school   (Intercept) 0.07077  0.2660       
+          standlrt    0.01470  0.1213   0.50
+ Residual             0.55016  0.7417       
+Number of obs: 4059, groups:  school, 65
+
+Fixed effects:
+                         Estimate Std. Error t value
+(Intercept)              -0.07780    0.10380  -0.749
+standlrt                  0.55155    0.02005  27.506
+gender1                   0.13718    0.10472   1.310
+mixed_schoolTRUE         -0.18697    0.09769  -1.914
+schav2                    0.06689    0.08528   0.784
+schav3                    0.17427    0.09868   1.766
+gender1:mixed_schoolTRUE  0.02995    0.10997   0.272
+
+Correlation of Fixed Effects:
+            (Intr) stndlr gendr1 m_TRUE schav2 schav3
+standlrt     0.162                                   
+gender1     -0.614  0.006                            
+mxd_schTRUE -0.674 -0.002  0.711                     
+schav2      -0.540 -0.035 -0.061 -0.061              
+schav3      -0.451 -0.080 -0.124 -0.061  0.622       
+gndr1:_TRUE  0.586 -0.017 -0.952 -0.726  0.054  0.113</code></pre>
+<p>In the mixed school, there seems to be no difference between genders</p>
+</div>
+<div id="challenge" class="section level2">
+<h2>7. (Challenge)</h2>
+<blockquote>
+<p>Tomorrow we will spend the morning session examining different ways of analyzing the Reisby dataset. This is a longitudinal dataset on 66 patients with endogenous or exogenous depression. Patients are measured every week starting at baseline; from week 1 on, they were all treated with imipramine. The outcome is the score on the Hamilton Depression Rating Scale (HDRS), a score based on a questionnaire administered by a health care professional. The score ranges - theoretically - from 0 (no depressive symptoms) to 52, where scores higher than 20 indicate moderate to very severe depression. The questions of interest are how the HDRS score changes over time for the patients, and whether the patterns of HDRS over time differ for patients with endogenous and exogenous depression. The data is available in both a “wide” and a “long” format: reisby_wide.sav and reisby_long.sav .</p>
+</blockquote>
+<p>Read in data and curate</p>
+<pre class="r"><code>reisby_wide &lt;- haven::read_spss(here(&quot;data&quot;, &quot;reisby_wide.sav&quot;))
+reisby_long &lt;- haven::read_spss(here(&quot;data&quot;, &quot;reisby_long.sav&quot;))
+
+factor_vars &lt;- c(&quot;id&quot;)
+logical_vars &lt;- c(&quot;endo&quot;)
+
+reisby_wide %&lt;&gt;% mutate_at(vars(factor_vars), funs(as.factor))
+reisby_long %&lt;&gt;% mutate_at(vars(factor_vars), funs(as.factor))
+reisby_wide %&lt;&gt;% mutate_at(vars(logical_vars), funs(as.logical))
+reisby_long %&lt;&gt;% mutate_at(vars(logical_vars), funs(as.logical))
+
+str(reisby_wide)</code></pre>
+<pre><code>Classes &#39;tbl_df&#39;, &#39;tbl&#39; and &#39;data.frame&#39;:   66 obs. of  8 variables:
+ $ id    : Factor w/ 66 levels &quot;101&quot;,&quot;103&quot;,&quot;104&quot;,..: 1 2 3 4 5 6 7 8 9 10 ...
+ $ endo  : logi  FALSE FALSE TRUE FALSE TRUE TRUE ...
+ $ hdrs.0: atomic  26 33 29 22 21 21 21 21 NA NA ...
+  ..- attr(*, &quot;label&quot;)= chr &quot;hdrs.0:&quot;
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F2.0&quot;
+  ..- attr(*, &quot;display_width&quot;)= int 6
+ $ hdrs.1: atomic  22 24 22 12 25 21 22 23 17 16 ...
+  ..- attr(*, &quot;label&quot;)= chr &quot;hdrs.1:&quot;
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F2.0&quot;
+  ..- attr(*, &quot;display_width&quot;)= int 6
+ $ hdrs.2: atomic  18 15 18 16 23 16 11 19 11 16 ...
+  ..- attr(*, &quot;label&quot;)= chr &quot;hdrs.2:&quot;
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F2.0&quot;
+  ..- attr(*, &quot;display_width&quot;)= int 6
+ $ hdrs.3: atomic  7 24 13 16 18 19 9 23 13 16 ...
+  ..- attr(*, &quot;label&quot;)= chr &quot;hdrs.3:&quot;
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F2.0&quot;
+  ..- attr(*, &quot;display_width&quot;)= int 6
+ $ hdrs.4: atomic  4 15 19 13 20 NA 9 23 7 16 ...
+  ..- attr(*, &quot;label&quot;)= chr &quot;hdrs.4:&quot;
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F2.0&quot;
+  ..- attr(*, &quot;display_width&quot;)= int 6
+ $ hdrs.5: atomic  3 13 0 9 NA 6 7 NA 7 11 ...
+  ..- attr(*, &quot;label&quot;)= chr &quot;hdrs.5:&quot;
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F2.0&quot;
+  ..- attr(*, &quot;display_width&quot;)= int 6</code></pre>
+<pre class="r"><code>str(reisby_long)</code></pre>
+<pre><code>Classes &#39;tbl_df&#39;, &#39;tbl&#39; and &#39;data.frame&#39;:   396 obs. of  4 variables:
+ $ id  : Factor w/ 66 levels &quot;101&quot;,&quot;103&quot;,&quot;104&quot;,..: 1 1 1 1 1 1 2 2 2 2 ...
+ $ hdrs: atomic  26 22 18 7 4 3 33 24 15 24 ...
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F2.0&quot;
+  ..- attr(*, &quot;display_width&quot;)= int 6
+ $ week: atomic  0 1 2 3 4 5 0 1 2 3 ...
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F1.0&quot;
+  ..- attr(*, &quot;display_width&quot;)= int 6
+ $ endo: logi  FALSE FALSE FALSE FALSE FALSE FALSE ...</code></pre>
+<div id="a.-4" class="section level3">
+<h3>a.</h3>
+<blockquote>
+<p>We heard this morning that longitudinal data is also multi-level data. How many levels do we have here? What does each level represent?</p>
+</blockquote>
+<p>Level 1: patient + timepoint Level 2: patient</p>
+</div>
+<div id="b.-4" class="section level3">
+<h3>b.</h3>
+<blockquote>
+<p>Use descriptive statistics (means, SDs, graphs) to get a feel for the data, concentrating on the patterns (individual and/or group) of HDRS over time (note that there are two versions of the dataset given, one “wide” and one “long”. For some graphs and descriptive statistics, one version may be easier to use than the other.</p>
+</blockquote>
+<p>Let’s look at spaghetti plots</p>
+<pre class="r"><code>reisby_long %&gt;% 
+  ggplot(aes(x = week, y = hdrs, group = id)) + 
+  geom_line() + facet_wrap(~endo, labeller = label_both)</code></pre>
+<pre><code>Warning: Removed 13 rows containing missing values (geom_path).</code></pre>
+<p><img src="figure/mim_assignments.Rmd/unnamed-chunk-29-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>All seem to go down.</p>
+<p>Slope seems pretty similar for both treatments, but not intercept</p>
+</div>
+<div id="c.-what-do-you-notice-about-the-mean-hdrs-score-over-time-and-the-variation" class="section level3">
+<h3>c. What do you notice about the mean HDRS score over time? And the variation?</h3>
+<p>Mean goes down, sd seems to go up</p>
+<pre class="r"><code>setDT(reisby_long)
+reisby_long[, list(n_patients = uniqueN(id),
+                   mean_hdrs = mean(hdrs, na.rm = T), 
+                   sd_hdrs = sd(hdrs, na.rm = T)), 
+            by = &quot;week&quot;]</code></pre>
+<pre><code>   week n_patients mean_hdrs  sd_hdrs
+1:    0         66  23.44262 4.533301
+2:    1         66  21.84127 4.697997
+3:    2         66  18.30769 5.485558
+4:    3         66  16.41538 6.415051
+5:    4         66  13.61905 6.970973
+6:    5         66  11.94828 7.219424</code></pre>
+</div>
+<div id="d.-1" class="section level3">
+<h3>d.</h3>
+<blockquote>
+<p>Time was measured at 6 discrete moments. How would you want to incorporate time in the fixed part of the model: as discrete or continuous? Explain your answer.</p>
+</blockquote>
+<p>Probably as continous, all moments are equally spaced. This requires less degrees of freedom</p>
+</div>
+<div id="e." class="section level3">
+<h3>e.</h3>
+<blockquote>
+<p>If you were to include a random intercept in the model, for which level would you include an intercept?</p>
+</blockquote>
+<p>Patient</p>
+</div>
+<div id="f." class="section level3">
+<h3>f.</h3>
+<blockquote>
+<p>Do you think it is necessary to include time in the random part of the model? Why or why not?</p>
+</blockquote>
+<p>Does not make a lot of sense.</p>
+<p>It’s not like the time-points are a random draw of all possible time-points to measure at</p>
+</div>
+</div>
+</div>
+<div id="day-2" class="section level1">
+<h1>Day 2</h1>
+<div id="section-5" class="section level2">
+<h2>1.</h2>
+<blockquote>
+<p>Repeat the linear mixed models analyses of the Reisby dataset, using time as a continuous variable. There are two versions of the dataset: “wide format” (reisby_wide.sav), meaning that all observations are in separate rows, and “long format” (reisby_long.sav), with observations from different time points on a separate line (so 6 lines per patient). Some of the descriptive analyses are easier to do when the data is in “wide format”, and others when the data is in “long format”. The mixed models need to be run on the data in “long” format. R users can use the foreign library to read in reisby_wide.sav, and either also read in the reisby_long.sav dataset or use the reshape() function to go from wide to long (see R script for help).</p>
+</blockquote>
+<blockquote>
+<ol style="list-style-type: lower-alpha">
+<li>Do some initial data analysis: get descriptive statistics and make plots of the data (note that most of the descriptive statistics – means, SDs, correlations – are easier to get in the wide version of the data, while the spaghetti plots and individual plots are easier to get from the wide version.</li>
+</ol>
+</blockquote>
+<p>See above</p>
+<div id="b.-5" class="section level3">
+<h3>b.</h3>
+<blockquote>
+<p>Can you think of a few possible hypotheses about the effect of endo?</p>
+</blockquote>
+<p>Different intercept, different slope</p>
+</div>
+<div id="c.-2" class="section level3">
+<h3>c.</h3>
+<blockquote>
+<p>Repeat the mixed model analyses of the Reisby dataset: model depression score (HDRS) as a function of time (linear), endo/exo and the interaction of the two. Use a model with only a random intercept per patient, and a model with a random intercept plus a random slope for time.</p>
+</blockquote>
+<pre class="r"><code>require(lme4)
+lmer(hdrs ~ week * endo + (1|id), data = reisby_long) %&gt;% summary()</code></pre>
+<pre><code>Linear mixed model fit by REML [&#39;lmerMod&#39;]
+Formula: hdrs ~ week * endo + (1 | id)
+   Data: reisby_long
+
+REML criterion at convergence: 2282.5
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-3.1782 -0.5924 -0.0329  0.5360  3.4763 
+
+Random effects:
+ Groups   Name        Variance Std.Dev.
+ id       (Intercept) 15.85    3.981   
+ Residual             19.16    4.377   
+Number of obs: 375, groups:  id, 66
+
+Fixed effects:
+              Estimate Std. Error t value
+(Intercept)   22.44118    0.95060  23.607
+week          -2.35168    0.19866 -11.838
+endoTRUE       1.99303    1.27877   1.559
+week:endoTRUE -0.04417    0.27147  -0.163
+
+Correlation of Fixed Effects:
+            (Intr) week   enTRUE
+week        -0.520              
+endoTRUE    -0.743  0.386       
+week:ndTRUE  0.380 -0.732 -0.526</code></pre>
+<pre class="r"><code>lmer(hdrs ~ week * endo + (week|id), data = reisby_long) %&gt;% summary()</code></pre>
+<pre><code>Linear mixed model fit by REML [&#39;lmerMod&#39;]
+Formula: hdrs ~ week * endo + (week | id)
+   Data: reisby_long
+
+REML criterion at convergence: 2214
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-2.7242 -0.4948  0.0334  0.4935  3.6148 
+
+Random effects:
+ Groups   Name        Variance Std.Dev. Corr 
+ id       (Intercept) 12.252   3.500         
+          week         2.173   1.474    -0.29
+ Residual             12.210   3.494         
+Number of obs: 375, groups:  id, 66
+
+Fixed effects:
+              Estimate Std. Error t value
+(Intercept)    22.4760     0.8074  27.836
+week           -2.3657     0.3170  -7.462
+endoTRUE        1.9882     1.0864   1.830
+week:endoTRUE  -0.0268     0.4264  -0.063
+
+Correlation of Fixed Effects:
+            (Intr) week   enTRUE
+week        -0.452              
+endoTRUE    -0.743  0.336       
+week:ndTRUE  0.336 -0.743 -0.458</code></pre>
+</div>
+<div id="d.-2" class="section level3">
+<h3>d.</h3>
+<blockquote>
+<p>Which model from (d) do you think fits the data better, and why?</p>
+</blockquote>
+<p>More terms always fits better according to likelihood.</p>
+<p>The residual standard deviation of the model with random intercept and slope is lower, so seems to fit better</p>
+</div>
+<div id="e.-1" class="section level3">
+<h3>e.</h3>
+<blockquote>
+<p>Interpret the second model from (c). f. Save your script/syntax for the next exercises!</p>
+</blockquote>
+</div>
+</div>
+<div id="section-6" class="section level2">
+<h2>2.</h2>
+<blockquote>
+<p>Model the variance-covariance matrix for the Reisby dataset.</p>
+</blockquote>
+<div id="a.-5" class="section level3">
+<h3>a.</h3>
+<blockquote>
+<p>Try different covariance pattern models (CPM) and mixed models to capture the correlation present in the dataset.</p>
+</blockquote>
+<p>First get the observed var-covar matrix</p>
+<pre class="r"><code>obs_vcov &lt;- reisby_long %&gt;%
+  data.table::dcast(id ~ week, value.var = &quot;hdrs&quot;) %&gt;% 
+  as.data.frame() %&gt;% .[, -1] %&gt;%
+  var(., use = &quot;pairwise.complete.obs&quot;)
+obs_vcov</code></pre>
+<pre><code>          0         1        2        3         4         5
+0 20.550820 10.114943 10.13870 10.08559  7.190865  6.277576
+1 10.114943 22.071173 12.27684 12.55024 10.263661  7.719865
+2 10.138701 12.276838 30.09135 25.12599 24.625595 18.384398
+3 10.085593 12.550238 25.12599 41.15288 37.338974 23.991541
+4  7.190865 10.263661 24.62559 37.33897 48.594470 30.512795
+5  6.277576  7.719865 18.38440 23.99154 30.512795 52.120085</code></pre>
+<pre class="r"><code>vcovs &lt;- list(observed = obs_vcov)
+
+obs_vcov %&gt;% 
+  data.table::melt() %&gt;%
+  ggplot(aes(x = Var1, y = Var2, fill = value)) + 
+  geom_tile() + scale_y_continuous(trans = &quot;reverse&quot;)</code></pre>
+<p><img src="figure/mim_assignments.Rmd/unnamed-chunk-32-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Using mean imputed dataframe</p>
+<pre class="r"><code>mean_impute_vector &lt;- function(x) {
+  if (nna(x) == 0) return(x)
+  x[is.na(x)] &lt;- mean(x, na.rm = T)
+  return(x)
+}
+
+mean_impute &lt;- function(data) {
+  n_missings &lt;- nna(data)
+  vars_with_missings &lt;- names(n_missings)[n_missings &gt; 0]
+  if (length(vars_with_missings) == 0) return(data)
+  data %&gt;% mutate_at(vars(vars_with_missings), funs(mean_impute_vector))
+}
+
+reisby_imp &lt;- mean_impute(reisby_long)</code></pre>
+<p>First model without dependence</p>
+<pre class="r"><code>fit0 &lt;- lm(hdrs ~ week * endo, data = reisby_imp)</code></pre>
+<pre class="r"><code>reisby_long %&gt;%
+  mutate(resid = residuals(fit0))</code></pre>
+<pre><code>     id hdrs week  endo        resid
+1   101   26    0 FALSE   3.66322058
+2   101   22    1 FALSE   1.94839365
+3   101   18    2 FALSE   0.23356672
+4   101    7    3 FALSE  -8.48126021
+5   101    4    4 FALSE  -9.19608714
+6   101    3    5 FALSE  -7.91091407
+7   103   33    0 FALSE  10.66322058
+8   103   24    1 FALSE   3.94839365
+9   103   15    2 FALSE  -2.76643328
+10  103   24    3 FALSE   8.51873979
+11  103   15    4 FALSE   1.80391286
+12  103   13    5 FALSE   2.08908593
+13  104   29    0  TRUE   5.20539854
+14  104   22    1  TRUE   0.35056405
+15  104   18    2  TRUE  -1.50427044
+16  104   13    3  TRUE  -4.35910493
+17  104   19    4  TRUE   3.78606057
+18  104    0    5  TRUE -13.06877392
+19  105   22    0 FALSE  -0.33677942
+20  105   12    1 FALSE  -8.05160635
+21  105   16    2 FALSE  -1.76643328
+22  105   16    3 FALSE   0.51873979
+23  105   13    4 FALSE  -0.19608714
+24  105    9    5 FALSE  -1.91091407
+25  106   21    0  TRUE  -2.79460146
+26  106   25    1  TRUE   3.35056405
+27  106   23    2  TRUE   3.49572956
+28  106   18    3  TRUE   0.64089507
+29  106   20    4  TRUE   4.78606057
+30  106   NA    5  TRUE   4.56855942
+31  107   21    0  TRUE  -2.79460146
+32  107   21    1  TRUE  -0.64943595
+33  107   16    2  TRUE  -3.50427044
+34  107   19    3  TRUE   1.64089507
+35  107   NA    4  TRUE   2.42339391
+36  107    6    5  TRUE  -7.06877392
+37  108   21    0  TRUE  -2.79460146
+38  108   22    1  TRUE   0.35056405
+39  108   11    2  TRUE  -8.50427044
+40  108    9    3  TRUE  -8.35910493
+41  108    9    4  TRUE  -6.21393943
+42  108    7    5  TRUE  -6.06877392
+43  113   21    0 FALSE  -1.33677942
+44  113   23    1 FALSE   2.94839365
+45  113   19    2 FALSE   1.23356672
+46  113   23    3 FALSE   7.51873979
+47  113   23    4 FALSE   9.80391286
+48  113   NA    5 FALSE   6.72641927
+49  114   NA    0 FALSE  -4.69944609
+50  114   17    1 FALSE  -3.05160635
+51  114   11    2 FALSE  -6.76643328
+52  114   13    3 FALSE  -2.48126021
+53  114    7    4 FALSE  -6.19608714
+54  114    7    5 FALSE  -3.91091407
+55  115   NA    0  TRUE  -6.15726813
+56  115   16    1  TRUE  -5.64943595
+57  115   16    2  TRUE  -3.50427044
+58  115   16    3  TRUE  -1.35910493
+59  115   16    4  TRUE   0.78606057
+60  115   11    5  TRUE  -2.06877392
+61  117   19    0  TRUE  -4.79460146
+62  117   16    1  TRUE  -5.64943595
+63  117   13    2  TRUE  -6.50427044
+64  117   12    3  TRUE  -5.35910493
+65  117    7    4  TRUE  -8.21393943
+66  117    6    5  TRUE  -7.06877392
+67  118   NA    0  TRUE  -6.15726813
+68  118   26    1  TRUE   4.35056405
+69  118   18    2  TRUE  -1.50427044
+70  118   18    3  TRUE   0.64089507
+71  118   14    4  TRUE  -1.21393943
+72  118   11    5  TRUE  -2.06877392
+73  120   20    0 FALSE  -2.33677942
+74  120   19    1 FALSE  -1.05160635
+75  120   17    2 FALSE  -0.76643328
+76  120   18    3 FALSE   2.51873979
+77  120   16    4 FALSE   2.80391286
+78  120   17    5 FALSE   6.08908593
+79  121   20    0 FALSE  -2.33677942
+80  121   22    1 FALSE   1.94839365
+81  121   19    2 FALSE   1.23356672
+82  121   19    3 FALSE   3.51873979
+83  121   12    4 FALSE  -1.19608714
+84  121   14    5 FALSE   3.08908593
+85  123   15    0 FALSE  -7.33677942
+86  123   15    1 FALSE  -5.05160635
+87  123   15    2 FALSE  -2.76643328
+88  123   13    3 FALSE  -2.48126021
+89  123    5    4 FALSE  -8.19608714
+90  123    5    5 FALSE  -5.91091407
+91  501   29    0  TRUE   5.20539854
+92  501   30    1  TRUE   8.35056405
+93  501   26    2  TRUE   6.49572956
+94  501   22    3  TRUE   4.64089507
+95  501   19    4  TRUE   3.78606057
+96  501   24    5  TRUE  10.93122608
+97  502   21    0  TRUE  -2.79460146
+98  502   22    1  TRUE   0.35056405
+99  502   13    2  TRUE  -6.50427044
+100 502   11    3  TRUE  -6.35910493
+101 502    2    4  TRUE -13.21393943
+102 502    1    5  TRUE -12.06877392
+103 504   19    0 FALSE  -3.33677942
+104 504   17    1 FALSE  -3.05160635
+105 504   15    2 FALSE  -2.76643328
+106 504   16    3 FALSE   0.51873979
+107 504   12    4 FALSE  -1.19608714
+108 504   12    5 FALSE   1.08908593
+109 505   21    0 FALSE  -1.33677942
+110 505   11    1 FALSE  -9.05160635
+111 505   18    2 FALSE   0.23356672
+112 505    0    3 FALSE -15.48126021
+113 505    0    4 FALSE -13.19608714
+114 505    4    5 FALSE  -6.91091407
+115 507   27    0  TRUE   3.20539854
+116 507   26    1  TRUE   4.35056405
+117 507   26    2  TRUE   6.49572956
+118 507   25    3  TRUE   7.64089507
+119 507   24    4  TRUE   8.78606057
+120 507   19    5  TRUE   5.93122608
+121 603   28    0 FALSE   5.66322058
+122 603   22    1 FALSE   1.94839365
+123 603   18    2 FALSE   0.23356672
+124 603   20    3 FALSE   4.51873979
+125 603   11    4 FALSE  -2.19608714
+126 603   13    5 FALSE   2.08908593
+127 604   27    0 FALSE   4.66322058
+128 604   27    1 FALSE   6.94839365
+129 604   13    2 FALSE  -4.76643328
+130 604    5    3 FALSE -10.48126021
+131 604    7    4 FALSE  -6.19608714
+132 604   NA    5 FALSE   6.72641927
+133 606   19    0  TRUE  -4.79460146
+134 606   33    1  TRUE  11.35056405
+135 606   12    2  TRUE  -7.50427044
+136 606   12    3  TRUE  -5.35910493
+137 606    3    4  TRUE -12.21393943
+138 606    1    5  TRUE -12.06877392
+139 607   30    0  TRUE   6.20539854
+140 607   39    1  TRUE  17.35056405
+141 607   30    2  TRUE  10.49572956
+142 607   27    3  TRUE   9.64089507
+143 607   20    4  TRUE   4.78606057
+144 607    4    5  TRUE  -9.06877392
+145 608   24    0 FALSE   1.66322058
+146 608   19    1 FALSE  -1.05160635
+147 608   14    2 FALSE  -3.76643328
+148 608   12    3 FALSE  -3.48126021
+149 608    3    4 FALSE -10.19608714
+150 608    4    5 FALSE  -6.91091407
+151 609   NA    0  TRUE  -6.15726813
+152 609   25    1  TRUE   3.35056405
+153 609   22    2  TRUE   2.49572956
+154 609   14    3  TRUE  -3.35910493
+155 609   15    4  TRUE  -0.21393943
+156 609    2    5  TRUE -11.06877392
+157 610   34    0  TRUE  10.20539854
+158 610   NA    1  TRUE  -4.01210262
+159 610   33    2  TRUE  13.49572956
+160 610   23    3  TRUE   5.64089507
+161 610   NA    4  TRUE   2.42339391
+162 610   11    5  TRUE  -2.06877392
+163 302   18    0  TRUE  -5.79460146
+164 302   22    1  TRUE   0.35056405
+165 302   16    2  TRUE  -3.50427044
+166 302    8    3  TRUE  -9.35910493
+167 302    9    4  TRUE  -6.21393943
+168 302   12    5  TRUE  -1.06877392
+169 303   21    0 FALSE  -1.33677942
+170 303   21    1 FALSE   0.94839365
+171 303   13    2 FALSE  -4.76643328
+172 303   14    3 FALSE  -1.48126021
+173 303   10    4 FALSE  -3.19608714
+174 303    5    5 FALSE  -5.91091407
+175 304   21    0  TRUE  -2.79460146
+176 304   27    1  TRUE   5.35056405
+177 304   29    2  TRUE   9.49572956
+178 304   NA    3  TRUE   0.27822840
+179 304   12    4  TRUE  -3.21393943
+180 304   24    5  TRUE  10.93122608
+181 305   19    0 FALSE  -3.33677942
+182 305   17    1 FALSE  -3.05160635
+183 305   15    2 FALSE  -2.76643328
+184 305   11    3 FALSE  -4.48126021
+185 305    5    4 FALSE  -8.19608714
+186 305    1    5 FALSE  -9.91091407
+187 308   22    0 FALSE  -0.33677942
+188 308   21    1 FALSE   0.94839365
+189 308   18    2 FALSE   0.23356672
+190 308   17    3 FALSE   1.51873979
+191 308   12    4 FALSE  -1.19608714
+192 308   11    5 FALSE   0.08908593
+193 309   22    0 FALSE  -0.33677942
+194 309   22    1 FALSE   1.94839365
+195 309   16    2 FALSE  -1.76643328
+196 309   19    3 FALSE   3.51873979
+197 309   20    4 FALSE   6.80391286
+198 309   11    5 FALSE   0.08908593
+199 310   24    0  TRUE   0.20539854
+200 310   19    1  TRUE  -2.64943595
+201 310   11    2  TRUE  -8.50427044
+202 310    7    3  TRUE -10.35910493
+203 310    6    4  TRUE  -9.21393943
+204 310   NA    5  TRUE   4.56855942
+205 311   20    0  TRUE  -3.79460146
+206 311   16    1  TRUE  -5.64943595
+207 311   21    2  TRUE   1.49572956
+208 311   17    3  TRUE  -0.35910493
+209 311   NA    4  TRUE   2.42339391
+210 311   15    5  TRUE   1.93122608
+211 312   17    0  TRUE  -6.79460146
+212 312   NA    1  TRUE  -4.01210262
+213 312   18    2  TRUE  -1.50427044
+214 312   17    3  TRUE  -0.35910493
+215 312   17    4  TRUE   1.78606057
+216 312    6    5  TRUE  -7.06877392
+217 313   21    0 FALSE  -1.33677942
+218 313   19    1 FALSE  -1.05160635
+219 313   10    2 FALSE  -7.76643328
+220 313   11    3 FALSE  -4.48126021
+221 313   11    4 FALSE  -2.19608714
+222 313    8    5 FALSE  -2.91091407
+223 315   27    0  TRUE   3.20539854
+224 315   21    1  TRUE  -0.64943595
+225 315   17    2  TRUE  -2.50427044
+226 315   13    3  TRUE  -4.35910493
+227 315    5    4  TRUE -10.21393943
+228 315   NA    5  TRUE   4.56855942
+229 316   32    0  TRUE   8.20539854
+230 316   26    1  TRUE   4.35056405
+231 316   23    2  TRUE   3.49572956
+232 316   26    3  TRUE   8.64089507
+233 316   23    4  TRUE   7.78606057
+234 316   24    5  TRUE  10.93122608
+235 318   17    0  TRUE  -6.79460146
+236 318   18    1  TRUE  -3.64943595
+237 318   19    2  TRUE  -0.50427044
+238 318   21    3  TRUE   3.64089507
+239 318   17    4  TRUE   1.78606057
+240 318   11    5  TRUE  -2.06877392
+241 319   24    0  TRUE   0.20539854
+242 319   18    1  TRUE  -3.64943595
+243 319   10    2  TRUE  -9.50427044
+244 319   14    3  TRUE  -3.35910493
+245 319   13    4  TRUE  -2.21393943
+246 319   12    5  TRUE  -1.06877392
+247 322   28    0  TRUE   4.20539854
+248 322   21    1  TRUE  -0.64943595
+249 322   25    2  TRUE   5.49572956
+250 322   32    3  TRUE  14.64089507
+251 322   34    4  TRUE  18.78606057
+252 322   NA    5  TRUE   4.56855942
+253 327   17    0 FALSE  -5.33677942
+254 327   18    1 FALSE  -2.05160635
+255 327   15    2 FALSE  -2.76643328
+256 327    8    3 FALSE  -7.48126021
+257 327   19    4 FALSE   5.80391286
+258 327   17    5 FALSE   6.08908593
+259 328   22    0 FALSE  -0.33677942
+260 328   24    1 FALSE   3.94839365
+261 328   28    2 FALSE  10.23356672
+262 328   26    3 FALSE  10.51873979
+263 328   28    4 FALSE  14.80391286
+264 328   29    5 FALSE  18.08908593
+265 331   19    0 FALSE  -3.33677942
+266 331   21    1 FALSE   0.94839365
+267 331   18    2 FALSE   0.23356672
+268 331   16    3 FALSE   0.51873979
+269 331   14    4 FALSE   0.80391286
+270 331   10    5 FALSE  -0.91091407
+271 333   23    0 FALSE   0.66322058
+272 333   20    1 FALSE  -0.05160635
+273 333   21    2 FALSE   3.23356672
+274 333   20    3 FALSE   4.51873979
+275 333   24    4 FALSE  10.80391286
+276 333   14    5 FALSE   3.08908593
+277 334   31    0 FALSE   8.66322058
+278 334   25    1 FALSE   4.94839365
+279 334   NA    2 FALSE  -0.12909995
+280 334    7    3 FALSE  -8.48126021
+281 334    8    4 FALSE  -5.19608714
+282 334   11    5 FALSE   0.08908593
+283 335   21    0 FALSE  -1.33677942
+284 335   21    1 FALSE   0.94839365
+285 335   18    2 FALSE   0.23356672
+286 335   15    3 FALSE  -0.48126021
+287 335   12    4 FALSE  -1.19608714
+288 335   10    5 FALSE  -0.91091407
+289 337   27    0 FALSE   4.66322058
+290 337   22    1 FALSE   1.94839365
+291 337   23    2 FALSE   5.23356672
+292 337   21    3 FALSE   5.51873979
+293 337   12    4 FALSE  -1.19608714
+294 337   13    5 FALSE   2.08908593
+295 338   22    0 FALSE  -0.33677942
+296 338   20    1 FALSE  -0.05160635
+297 338   22    2 FALSE   4.23356672
+298 338   23    3 FALSE   7.51873979
+299 338   19    4 FALSE   5.80391286
+300 338   18    5 FALSE   7.08908593
+301 339   27    0  TRUE   3.20539854
+302 339   NA    1  TRUE  -4.01210262
+303 339   14    2  TRUE  -5.50427044
+304 339   12    3  TRUE  -5.35910493
+305 339   11    4  TRUE  -4.21393943
+306 339   12    5  TRUE  -1.06877392
+307 344   NA    0  TRUE  -6.15726813
+308 344   21    1  TRUE  -0.64943595
+309 344   12    2  TRUE  -7.50427044
+310 344   13    3  TRUE  -4.35910493
+311 344   13    4  TRUE  -2.21393943
+312 344   18    5  TRUE   4.93122608
+313 345   29    0 FALSE   6.66322058
+314 345   27    1 FALSE   6.94839365
+315 345   27    2 FALSE   9.23356672
+316 345   22    3 FALSE   6.51873979
+317 345   22    4 FALSE   8.80391286
+318 345   23    5 FALSE  12.08908593
+319 346   25    0  TRUE   1.20539854
+320 346   24    1  TRUE   2.35056405
+321 346   19    2  TRUE  -0.50427044
+322 346   23    3  TRUE   5.64089507
+323 346   14    4  TRUE  -1.21393943
+324 346   21    5  TRUE   7.93122608
+325 347   18    0  TRUE  -5.79460146
+326 347   15    1  TRUE  -6.64943595
+327 347   14    2  TRUE  -5.50427044
+328 347   10    3  TRUE  -7.35910493
+329 347    8    4  TRUE  -7.21393943
+330 347   NA    5  TRUE   4.56855942
+331 348   24    0 FALSE   1.66322058
+332 348   21    1 FALSE   0.94839365
+333 348   12    2 FALSE  -5.76643328
+334 348   13    3 FALSE  -2.48126021
+335 348   12    4 FALSE  -1.19608714
+336 348    5    5 FALSE  -5.91091407
+337 349   17    0  TRUE  -6.79460146
+338 349   19    1  TRUE  -2.64943595
+339 349   15    2  TRUE  -4.50427044
+340 349   12    3  TRUE  -5.35910493
+341 349    9    4  TRUE  -6.21393943
+342 349   13    5  TRUE  -0.06877392
+343 350   22    0 FALSE  -0.33677942
+344 350   25    1 FALSE   4.94839365
+345 350   12    2 FALSE  -5.76643328
+346 350   16    3 FALSE   0.51873979
+347 350   10    4 FALSE  -3.19608714
+348 350   16    5 FALSE   5.08908593
+349 351   30    0  TRUE   6.20539854
+350 351   27    1  TRUE   5.35056405
+351 351   23    2  TRUE   3.49572956
+352 351   20    3  TRUE   2.64089507
+353 351   12    4  TRUE  -3.21393943
+354 351   11    5  TRUE  -2.06877392
+355 352   21    0  TRUE  -2.79460146
+356 352   19    1  TRUE  -2.64943595
+357 352   18    2  TRUE  -1.50427044
+358 352   15    3  TRUE  -2.35910493
+359 352   18    4  TRUE   2.78606057
+360 352   19    5  TRUE   5.93122608
+361 353   27    0  TRUE   3.20539854
+362 353   21    1  TRUE  -0.64943595
+363 353   24    2  TRUE   4.49572956
+364 353   22    3  TRUE   4.64089507
+365 353   16    4  TRUE   0.78606057
+366 353   11    5  TRUE  -2.06877392
+367 354   28    0  TRUE   4.20539854
+368 354   27    1  TRUE   5.35056405
+369 354   27    2  TRUE   7.49572956
+370 354   26    3  TRUE   8.64089507
+371 354   23    4  TRUE   7.78606057
+372 354   NA    5  TRUE   4.56855942
+373 355   22    0  TRUE  -1.79460146
+374 355   26    1  TRUE   4.35056405
+375 355   20    2  TRUE   0.49572956
+376 355   13    3  TRUE  -4.35910493
+377 355   10    4  TRUE  -5.21393943
+378 355    7    5  TRUE  -6.06877392
+379 357   27    0  TRUE   3.20539854
+380 357   22    1  TRUE   0.35056405
+381 357   24    2  TRUE   4.49572956
+382 357   25    3  TRUE   7.64089507
+383 357   19    4  TRUE   3.78606057
+384 357   19    5  TRUE   5.93122608
+385 360   21    0  TRUE  -2.79460146
+386 360   28    1  TRUE   6.35056405
+387 360   27    2  TRUE   7.49572956
+388 360   29    3  TRUE  11.64089507
+389 360   28    4  TRUE  12.78606057
+390 360   33    5  TRUE  19.93122608
+391 361   30    0  TRUE   6.20539854
+392 361   22    1  TRUE   0.35056405
+393 361   11    2  TRUE  -8.50427044
+394 361    8    3  TRUE  -9.35910493
+395 361    7    4  TRUE  -8.21393943
+396 361   19    5  TRUE   5.93122608</code></pre>
+<pre class="r"><code>require(nlme)
+lme(fixed = hdrs ~ week * endo, random = ~ 1 | id, data = reisby_long,
+    na.action = &quot;na.omit&quot;, method = &quot;ML&quot;) %&gt;% summary()</code></pre>
+<pre><code>Linear mixed-effects model fit by maximum likelihood
+ Data: reisby_long 
+       AIC      BIC    logLik
+  2294.137 2317.699 -1141.069
+
+Random effects:
+ Formula: ~1 | id
+        (Intercept) Residual
+StdDev:    3.909812 4.362878
+
+Fixed effects: hdrs ~ week * endo 
+                  Value Std.Error  DF    t-value p-value
+(Intercept)   22.441628 0.9441419 307  23.769337  0.0000
+week          -2.351842 0.1990804 307 -11.813530  0.0000
+endoTRUE       1.992873 1.2702442  64   1.568890  0.1216
+week:endoTRUE -0.044176 0.2720416 307  -0.162387  0.8711
+ Correlation: 
+              (Intr) week   enTRUE
+week          -0.524              
+endoTRUE      -0.743  0.390       
+week:endoTRUE  0.384 -0.732 -0.531
+
+Standardized Within-Group Residuals:
+        Min          Q1         Med          Q3         Max 
+-3.18214138 -0.59376247 -0.03548597  0.53988343  3.48261468 
+
+Number of Observations: 375
+Number of Groups: 66 </code></pre>
+<p>With independent compound symmetry structure</p>
+<pre class="r"><code>melt_vcov &lt;- function(vcov) {
+  if (is.list(vcov)) vcov = vcov[[1]]
+  vcov %&gt;%
+    as.numeric() %&gt;%
+    matrix(., nrow = dim(vcov)[1]) %&gt;%
+    data.table::melt() %&gt;%
+    set_colnames(c(&quot;axis1&quot;, &quot;axis2&quot;, &quot;value&quot;))
+}
+melt_vcov(obs_vcov)</code></pre>
+<pre><code>   axis1 axis2     value
+1      1     1 20.550820
+2      2     1 10.114943
+3      3     1 10.138701
+4      4     1 10.085593
+5      5     1  7.190865
+6      6     1  6.277576
+7      1     2 10.114943
+8      2     2 22.071173
+9      3     2 12.276838
+10     4     2 12.550238
+11     5     2 10.263661
+12     6     2  7.719865
+13     1     3 10.138701
+14     2     3 12.276838
+15     3     3 30.091346
+16     4     3 25.125992
+17     5     3 24.625595
+18     6     3 18.384398
+19     1     4 10.085593
+20     2     4 12.550238
+21     3     4 25.125992
+22     4     4 41.152885
+23     5     4 37.338974
+24     6     4 23.991541
+25     1     5  7.190865
+26     2     5 10.263661
+27     3     5 24.625595
+28     4     5 37.338974
+29     5     5 48.594470
+30     6     5 30.512795
+31     1     6  6.277576
+32     2     6  7.719865
+33     3     6 18.384398
+34     4     6 23.991541
+35     5     6 30.512795
+36     6     6 52.120085</code></pre>
+<pre class="r"><code>fit_cs &lt;- gls(hdrs ~ week*endo, correlation=corCompSymm(form = ~ 1 | id), data=reisby_long, na.action=&quot;na.omit&quot;, method=&quot;ML&quot;)
+vcov_cs &lt;- getVarCov(fit_cs, type = &quot;marginal&quot;)
+vcov_cs</code></pre>
+<pre><code>Marginal variance covariance matrix
+       [,1]   [,2]   [,3]   [,4]   [,5]   [,6]
+[1,] 34.321 15.287 15.287 15.287 15.287 15.287
+[2,] 15.287 34.321 15.287 15.287 15.287 15.287
+[3,] 15.287 15.287 34.321 15.287 15.287 15.287
+[4,] 15.287 15.287 15.287 34.321 15.287 15.287
+[5,] 15.287 15.287 15.287 15.287 34.321 15.287
+[6,] 15.287 15.287 15.287 15.287 15.287 34.321
+  Standard Deviations: 5.8584 5.8584 5.8584 5.8584 5.8584 5.8584 </code></pre>
+<pre class="r"><code>vcovs[[&quot;compound_symmerty&quot;]] &lt;- vcov_cs</code></pre>
+<p>With random intercept only</p>
+<pre class="r"><code>fit_ri &lt;- lme(fixed = hdrs ~ week*endo, random = ~1|id, data = reisby_long,
+              method = &quot;ML&quot;, na.action = &quot;na.omit&quot;)
+
+vcov_ri &lt;- getVarCov(fit_ri, type = &quot;marginal&quot;)
+vcov_ri</code></pre>
+<pre><code>id 101 
+Marginal variance covariance matrix
+       1      2      3      4      5      6
+1 34.321 15.287 15.287 15.287 15.287 15.287
+2 15.287 34.321 15.287 15.287 15.287 15.287
+3 15.287 15.287 34.321 15.287 15.287 15.287
+4 15.287 15.287 15.287 34.321 15.287 15.287
+5 15.287 15.287 15.287 15.287 34.321 15.287
+6 15.287 15.287 15.287 15.287 15.287 34.321
+  Standard Deviations: 5.8584 5.8584 5.8584 5.8584 5.8584 5.8584 </code></pre>
+<pre class="r"><code>vcovs[[&quot;random_intercept&quot;]] &lt;- vcov_ri</code></pre>
+<p>With autoregressive residual correlation structure</p>
+<pre class="r"><code>fit_ar &lt;- gls(hdrs ~ week*endo, correlation = corAR1(form = ~1 | id),
+              data = reisby_long, na.action = &quot;na.omit&quot;, method = &quot;ML&quot;)
+vcov_ar &lt;- getVarCov(fit_ar, type = &quot;marginal&quot;)
+vcov_ar</code></pre>
+<pre><code>Marginal variance covariance matrix
+        [,1]    [,2]    [,3]    [,4]    [,5]    [,6]
+[1,] 35.1560 22.7130 14.6740  9.4807  6.1252  3.9573
+[2,] 22.7130 35.1560 22.7130 14.6740  9.4807  6.1252
+[3,] 14.6740 22.7130 35.1560 22.7130 14.6740  9.4807
+[4,]  9.4807 14.6740 22.7130 35.1560 22.7130 14.6740
+[5,]  6.1252  9.4807 14.6740 22.7130 35.1560 22.7130
+[6,]  3.9573  6.1252  9.4807 14.6740 22.7130 35.1560
+  Standard Deviations: 5.9292 5.9292 5.9292 5.9292 5.9292 5.9292 </code></pre>
+<pre class="r"><code>vcovs[[&quot;auto_regressive&quot;]] &lt;- vcov_ar</code></pre>
+<p>With autoregressive residual correlation structure and heterogeneous variances</p>
+<p>It’s a bit more complicated to get the variance-covariance matrix</p>
+<pre class="r"><code>fit_har &lt;- gls(hdrs ~ week*endo, correlation = corAR1(form = ~1 | id),
+                 weights = varIdent(form = ~1|week),
+              data = reisby_long, na.action = &quot;na.omit&quot;, method = &quot;ML&quot;)
+summary(fit_har)</code></pre>
+<pre><code>Generalized least squares fit by maximum likelihood
+  Model: hdrs ~ week * endo 
+  Data: reisby_long 
+       AIC      BIC    logLik
+  2240.717 2283.913 -1109.358
+
+Correlation Structure: AR(1)
+ Formula: ~1 | id 
+ Parameter estimate(s):
+      Phi 
+0.6270097 
+Variance function:
+ Structure: Different standard deviations per stratum
+ Formula: ~1 | week 
+ Parameter estimates:
+       0        1        2        3        4        5 
+1.000000 1.108897 1.150139 1.209555 1.297891 1.502195 
+
+Coefficients:
+                  Value Std.Error   t-value p-value
+(Intercept)   22.651966 0.8809205 25.713974  0.0000
+week          -2.410213 0.2967891 -8.120964  0.0000
+endoTRUE       1.516556 1.1852305  1.279545  0.2015
+week:endoTRUE  0.086591 0.3990676  0.216984  0.8283
+
+ Correlation: 
+              (Intr) week   enTRUE
+week          -0.581              
+endoTRUE      -0.743  0.432       
+week:endoTRUE  0.432 -0.744 -0.581
+
+Standardized residuals:
+        Min          Q1         Med          Q3         Max 
+-2.66899729 -0.72617223 -0.08373892  0.70948986  3.23857619 
+
+Residual standard error: 4.776921 
+Degrees of freedom: 375 total; 371 residual</code></pre>
+<pre class="r"><code>cormat_har &lt;- corMatrix(fit_har$modelStruct$corStruct)[[1]]
+var_struct_har &lt;- 1+c(0, as.numeric(fit_har$modelStruct$varStruct))
+sigma_har &lt;- fit_har$sigma
+
+vcov_har &lt;- matrix(numeric(0), nrow = 6, ncol = 6)
+
+for (i in 1:nrow(cormat_har)) {
+  for (j in 1:ncol(cormat_har)) {
+    vcov_har[i, j] = sigma_har^2 * cormat_har[i, j] * var_struct_har[i] * var_struct_har[j]
+  }
+}
+vcov_har</code></pre>
+<pre><code>          [,1]      [,2]     [,3]      [,4]      [,5]      [,6]
+[1,] 22.818970 15.786642 10.22598  6.695114  4.446507  3.111280
+[2,] 15.786642 27.780171 17.99492 11.781568  7.824636  5.475002
+[3,] 10.225977 17.994922 29.64944 19.411970 12.892307  9.020920
+[4,]  6.695114 11.781568 19.41197 32.327653 21.470157 15.022956
+[5,]  4.446507  7.824636 12.89231 21.470157 36.270012 25.378612
+[6,]  3.111280  5.475002  9.02092 15.022956 25.378612 45.168895</code></pre>
+<pre class="r"><code>vcovs[[&quot;heterogeneous_AR&quot;]] &lt;- vcov_har</code></pre>
+<p>With unstructured correlation (has the most free parameters)</p>
+<pre class="r"><code>fit_unr &lt;- gls(hdrs ~ week*endo, correlation = corSymm(form = ~1|id),
+               weights = varIdent(form = ~1|week),
+               data = reisby_long, na.action = &quot;na.omit&quot;, method = &quot;ML&quot;)
+
+cormat_unr &lt;- corMatrix(fit_unr$modelStruct$corStruct)[[1]]
+var_struct_unr &lt;- 1+c(0, as.numeric(fit_unr$modelStruct$varStruct))
+sigma_unr &lt;- fit_unr$sigma
+
+vcov_unr &lt;- matrix(numeric(0), nrow = 6, ncol = 6)
+
+for (i in 1:nrow(cormat_unr)) {
+  for (j in 1:ncol(cormat_unr)) {
+    vcov_unr[i, j] = sigma_unr^2 * cormat_unr[i, j] * var_struct_unr[i] * var_struct_unr[j]
+  }
+}
+vcov_unr</code></pre>
+<pre><code>          [,1]      [,2]      [,3]      [,4]      [,5]      [,6]
+[1,] 19.674419  9.880921  6.292196  7.718344  6.331878  3.878412
+[2,]  9.880921 21.219622  9.874717 10.187582  7.680643  4.756425
+[3,]  6.292196  9.874717 25.949930 21.274065 22.430340 18.462169
+[4,]  7.718344 10.187582 21.274065 35.148004 28.438097 25.761781
+[5,]  6.331878  7.680643 22.430340 28.438097 40.818708 31.979363
+[6,]  3.878412  4.756425 18.462169 25.761781 31.979363 47.945744</code></pre>
+<pre class="r"><code>vcovs[[&quot;unstructured_correlation&quot;]] &lt;- vcov_unr</code></pre>
+<p>Using continous AR</p>
+<pre class="r"><code>fit_car &lt;- lme(fixed = hdrs ~ week*endo, random = ~week|id,
+               correlation = corCAR1(form = ~ week | id),
+               data = reisby_long, na.action = &quot;na.omit&quot;, method = &quot;ML&quot;)
+vcovs[[&quot;continous_autoregressive&quot;]] &lt;- getVarCov(fit_car, type = &quot;margin&quot;)</code></pre>
+<p>Plot them to compare</p>
+<pre class="r"><code>vcovs %&gt;%
+  map_df(melt_vcov, .id = &quot;model&quot;) %&gt;%
+  mutate(model = relevel(factor(model), &quot;observed&quot;)) %&gt;%
+  ggplot(aes(x = axis1, y = axis2, fill = value)) + 
+  geom_tile() + scale_y_continuous(trans = &quot;reverse&quot;) + 
+  facet_wrap(~model)</code></pre>
+<p><img src="figure/mim_assignments.Rmd/unnamed-chunk-44-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="b.-6" class="section level3">
+<h3>b.</h3>
+<blockquote>
+<p>Using the corMatrix() and getVarCov() functions in R (or the option Statistics – Covariance of residuals in the menu, /PRINT=R in the syntax), we can take a look the estimated correlation or variance-covariance structures for most of the models in (a). Which structures seem more realistic for this data? Which structures seem less realistic?</p>
+</blockquote>
+</div>
+<div id="c.-3" class="section level3">
+<h3>c.</h3>
+<blockquote>
+<p>Save your script/syntax for the next exercises!</p>
+</blockquote>
+<blockquote>
+<p>Some tips for SPSS users: (See the extra slides on Moodle.) Since we want to explicitly choose the correlation structure, we will not include a random intercept, but instead model impose a structure on the repeated observations within each patient: Using the long version of the dataset, go to Analyze, Mixed Models, Linear. In the first screen of the Linear Mixed Models menu, put ID in Subjects and WEEK in Repeated. As Repeated Covariance Type, choose either Compound symmetry (with and without Correlation Metric), Unstructured (with Correlation Metric for interpretability), or AR(1) (with and without heterogeneous variances) Use a fixed model with ENDO, WEEK and their interaction, and no random effects. Choose Method=ML under Estimation.</p>
+</blockquote>
+</div>
+</div>
+<div id="section-7" class="section level2">
+<h2>3.</h2>
+<blockquote>
+<p>In this exercise we repeat the rest of the analyses of the Reisby dataset.</p>
+</blockquote>
+<div id="a.-6" class="section level3">
+<h3>a.</h3>
+<blockquote>
+<p>Take a look at the modelled (assumed) covariance matrices for the LMEs from Exercise 1. Compare these to the observed covariance matrix of the outcomes above, and to some of the CPMs above. Which model(s) do you think best fit the observed data?</p>
+</blockquote>
+<p>offcourse unstructured correlation but it has too many free parameters</p>
+<p>heterogeneous autoregressive and continous autoregressive fit best from the rest</p>
+</div>
+<div id="b.-7" class="section level3">
+<h3>b.</h3>
+<blockquote>
+<p>Re-analyze the Reisby data, using the baseline HDRS as an adjustment variable (note: you must first remove the HDRS at week = 0 from your dataset before running the mixed model!). Compare the estimates of the fixed and random effects. What changed, and what did not?</p>
+</blockquote>
+<pre class="r"><code>reisby_base &lt;- reisby_long %&gt;%
+  group_by(id) %&gt;%
+  mutate(hdrs_baseline = hdrs[week == 0]) %&gt;%
+  ungroup() %&gt;%
+  filter(week &gt; 0)</code></pre>
+<pre class="r"><code>fit_har_base &lt;- gls(hdrs ~ week*endo + hdrs_baseline,
+                    correlation = corAR1(form = ~1 | id),
+                    weights = varIdent(form = ~1 | week),
+                    data = reisby_base, 
+                    method = &quot;ML&quot;, na.action = &quot;na.omit&quot;)
+summary(fit_har)</code></pre>
+<pre><code>Generalized least squares fit by maximum likelihood
+  Model: hdrs ~ week * endo 
+  Data: reisby_long 
+       AIC      BIC    logLik
+  2240.717 2283.913 -1109.358
+
+Correlation Structure: AR(1)
+ Formula: ~1 | id 
+ Parameter estimate(s):
+      Phi 
+0.6270097 
+Variance function:
+ Structure: Different standard deviations per stratum
+ Formula: ~1 | week 
+ Parameter estimates:
+       0        1        2        3        4        5 
+1.000000 1.108897 1.150139 1.209555 1.297891 1.502195 
+
+Coefficients:
+                  Value Std.Error   t-value p-value
+(Intercept)   22.651966 0.8809205 25.713974  0.0000
+week          -2.410213 0.2967891 -8.120964  0.0000
+endoTRUE       1.516556 1.1852305  1.279545  0.2015
+week:endoTRUE  0.086591 0.3990676  0.216984  0.8283
+
+ Correlation: 
+              (Intr) week   enTRUE
+week          -0.581              
+endoTRUE      -0.743  0.432       
+week:endoTRUE  0.432 -0.744 -0.581
+
+Standardized residuals:
+        Min          Q1         Med          Q3         Max 
+-2.66899729 -0.72617223 -0.08373892  0.70948986  3.23857619 
+
+Residual standard error: 4.776921 
+Degrees of freedom: 375 total; 371 residual</code></pre>
+<pre class="r"><code>summary(fit_har_base)</code></pre>
+<pre><code>Generalized least squares fit by maximum likelihood
+  Model: hdrs ~ week * endo + hdrs_baseline 
+  Data: reisby_base 
+       AIC      BIC    logLik
+  1741.254 1781.585 -859.6272
+
+Correlation Structure: AR(1)
+ Formula: ~1 | id 
+ Parameter estimate(s):
+     Phi 
+0.622436 
+Variance function:
+ Structure: Different standard deviations per stratum
+ Formula: ~1 | week 
+ Parameter estimates:
+       1        2        3        4        5 
+1.000000 1.207278 1.287749 1.404622 1.613014 
+
+Coefficients:
+                  Value Std.Error   t-value p-value
+(Intercept)   12.201649 2.8671203  4.255716  0.0000
+week          -2.472514 0.3635657 -6.800736  0.0000
+endoTRUE       2.306241 1.4827031  1.555430  0.1210
+hdrs_baseline  0.479490 0.1167423  4.107249  0.0001
+week:endoTRUE -0.287551 0.5017481 -0.573099  0.5670
+
+ Correlation: 
+              (Intr) week   enTRUE hdrs_b
+week          -0.272                     
+endoTRUE      -0.189  0.517              
+hdrs_baseline -0.928  0.004 -0.088       
+week:endoTRUE  0.202 -0.725 -0.716 -0.009
+
+Standardized residuals:
+        Min          Q1         Med          Q3         Max 
+-2.57009355 -0.66785905 -0.05278401  0.58704650  3.06988300 
+
+Residual standard error: 4.487926 
+Degrees of freedom: 289 total; 284 residual</code></pre>
+</div>
+</div>
+<div id="optional" class="section level2">
+<h2>4. (Optional)</h2>
+<blockquote>
+<p>If you wish, go back to reisby_wide.sav and use this dataset to perform a repeated measures ANOVA. Recall the objections to this analysis from the lecture. How many subjects are used in the analysis? And what assumptions does this analysis make? How realistic are those assumptions for this study?</p>
+</blockquote>
+<p>Skipped for now</p>
+<blockquote>
+<p>Tips for SPSS users: Go to Analyze, General Linear Model, Repeated measures, type WEEK as Within Subject Factor Name , with 6 levels, and click Define. Choose hdrs.0 – hdrs.5 as Within-Subject Variables, and ENDO as Between-Subjects Factor. OK. (Note: the results might differ slightly from those from R in the lecture notes.)</p>
+</blockquote>
+</div>
+<div id="section-8" class="section level2">
+<h2>5.</h2>
+<blockquote>
+<p>On page 25 of Mixed-Effects Models in R (Appendix to An R Companion to Applied Regression, Second Edition) by John Fox and Sanford Weisberg (see link on Moodle) you will find section 2.4, “An Illustrative Application to Longitudinal Data”. In this exercise you will try to reproduce the results presented there. (Note that you can copy all commands from the article and paste them into R or RStudio.) Concentrate only on the models and the interpretation. The anova() commands, comparing the models, may be skipped over, as may be the table on page 32 (starting at line 6). Do try out the compareCoefs() function around the middle of page 32! Whether you choose to skip the anova() commands for now or not, please add method=”ML” to the first lme() command (since the rest of the models are “updated” from the first model, they will all be fit using ML estimation).</p>
+</blockquote>
+<p>Get the data</p>
+<pre class="r"><code>require(car)
+head(Blackmore, 10)</code></pre>
+<pre><code>   subject   age exercise   group
+1      100  8.00     2.71 patient
+2      100 10.00     1.94 patient
+3      100 12.00     2.36 patient
+4      100 14.00     1.54 patient
+5      100 15.92     8.63 patient
+6      101  8.00     0.14 patient
+7      101 10.00     0.14 patient
+8      101 12.00     0.00 patient
+9      101 14.00     0.00 patient
+10     101 16.67     5.08 patient</code></pre>
+<div id="a.-7" class="section level3">
+<h3>a.</h3>
+<blockquote>
+<p>Examine the time variable (age). What is different about this time variable, compared to, say, time in the Reisby data?</p>
+</blockquote>
+<pre class="r"><code>table(Blackmore$age)</code></pre>
+<pre><code>
+    8    10 11.58 11.83    12 12.08 12.17 12.25 12.33 12.42 12.46 12.58 
+  231   229     1     1   176     2     2     3     2     1     1     1 
+12.75 12.83    13 13.08 13.17 13.21 13.25 13.33 13.42  13.5 13.58 13.71 
+    2     1     6     2     3     1     4     2     4     4     5     1 
+13.75 13.83 13.92 13.96    14 14.08 14.17 14.25 14.29 14.38 14.42  14.5 
+    4     1     3     1    85     3     3     6     1     1     5     5 
+14.54 14.58 14.67 14.75 14.83 14.92 14.96    15 15.08 15.17 15.25 15.33 
+    3     3     3     3     1     5     1     7     3     3     3     3 
+15.42  15.5 15.67 15.75 15.79 15.83 15.88 15.92 15.96    16 16.08 16.13 
+    3     5     2     5     1     3     1     5     1    13     3     1 
+16.17 16.21 16.25 16.33 16.38 16.42  16.5 16.58 16.67 16.75 16.79 16.83 
+    5     1     1     6     1     4    11     4     2     2     1     1 
+16.96    17 17.13 17.17 17.25 17.42 17.46  17.5 17.67 17.92 
+    1     7     2     4     2     1     1     1     1     2 </code></pre>
+<pre class="r"><code>nobs &lt;- Blackmore %&gt;%
+  group_by(subject) %&gt;%
+  summarize(nobs = uniqueN(age))
+table(nobs$nobs)</code></pre>
+<pre><code>
+ 2  3  4  5 
+ 2 57 90 82 </code></pre>
+<p>Here are the number of observations per subject.</p>
+<p>Age is different from time in Reisby in that it is no just a relative time-indicator to some general starting point, but the absolute value carries meaning also.</p>
+<p>It seems to be sampled at 2 year differences, and then an in between value for each subject</p>
+</div>
+<div id="b.-8" class="section level3">
+<h3>b.</h3>
+<blockquote>
+<p>Why is age-8 used in the models?</p>
+</blockquote>
+<p>To standardize</p>
+</div>
+<div id="c.-4" class="section level3">
+<h3>c.</h3>
+<blockquote>
+<p>Interpret the coefficients of the 5th model (bm.lme.5).</p>
+</blockquote>
+<p>Reproduce:</p>
+<pre class="r"><code>Blackmore %&lt;&gt;% mutate(log.exercise = log2(exercise + 5/60))
+bm_lme_5 &lt;- lme(fixed = exercise ~ age*group, random = ~1 | subject,
+                correlation = corCAR1(form = ~age | subject),
+                data = Blackmore, method = &quot;ML&quot;)
+summary(bm_lme_5)</code></pre>
+<pre><code>Linear mixed-effects model fit by maximum likelihood
+ Data: Blackmore 
+      AIC      BIC   logLik
+  4569.84 4603.799 -2277.92
+
+Random effects:
+ Formula: ~1 | subject
+        (Intercept) Residual
+StdDev:    1.419018  2.87993
+
+Correlation Structure: Continuous AR(1)
+ Formula: ~age | subject 
+ Parameter estimate(s):
+      Phi 
+0.7359748 
+Fixed effects: exercise ~ age * group 
+                     Value Std.Error  DF   t-value p-value
+(Intercept)       0.112943 0.7022649 712  0.160827  0.8723
+age               0.133079 0.0575338 712  2.313056  0.0210
+grouppatient     -4.080945 0.8941782 229 -4.563906  0.0000
+age:grouppatient  0.494545 0.0723783 712  6.832780  0.0000
+ Correlation: 
+                 (Intr) age    grpptn
+age              -0.929              
+grouppatient     -0.785  0.730       
+age:grouppatient  0.738 -0.795 -0.928
+
+Standardized Within-Group Residuals:
+       Min         Q1        Med         Q3        Max 
+-1.9637923 -0.4800912 -0.1517707  0.1983307  7.1789129 
+
+Number of Observations: 945
+Number of Groups: 231 </code></pre>
+<p>Exercise seems lower in patients, and the correlation between age and exercise is higher in controls</p>
+<p>Within subject variation seems higher than between subject.</p>
+<p>correlations over time are correlated with phi = 0.73 (which is not too low I guess)</p>
+<p>slope and intercept are negatively correlated, as is more often the case</p>
+</div>
+</div>
+<div id="d.-3" class="section level2">
+<h2>d.</h2>
+<blockquote>
+<p>Write a “statistical methods” second in which you describe, in a few sentences, how the results for the 5th model (bm.lme.5) were obtained. (For today: do not worry about explaining how you chose model 5.) Be as concise - yet complete - as possible.</p>
+</blockquote>
+<p>Skipped for now</p>
+<blockquote>
+<p>Notes for SPSS users: - The data have been saved under blackmoor.csv. Be careful to read the subject number as a string variable, and not as numeric! - The log2 function does not exist in SPSS, but you can get from a loge to a log2 using the following trick: compute log2x = ln(x)/ln(2). - In SPSS you can save both fixed and individual predicted values. For the fixed, click on “Save” and choose under “Fixed Predicted values” the option “Predicted values”. - For models 4-6: the cAR(1) correlation structure for residuals is not available in SPSS. Use the AR(1) structure (not that you will then get slightly different results).</p>
+</blockquote>
+</div>
+<div id="section-9" class="section level2">
+<h2>6.</h2>
+<blockquote>
+<p>The data contained in the file stroke.csv are from an experiment to promote the recovery of stroke patients. There were three experimental groups: A was a new occupational therapy intervention; B was the existing stroke rehabilitation program conducted in the same hospital where A was conducted; C was the usual care regime for stroke patients provided in a different hospital. There were 8 patients in each experimental group. The response variable was a measure of functional ability, the Bartel index: higher scores correspond to better outcomes and the maximum score is 100. Each program lasted for 8 weeks. All subjects were evaluated at the start of the program and at weekly intervals until the end of the program. The hypothesis was that the patients in group A would do better than those in group B or C.</p>
+</blockquote>
+<div id="a.-8" class="section level3">
+<h3>a.</h3>
+<blockquote>
+<p>Thinking about the design of the study (and without yet looking at the data), what approach(es) would you use to model this data? Think about both the fixed part of the model (to answer the research question) and the random part of the model (to account for correlated measurements).</p>
+</blockquote>
+<p>Fixed parts: treatment and time, including interaction, and if available: baseline Bartel, age, sex Random parts: intercept and slope (with time) by patient; we have regular time intervals, we could use them as a linear trend</p>
+<p>or: treat time as categorical if there is no linear relationship, then use Correlation part: correlation on time-axis by patient a good bet may be heterogeneous autocorrelation</p>
+</div>
+<div id="b.-9" class="section level3">
+<h3>b.</h3>
+<blockquote>
+<p>How would you treat the first Bartel index evaluation?</p>
+</blockquote>
+<p>as a covariate</p>
+</div>
+<div id="c.-5" class="section level3">
+<h3>c.</h3>
+<blockquote>
+<p>Get descriptive statistics of the measurements and examine correlations of measurements over time.</p>
+</blockquote>
+<p>Load data and curate</p>
+<pre class="r"><code>stroke &lt;- read.csv(here(&quot;data&quot;, &quot;stroke_mim.csv&quot;), sep = &quot;,&quot;)
+stroke %&lt;&gt;% mutate(Subject = factor(Subject))
+str(stroke)</code></pre>
+<pre><code>&#39;data.frame&#39;:   24 obs. of  10 variables:
+ $ Subject: Factor w/ 24 levels &quot;1&quot;,&quot;2&quot;,&quot;3&quot;,&quot;4&quot;,..: 1 2 3 4 5 6 7 8 9 10 ...
+ $ Group  : Factor w/ 3 levels &quot;A&quot;,&quot;B&quot;,&quot;C&quot;: 1 1 1 1 1 1 1 1 2 2 ...
+ $ week1  : int  45 20 50 25 100 20 30 30 40 65 ...
+ $ week2  : int  45 25 50 25 100 20 35 35 55 65 ...
+ $ week3  : int  45 25 55 35 100 30 35 45 60 70 ...
+ $ week4  : int  45 25 70 40 100 50 40 50 70 70 ...
+ $ week5  : int  80 30 70 60 100 50 50 55 80 80 ...
+ $ week6  : int  80 35 75 60 100 60 60 65 85 80 ...
+ $ week7  : int  80 30 90 70 100 85 75 65 90 80 ...
+ $ week8  : int  90 50 90 80 100 95 85 70 90 80 ...</code></pre>
+<p>Let’s go to long</p>
+<pre class="r"><code>stroke_long &lt;- data.table::melt(stroke, id.vars = c(&quot;Subject&quot;, &quot;Group&quot;),
+                                variable.name = &quot;week&quot;, value.name = &quot;bartel&quot;)
+stroke_long %&lt;&gt;%
+  mutate(week_int = as.integer(stringr::str_extract(week, &quot;[0-9]&quot;)))</code></pre>
+<pre class="r"><code>setDT(stroke_long)
+stroke_long[, list(mean = mean(bartel), sd = sd(bartel)), by = &quot;week,Group&quot;]</code></pre>
+<pre><code>     week Group   mean       sd
+ 1: week1     A 40.000 26.59216
+ 2: week1     B 36.875 14.86547
+ 3: week1     C 30.625 11.16036
+ 4: week2     A 41.875 25.62609
+ 5: week2     B 40.000 15.35299
+ 6: week2     C 38.750 17.06082
+ 7: week3     A 46.250 23.71708
+ 8: week3     B 46.250 22.48015
+ 9: week3     C 41.250 16.42081
+10: week4     A 52.500 22.99068
+11: week4     B 51.250 22.63846
+12: week4     C 45.625 21.11829
+13: week5     A 61.875 21.37046
+14: week5     B 56.875 24.77578
+15: week5     C 48.750 22.95181
+16: week6     A 66.875 18.88641
+17: week6     B 61.875 24.19231
+18: week6     C 51.250 24.89263
+19: week7     A 74.375 21.11829
+20: week7     B 63.750 24.31196
+21: week7     C 55.625 26.38147
+22: week8     A 82.500 16.03567
+23: week8     B 64.375 24.26601
+24: week8     C 57.500 28.03060
+     week Group   mean       sd</code></pre>
+<p>Get the var-covariance matrix over times</p>
+<pre class="r"><code>vcov_obs &lt;- var(stroke[, 3:10])
+vcov_obs </code></pre>
+<pre><code>         week1    week2    week3    week4    week5    week6    week7
+week1 336.2319 323.7319 328.6232 327.3551 330.7971 297.8261 274.2754
+week2 323.7319 361.9112 356.6123 358.7409 366.1232 342.3913 325.0906
+week3 328.6232 356.6123 412.8623 416.2138 419.9275 395.6522 378.0797
+week4 327.3551 358.7409 416.2138 461.9112 450.1812 430.4348 433.6051
+week5 330.7971 366.1232 419.9275 450.1812 516.6667 504.3478 504.7101
+week6 297.8261 342.3913 395.6522 430.4348 504.3478 519.5652 529.3478
+week7 274.2754 325.0906 378.0797 433.6051 504.7101 529.3478 588.9493
+week8 251.6304 302.5815 352.4457 410.4620 496.1957 522.8261 587.2283
+         week8
+week1 251.6304
+week2 302.5815
+week3 352.4457
+week4 410.4620
+week5 496.1957
+week6 522.8261
+week7 587.2283
+week8 612.6359</code></pre>
+<pre class="r"><code>vcov_obs %&gt;%
+  melt_vcov() %&gt;%
+  ggplot(aes(x = axis1, y = axis2, fill = value)) + 
+  geom_tile() + scale_y_continuous(trans = &quot;reverse&quot;)</code></pre>
+<p><img src="figure/mim_assignments.Rmd/unnamed-chunk-53-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Variance increases with time</p>
+</div>
+<div id="d.-4" class="section level3">
+<h3>d.</h3>
+<blockquote>
+<p>Make a spaghetti plot of the data (don’t forget to restructure the data!).</p>
+</blockquote>
+<pre class="r"><code>stroke_long %&gt;%
+  ggplot(aes(x = week_int, y = bartel, col = Subject, group = Subject)) + 
+  geom_line() + facet_wrap(~Group)</code></pre>
+<p><img src="figure/mim_assignments.Rmd/unnamed-chunk-54-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Most seem to increase. Group A starts a little lower but shows relatively steep increase</p>
+<p>Pretty different slopes, pretty different intercepts.</p>
+<p>Effect is pretty much linear</p>
+</div>
+<div id="e.-2" class="section level3">
+<h3>e.</h3>
+<blockquote>
+<p>Fit the model you think would best describe the patterns in the data.</p>
+</blockquote>
+<p>We will go for random slope and intercept, taking the first bartel as baseline</p>
+<pre class="r"><code>stroke_base &lt;- stroke_long %&gt;%
+  group_by(Subject) %&gt;%
+  mutate(bartel_baseline = bartel[week_int == 8]) %&gt;%
+  ungroup() %&gt;%
+  filter(week_int &gt; 1)</code></pre>
+<p>Random part with both slope and intercept did not converge, so now only intercept</p>
+<pre class="r"><code>fit &lt;- lme(fixed = bartel ~ Group*week_int + bartel_baseline,
+           random = ~ 1 | Subject,
+           data = stroke_base,
+           method = &quot;ML&quot;)
+summary(fit)</code></pre>
+<pre><code>Linear mixed-effects model fit by maximum likelihood
+ Data: stroke_base 
+       AIC      BIC    logLik
+  1227.427 1255.543 -604.7136
+
+Random effects:
+ Formula: ~1 | Subject
+        (Intercept) Residual
+StdDev:    6.939387 7.731775
+
+Fixed effects: bartel ~ Group * week_int + bartel_baseline 
+                    Value Std.Error  DF   t-value p-value
+(Intercept)     -42.45840  7.043459 141 -6.028061   0e+00
+GroupB           22.34137  5.515033  20  4.050995   6e-04
+GroupC           26.59386  5.652543  20  4.704760   1e-04
+week_int          6.87500  0.527712 141 13.027941   0e+00
+bartel_baseline   0.83608  0.071969  20 11.617154   0e+00
+GroupB:week_int  -2.63393  0.746297 141 -3.529328   6e-04
+GroupC:week_int  -3.63839  0.746297 141 -4.875259   0e+00
+ Correlation: 
+                (Intr) GroupB GroupC wek_nt brtl_b GrpB:_
+GroupB          -0.569                                   
+GroupC          -0.629  0.536                            
+week_int        -0.375  0.478  0.467                     
+bartel_baseline -0.843  0.237  0.318  0.000              
+GroupB:week_int  0.265 -0.677 -0.330 -0.707  0.000       
+GroupC:week_int  0.265 -0.338 -0.660 -0.707  0.000  0.500
+
+Standardized Within-Group Residuals:
+         Min           Q1          Med           Q3          Max 
+-2.706719777 -0.574462832  0.002877703  0.556111611  3.144403124 
+
+Number of Observations: 168
+Number of Groups: 24 </code></pre>
+</div>
+<div id="f.-1" class="section level3">
+<h3>f.</h3>
+<blockquote>
+<p>Summarize and interpret the results in part (e).</p>
+</blockquote>
+<p>Group B and C start out better than A, but Group A increases faster</p>
+<p>Inter and intra subject variation with regards to intercept are approximately equal</p>
+</div>
+</div>
+<div id="session-information" class="section level2">
+<h2>Session information</h2>
+<!-- Insert the session information into the document -->
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 3.4.3 (2017-11-30)
+Platform: x86_64-apple-darwin15.6.0 (64-bit)
+Running under: macOS Sierra 10.12.6
+
+Matrix products: default
+BLAS: /Library/Frameworks/R.framework/Versions/3.4/Resources/lib/libRblas.0.dylib
+LAPACK: /Library/Frameworks/R.framework/Versions/3.4/Resources/lib/libRlapack.dylib
+
+locale:
+[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+ [1] car_2.1-6           nlme_3.1-131        lme4_1.1-15        
+ [4] Matrix_1.2-12       tidyr_0.8.0         bindrcpp_0.2       
+ [7] broom_0.4.3         epistats_0.1.0      ggplot2_2.2.1      
+[10] here_0.1            purrr_0.2.4         magrittr_1.5       
+[13] data.table_1.10.4-3 dplyr_0.7.4        
+
+loaded via a namespace (and not attached):
+ [1] tidyselect_0.2.3   reshape2_1.4.3     splines_3.4.3     
+ [4] haven_1.1.1        lattice_0.20-35    colorspace_1.3-2  
+ [7] htmltools_0.3.6    mgcv_1.8-23        yaml_2.1.16       
+[10] utf8_1.1.3         rlang_0.1.6        pillar_1.1.0      
+[13] nloptr_1.0.4       foreign_0.8-69     glue_1.2.0        
+[16] bindr_0.1          plyr_1.8.4         stringr_1.2.0     
+[19] MatrixModels_0.4-1 munsell_0.4.3      gtable_0.2.0      
+[22] codetools_0.2-15   psych_1.7.8        evaluate_0.10.1   
+[25] labeling_0.3       knitr_1.19         forcats_0.2.0     
+[28] SparseM_1.77       quantreg_5.35      pbkrtest_0.4-7    
+[31] parallel_3.4.3     Rcpp_0.12.15       readr_1.1.1       
+[34] scales_0.5.0       backports_1.1.2    mnormt_1.5-5      
+[37] hms_0.4.1          digest_0.6.15      stringi_1.1.6     
+[40] grid_3.4.3         rprojroot_1.3-2    cli_1.0.0         
+[43] tools_3.4.3        lazyeval_0.2.1     tibble_1.4.2      
+[46] crayon_1.3.4       pkgconfig_2.0.1    MASS_7.3-48       
+[49] assertthat_0.2.0   minqa_1.2.4        rmarkdown_1.8     
+[52] R6_2.2.2           nnet_7.3-12        git2r_0.21.0      
+[55] compiler_3.4.3    </code></pre>
+</div>
+</div>
+
+<hr>
+<p>
+    This <a href="http://rmarkdown.rstudio.com">R Markdown</a> site was created with <a href="https://github.com/jdblischak/workflowr">workflowr</a>
+</p>
+<hr>
+
+<!-- To enable disqus, uncomment the section below and provide your disqus_shortname -->
+
+<!-- disqus
+  <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+        var disqus_shortname = 'rmarkdown'; // required: replace example with your forum shortname
+
+        /* * * DON'T EDIT BELOW THIS LINE * * */
+        (function() {
+            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+-->
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
