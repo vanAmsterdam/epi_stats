@@ -50,6 +50,10 @@ statistic courses in the Epidemiology Graduate Program of the Julius Center, Utr
 
 [assignments](pr_assignments.html)
 
+## Mixed models
+
+[assignments](mim_assignments.html)
+
 # Notes and commmon errors
 
 **working directory**
