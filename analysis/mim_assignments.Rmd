@@ -529,7 +529,7 @@ obs_vcov %>%
 
 
 
-Using mean imputed dataframe
+Create mean imputed dataframe which can be used with ANOVA (not done here)
 
 ```{r}
 mean_impute_vector <- function(x) {
@@ -586,6 +586,7 @@ fit_cs <- gls(hdrs ~ week*endo, correlation=corCompSymm(form = ~ 1 | id), data=r
 vcov_cs <- getVarCov(fit_cs, type = "marginal")
 vcov_cs
 
+fits <- list(compound_symmerty = fit_cs)
 vcovs[["compound_symmerty"]] <- vcov_cs
 
 ```
@@ -600,6 +601,7 @@ vcov_ri <- getVarCov(fit_ri, type = "marginal")
 vcov_ri
 
 vcovs[["random_intercept"]] <- vcov_ri
+fits[["random_intercept"]] <- fit_ri
 
 ```
 
@@ -612,6 +614,7 @@ vcov_ar <- getVarCov(fit_ar, type = "marginal")
 vcov_ar
 
 vcovs[["auto_regressive"]] <- vcov_ar
+fits[["auto_regressive"]] <- fit_ar
 ```
 
 
@@ -639,6 +642,8 @@ for (i in 1:nrow(cormat_har)) {
 vcov_har
 
 vcovs[["heterogeneous_AR"]] <- vcov_har
+fits[["heterogeneous_AR"]] <- fit_har
+
 ```
 
 
@@ -662,7 +667,14 @@ for (i in 1:nrow(cormat_unr)) {
 }
 vcov_unr
 
+## matrix implementation, multiply scalar with (matrix, element-wise with (1d vector matrix product 1d vector (which is like tensor product)))
+
+vcov_unr2 = sigma_unr^2 * cormat_unr * (var_struct_unr %*% t(var_struct_unr))
+vcov_unr - vcov_unr2
+
 vcovs[["unstructured_correlation"]] <- vcov_unr
+fits[["unstructured_correlation"]] <- fit_unr
+
 ```
 
 
@@ -675,8 +687,9 @@ fit_car <- lme(fixed = hdrs ~ week*endo, random = ~week|id,
                correlation = corCAR1(form = ~ week | id),
                data = reisby_long, na.action = "na.omit", method = "ML")
 vcovs[["continous_autoregressive"]] <- getVarCov(fit_car, type = "margin")
+fits[["continous_autoregressive"]] <- fit_car
 
-
+fits_reisby <- fits
 ```
 
 
@@ -685,7 +698,7 @@ Plot them to compare
 
 ```{r}
 vcovs %>%
-  map_df(melt_vcov, .id = "model") %>%
+  map_df(melt_vcov, .id = "model") %>% 
   mutate(model = relevel(factor(model), "observed")) %>%
   ggplot(aes(x = axis1, y = axis2, fill = value)) + 
   geom_tile() + scale_y_continuous(trans = "reverse") + 
@@ -950,7 +963,751 @@ Group B and C start out better than A, but Group A increases faster
 Inter and intra subject variation with regards to intercept are approximately 
 equal
 
+# Day 3
 
+> During this computer lab we will
+1,2,5)	Revisit examples from earlier in the week, and do some proper model building and checking.
+3)	(Optional) Try to reproduce the results from this morning’s lecture, using SPSS and/or R.
+4)	Expand on the Reisby analyses using polynomial functions for time.
+6)	Analyze data from a multi-center, longitudinal trial.
+7)	Time permitting, examine effects of centering explanatory variables.
+8)	Time permitting, take a look at a (two-level) dataset with complicated residuals.
+
+> Note:	Exercise 1 is a re-analysis of the example from this morning’s lecture, intended to help you familiarize yourself with mixed models in SPSS and R. If you are already comfortable with the software, feel free to skip it.
+
+## 1.
+
+> We will re-analyze the schools data (school.sav or school.dat ) in R or SPSS according to the strategy described in the lecture: starting with the full fixed model we first test the random effects, then the fixed effects.
+### a.
+
+> Making use of the full fixed model from Day 1, test (with the likelihood ratio test) whether a random slope is necessary, or whether a random intercept model would be sufficient. Which model do you prefer?
+
+```{r}
+full_model <- lmer(normexam ~ standlrt + gender + schgend + schav + (standlrt | school), data = london,
+     REML = F)
+fit2 <- lmer(normexam ~ standlrt + gender + schgend + schav + (1 | school), data = london,
+     REML = F)
+anova(full_model, fit2)
+```
+
+Model with random slope is a lot better
+
+### b.
+
+> Using maximum likelihood estimation and the “random part” chosen in part (a), try to reduce the fixed part of the model by removing non-significant explanatory variables.
+
+```{r}
+fit <- full_model
+drop1(fit, test = "Chisq")
+```
+
+Remove schav
+
+```{r}
+drop1(update(fit, normexam ~ standlrt + gender + schgend + (standlrt | school)), test = "Chisq")
+```
+
+Now we can't reduce the model further
+
+```{r}
+fit_final <- update(fit, normexam ~ standlrt + gender + schgend + (standlrt | school))
+```
+
+
+### c.
+
+> Once you have a final model, run it one last time using REML estimation for correct parameter estimates. Interpret the results of this model.
+
+```{r}
+fit_final_reml <- update(fit_final, REML = T)
+fit_final_reml %>% summary()
+```
+
+More inter school variation than between school variation.
+Higher standlrt is associated with higher normexam
+
+Gender is associated with normexam (1 = better)
+School gender is associated with normexam, 2 and 3 being better
+
+> Note: save your R script (or SPSS syntax) to re-run later! After the next part of the lecture, you will continue analyzing this dataset/model.
+
+## 2.
+
+> Continuing with the schools data (school.sav or school.dat ) in R and/or SPSS:
+
+### a.	
+
+> Check the model assumptions for the final model: are the residuals, random intercept (and random slope if you used it) (approximately) normally distributed? (Note that some of the graphs for checking model assumptions are not easily produced in SPSS; see the extra slides on Moodle for help.)
+
+```{r}
+plot(fit_final_reml)
+```
+
+Boxplot of residuals per subject / group
+
+
+```{r}
+london %>%
+  mutate(residual = resid(fit_final_reml)) %>%
+  ggplot(aes(x = school, y = residual, group = school)) + 
+  geom_boxplot()
+```
+
+
+No structure, no heteroscedasticity
+
+```{r}
+qqnorm(resid(fit_final_reml))
+```
+
+Normal distributed residuals
+
+Look at intercepts and slopes
+
+```{r}
+coefs <- coef(fit_final_reml)
+head(coefs$school)
+intercepts <- coefs$school[,1]
+slopes <- coefs$school[,2]
+
+boxplot(intercepts)
+boxplot(slopes)
+```
+
+There is a single observation a deviating slope. It is the highest slope, 
+so we can get the rownumber:
+
+```{r}
+which.max(slopes)
+```
+
+Look at the 53'th school
+
+```{r}
+london %>%
+  filter(as.numeric(school) == 53)
+```
+
+We should look at the residuals of this school when corrected for the fixed part
+
+We create predictions based on the beta's of the fixed part, but it's a little 
+messy because we would need to properly handle the factor variables that 
+should be recoded to dummy variables.
+
+We can also take the predictions, and then add the intercept and slope
+
+First polish up the slopes and intercepts
+
+```{r}
+betas <- fit_final_reml@beta
+
+school_df <- coefs$school
+school_df %<>%
+  transmute(
+    random_intercept = `(Intercept)`,
+    random_slope = standlrt,
+    school = 1:n())
+  
+
+london <- merge(london, school_df, by = "school", all.x = T)
+london %<>% 
+  mutate(predicted = predict(fit_final_reml, type = "response"),
+         predicted_fixed = predicted - random_intercept - random_slope * standlrt,
+         resid_fixed = normexam - predicted_fixed,
+         residual = resid(fit_final_reml))
+```
+
+
+
+```{r}
+
+london %>%
+  mutate(special_school = as.numeric(school) == 53) %>% 
+  data.table::melt(measure.vars = c("resid_fixed", "normexam"),
+                   variable.name = "y_type") %>% 
+  ggplot(aes(x = standlrt, y = value, 
+             alpha = special_school, shape = special_school)) + 
+  geom_point() + theme_minimal() + 
+  facet_grid(~y_type)
+
+```
+
+We can see that this school does seem to have a steeper slope than the rest 
+of the schools.
+
+On original scale:
+
+
+```{r}
+
+london %>%
+  mutate(special_school = as.numeric(school) == 53,
+         residual = resid(fit_final_reml)) %>%
+  ggplot(aes(x = standlrt, y = normexam, 
+             alpha = special_school, shape = special_school)) + 
+  geom_point() + theme_minimal()
+
+```
+
+
+
+
+## 3. (Optional) 
+
+> Repeat this morning’s analysis of the Reisby data in R or SPSS (or both). Choose the best model, check model assumptions, and interpret the results of the best model. SPSS users will find slight discrepancies between R and SPSS (for unstructured, AR(1) and heterogeneous AR(1) models), but overall conclusions remain the same.
+
+> Note: save your R script (or SPSS syntax) for use in the next exercise!.
+
+Luckily, we saved the fits in a list
+
+```{r}
+names(fits_reisby)
+```
+
+All these models share the same fixed part, so we can go ahead and compare the 
+random parts. All were fitted with ML
+
+```{r}
+fits <- map_df(fits_reisby, function(fit) data.frame(fit = I(list(fit)), 
+                                             aic = AIC(fit)), .id = "model")
+fits
+```
+
+AIC of continous autoregressive is crearly best.
+
+Let's reduce the fixed part of this fit
+
+```{r}
+fit1 <- fits %>% filter(model == "continous_autoregressive") %>% pull(fit) %>% .[[1]]
+fit2 <- update(fit1, fixed = hdrs~week + endo)
+fit3 <- update(fit2, fixed = hdrs~week)
+anova(fit1, fit2, fit3)
+```
+
+We can leave out the interaction and the overall term endo
+
+## 4.
+
+> In this exercise we will consider a possible quadratic effect of time in the Reisby example. You may choose whether you use R or SPSS.
+
+### a.
+
+> Based on the spaghetti plots of the data (see the spaghetti plots on Day 2) one might suspect it is too simplistic to assume that the change across time is linear. Perhaps the trend in time is curvilinear? Test (with the likelihood ratio test) whether adding a fixed quadratic time parameter would improve the model. (Note: when using a quadratic term for time along with the linear term, it is better to first center time.)
+
+```{r}
+reisby_long %<>%
+  mutate(week_center = week - diff(range(week)) / 2)
+
+fit_lin <- lme(fixed = hdrs ~ week_center,
+                 random = ~ week_center | id,
+                 # correlation = corCAR1(form = ~ week_center | id),
+                 data = reisby_long, na.action = "na.omit",
+                 method = "ML")
+
+fit_quadr <- lme(fixed = hdrs ~ week_center + I(week_center^2) ,
+                 random = ~ week_center | id,
+                 # correlation = corCAR1(form = ~ week_center | id),
+                 data = reisby_long, na.action = "na.omit",
+                 method = "ML")
+
+drop1(fit_quadr, test = "Chisq")
+```
+
+Quadratic can be left out without hurting model fit
+
+### b.
+
+> Would the model be improved if we also postulate that the quadratic time parameter individually deviates from average (i.e. is also random)?
+
+```{r}
+reisby_long %<>% mutate(week_center_sqr = week_center^2)
+
+fit_quadr2 <- lme(fixed = hdrs ~ week_center + week_center_sqr,
+                 random = ~ week_center + week_center_sqr | id,
+                 # correlation = corCAR1(form = ~ week_center | id),
+                 data = reisby_long, na.action = "na.omit",
+                 method = "ML")
+
+# fit_quadr2_car <- lme(fixed = hdrs ~ week_center + week_center_sqr,
+#                  random = ~ week_center + week_center_sqr | id,
+#                  correlation = corCAR1(form = ~ week_center + week_center_sqr | id),
+#                  data = reisby_long, na.action = "na.omit",
+#                  method = "ML")
+
+drop1(fit_quadr2, test = "Chisq")
+
+anova(fit_lin, fit_quadr, fit_quadr2)
+
+summary(fit_quadr2)
+```
+
+Quadratic with quadratic term in random part fits th edata better than 
+with only linear term
+
+### c.
+
+> The results of this last model suggest that although the trend across time is essentially linear at the population level, it is curvilinear at the individual level. Can you explain this phenomenon?
+
+Some patients may 'wiggle-up' while others will 'wiggle-down', which may 
+smooth out the overall 'wiggling' to a linear trend
+
+## 5.
+
+> Part b of this question will be used in the quiz this afternoon. Please save the output and have it on hand (together with this exercise) when you complete the quiz.
+
+> Take another look at the crossover study (crossover.sav and crossover.dat) from Day 1.
+
+Read in data and curate
+
+```{r}
+bpco <- read.table(here("data", "crossover.dat"), header = T)
+bpco %<>% 
+  set_colnames(tolower(colnames(bpco)))
+
+factor_vars <- c("period", "drug")
+bpco %<>% mutate_at(vars(factor_vars), funs(as.factor))
+
+str(bpco)
+```
+
+
+### a.
+
+> Check the assumptions for the model from exercise 5b on Day 1.
+
+b. was: 
+
+> Fit a model to the data, looking at drug and period effect and correcting for the fact that (most) patients have more than one DBP measurement. Which variable(s) do you choose as random?
+
+
+```{r}
+fit <- lmer(y ~ drug + period + (1 | patient), data = bpco, REML = F)
+fit %>% summary()
+```
+
+Normal distribution of residuals:
+
+```{r}
+qqnorm(resid(fit))
+```
+
+Pretty o.k.
+
+Check outliers of random terms
+
+```{r}
+intercepts <- coef(fit)$patient[,1]
+boxplot(intercepts)
+```
+
+Seems ok
+
+Check distribution of residuals within patients
+
+```{r}
+bpco %>%
+  mutate(residual = resid(fit)) %>%
+  ggplot(aes(y = residual, x = patient, group = patient)) + 
+  geom_boxplot()
+```
+
+Patient 11 seems to have quite extreme residuals
+
+There is no linear effect of time assumed in the model, so it does not make sense to 
+check for this assumption.
+
+### b.
+
+> Use this dataset to answer the questions: is there a significant difference between the two drugs, and is there a significant period effect? Begin with the full model from part (a), and reduce the model (if possible) by removing the least significant explanatory variable(s). Use the likelihood ratio test (and maximum likelihood estimation) to test. 
+
+```{r}
+drop1(fit, test = "Chisq")
+```
+
+Period can be left out
+
+```{r}
+fit <- update(fit, y ~ drug + (1 | patient))
+drop1(fit, test = "Chisq")
+```
+
+We cannot remove 'drug' from the model without hurting model fit, it needs to stay 
+in. 
+
+There is a significant effect of the drug on the outcome, according to the LRT
+
+## 6.
+
+> On day 1 and in the morning session we looked at a multi-center, randomized, double-blind clinical trial to compare three treatments for hypertension (on Monday we only looked at 2). One treatment was a new drug (A = Carvedilol) and the other two were standard drugs for controlling hypertension (B = Nifedipine, C = Atenolol). Twenty-nine centers participated in the trial and patients were randomized in order of entry. One pre-randomization and four post-treatment visits (at weeks 3, 5, 7 and 9) were made. We would like to see if there is a difference among the three treatments. The data can be found in the file bp.csv. Read the data into R or SPSS. The research question is which of the medicines (treat) is more effective in reducing DBP. Since baseline (pre-randomization) DBP (dbp) will likely be associated with post-treatment DBP, we wish to include it here as a covariate. 
+
+Read in data and curate
+
+```{r}
+bp <- read.csv(here("data", "bp.csv"))
+factor_vars <- c("patient", "center", "treat")
+
+bp %<>% mutate_at(vars(factor_vars), funs(as.factor))
+str(bp)
+nna(bp)
+```
+
+We seem to have 288 unique patients (not 29), but we have the 3 treatments 
+and the dbp outcomes, so probably this is the dataset we need
+
+No missing values, which is nice
+
+### a.
+
+> First fit a two-level model, examining the effects of treatment, time and their interaction, while adjusting only for multiple measurements per person by including a random intercept and random slope per patient. Use ML estimation.
+
+Since visit is measured in weeks, we can model is as continous
+
+```{r}
+fit1 <- lme(fixed = dbp ~ treat*visit,
+            random = ~ visit | patient,
+            data = bp, method = "ML")
+summary(fit1)
+```
+
+### b.
+
+> Now fit a three-level model, examining the effects of treatment, time and their interaction, including a random intercept and random slope per patient and a random intercept per center. Use ML estimation.
+Note: R users will perhaps find it easier to switch the the lmer function in the lme4 package, allowing one to add random effects per level using + (effect|level) to the equation.
+SPSS users will need to use the syntax for this. Paste the syntax from part (a) and add an extra RANDOM statement:
+/RANDOM=INTERCEPT | SUBJECT(center) COVTYPE(ID)
+Both: if you get stuck, see the code on Moodle.
+
+```{r}
+fit2 <- lmer(dbp ~ treat * visit + (visit | patient) + (1 | center),
+             data = bp, REML = F)
+summary(fit2)
+```
+
+### c.
+
+> Compare the two models using the likelihood ratio test. Is the random intercept per center significant? Should you base your decision to include the intercept on this outcome?
+
+Switch fit1 to lmer too to make the anova function work
+
+```{r}
+fit1 <- lmer(dbp ~ treat*visit + (visit | patient),
+             data = bp, REML = F)
+anova(fit1, fit2)
+```
+
+Dropping the intercept per center would decrease the model fit significantly.
+
+This is an argument to keep it in. However you can also argue to just keep it 
+in based on the design of the study
+
+### d. 
+
+> Try to reduce the fixed part of the model: is the interaction significant? Is there a treatment effect? Is there a time effect?
+
+Let's continue with fit2
+
+```{r}
+drop1(fit2, test = "Chisq")
+```
+
+We can drop the interaction
+
+```{r}
+fit2 <- update(fit2, dbp ~ treat + visit + (visit | patient) + (1 | center))
+drop1(fit2, test = "Chisq")
+```
+
+We should keep in treat.
+
+So there is a difference in treatments, and a time-effect
+
+### e.
+
+> Run the final model once more using REML estimation. See if you can get some post-hoc tests of treatments (hint: EMMEANS statement in SPSS. In R, the package lmerTest contains the useful functions lsmeans() and difflsmeans(). If you get stuck, you can look at the R script provided on Moodle).
+
+```{r}
+fit2_reml <- update(fit2, REML = T)
+summary(fit2_reml)
+```
+
+```{r}
+require(lmerTest)
+difflsmeans(fit2_reml)
+```
+
+### f. 
+
+> Interpret the results.
+
+Using the post-hoc test, there is a significant difference between treatments 
+A and C, but not between the other treatments
+
+##7.
+
+> Centering the explanatory variables is a major topic in mixed models. (See for example the evaluation review of Omar Paccagnella “Centering or Not Centering in Multilevel Models? The Role of the Group Mean and the Assessment of Group Effects”.) In this exercise we will demonstrate the consequences of centering. Consider again the longitudinal data example of the paper by John Fox (see exercise 3 of Day 2), stored in blackmoor.csv or available as Blackmore in the car package. 
+
+```{r}
+data("Blackmore")
+str(Blackmore)
+bm <- Blackmore
+nna(bm)
+```
+
+This one is nicely curated. Factor variables are coded as such, and the data 
+is nice and long. No missings
+
+### a.
+
+> Fit a model with random intercept, random age effect, fixed group and a fixed interaction between age and group. Don’t forget the transformation of the outcome! Make a table of the most important parameter estimates.
+
+```{r}
+bm %<>% mutate(log_exercise = log2(exercise + 5/60))
+fit1 <- lme(fixed = log_exercise ~ group*age,
+            random = ~ age | subject,
+            data = bm, method = "ML", na.action = "na.omit")
+fit1 %>% summary()
+```
+
+We can print the random effects, but to get them as a numeric vector is pretty 
+hard (they are 'well' hidden in the fit-object).
+
+Inspecting the code of nlme:::print.lme should brings us to the answer but takes 
+too long for now
+
+We try to get them ourselves but it doesn't help
+
+```{r}
+(var(coef(fit1)[, c(1,3)]))
+```
+
+This is actually a little troubling
+
+We can get the fixed coefficients and the sigma easily
+
+```{r}
+fit1$coefficients$fixed
+fit1$sigma
+```
+
+
+### b.
+
+> Repeat the analysis but first transform the age to age-8. Extend the table of (a) with the new estimates. 
+
+```{r}
+bm_shift <- mutate(bm, age = age - 8)
+fit2 <- update(fit1, data = bm_shift)
+```
+
+There is a handy function for the fixed part:
+
+```{r}
+compareCoefs(fit1, fit2)
+```
+
+Intercept changes, which makes sense, not the linear effect of age, 
+nor the interaction. Grouppatient also changes
+
+### c.
+
+> Repeat the analysis again but now transform the age to the deviation from the mean age (i.e. centering to the mean). Extend again the table with the new estimates (R users should recall the compareCoefs() function from yesterday).
+
+```{r}
+bm_center <- mutate(bm, age = age - mean(age))
+fit3 <- update(fit1, data = bm_center)
+compareCoefs(fit1, fit2, fit3)
+```
+
+Again the intercept and group effects change, but not the slopes
+
+### d.
+
+> Compare the results of these three models and explain the differences and similarities (Hint. Use something like figure 9 of the Fox & Weisberg paper).
+
+Left for now
+
+### e.
+
+> Which model would you prefer? Explain your choice.
+
+Skipped for now
+
+## 8. (CHALLENGE EXERCISE)
+
+> Kroesbergen et al. (Eur Respir J 1999) investigated the flow-dependency of exhaled nitric oxide (NO) in healthy children (n=20) and children with asthma (n=19). The concentration of NO in exhaled are was measured four times, at four different target values of the flow of exhalation (2, 5, 10, and 20% of their vital capacity per second). The actual flows differed from the target flows. 
+The following questions are addressed: is there is an association between NO (pbb) and FLOW (L/sec) for healthy and asthmatic children? Is this association different for the two groups? The variables NO and FLOW have been been log-transformed.
+
+> The dataset no.dat. contains the following variables:
+
+> NUM	child’s identification number
+DIAGNOSE	0 = “healthy” and 1 = “asthma”
+FLOW	10log(flow)-10log(2)  
+NO	10log(NO concentration)
+
+### a. 
+
+> Describe what you see in the graphs. What would be your first impression with respect to the research questions?
+
+Seems like a clear association betheen NO and flow in both groups.
+
+More variace in NO in asthma group, and steeper slope (more negative)
+
+### b.
+
+> In R, fit a model with random intercept random slope regression for the healthy group. What is the mean slope and intercept? What are the estimated variances of the random components? Is a random slope model necessary, or would a random intercept be sufficient? 
+
+```{r}
+no <- read.table(here("data", "no.dat"), header = T)
+
+factor_vars <- c("num", "diagnose")
+no %<>% mutate_at(vars(factor_vars), funs(as.factor))
+
+str(no)
+```
+
+Reproducing the plot from the word-file
+
+```{r}
+no %>%
+  ggplot(aes(x = flow, y = no, group = num)) + 
+  geom_line() + geom_point() + 
+  facet_grid(~diagnose) + theme_minimal()
+```
+
+
+
+```{r}
+fit1 <- lme(fixed = no ~ flow,
+            random = ~ flow | num,
+            data = filter(no, diagnose == "0"),
+            method = "ML")
+summary(fit1)
+```
+
+See random effects for the SD's of the effects
+
+```{r}
+fit2 <- update(fit1, random = ~ 1 | num)
+anova(fit1, fit2)
+```
+
+The AIC is negative here which is a little unusual, but the lower AIC 
+(more negative) from fit1 indicates fit1 is better
+
+### c.
+
+> Answer the same questions for the group of children with asthma.
+
+```{r}
+fit1_a <- update(fit1, data = filter(no, diagnose == "1"))
+fit2_a <- update(fit1_a, random = ~ 1 | num)
+anova(fit1_a, fit2_a)
+```
+
+Again the model with random slope is better
+
+### d.
+
+> Compare the results of the two groups. What would you conclude on the basis of these results?
+
+```{r}
+summary(fit1)
+summary(fit1_a)
+```
+
+With regards to the random part: 
+there is greater variation in slopes and intercepts for the asthmatic group,
+which is in accordance with the plot
+
+```{r}
+compareCoefs(fit1, fit1_a)
+```
+
+For the fixed parts, the intercept is a little higher in the asthmatic group,
+and their slopes are more negative
+
+### e. 
+
+> Fit a model for the two groups combined, using an interaction for diagnosis*flow and allowing a different covariance structure for the two groups (note: as far as we know, this cannot be done in SPSS; in R, use the following command:)
+no.lme.3 <- lme(no~flow + factor(diagnose)+ flow:factor(diagnose), random=~flow + diagnose + flow*diagnose| num,  weights=varIdent(form=~1|diagnose), method="ML", data=nodat)
+
+```{r}
+fit3 <- lme(fixed = no ~ flow * diagnose,
+            random = ~ flow * diagnose | num,
+            weights = varIdent(form = ~1|diagnose),
+            method = "ML", data = no)
+summary(fit3)
+```
+
+> The random command contains a term for group, flow and the group*flow interaction and thus allows for a separate variance for the random intercept and slope for the two diagnosis groups. The weights statement further allows differing residual variances for the two groups. Check that the log-likelihood of this model is the sum of the log-likelihoods of the models in b and c.
+
+```{r}
+logLik(fit1) + logLik(fit1_a)
+logLik(fit3)
+```
+
+It's the same, awesome
+
+### f.
+
+> Can the variance structure be simplified by assuming equal residual variances? (Hint: try removing the weights statement.)
+
+
+```{r}
+anova(fit3, update(fit3, weights = NULL))
+```
+
+Yes, the difference is not statistically significant
+
+### g. 
+
+> Can the covariance structure be further reduced? Try to simplify the random command by removing the diagnose*flow interaction, and then by removing diagnose.
+
+```{r}
+fit <- update(fit3, weights = NULL)
+anova(fit, update(fit, random = ~diagnose + flow | num))
+```
+
+No significant decrease, so throw out interaction
+
+```{r}
+fit <- update(fit, random = ~ diagnose + flow | num)
+anova(fit, update(fit, random = ~ flow | num))
+```
+
+We cannot drop the diagnosis random slope, so let's keep this one in
+
+### h.
+
+> Is the fixed diagnose*flow interaction necessary? In other words: do the asthmatic children indeed have a significantly more negative slope than the healthy children?
+
+```{r}
+drop1(fit, test = "Chisq")
+```
+
+Yes, there is a significantly different slope on a group level.
+
+### i.
+
+> Answer the following questions for the model you end up with. What is the slope for the healthy group, what for the asthma group? What is the standard deviation of the random intercept the healthy children, and is the variance for asthmatic children larger or smaller? What is the residual standard deviation for the two groups?
+
+```{r}
+summary(fit)
+```
+
+slope healthy = -0.345
+slope asthma = -0.345 - 0.239 = (`r -.345 - .239`)
+
+sd of random intercept healthy: 0.165
+
+From the summary of the separate fit for asthmatic children, 
+we see that the variance in intercept is higher. 
+
+I don't know how to properly combine the numbers from the random effects here.
+I'm inclined to add the sd of 'diagnose1' to the intercept, but the numbers 
+don't add up.
+
+Residual sd = 0.058
 
 ## Session information
 

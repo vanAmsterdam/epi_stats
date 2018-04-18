@@ -1,0 +1,99 @@
+---
+title: "Mixed model testing"
+author: "Wouter van Amsterdam"
+date: 2018-04-18
+output: html_document
+---
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+```
+
+<!-- Update knitr chunk options -->
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+<!-- Insert the date the file was last updated -->
+```{r last-updated, echo=FALSE, results='asis'}
+```
+
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+```{r code-version, echo=FALSE, results='asis'}
+```
+
+<!-- Add your analysis here -->
+
+# Intro
+
+Tutor: Rebecca Stellato
+
+## ML vs REML
+
+ML underestimates variances of parameters.
+
+REML is better. 
+
+Testing models that differ in correlation part: both ML or REML
+Testing models that differ in fixed part: only ML is OK
+
+for reporting, do REML
+
+## Procedure
+
+- start with all possible covariates in fixed model
+- experiment with random part to fix correlation structure
+- then reduce fixed part
+
+### Testing random effects
+
+variance parameters are strictly >= 0; divide p-value by 2 for LRT chi-square
+AIC is ok, but don't use +2 as criterion (is not often used in literature)
+
+### Testing fixed effects
+
+use LRT (under ML)
+
+
+Mixed models work pretty well with missing data on outcome
+Uses some implicit imputation for missing values.
+
+For missing predictors, imputation will help
+
+## Model assumptions
+
+- linearity of effects (for those you include)
+- normality of residuals
+- normality of intercepts and slopes (however, these are more or less 
+coerced to normal distribution by the random modeling)
+
+## Centering covariates
+
+Center 'time' axis will change fixed intercept (when there is a fixed effect of time),
+and SD of random intercept effect (if variation increases with time)
+and correlation of intercept and slope of random parts
+
+## Multilevel models
+
+e.g. longitudinal data from patients of different hospitals
+
+Usually, you want a random intercept on hospital level, due to design,
+even if it's not needed by LRT
+
+
+-> great range of possibilities, think about what makes sense!
+
+
+Time-varying covariates no problem for mixed models. 
+Gives a single fixed effect.
+
+--> think about case-mix and what to include in hospital level covariates
+
+
+## Session information
+
+<!-- Insert the session information into the document -->
+```{r session-info}
+```
