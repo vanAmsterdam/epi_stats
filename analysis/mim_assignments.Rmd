@@ -1320,21 +1320,7 @@ check for this assumption.
 
 > Use this dataset to answer the questions: is there a significant difference between the two drugs, and is there a significant period effect? Begin with the full model from part (a), and reduce the model (if possible) by removing the least significant explanatory variable(s). Use the likelihood ratio test (and maximum likelihood estimation) to test. 
 
-```{r}
-drop1(fit, test = "Chisq")
-```
-
-Period can be left out
-
-```{r}
-fit <- update(fit, y ~ drug + (1 | patient))
-drop1(fit, test = "Chisq")
-```
-
-We cannot remove 'drug' from the model without hurting model fit, it needs to stay 
-in. 
-
-There is a significant effect of the drug on the outcome, according to the LRT
+Quiz assignment so not included
 
 ## 6.
 

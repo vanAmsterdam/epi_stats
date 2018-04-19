@@ -1,0 +1,226 @@
+---
+title: "Mixed models quizzes"
+author: "Wouter van Amsterdam"
+date: 2018-04-16
+output: html_document
+---
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+```
+
+<!-- Update knitr chunk options -->
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+<!-- Insert the date the file was last updated -->
+```{r last-updated, echo=FALSE, results='asis'}
+```
+
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+```{r code-version, echo=FALSE, results='asis'}
+```
+
+<!-- Add your analysis here -->
+
+
+# Setup R environment
+
+```{r}
+library(dplyr)
+library(data.table)
+library(magrittr)
+library(purrr)
+library(here) # for tracking working directory
+library(ggplot2)
+library(epistats)
+library(broom)
+library(lme4)
+```
+
+
+# Day 1
+
+
+> Part c of this question will be used in the quiz this afternoon. Please save or print the output and have it on hand (together with this exercise) when you complete the quiz.
+
+> A multi-center, randomized, double-blind clinical trial was done to compare two treatments for hypertension. One treatment was a new drug (1 = Carvedilol) and the other was a standard drug for controlling hypertension (2 = Nifedipine). Twenty-nine centers participated in the trial and patients were randomized in order of entry. One pre-randomization and four post-treatment visits were made. Here, we will concentrate on the last recorded measurement of diastolic blood pressure (primary endpoint: dbp). The data can be found in the SPSS data file dbplast.sav. Read the data into R or SPSS. The research question is which of the two medicines (treat) is more effective in reducing DBP. Since baseline (pre-randomization) DBP (dbp) will likely be associated with post-treatment DBP and will reduce the variation in the outcome (thereby increasing our power to detect a treatment effect), we wish to include it here as a covariate.
+
+Read in the data
+
+```{r}
+bp <- haven::read_spss(here("data", "dbplast.sav"))
+str(bp)
+```
+
+Curate
+
+```{r}
+factor_vars <- c("center", "patient", "treat")
+bp %<>% mutate_at(vars(factor_vars), funs(as.factor))
+```
+
+### a.	
+
+> Make some plots to describe the patterns of the data.
+
+```{r}
+summary(bp)
+```
+
+
+First scatter plot an pre-and post bp;
+
+Let's assume that dbp1 = pre
+
+```{r}
+bp %>%
+  ggplot(aes(x = dbp1, y = dbp)) + 
+  geom_point()
+```
+
+Now per treatment
+
+
+```{r}
+bp %>%
+  ggplot(aes(x = dbp1, y = dbp)) + 
+  geom_point() + 
+  facet_wrap(~treat)
+
+```
+
+Look at marginal distributions per treatment
+
+```{r}
+bp %>% 
+  as.data.table() %>%
+  data.table::melt(id.vars = c("patient", "treat"), measure.vars = c("dbp", "dbp1")) %>%
+  ggplot(aes(x = 1, y = value, fill = treat)) + 
+  geom_boxplot(alpha = .5) + 
+  facet_wrap(~variable)
+```
+
+
+### b.	
+
+> Fit a model to answer the research question, using maximum likelihood estimation, taking into account that patients within centers may have correlated data. Interpret the coefficients of the model.
+
+```{r}
+lmer(dbp ~ dbp1 + treat + (1 | center), data = bp, REML = F) %>%
+  summary()
+```
+
+
+### c.
+
+> Make a new baseline dbp variable, centered around its mean. Re-fit the model in (b) using the centered baseline blood pressure variable, using maximum likelihood estimation, and interpret the parameters of this new model.
+
+```{r}
+fit <- bp %>%
+  mutate(dbp_center = dbp1 - mean(dbp1)) %>%
+  lmer(dbp ~ dbp_center + treat + (1 | center), data = ., REML = F)
+
+fit %>%
+  summary()
+```
+
+# Day 3
+
+## 5.
+
+> Part b of this question will be used in the quiz this afternoon. Please save the output and have it on hand (together with this exercise) when you complete the quiz.
+
+> Take another look at the crossover study (crossover.sav and crossover.dat) from Day 1.
+
+Read in data and curate
+
+```{r}
+bpco <- read.table(here("data", "crossover.dat"), header = T)
+bpco %<>% 
+  set_colnames(tolower(colnames(bpco)))
+
+factor_vars <- c("period", "drug")
+bpco %<>% mutate_at(vars(factor_vars), funs(as.factor))
+
+str(bpco)
+```
+
+
+### a.
+
+> Check the assumptions for the model from exercise 5b on Day 1.
+
+b. was: 
+
+> Fit a model to the data, looking at drug and period effect and correcting for the fact that (most) patients have more than one DBP measurement. Which variable(s) do you choose as random?
+
+
+```{r}
+fit <- lmer(y ~ drug + period + (1 | patient), data = bpco, REML = F)
+fit %>% summary()
+```
+
+Normal distribution of residuals:
+
+```{r}
+qqnorm(resid(fit))
+```
+
+Pretty o.k.
+
+Check outliers of random terms
+
+```{r}
+intercepts <- coef(fit)$patient[,1]
+boxplot(intercepts)
+```
+
+Seems ok
+
+Check distribution of residuals within patients
+
+```{r}
+bpco %>%
+  mutate(residual = resid(fit)) %>%
+  ggplot(aes(y = residual, x = patient, group = patient)) + 
+  geom_boxplot()
+```
+
+Patient 11 seems to have quite extreme residuals
+
+There is no linear effect of time assumed in the model, so it does not make sense to 
+check for this assumption.
+
+### b.
+
+> Use this dataset to answer the questions: is there a significant difference between the two drugs, and is there a significant period effect? Begin with the full model from part (a), and reduce the model (if possible) by removing the least significant explanatory variable(s). Use the likelihood ratio test (and maximum likelihood estimation) to test. 
+
+Quiz assignment so not included
+
+```{r}
+drop1(fit, test = "Chisq")
+```
+
+Period can be left out
+
+```{r}
+fit <- update(fit, y ~ drug + (1 | patient))
+drop1(fit, test = "Chisq")
+```
+
+We cannot remove 'drug' from the model without hurting model fit, it needs to stay 
+in. 
+
+There is a significant effect of the drug on the outcome, according to the LRT
+
+
+
+## Session information
+
+<!-- Insert the session information into the document -->
+```{r session-info}
+```
