@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+<meta name="author" content="Wouter van Amsterdam" />
+
+<meta name="date" content="2018-04-16" />
+
+<title>Mixed models quizzes</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/font-awesome-4.5.0/css/font-awesome.min.css" rel="stylesheet" />
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+
+<div class="container-fluid main-container">
+
+<!-- tabsets -->
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+</script>
+
+<!-- code folding -->
+
+
+
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+  padding-left: 25px;
+  text-indent: 0;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">epi_stats</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/jdblischak/workflowr">
+    <span class="fa fa-github"></span>
+     
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">Mixed models quizzes</h1>
+<h4 class="author"><em>Wouter van Amsterdam</em></h4>
+<h4 class="date"><em>2018-04-16</em></h4>
+
+</div>
+
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+<!-- Update knitr chunk options -->
+<!-- Insert the date the file was last updated -->
+<p><strong>Last updated:</strong> 2018-04-19</p>
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+<p><strong>Code version:</strong> 4a05fe1</p>
+<!-- Add your analysis here -->
+<div id="setup-r-environment" class="section level1">
+<h1>Setup R environment</h1>
+<pre class="r"><code>library(dplyr)
+library(data.table)
+library(magrittr)
+library(purrr)
+library(here) # for tracking working directory
+library(ggplot2)
+library(epistats)
+library(broom)
+library(lme4)</code></pre>
+</div>
+<div id="day-1" class="section level1">
+<h1>Day 1</h1>
+<blockquote>
+<p>Part c of this question will be used in the quiz this afternoon. Please save or print the output and have it on hand (together with this exercise) when you complete the quiz.</p>
+</blockquote>
+<blockquote>
+<p>A multi-center, randomized, double-blind clinical trial was done to compare two treatments for hypertension. One treatment was a new drug (1 = Carvedilol) and the other was a standard drug for controlling hypertension (2 = Nifedipine). Twenty-nine centers participated in the trial and patients were randomized in order of entry. One pre-randomization and four post-treatment visits were made. Here, we will concentrate on the last recorded measurement of diastolic blood pressure (primary endpoint: dbp). The data can be found in the SPSS data file dbplast.sav. Read the data into R or SPSS. The research question is which of the two medicines (treat) is more effective in reducing DBP. Since baseline (pre-randomization) DBP (dbp) will likely be associated with post-treatment DBP and will reduce the variation in the outcome (thereby increasing our power to detect a treatment effect), we wish to include it here as a covariate.</p>
+</blockquote>
+<p>Read in the data</p>
+<pre class="r"><code>bp &lt;- haven::read_spss(here(&quot;data&quot;, &quot;dbplast.sav&quot;))
+str(bp)</code></pre>
+<pre><code>Classes &#39;tbl_df&#39;, &#39;tbl&#39; and &#39;data.frame&#39;:   193 obs. of  5 variables:
+ $ patient: atomic  3 4 5 7 8 9 10 13 14 18 ...
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F7.0&quot;
+ $ center : atomic  5 5 29 3 3 3 3 36 36 36 ...
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F8.0&quot;
+ $ dbp    : atomic  109 87 85 100 80 90 100 80 85 100 ...
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F10.0&quot;
+  ..- attr(*, &quot;display_width&quot;)= int 10
+ $ dbp1   : atomic  117 100 105 114 105 100 102 100 100 100 ...
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F8.0&quot;
+ $ treat  : atomic  2 1 1 1 2 2 1 2 1 1 ...
+  ..- attr(*, &quot;format.spss&quot;)= chr &quot;F8.0&quot;
+  ..- attr(*, &quot;display_width&quot;)= int 10</code></pre>
+<p>Curate</p>
+<pre class="r"><code>factor_vars &lt;- c(&quot;center&quot;, &quot;patient&quot;, &quot;treat&quot;)
+bp %&lt;&gt;% mutate_at(vars(factor_vars), funs(as.factor))</code></pre>
+<div id="a." class="section level3">
+<h3>a.</h3>
+<blockquote>
+<p>Make some plots to describe the patterns of the data.</p>
+</blockquote>
+<pre class="r"><code>summary(bp)</code></pre>
+<pre><code>    patient        center        dbp              dbp1       treat  
+ 3      :  1   1      :27   Min.   : 70.00   Min.   : 95.0   1:100  
+ 4      :  1   31     :24   1st Qu.: 85.00   1st Qu.:100.0   2: 93  
+ 5      :  1   14     :16   Median : 90.00   Median :102.0          
+ 7      :  1   36     :15   Mean   : 91.05   Mean   :102.7          
+ 8      :  1   7      :12   3rd Qu.: 98.00   3rd Qu.:105.0          
+ 9      :  1   5      : 9   Max.   :140.00   Max.   :120.0          
+ (Other):187   (Other):90                                           </code></pre>
+<p>First scatter plot an pre-and post bp;</p>
+<p>Let’s assume that dbp1 = pre</p>
+<pre class="r"><code>bp %&gt;%
+  ggplot(aes(x = dbp1, y = dbp)) + 
+  geom_point()</code></pre>
+<p><img src="figure/mim_quizzes.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Now per treatment</p>
+<pre class="r"><code>bp %&gt;%
+  ggplot(aes(x = dbp1, y = dbp)) + 
+  geom_point() + 
+  facet_wrap(~treat)</code></pre>
+<p><img src="figure/mim_quizzes.Rmd/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Look at marginal distributions per treatment</p>
+<pre class="r"><code>bp %&gt;% 
+  as.data.table() %&gt;%
+  data.table::melt(id.vars = c(&quot;patient&quot;, &quot;treat&quot;), measure.vars = c(&quot;dbp&quot;, &quot;dbp1&quot;)) %&gt;%
+  ggplot(aes(x = 1, y = value, fill = treat)) + 
+  geom_boxplot(alpha = .5) + 
+  facet_wrap(~variable)</code></pre>
+<p><img src="figure/mim_quizzes.Rmd/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="b." class="section level3">
+<h3>b.</h3>
+<blockquote>
+<p>Fit a model to answer the research question, using maximum likelihood estimation, taking into account that patients within centers may have correlated data. Interpret the coefficients of the model.</p>
+</blockquote>
+<pre class="r"><code>lmer(dbp ~ dbp1 + treat + (1 | center), data = bp, REML = F) %&gt;%
+  summary()</code></pre>
+<pre><code>Linear mixed model fit by maximum likelihood  [&#39;lmerMod&#39;]
+Formula: dbp ~ dbp1 + treat + (1 | center)
+   Data: bp
+
+     AIC      BIC   logLik deviance df.resid 
+  1393.7   1410.1   -691.9   1383.7      188 
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-2.1666 -0.7244 -0.0745  0.5536  5.0417 
+
+Random effects:
+ Groups   Name        Variance Std.Dev.
+ center   (Intercept)  7.98    2.825   
+ Residual             70.67    8.406   
+Number of obs: 193, groups:  center, 27
+
+Fixed effects:
+            Estimate Std. Error t value
+(Intercept)  74.1014    13.5245   5.479
+dbp1          0.1747     0.1306   1.338
+treat2       -1.1179     1.2205  -0.916
+
+Correlation of Fixed Effects:
+       (Intr) dbp1  
+dbp1   -0.997       
+treat2 -0.122  0.080</code></pre>
+</div>
+<div id="c." class="section level3">
+<h3>c.</h3>
+<blockquote>
+<p>Make a new baseline dbp variable, centered around its mean. Re-fit the model in (b) using the centered baseline blood pressure variable, using maximum likelihood estimation, and interpret the parameters of this new model.</p>
+</blockquote>
+<pre class="r"><code>fit &lt;- bp %&gt;%
+  mutate(dbp_center = dbp1 - mean(dbp1)) %&gt;%
+  lmer(dbp ~ dbp_center + treat + (1 | center), data = ., REML = F)
+
+fit %&gt;%
+  summary()</code></pre>
+<pre><code>Linear mixed model fit by maximum likelihood  [&#39;lmerMod&#39;]
+Formula: dbp ~ dbp_center + treat + (1 | center)
+   Data: .
+
+     AIC      BIC   logLik deviance df.resid 
+  1393.7   1410.1   -691.9   1383.7      188 
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-2.1666 -0.7244 -0.0745  0.5536  5.0417 
+
+Random effects:
+ Groups   Name        Variance Std.Dev.
+ center   (Intercept)  7.98    2.825   
+ Residual             70.67    8.406   
+Number of obs: 193, groups:  center, 27
+
+Fixed effects:
+            Estimate Std. Error t value
+(Intercept)  92.0438     1.0566   87.11
+dbp_center    0.1747     0.1306    1.34
+treat2       -1.1179     1.2205   -0.92
+
+Correlation of Fixed Effects:
+           (Intr) dbp_cn
+dbp_center -0.068       
+treat2     -0.548  0.080</code></pre>
+</div>
+</div>
+<div id="day-3" class="section level1">
+<h1>Day 3</h1>
+<div id="section" class="section level2">
+<h2>5.</h2>
+<blockquote>
+<p>Part b of this question will be used in the quiz this afternoon. Please save the output and have it on hand (together with this exercise) when you complete the quiz.</p>
+</blockquote>
+<blockquote>
+<p>Take another look at the crossover study (crossover.sav and crossover.dat) from Day 1.</p>
+</blockquote>
+<p>Read in data and curate</p>
+<pre class="r"><code>bpco &lt;- read.table(here(&quot;data&quot;, &quot;crossover.dat&quot;), header = T)
+bpco %&lt;&gt;% 
+  set_colnames(tolower(colnames(bpco)))
+
+factor_vars &lt;- c(&quot;period&quot;, &quot;drug&quot;)
+bpco %&lt;&gt;% mutate_at(vars(factor_vars), funs(as.factor))
+
+str(bpco)</code></pre>
+<pre><code>&#39;data.frame&#39;:   36 obs. of  4 variables:
+ $ patient: int  1 1 2 2 3 3 4 5 5 6 ...
+ $ period : Factor w/ 2 levels &quot;1&quot;,&quot;2&quot;: 1 2 1 2 1 2 2 1 2 1 ...
+ $ drug   : Factor w/ 2 levels &quot;1&quot;,&quot;2&quot;: 1 2 2 1 1 2 1 2 1 1 ...
+ $ y      : int  100 112 116 114 108 110 104 114 114 98 ...</code></pre>
+<div id="a.-1" class="section level3">
+<h3>a.</h3>
+<blockquote>
+<p>Check the assumptions for the model from exercise 5b on Day 1.</p>
+</blockquote>
+<ol start="2" style="list-style-type: lower-alpha">
+<li>was:</li>
+</ol>
+<blockquote>
+<p>Fit a model to the data, looking at drug and period effect and correcting for the fact that (most) patients have more than one DBP measurement. Which variable(s) do you choose as random?</p>
+</blockquote>
+<pre class="r"><code>fit &lt;- lmer(y ~ drug + period + (1 | patient), data = bpco, REML = F)
+fit %&gt;% summary()</code></pre>
+<pre><code>Linear mixed model fit by maximum likelihood  [&#39;lmerMod&#39;]
+Formula: y ~ drug + period + (1 | patient)
+   Data: bpco
+
+     AIC      BIC   logLik deviance df.resid 
+   280.7    288.6   -135.3    270.7       31 
+
+Scaled residuals: 
+     Min       1Q   Median       3Q      Max 
+-2.28988 -0.42035 -0.02943  0.44467  1.49483 
+
+Random effects:
+ Groups   Name        Variance Std.Dev.
+ patient  (Intercept) 80.65    8.981   
+ Residual             52.95    7.277   
+Number of obs: 36, groups:  patient, 19
+
+Fixed effects:
+            Estimate Std. Error t value
+(Intercept)  104.955      2.983   35.18
+drug2          9.360      2.471    3.79
+period2       -1.250      2.474   -0.51
+
+Correlation of Fixed Effects:
+        (Intr) drug2 
+drug2   -0.388       
+period2 -0.427 -0.058</code></pre>
+<p>Normal distribution of residuals:</p>
+<pre class="r"><code>qqnorm(resid(fit))</code></pre>
+<p><img src="figure/mim_quizzes.Rmd/unnamed-chunk-12-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Pretty o.k.</p>
+<p>Check outliers of random terms</p>
+<pre class="r"><code>intercepts &lt;- coef(fit)$patient[,1]
+boxplot(intercepts)</code></pre>
+<p><img src="figure/mim_quizzes.Rmd/unnamed-chunk-13-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Seems ok</p>
+<p>Check distribution of residuals within patients</p>
+<pre class="r"><code>bpco %&gt;%
+  mutate(residual = resid(fit)) %&gt;%
+  ggplot(aes(y = residual, x = patient, group = patient)) + 
+  geom_boxplot()</code></pre>
+<p><img src="figure/mim_quizzes.Rmd/unnamed-chunk-14-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Patient 11 seems to have quite extreme residuals</p>
+<p>There is no linear effect of time assumed in the model, so it does not make sense to check for this assumption.</p>
+</div>
+<div id="b.-1" class="section level3">
+<h3>b.</h3>
+<blockquote>
+<p>Use this dataset to answer the questions: is there a significant difference between the two drugs, and is there a significant period effect? Begin with the full model from part (a), and reduce the model (if possible) by removing the least significant explanatory variable(s). Use the likelihood ratio test (and maximum likelihood estimation) to test.</p>
+</blockquote>
+<p>Quiz assignment so not included</p>
+<pre class="r"><code>drop1(fit, test = &quot;Chisq&quot;)</code></pre>
+<pre><code>Single term deletions
+
+Model:
+y ~ drug + period + (1 | patient)
+       Df    AIC    LRT Pr(Chi)   
+&lt;none&gt;    280.68                  
+drug    1 289.18 10.505 0.00119 **
+period  1 278.93  0.254 0.61429   
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<p>Period can be left out</p>
+<pre class="r"><code>fit &lt;- update(fit, y ~ drug + (1 | patient))
+drop1(fit, test = &quot;Chisq&quot;)</code></pre>
+<pre><code>Single term deletions
+
+Model:
+y ~ drug + (1 | patient)
+       Df    AIC    LRT  Pr(Chi)   
+&lt;none&gt;    278.93                   
+drug    1 287.24 10.307 0.001325 **
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<p>We cannot remove ‘drug’ from the model without hurting model fit, it needs to stay in.</p>
+<p>There is a significant effect of the drug on the outcome, according to the LRT</p>
+</div>
+</div>
+<div id="session-information" class="section level2">
+<h2>Session information</h2>
+<!-- Insert the session information into the document -->
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 3.4.3 (2017-11-30)
+Platform: x86_64-apple-darwin15.6.0 (64-bit)
+Running under: macOS Sierra 10.12.6
+
+Matrix products: default
+BLAS: /Library/Frameworks/R.framework/Versions/3.4/Resources/lib/libRblas.0.dylib
+LAPACK: /Library/Frameworks/R.framework/Versions/3.4/Resources/lib/libRlapack.dylib
+
+locale:
+[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+ [1] bindrcpp_0.2        lme4_1.1-15         Matrix_1.2-12      
+ [4] broom_0.4.3         epistats_0.1.0      ggplot2_2.2.1      
+ [7] here_0.1            purrr_0.2.4         magrittr_1.5       
+[10] data.table_1.10.4-3 dplyr_0.7.4        
+
+loaded via a namespace (and not attached):
+ [1] Rcpp_0.12.15     nloptr_1.0.4     pillar_1.1.0     compiler_3.4.3  
+ [5] git2r_0.21.0     plyr_1.8.4       bindr_0.1        forcats_0.2.0   
+ [9] tools_3.4.3      digest_0.6.15    evaluate_0.10.1  tibble_1.4.2    
+[13] gtable_0.2.0     nlme_3.1-131     lattice_0.20-35  pkgconfig_2.0.1 
+[17] rlang_0.1.6      psych_1.7.8      parallel_3.4.3   yaml_2.1.16     
+[21] haven_1.1.1      stringr_1.2.0    knitr_1.19       hms_0.4.1       
+[25] rprojroot_1.3-2  grid_3.4.3       glue_1.2.0       R6_2.2.2        
+[29] foreign_0.8-69   rmarkdown_1.8    minqa_1.2.4      readr_1.1.1     
+[33] reshape2_1.4.3   tidyr_0.8.0      MASS_7.3-48      splines_3.4.3   
+[37] backports_1.1.2  scales_0.5.0     htmltools_0.3.6  mnormt_1.5-5    
+[41] assertthat_0.2.0 colorspace_1.3-2 labeling_0.3     stringi_1.1.6   
+[45] lazyeval_0.2.1   munsell_0.4.3   </code></pre>
+</div>
+</div>
+
+<hr>
+<p>
+    This <a href="http://rmarkdown.rstudio.com">R Markdown</a> site was created with <a href="https://github.com/jdblischak/workflowr">workflowr</a>
+</p>
+<hr>
+
+<!-- To enable disqus, uncomment the section below and provide your disqus_shortname -->
+
+<!-- disqus
+  <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+        var disqus_shortname = 'rmarkdown'; // required: replace example with your forum shortname
+
+        /* * * DON'T EDIT BELOW THIS LINE * * */
+        (function() {
+            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+-->
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

@@ -315,10 +315,10 @@ div.tocify {
 shared across the workflowr files. -->
 <!-- Update knitr chunk options -->
 <!-- Insert the date the file was last updated -->
-<p><strong>Last updated:</strong> 2018-04-18</p>
+<p><strong>Last updated:</strong> 2018-04-19</p>
 <!-- Insert the code version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
-<p><strong>Code version:</strong> 1ec8eeb</p>
+<p><strong>Code version:</strong> 4a05fe1</p>
 <!-- Add your analysis here -->
 <div id="setup-r-environment" class="section level2">
 <h2>Setup R environment</h2>
@@ -2692,31 +2692,7 @@ boxplot(intercepts)</code></pre>
 <blockquote>
 <p>Use this dataset to answer the questions: is there a significant difference between the two drugs, and is there a significant period effect? Begin with the full model from part (a), and reduce the model (if possible) by removing the least significant explanatory variable(s). Use the likelihood ratio test (and maximum likelihood estimation) to test.</p>
 </blockquote>
-<pre class="r"><code>drop1(fit, test = &quot;Chisq&quot;)</code></pre>
-<pre><code>Single term deletions
-
-Model:
-y ~ drug + period + (1 | patient)
-       Df    AIC    LRT Pr(Chi)   
-&lt;none&gt;    280.68                  
-drug    1 289.18 10.505 0.00119 **
-period  1 278.93  0.254 0.61429   
----
-Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
-<p>Period can be left out</p>
-<pre class="r"><code>fit &lt;- update(fit, y ~ drug + (1 | patient))
-drop1(fit, test = &quot;Chisq&quot;)</code></pre>
-<pre><code>Single term deletions
-
-Model:
-y ~ drug + (1 | patient)
-       Df    AIC    LRT  Pr(Chi)   
-&lt;none&gt;    278.93                   
-drug    1 287.24 10.307 0.001325 **
----
-Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
-<p>We cannot remove ‘drug’ from the model without hurting model fit, it needs to stay in.</p>
-<p>There is a significant effect of the drug on the outcome, according to the LRT</p>
+<p>Quiz assignment so not included</p>
 </div>
 </div>
 <div id="section-14" class="section level2">
@@ -3116,7 +3092,7 @@ str(no)</code></pre>
   ggplot(aes(x = flow, y = no, group = num)) + 
   geom_line() + geom_point() + 
   facet_grid(~diagnose) + theme_minimal()</code></pre>
-<p><img src="figure/mim_assignments.Rmd/unnamed-chunk-99-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/mim_assignments.Rmd/unnamed-chunk-97-1.png" width="672" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>fit1 &lt;- lme(fixed = no ~ flow,
             random = ~ flow | num,
             data = filter(no, diagnose == &quot;0&quot;),
