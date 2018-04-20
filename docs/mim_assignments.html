@@ -315,10 +315,10 @@ div.tocify {
 shared across the workflowr files. -->
 <!-- Update knitr chunk options -->
 <!-- Insert the date the file was last updated -->
-<p><strong>Last updated:</strong> 2018-04-19</p>
+<p><strong>Last updated:</strong> 2018-04-20</p>
 <!-- Insert the code version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
-<p><strong>Code version:</strong> 4a05fe1</p>
+<p><strong>Code version:</strong> e96adb1</p>
 <!-- Add your analysis here -->
 <div id="setup-r-environment" class="section level2">
 <h2>Setup R environment</h2>
@@ -451,7 +451,10 @@ fits[[2]] %&gt;%
 <p>Fit a linear mixed model with random intercept to predict exam scores using the LRT scores.</p>
 </blockquote>
 <pre class="r"><code>require(lme4)
-lmer(normexam ~ standlrt + (1 | school), data = london, REML = F)</code></pre>
+fit0 &lt;- lm(normexam ~ standlrt, data = london)
+
+fit1 &lt;- lmer(normexam ~ standlrt + (1 | school), data = london, REML = F)
+fit1</code></pre>
 <pre><code>Linear mixed model fit by maximum likelihood  [&#39;lmerMod&#39;]
 Formula: normexam ~ standlrt + (1 | school)
    Data: london
@@ -471,7 +474,8 @@ Fixed Effects:
 <blockquote>
 <p>Add a random slope to the model in (a). Interpret this model.</p>
 </blockquote>
-<pre class="r"><code>lmer(normexam ~ standlrt + (standlrt | school), data = london, REML = F)</code></pre>
+<pre class="r"><code>fit2 &lt;- lmer(normexam ~ standlrt + (standlrt | school), data = london, REML = F)
+fit2</code></pre>
 <pre><code>Linear mixed model fit by maximum likelihood  [&#39;lmerMod&#39;]
 Formula: normexam ~ standlrt + (standlrt | school)
    Data: london
@@ -487,6 +491,16 @@ Fixed Effects:
 (Intercept)     standlrt  
    -0.01151      0.55673  </code></pre>
 <p>On average, children with average baseline score, score avarage on the normalized exams. There is a positive correlation with baseline score and normalized exam. Schools differ in overall normalized exam scores, and the correlation between baseline score and normalized exam score differs between schools</p>
+<pre class="r"><code>anova(fit2, fit1)</code></pre>
+<pre><code>Data: london
+Models:
+fit1: normexam ~ standlrt + (1 | school)
+fit2: normexam ~ standlrt + (standlrt | school)
+     Df    AIC    BIC  logLik deviance  Chisq Chi Df Pr(&gt;Chisq)    
+fit1  4 9365.2 9390.4 -4678.6   9357.2                             
+fit2  6 9328.8 9366.7 -4658.4   9316.8 40.372      2  1.711e-09 ***
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
 </div>
 </div>
 </div>
@@ -595,13 +609,13 @@ bp %&lt;&gt;% mutate_at(vars(factor_vars), funs(as.factor))</code></pre>
 <pre class="r"><code>bp %&gt;%
   ggplot(aes(x = dbp1, y = dbp)) + 
   geom_point()</code></pre>
-<p><img src="figure/mim_assignments.Rmd/unnamed-chunk-17-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/mim_assignments.Rmd/unnamed-chunk-18-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>Now per treatment</p>
 <pre class="r"><code>bp %&gt;%
   ggplot(aes(x = dbp1, y = dbp)) + 
   geom_point() + 
   facet_wrap(~treat)</code></pre>
-<p><img src="figure/mim_assignments.Rmd/unnamed-chunk-18-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/mim_assignments.Rmd/unnamed-chunk-19-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>Look at marginal distributions per treatment</p>
 <pre class="r"><code>bp %&gt;% 
   as.data.table() %&gt;%
@@ -609,7 +623,7 @@ bp %&lt;&gt;% mutate_at(vars(factor_vars), funs(as.factor))</code></pre>
   ggplot(aes(x = 1, y = value, fill = treat)) + 
   geom_boxplot(alpha = .5) + 
   facet_wrap(~variable)</code></pre>
-<p><img src="figure/mim_assignments.Rmd/unnamed-chunk-19-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/mim_assignments.Rmd/unnamed-chunk-20-1.png" width="672" style="display: block; margin: auto;" /></p>
 </div>
 <div id="b.-2" class="section level3">
 <h3>b.</h3>
@@ -727,7 +741,7 @@ bpco[, list(mean_bp = mean(y)), by = &quot;drug,period&quot;]</code></pre>
 <pre class="r"><code>bpco %&gt;%
   ggplot(aes(x = drug, y = y, group = patient)) + 
   geom_line(alpha = .8) + theme_minimal()</code></pre>
-<p><img src="figure/mim_assignments.Rmd/unnamed-chunk-24-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/mim_assignments.Rmd/unnamed-chunk-25-1.png" width="672" style="display: block; margin: auto;" /></p>
 </div>
 <div id="b.-3" class="section level3">
 <h3>b.</h3>
@@ -911,7 +925,7 @@ str(reisby_wide)</code></pre>
   ggplot(aes(x = week, y = hdrs, group = id)) + 
   geom_line() + facet_wrap(~endo, labeller = label_both)</code></pre>
 <pre><code>Warning: Removed 13 rows containing missing values (geom_path).</code></pre>
-<p><img src="figure/mim_assignments.Rmd/unnamed-chunk-29-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/mim_assignments.Rmd/unnamed-chunk-30-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>All seem to go down.</p>
 <p>Slope seems pretty similar for both treatments, but not intercept</p>
 </div>
@@ -1085,7 +1099,7 @@ obs_vcov %&gt;%
   data.table::melt() %&gt;%
   ggplot(aes(x = Var1, y = Var2, fill = value)) + 
   geom_tile() + scale_y_continuous(trans = &quot;reverse&quot;)</code></pre>
-<p><img src="figure/mim_assignments.Rmd/unnamed-chunk-32-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/mim_assignments.Rmd/unnamed-chunk-33-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>Create mean imputed dataframe which can be used with ANOVA (not done here)</p>
 <pre class="r"><code>mean_impute_vector &lt;- function(x) {
   if (nna(x) == 0) return(x)
@@ -1744,7 +1758,7 @@ fits_reisby &lt;- fits</code></pre>
   ggplot(aes(x = axis1, y = axis2, fill = value)) + 
   geom_tile() + scale_y_continuous(trans = &quot;reverse&quot;) + 
   facet_wrap(~model)</code></pre>
-<p><img src="figure/mim_assignments.Rmd/unnamed-chunk-44-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/mim_assignments.Rmd/unnamed-chunk-45-1.png" width="672" style="display: block; margin: auto;" /></p>
 </div>
 <div id="b.-6" class="section level3">
 <h3>b.</h3>
@@ -2096,7 +2110,7 @@ week8 612.6359</code></pre>
   melt_vcov() %&gt;%
   ggplot(aes(x = axis1, y = axis2, fill = value)) + 
   geom_tile() + scale_y_continuous(trans = &quot;reverse&quot;)</code></pre>
-<p><img src="figure/mim_assignments.Rmd/unnamed-chunk-53-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/mim_assignments.Rmd/unnamed-chunk-54-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>Variance increases with time</p>
 </div>
 <div id="d.-4" class="section level3">
@@ -2107,7 +2121,7 @@ week8 612.6359</code></pre>
 <pre class="r"><code>stroke_long %&gt;%
   ggplot(aes(x = week_int, y = bartel, col = Subject, group = Subject)) + 
   geom_line() + facet_wrap(~Group)</code></pre>
-<p><img src="figure/mim_assignments.Rmd/unnamed-chunk-54-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/mim_assignments.Rmd/unnamed-chunk-55-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>Most seem to increase. Group A starts a little lower but shows relatively steep increase</p>
 <p>Pretty different slopes, pretty different intercepts.</p>
 <p>Effect is pretty much linear</p>
@@ -2298,16 +2312,16 @@ schgend3 -0.458  0.019 -0.230  0.240</code></pre>
 <p>Check the model assumptions for the final model: are the residuals, random intercept (and random slope if you used it) (approximately) normally distributed? (Note that some of the graphs for checking model assumptions are not easily produced in SPSS; see the extra slides on Moodle for help.)</p>
 </blockquote>
 <pre class="r"><code>plot(fit_final_reml)</code></pre>
-<p><img src="figure/mim_assignments.Rmd/unnamed-chunk-62-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/mim_assignments.Rmd/unnamed-chunk-63-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>Boxplot of residuals per subject / group</p>
 <pre class="r"><code>london %&gt;%
   mutate(residual = resid(fit_final_reml)) %&gt;%
   ggplot(aes(x = school, y = residual, group = school)) + 
   geom_boxplot()</code></pre>
-<p><img src="figure/mim_assignments.Rmd/unnamed-chunk-63-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/mim_assignments.Rmd/unnamed-chunk-64-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>No structure, no heteroscedasticity</p>
 <pre class="r"><code>qqnorm(resid(fit_final_reml))</code></pre>
-<p><img src="figure/mim_assignments.Rmd/unnamed-chunk-64-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/mim_assignments.Rmd/unnamed-chunk-65-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>Normal distributed residuals</p>
 <p>Look at intercepts and slopes</p>
 <pre class="r"><code>coefs &lt;- coef(fit_final_reml)
@@ -2323,9 +2337,9 @@ head(coefs$school)</code></pre>
 slopes &lt;- coefs$school[,2]
 
 boxplot(intercepts)</code></pre>
-<p><img src="figure/mim_assignments.Rmd/unnamed-chunk-65-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/mim_assignments.Rmd/unnamed-chunk-66-1.png" width="672" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>boxplot(slopes)</code></pre>
-<p><img src="figure/mim_assignments.Rmd/unnamed-chunk-65-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/mim_assignments.Rmd/unnamed-chunk-66-2.png" width="672" style="display: block; margin: auto;" /></p>
 <p>There is a single observation a deviating slope. It is the highest slope, so we can get the rownumber:</p>
 <pre class="r"><code>which.max(slopes)</code></pre>
 <pre><code>[1] 53</code></pre>
@@ -2431,7 +2445,7 @@ london %&lt;&gt;%
              alpha = special_school, shape = special_school)) + 
   geom_point() + theme_minimal() + 
   facet_grid(~y_type)</code></pre>
-<p><img src="figure/mim_assignments.Rmd/unnamed-chunk-69-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/mim_assignments.Rmd/unnamed-chunk-70-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>We can see that this school does seem to have a steeper slope than the rest of the schools.</p>
 <p>On original scale:</p>
 <pre class="r"><code>london %&gt;%
@@ -2440,7 +2454,7 @@ london %&lt;&gt;%
   ggplot(aes(x = standlrt, y = normexam, 
              alpha = special_school, shape = special_school)) + 
   geom_point() + theme_minimal()</code></pre>
-<p><img src="figure/mim_assignments.Rmd/unnamed-chunk-70-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/mim_assignments.Rmd/unnamed-chunk-71-1.png" width="672" style="display: block; margin: auto;" /></p>
 </div>
 </div>
 <div id="optional-1" class="section level2">
@@ -2671,19 +2685,19 @@ drug2   -0.388
 period2 -0.427 -0.058</code></pre>
 <p>Normal distribution of residuals:</p>
 <pre class="r"><code>qqnorm(resid(fit))</code></pre>
-<p><img src="figure/mim_assignments.Rmd/unnamed-chunk-78-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/mim_assignments.Rmd/unnamed-chunk-79-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>Pretty o.k.</p>
 <p>Check outliers of random terms</p>
 <pre class="r"><code>intercepts &lt;- coef(fit)$patient[,1]
 boxplot(intercepts)</code></pre>
-<p><img src="figure/mim_assignments.Rmd/unnamed-chunk-79-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/mim_assignments.Rmd/unnamed-chunk-80-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>Seems ok</p>
 <p>Check distribution of residuals within patients</p>
 <pre class="r"><code>bpco %&gt;%
   mutate(residual = resid(fit)) %&gt;%
   ggplot(aes(y = residual, x = patient, group = patient)) + 
   geom_boxplot()</code></pre>
-<p><img src="figure/mim_assignments.Rmd/unnamed-chunk-80-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/mim_assignments.Rmd/unnamed-chunk-81-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>Patient 11 seems to have quite extreme residuals</p>
 <p>There is no linear effect of time assumed in the model, so it does not make sense to check for this assumption.</p>
 </div>
@@ -3092,7 +3106,7 @@ str(no)</code></pre>
   ggplot(aes(x = flow, y = no, group = num)) + 
   geom_line() + geom_point() + 
   facet_grid(~diagnose) + theme_minimal()</code></pre>
-<p><img src="figure/mim_assignments.Rmd/unnamed-chunk-97-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/mim_assignments.Rmd/unnamed-chunk-98-1.png" width="672" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>fit1 &lt;- lme(fixed = no ~ flow,
             random = ~ flow | num,
             data = filter(no, diagnose == &quot;0&quot;),
@@ -3381,6 +3395,635 @@ Number of Groups: 39 </code></pre>
 <p>Residual sd = 0.058</p>
 </div>
 </div>
+</div>
+<div id="day-4" class="section level1">
+<h1>Day 4</h1>
+<blockquote>
+<p>CASE I: Contraception use of women in Bangladesh Note: today’s quiz questions are about this case.</p>
+</blockquote>
+<div id="section-16" class="section level2">
+<h2>1.</h2>
+<blockquote>
+<p>First, let’s make some preparations. The dataset Contraception is located in the package mlmRev. Function glmer() that is needed to fit the GLMMs is located in the package lme4.</p>
+</blockquote>
+<div id="a.-15" class="section level3">
+<h3>a.</h3>
+<blockquote>
+<p>Open RStudio and try to load package lme4 using library(lme4). Is the package installed?</p>
+</blockquote>
+<pre class="r"><code>library(lme4)</code></pre>
+</div>
+<div id="b.-16" class="section level3">
+<h3>b.</h3>
+<blockquote>
+<p>When the package lme4 is not on this computer, it needs to be installed using install.packages(“lme4”). After installing the package, load it. When R complains about other missing packages, install and load those too.</p>
+</blockquote>
+</div>
+<div id="c.-11" class="section level3">
+<h3>c.</h3>
+<blockquote>
+<p>Load package mlmRev, if needed install it first.</p>
+</blockquote>
+<pre class="r"><code>require(mlmRev)</code></pre>
+</div>
+</div>
+<div id="section-17" class="section level2">
+<h2>2.</h2>
+<blockquote>
+<p>Examine dataset Contraception.</p>
+</blockquote>
+<div id="a.-16" class="section level3">
+<h3>a.</h3>
+<blockquote>
+<p>Load the data using data(Contraception). Open the description using help(Contraception) (and read it!).</p>
+</blockquote>
+<pre class="r"><code>data(&quot;Contraception&quot;)
+cc &lt;- Contraception
+str(cc)</code></pre>
+<pre><code>&#39;data.frame&#39;:   1934 obs. of  6 variables:
+ $ woman   : Factor w/ 1934 levels &quot;1&quot;,&quot;2&quot;,&quot;3&quot;,&quot;4&quot;,..: 1 2 3 4 5 6 7 8 9 10 ...
+ $ district: Factor w/ 60 levels &quot;1&quot;,&quot;2&quot;,&quot;3&quot;,&quot;4&quot;,..: 1 1 1 1 1 1 1 1 1 1 ...
+ $ use     : Factor w/ 2 levels &quot;N&quot;,&quot;Y&quot;: 1 1 1 1 1 1 1 1 1 1 ...
+ $ livch   : Factor w/ 4 levels &quot;0&quot;,&quot;1&quot;,&quot;2&quot;,&quot;3+&quot;: 4 1 3 4 1 1 4 4 2 4 ...
+ $ age     : num  18.44 -5.56 1.44 8.44 -13.56 ...
+ $ urban   : Factor w/ 2 levels &quot;N&quot;,&quot;Y&quot;: 2 2 2 2 2 2 2 2 2 2 ...</code></pre>
+</div>
+<div id="b.-17" class="section level3">
+<h3>b.</h3>
+<blockquote>
+<p>Variable livch is a factor variable containing the number of living children a woman has at the time of the study, which could be used to explain the use of contraceptives. Hint: you can use Contraception$livch to access the column livch in the dataset Contraception. Do you think this coding is a wise choice? Would it have been better to use the exact number of children?</p>
+</blockquote>
+<p>This depends on whether the association is linear.</p>
+<p>If it is linear, it would have been better to keep the absolute values, otherwise using them as factors should be pretty similar, except when there is actually a big difference between 3 and more, which may actually be possible as there are people who will never use contraception, and they may have more than 3 children, while other people who would use contraception can also ‘stop at 3’</p>
+<p>In general: better to keep in raw data and only categorize when necessary during statistical modeling later on.</p>
+</div>
+<div id="c.-12" class="section level3">
+<h3>c.</h3>
+<blockquote>
+<p>age is the only continuous variable that is used, examine its distribution using the boxplot() function. Try the summary() function too. Does the distribution of age appear to be symmetrical? Does it need to be?</p>
+</blockquote>
+<pre class="r"><code>boxplot(cc$age)</code></pre>
+<p><img src="figure/mim_assignments.Rmd/unnamed-chunk-114-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Not symmertrical, does not need to be (it is a determinant, the assumption is that there is a linear relationsiop between the outcome, not on the distribution of the determinant itself)</p>
+</div>
+<div id="d.-8" class="section level3">
+<h3>d.</h3>
+<blockquote>
+<p>Explore the dataset by examining different rows, for instance Contraception[1:10,] shows the first 10 rows, Contraception[100:110,] shows rows 100 to 110.</p>
+</blockquote>
+<pre class="r"><code>cc[20:30,]</code></pre>
+<pre><code>   woman district use livch     age urban
+20    20        1   N     2 -3.5600     Y
+21    21        1   N     0 -4.5599     Y
+22    22        1   N     0 -9.5599     Y
+23    23        1   N    3+  2.4400     Y
+24    24        1   Y     2  2.4400     Y
+25    25        1   Y     1 -4.5599     Y
+26    26        1   N    3+ 14.4400     Y
+27    27        1   Y     0 -6.5599     Y
+28    28        1   Y     1 -3.5599     Y
+29    29        1   Y     1 -5.5599     Y
+30    30        1   Y     1 -1.5599     Y</code></pre>
+</div>
+</div>
+<div id="section-18" class="section level2">
+<h2>3.</h2>
+<blockquote>
+<p>Make some tables to examine the relationship between the use of contraceptives and different factors using the table() command. For more information on table(), use ?table.</p>
+</blockquote>
+<div id="a.-17" class="section level3">
+<h3>a.</h3>
+<blockquote>
+<p>Make a crosstable of urban and use. What’s the percentage of women in rural areas using contraception? And what’s the percentage of women in urban areas using contraception?</p>
+</blockquote>
+<p>We’ll use data.table for easy subsetting</p>
+<pre class="r"><code>setDT(cc)
+cc[, tabl(use, urban)]</code></pre>
+<pre><code>      urban
+use      N   Y &lt;NA&gt;
+  N    903 272    0
+  Y    469 290    0
+  &lt;NA&gt;   0   0    0</code></pre>
+<p>Seems like more use in urban areas</p>
+</div>
+<div id="b.-18" class="section level3">
+<h3>b.</h3>
+<blockquote>
+<p>Examine the crosstable of livch and use. Does there seem to be a relationship between the number of children and the use of contraception?</p>
+</blockquote>
+<pre class="r"><code>cc[, tabl(use, livch)]</code></pre>
+<pre><code>      livch
+use      0   1   2  3+ &lt;NA&gt;
+  N    397 192 158 428    0
+  Y    133 164 147 315    0
+  &lt;NA&gt;   0   0   0   0    0</code></pre>
+<pre class="r"><code>cc %&gt;%
+  ggplot(aes(x = livch, fill = use)) + 
+  geom_bar()</code></pre>
+<p><img src="figure/mim_assignments.Rmd/unnamed-chunk-118-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Yes, most use for people with 2 living childer</p>
+</div>
+<div id="c.-13" class="section level3">
+<h3>c.</h3>
+<blockquote>
+<p>Does the use of contraception seem to differ between districts in this sample?</p>
+</blockquote>
+<pre class="r"><code>cc %&gt;%
+  group_by(district) %&gt;%
+  summarize(mean_use = mean(use == &quot;Y&quot;)) %&gt;%
+  mutate(district = factor(district, levels = levels(district)[order(mean_use)])) %&gt;%
+  ggplot(aes(y = district, x = mean_use)) + 
+  geom_point()</code></pre>
+<p><img src="figure/mim_assignments.Rmd/unnamed-chunk-119-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Yes, pretty different per district</p>
+</div>
+</div>
+<div id="section-19" class="section level2">
+<h2>4.</h2>
+<blockquote>
+<p>We will fit regression models to predict contraception use as a function of the number of children, age, and whether women live in urban or rural areas.</p>
+</blockquote>
+<div id="a.-18" class="section level3">
+<h3>a.</h3>
+<blockquote>
+<p>Fit a standard logistic model for use, regressed on main effects of livch, age and urban. This can be done using:</p>
+</blockquote>
+<pre class="r"><code>mod0 &lt;- glm(use ~  livch + age + urban, family = binomial, data = cc)
+summary(mod0)</code></pre>
+<pre><code>
+Call:
+glm(formula = use ~ livch + age + urban, family = binomial, data = cc)
+
+Deviance Residuals: 
+    Min       1Q   Median       3Q      Max  
+-1.5170  -0.9994  -0.6972   1.2772   1.9635  
+
+Coefficients:
+             Estimate Std. Error z value Pr(&gt;|z|)    
+(Intercept) -1.568044   0.126229 -12.422  &lt; 2e-16 ***
+livch1       1.059186   0.151954   6.970 3.16e-12 ***
+livch2       1.287805   0.167241   7.700 1.36e-14 ***
+livch3+      1.216385   0.170593   7.130 1.00e-12 ***
+age         -0.023995   0.007536  -3.184  0.00145 ** 
+urbanY       0.797181   0.105186   7.579 3.49e-14 ***
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+(Dispersion parameter for binomial family taken to be 1)
+
+    Null deviance: 2590.9  on 1933  degrees of freedom
+Residual deviance: 2456.7  on 1928  degrees of freedom
+AIC: 2468.7
+
+Number of Fisher Scoring iterations: 4</code></pre>
+<blockquote>
+<p>Examine the coefficients using summary(mod0). What meaning does for instance the coefficient for age have?</p>
+</blockquote>
+<p>Higher odds of using contraception in lower age</p>
+<blockquote>
+<p>How do we obtain the odds ratio corresponding to the effect of age on contraception use? Take exponent</p>
+</blockquote>
+<blockquote>
+<p>Is the effect of age linear? (Make a table of proportions of contraceptive use against age, and make an appropriate plot.)</p>
+</blockquote>
+<p>We can do this by binning age, and calculating the log-odds of contraception use in each stratum</p>
+<pre class="r"><code>cc %&gt;%
+  mutate(age_bin = quant(age, 10),
+         use_logical = use == &quot;Y&quot;) %&gt;%
+  group_by(age_bin) %&gt;%
+  summarize(prop_ci_use = list(binom.confint_logical(use_logical))) %&gt;%
+  mutate(
+    prop_use = map_dbl(prop_ci_use, &quot;mean&quot;),
+    prop_use_lo = map_dbl(prop_ci_use, &quot;lower&quot;),
+    prop_use_hi = map_dbl(prop_ci_use, &quot;upper&quot;),
+    logit_use = logit(prop_use),
+    logit_use_lo = logit(prop_use_lo),
+    logit_use_hi = logit(prop_use_hi)
+  ) %&gt;% 
+  ggplot(aes(x = age_bin, y = logit_use, ymin = logit_use_lo, ymax = logit_use_hi)) + 
+  geom_errorbar()</code></pre>
+<p><img src="figure/mim_assignments.Rmd/unnamed-chunk-121-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Clearly no linear trend, looks more like quadratic</p>
+<p>Though keep in mind that this is marginal over all other covariates.</p>
+<p>However since there are only a few and they are all discrete, it is unlikely that co-‘variation’ between age and these other covariates would explain this non-linear trend between age and the logit of use</p>
+</div>
+<div id="b.-19" class="section level3">
+<h3>b.</h3>
+<blockquote>
+<p>Adapt the previous model by adding a quadratic age component:</p>
+</blockquote>
+<pre class="r"><code>mod1 &lt;- glm(use ~  livch + age + I(age^2) + urban, family = binomial, data = cc)
+summary(mod1)</code></pre>
+<pre><code>
+Call:
+glm(formula = use ~ livch + age + I(age^2) + urban, family = binomial, 
+    data = cc)
+
+Deviance Residuals: 
+    Min       1Q   Median       3Q      Max  
+-1.4738  -1.0369  -0.6683   1.2401   1.9765  
+
+Coefficients:
+              Estimate Std. Error z value Pr(&gt;|z|)    
+(Intercept) -0.9499521  0.1560118  -6.089 1.14e-09 ***
+livch1       0.7831128  0.1569096   4.991 6.01e-07 ***
+livch2       0.8549040  0.1783573   4.793 1.64e-06 ***
+livch3+      0.8060251  0.1784817   4.516 6.30e-06 ***
+age          0.0045837  0.0089084   0.515    0.607    
+I(age^2)    -0.0042865  0.0007002  -6.122 9.23e-10 ***
+urbanY       0.7680975  0.1061916   7.233 4.72e-13 ***
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+(Dispersion parameter for binomial family taken to be 1)
+
+    Null deviance: 2590.9  on 1933  degrees of freedom
+Residual deviance: 2417.7  on 1927  degrees of freedom
+AIC: 2431.7
+
+Number of Fisher Scoring iterations: 4</code></pre>
+<pre class="r"><code>drop1(mod1)</code></pre>
+<pre><code>Single term deletions
+
+Model:
+use ~ livch + age + I(age^2) + urban
+         Df Deviance    AIC
+&lt;none&gt;        2417.7 2431.7
+livch     3   2451.0 2459.0
+age       1   2417.9 2429.9
+I(age^2)  1   2456.7 2468.7
+urban     1   2470.5 2482.5</code></pre>
+<blockquote>
+<p>Based on the Wald p-value of age2, did the model improve significantly? And if you compare the AIC’s?</p>
+</blockquote>
+<p>Both according to wald and AIC we should keep it in</p>
+</div>
+<div id="c.-14" class="section level3">
+<h3>c.</h3>
+<blockquote>
+<p>Now fit a logistic model for use, regressed on main effects of livch, age, I(age^2) and urban, and with a random intercept for each district. This can be done using:</p>
+</blockquote>
+<pre class="r"><code>mod2 &lt;- glmer(use ~ livch + age + I(age^2) + urban + (1 | district), family = binomial, data = cc)</code></pre>
+<pre><code>Warning in checkConv(attr(opt, &quot;derivs&quot;), opt$par, ctrl = control
+$checkConv, : Model failed to converge with max|grad| = 0.00584039 (tol =
+0.001, component 1)</code></pre>
+<pre><code>Warning in checkConv(attr(opt, &quot;derivs&quot;), opt$par, ctrl = control$checkConv, : Model is nearly unidentifiable: very large eigenvalue
+ - Rescale variables?</code></pre>
+<blockquote>
+<p>(Disregard any warning messages for now.) Examine the fixed coefficients of mod2, compare these to the coefficients of mod1.</p>
+</blockquote>
+<pre class="r"><code>summary(mod2)</code></pre>
+<pre><code>Generalized linear mixed model fit by maximum likelihood (Laplace
+  Approximation) [glmerMod]
+ Family: binomial  ( logit )
+Formula: use ~ livch + age + I(age^2) + urban + (1 | district)
+   Data: cc
+
+     AIC      BIC   logLik deviance df.resid 
+  2388.7   2433.3  -1186.4   2372.7     1926 
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-1.8438 -0.7592 -0.4640  0.9493  3.0715 
+
+Random effects:
+ Groups   Name        Variance Std.Dev.
+ district (Intercept) 0.2258   0.4752  
+Number of obs: 1934, groups:  district, 60
+
+Fixed effects:
+              Estimate Std. Error z value Pr(&gt;|z|)    
+(Intercept) -1.0350274  0.1757515  -5.889 3.88e-09 ***
+livch1       0.8149767  0.1631935   4.994 5.92e-07 ***
+livch2       0.9164595  0.1863475   4.918 8.74e-07 ***
+livch3+      0.9150272  0.1873165   4.885 1.03e-06 ***
+age          0.0035352  0.0092785   0.381    0.703    
+I(age^2)    -0.0045621  0.0007294  -6.255 3.98e-10 ***
+urbanY       0.6972851  0.1208609   5.769 7.96e-09 ***
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+
+Correlation of Fixed Effects:
+         (Intr) livch1 livch2 lvch3+ age    I(g^2)
+livch1   -0.609                                   
+livch2   -0.680  0.524                            
+livch3+  -0.764  0.565  0.651                     
+age       0.573 -0.276 -0.457 -0.698              
+I(age^2) -0.541  0.250  0.354  0.320 -0.477       
+urbanY   -0.263  0.064  0.096  0.102 -0.053  0.027
+convergence code: 0
+Model failed to converge with max|grad| = 0.00584039 (tol = 0.001, component 1)
+Model is nearly unidentifiable: very large eigenvalue
+ - Rescale variables?</code></pre>
+<pre class="r"><code>compareCoefs(mod2, mod1)</code></pre>
+<pre><code>Warning in compareCoefs(mod2, mod1): models to be compared are of different
+classes</code></pre>
+<pre><code>
+Call:
+1: glmer(formula = use ~ livch + age + I(age^2) + urban + (1 | 
+  district), data = cc, family = binomial)
+2: glm(formula = use ~ livch + age + I(age^2) + urban, family = 
+  binomial, data = cc)
+               Est. 1      SE 1    Est. 2      SE 2
+(Intercept) -1.035027  0.175752 -0.949952  0.156012
+livch1       0.814977  0.163194  0.783113  0.156910
+livch2       0.916459  0.186348  0.854904  0.178357
+livch3+      0.915027  0.187317  0.806025  0.178482
+age          0.003535  0.009278  0.004584  0.008908
+I(age^2)    -0.004562  0.000729 -0.004286  0.000700
+urbanY       0.697285  0.120861  0.768097  0.106192</code></pre>
+<p>Using the random intercept per district, the fixed effect of livch is higher,</p>
+<p>linear effect of age is smaller, quadratic effect unchaged, fixed effect of urban smaller</p>
+</div>
+<div id="d.-9" class="section level3">
+<h3>d.</h3>
+<blockquote>
+<p>The AIC can again be obtained from each model using the summary() function. Based on the AIC, do you prefer mod1 or mod2?</p>
+</blockquote>
+<pre class="r"><code>AIC(mod2, mod1)</code></pre>
+<pre><code>     df      AIC
+mod2  8 2388.729
+mod1  7 2431.659</code></pre>
+<p>Prefer mod2</p>
+</div>
+<div id="e.-6" class="section level3">
+<h3>e.</h3>
+<blockquote>
+<p>We can also use a likelihood ratio test to compare mod1 and mod2. Do this as follows (commands can be pasted in R, comments appear after the # character):</p>
+</blockquote>
+<pre class="r"><code>d1 &lt;- as.numeric(-2*logLik(mod1)) #is the -2LL for mod1
+d2 &lt;- as.numeric(-2*logLik(mod2)) #is the -2LL for mod2
+ldif &lt;- d1 - d2 #is the -2LL difference
+degfr &lt;- 1 #difference in the number of parameters
+pchisq(ldif, degfr, lower.tail = FALSE)/2 #to compute the p-value</code></pre>
+<pre><code>[1] 1.020941e-11</code></pre>
+<p>Or:</p>
+<pre class="r"><code>anova(mod2, mod1, test = &quot;Chisq&quot;)</code></pre>
+<pre><code>Data: cc
+Models:
+mod1: use ~ livch + age + I(age^2) + urban
+mod2: use ~ livch + age + I(age^2) + urban + (1 | district)
+     Df    AIC    BIC  logLik deviance Chisq Chi Df Pr(&gt;Chisq)    
+mod1  7 2431.7 2470.6 -1208.8   2417.7                            
+mod2  8 2388.7 2433.3 -1186.4   2372.7 44.93      1  2.042e-11 ***
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<p>P-value of latter version is the same but not divided by 2</p>
+<blockquote>
+<p>Why is the p-value divided by 2?</p>
+</blockquote>
+<p>Variance of random effects are always greater &gt;= 0, so it can be tested one-sided, thus the p-value divided by 2</p>
+<blockquote>
+<p>Why is degfr equal to 1?</p>
+</blockquote>
+<p>1 additional parameter estimated: variance of random intercepts</p>
+<blockquote>
+<p>Based on the likelihood ratio test, do you prefer mod1 or mod2?</p>
+</blockquote>
+<p>mod2</p>
+</div>
+<div id="f.-4" class="section level3">
+<h3>f.</h3>
+<blockquote>
+<p>Fit model mod3, which is similar to mod2 but also contains a random “slope” for urban. Models mod2 and mod3 can be compared using anova(mod2, mod3). (Note that you could not compare mod1 and mod2 this way, because one contains a random explanatory variable and the other doesn’t.) Which model do you prefer? Try to interpret the coefficients of this model.</p>
+</blockquote>
+<pre class="r"><code>mod3 &lt;- glmer(use ~ livch + age + I(age^2) + urban + (urban | district), family = binomial, data = cc)</code></pre>
+<pre><code>Warning in checkConv(attr(opt, &quot;derivs&quot;), opt$par, ctrl = control
+$checkConv, : Model failed to converge with max|grad| = 0.00471276 (tol =
+0.001, component 1)</code></pre>
+<pre><code>Warning in checkConv(attr(opt, &quot;derivs&quot;), opt$par, ctrl = control$checkConv, : Model is nearly unidentifiable: very large eigenvalue
+ - Rescale variables?</code></pre>
+<pre class="r"><code>anova(mod3, mod2, test = &quot;Chisq&quot;)</code></pre>
+<pre><code>Data: cc
+Models:
+mod2: use ~ livch + age + I(age^2) + urban + (1 | district)
+mod3: use ~ livch + age + I(age^2) + urban + (urban | district)
+     Df    AIC    BIC  logLik deviance  Chisq Chi Df Pr(&gt;Chisq)   
+mod2  8 2388.7 2433.3 -1186.4   2372.7                            
+mod3 10 2380.6 2436.3 -1180.3   2360.6 12.118      2   0.002337 **
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<p>Mod3 is better</p>
+<p>CASE II: Melanoma mortality</p>
+<ol start="5" style="list-style-type: decimal">
+<li>Preparation</li>
+</ol>
+<ol style="list-style-type: lower-alpha">
+<li>Load dataset Mmmec and examine its help file.</li>
+<li>How many rows does dataset Mmmec have? Use the nrow() command.</li>
+<li>Explore dataset Mmmec by looking at different sets of rows.</li>
+</ol>
+<ol start="6" style="list-style-type: decimal">
+<li>Descriptive statistics.</li>
+</ol>
+<ol style="list-style-type: lower-alpha">
+<li>Examine whether the number of malignant melanoma deaths seems to be different for counties with a high dose of UVB versus counties with a low dose of UVB (dichotomizing using the median UVB dose). This can be done as follows, plotting two separate histograms:</li>
+</ol>
+<p>par(mfrow = c(2, 1)) #tell R to plot two graphs below each other in one figure hist(Mmmec<span class="math inline">\(deaths[Mmmec\)</span>uvb &gt;= median(Mmmec<span class="math inline">\(uvb)], xlim = c(0, 350), ylim = c(0, 80), breaks = 10*(0:35)) #histogram for high UVB hist(Mmmec\)</span>deaths[Mmmec<span class="math inline">\(uvb &lt; median(Mmmec\)</span>uvb)], xlim = c(0, 350), ylim = c(0, 80), breaks = 10*(0:35)) #histogram for low UVB</p>
+<ol start="2" style="list-style-type: lower-alpha">
+<li>Compare the two histograms.</li>
+<li>What is the function of the xlim, ylim and breaks arguments for hist()?</li>
+<li>Look at the help file for hist(), see if you can change the axis labels and the main title. Note that if needed, the graphics panel can be cleared using graphics.off(),</li>
+</ol>
+<ol start="7" style="list-style-type: decimal">
+<li></li>
+</ol>
+<ol style="list-style-type: lower-alpha">
+<li>Fit a Poisson regression model for deaths, regressed on a main effect of uvb. The model can be obtained using glm(), just as in exercise 4a. Choose the correct family. Use the argument offset = log(expected). Call the model pmod0. Is the estimated effect of UVB radiation on the number of malignant melanoma deaths in each county from pmod0 positive or negative?</li>
+<li>Fit a Poisson regression model for deaths, regressed on a main effect of uvb, and including a random intercept for region. Use the same offset as pmod0. Use function glmer(), and call this model pmod1. Is the estimated effect of UVB radiation on the number of malignant melanoma deaths in each county from pmod1 positive or negative?</li>
+<li>Compare the fit of pmod0 and pmod1 using the AIC. Hint: this can be done just as in exercise 4d. Based on the AIC, do you prefer pmod0 or pmod1?</li>
+<li>Based on the likelihood ratio test, do you prefer pmod0 or pmod1? Use the method from exercise 4e. You will need to explicitly ask for the maximum log likelihood, using the function logLik.</li>
+</ol>
+<ol start="8" style="list-style-type: decimal">
+<li></li>
+</ol>
+<ol style="list-style-type: lower-alpha">
+<li>Fit a model similar to pmod1, but also including a random slope for uvb within each region. Call this model pmod2.</li>
+<li>Use anova() to compare pmod1 and pmod2. Which model do you prefer?</li>
+</ol>
+<ol start="9" style="list-style-type: decimal">
+<li>Let’s examine the effect of UVB radiation on the number of malignant melanoma deaths in more detail.</li>
+</ol>
+<ol style="list-style-type: lower-alpha">
+<li>Fit a model similar to pmod1, but with a fixed main effect of nation, as well as a fixed interaction of nation with uvb. This can be done using:</li>
+</ol>
+<p>pmod3 &lt;- glmer(deaths ~ uvb*nation + (1|region), family = poisson, data = Mmmec, offset = log(expected))</p>
+<ol start="2" style="list-style-type: lower-alpha">
+<li>Compare pmod1 and pmod3 using anova().</li>
+<li>Examine the coefficients of pmod3.</li>
+<li>To aid in the interpretation of pmod3, we will plot the predicted outcome ln(deaths/expected) against the UVB dose in each nation, using the fixed effects. R is a powerful tool for producing plots, but it can be complicated. We will build the plots in steps as follows:</li>
+</ol>
+<p>fixef(pmod3) #are the fixed effects from pmod3</p>
+<p>uvb.Belgium &lt;- seq(min(Mmmec<span class="math inline">\(uvb[Mmmec\)</span>nation == “Belgium”]), max(Mmmec<span class="math inline">\(uvb[Mmmec\)</span>nation == “Belgium”]), 0.001) #is a sequence of possible uvb values within the observed range for Belgium, we will use this in the plots</p>
+</div>
+</div>
+</div>
+<div id="similarly-for-the-other-nations" class="section level1">
+<h1>similarly for the other nations:</h1>
+<p>uvb.W.Germany &lt;- seq(min(Mmmec<span class="math inline">\(uvb[Mmmec\)</span>nation == “W.Germany”]), max(Mmmec<span class="math inline">\(uvb[Mmmec\)</span>nation == “W.Germany”]), 0.001) uvb.Denmark &lt;- seq(min(Mmmec<span class="math inline">\(uvb[Mmmec\)</span>nation == “Denmark”]), max(Mmmec<span class="math inline">\(uvb[Mmmec\)</span>nation == “Denmark”]), 0.001) uvb.France &lt;- seq(min(Mmmec<span class="math inline">\(uvb[Mmmec\)</span>nation == “France”]), max(Mmmec<span class="math inline">\(uvb[Mmmec\)</span>nation == “France”]), 0.001) uvb.UK &lt;- seq(min(Mmmec<span class="math inline">\(uvb[Mmmec\)</span>nation == “UK”]), max(Mmmec<span class="math inline">\(uvb[Mmmec\)</span>nation == “UK”]), 0.001) uvb.Italy &lt;- seq(min(Mmmec<span class="math inline">\(uvb[Mmmec\)</span>nation == “Italy”]), max(Mmmec<span class="math inline">\(uvb[Mmmec\)</span>nation == “Italy”]), 0.001) uvb.Ireland &lt;- seq(min(Mmmec<span class="math inline">\(uvb[Mmmec\)</span>nation == “Ireland”]), max(Mmmec<span class="math inline">\(uvb[Mmmec\)</span>nation == “Ireland”]), 0.001) uvb.Luxembourg &lt;- seq(min(Mmmec<span class="math inline">\(uvb[Mmmec\)</span>nation == “Luxembourg”]), max(Mmmec<span class="math inline">\(uvb[Mmmec\)</span>nation == “Luxembourg”]), 0.001) uvb.Netherlands &lt;- seq(min(Mmmec<span class="math inline">\(uvb[Mmmec\)</span>nation == “Netherlands”]), max(Mmmec<span class="math inline">\(uvb[Mmmec\)</span>nation == “Netherlands”]), 0.001)</p>
+<p>graphics.off() #clear the graphics panel par(lwd = 3, cex.main = 1.6, cex.axis = 1.6, cex.lab = 1.6) #set some global parameters for the plot, line width is 3, we will use character size 1.6</p>
+</div>
+<div id="plot-the-predicted-outcome-for-belgium-given-the-fixed-effects" class="section level1">
+<h1>plot the predicted outcome for Belgium (given the fixed effects):</h1>
+<p>plot(uvb.Belgium, fixef(pmod3)[“(Intercept)”] + fixef(pmod3)[“uvb”]*uvb.Belgium, type = “l”, col = “blue”, xlim = c(-10, 15), ylim = c(-0.9, 0.9), xlab = “UVB”, ylab = “Predicted ln(deaths/expected)”)</p>
+</div>
+<div id="add-the-other-nations-to-the-plot" class="section level1">
+<h1>add the other nations to the plot:</h1>
+<p>lines(uvb.W.Germany, fixef(pmod3)[“(Intercept)”] + fixef(pmod3)[“uvb”]<em>uvb.W.Germany + fixef(pmod3)[“nationW.Germany”] + fixef(pmod3)[“uvb:nationW.Germany”]</em>uvb.W.Germany, col = “darkgreen”)</p>
+<p>lines(uvb.Denmark, fixef(pmod3)[“(Intercept)”] + fixef(pmod3)[“uvb”]<em>uvb.Denmark + fixef(pmod3)[“nationDenmark”] + fixef(pmod3)[“uvb:nationDenmark”]</em>uvb.Denmark, col = “red”)</p>
+<p>lines(uvb.France, fixef(pmod3)[“(Intercept)”] + fixef(pmod3)[“uvb”]<em>uvb.France + fixef(pmod3)[“nationFrance”] + fixef(pmod3)[“uvb:nationFrance”]</em>uvb.France, col = “grey”)</p>
+<p>lines(uvb.UK, fixef(pmod3)[“(Intercept)”] + fixef(pmod3)[“uvb”]<em>uvb.UK + fixef(pmod3)[“nationUK”] + fixef(pmod3)[“uvb:nationUK”]</em>uvb.UK, col = “yellow”)</p>
+<p>lines(uvb.Italy, fixef(pmod3)[“(Intercept)”] + fixef(pmod3)[“uvb”]<em>uvb.Italy + fixef(pmod3)[“nationItaly”] + fixef(pmod3)[“uvb:nationItaly”]</em>uvb.Italy, col = “black”)</p>
+<p>lines(uvb.Ireland, fixef(pmod3)[“(Intercept)”] + fixef(pmod3)[“uvb”]<em>uvb.Ireland + fixef(pmod3)[“nationIreland”] + fixef(pmod3)[“uvb:nationIreland”]</em>uvb.Ireland, col = “lightgreen”)</p>
+<p>lines(uvb.Luxembourg, fixef(pmod3)[“(Intercept)”] + fixef(pmod3)[“uvb”]<em>uvb.Luxembourg + fixef(pmod3)[“nationLuxembourg”] + fixef(pmod3)[“uvb:nationLuxembourg”]</em>uvb.Luxembourg, col = “purple”)</p>
+<p>lines(uvb.Netherlands, fixef(pmod3)[“(Intercept)”] + fixef(pmod3)[“uvb”]<em>uvb.Netherlands + fixef(pmod3)[“nationNetherlands”] + fixef(pmod3)[“uvb:nationNetherlands”]</em>uvb.Netherlands, col = “orange”)</p>
+</div>
+<div id="add-a-legend" class="section level1">
+<h1>add a legend:</h1>
+<p>legend(8, 0.9, legend = c(“Belgium”, “W.Germany”, “Denmark”, “France”, “UK”, “Italy”, “Ireland”, “Luxembourg”, “Netherlands”), col = c(“blue”, “darkgreen”, “red”, “grey”, “yellow”, “black”, “lightgreen”, “purple”, “orange”), lty = c(1, 1, 1, 1, 1, 1, 1, 1, 1), cex = 1.6)</p>
+<p>Try to explain what was done when we computed for instance fixef(pmod3)[“(Intercept)”] + fixef(pmod3)[“uvb”]<em>uvb.Netherlands + fixef(pmod3)[“nationNetherlands”] + fixef(pmod3)[“uvb:nationNetherlands”]</em>uvb.Netherlands</p>
+<p>Examine the plot and try to explain these results.</p>
+<div id="case-iii-babyboomers-and-alcohol-addiction" class="section level2">
+<h2>CASE III: babyboomers and alcohol addiction</h2>
+<blockquote>
+<p>The dataset survdat1 contains the survival data on alcohol addiction, sex, age and being a baby boomer, from today’s lecture.</p>
+</blockquote>
+<div id="section-20" class="section level3">
+<h3>10.</h3>
+<div id="a.-19" class="section level4">
+<h4>a.</h4>
+<blockquote>
+<p>Load dataset survdat1 and package survival.</p>
+</blockquote>
+<pre class="r"><code>library(survival)
+load(here(&quot;data&quot;, &quot;Survdat1.Rdata&quot;))
+str(survdat1)</code></pre>
+<pre><code>&#39;data.frame&#39;:   3075 obs. of  7 variables:
+ $ id     : int  1 2 3 4 5 6 7 8 9 10 ...
+ $ clust  : int  1 1 1 1 1 1 1 1 1 1 ...
+ $ age    : num  58.6 62.5 59.8 59.1 66.6 ...
+ $ sex    : num  0 0 1 1 0 1 0 1 0 0 ...
+ $ a      : num  0 0 0 1 0 0 1 0 0 1 ...
+ $ endtime: num  12 12 10 4 12 7 11 12 0 12 ...
+ $ y1     : num  0 0 1 0 0 0 0 0 0 0 ...</code></pre>
+</div>
+<div id="b.-20" class="section level4">
+<h4>b.</h4>
+<blockquote>
+<p>Examine survdat1 using descriptive statistics as you see fit.</p>
+</blockquote>
+<pre class="r"><code>summary(survdat1)</code></pre>
+<pre><code>       id             clust            age             sex        
+ Min.   :   1.0   Min.   : 1.00   Min.   :56.97   Min.   :0.0000  
+ 1st Qu.: 769.5   1st Qu.:10.00   1st Qu.:59.47   1st Qu.:0.0000  
+ Median :1538.0   Median :18.00   Median :62.06   Median :0.0000  
+ Mean   :1538.0   Mean   :17.64   Mean   :62.00   Mean   :0.4937  
+ 3rd Qu.:2306.5   3rd Qu.:26.00   3rd Qu.:64.46   3rd Qu.:1.0000  
+ Max.   :3075.0   Max.   :32.00   Max.   :66.96   Max.   :1.0000  
+       a             endtime             y1        
+ Min.   :0.0000   Min.   : 0.000   Min.   :0.0000  
+ 1st Qu.:0.0000   1st Qu.: 3.000   1st Qu.:0.0000  
+ Median :1.0000   Median :11.000   Median :0.0000  
+ Mean   :0.5249   Mean   : 8.024   Mean   :0.1483  
+ 3rd Qu.:1.0000   3rd Qu.:12.000   3rd Qu.:0.0000  
+ Max.   :1.0000   Max.   :12.000   Max.   :1.0000  </code></pre>
+<p>Look at distribution of outcomes and survival distribution</p>
+<pre class="r"><code>require(ggfortify)
+survdat1 %&gt;%
+  mutate(dummy_event = T, 
+         status = factor(y1, levels = c(1, 0), 
+                         labels = c(&quot;event&quot;, &quot;censored&quot;))) %&gt;%
+  survfit(Surv(endtime, dummy_event)~status, data = .) %&gt;%
+  autoplot() + 
+  theme_minimal()</code></pre>
+<p><img src="figure/mim_assignments.Rmd/unnamed-chunk-132-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Most events occur before censoring, nice</p>
+</div>
+<div id="c.-15" class="section level4">
+<h4>c.</h4>
+<blockquote>
+<p>Be sure to make a cross-table of exposure a (being a babyboomer yes or no), and the indicator for alcohol addiction y1. Is it straightforward to estimate the probability of alcohol addiction at 12 months from the observed frequencies?</p>
+</blockquote>
+<p>No, there is sensoring</p>
+<pre class="r"><code>setDT(survdat1)
+survdat1[, tabl(y1, a)]</code></pre>
+<pre><code>      a
+y1        0    1 &lt;NA&gt;
+  0    1328 1291    0
+  1     133  323    0
+  &lt;NA&gt;    0    0    0</code></pre>
+</div>
+</div>
+<div id="section-21" class="section level3">
+<h3>11.</h3>
+<div id="a.-20" class="section level4">
+<h4>a.</h4>
+<blockquote>
+<p>Fit a Cox proportional-hazards model for time-to-alcohol addiction, with fixed effects of age, sex and being a babyboomer, and a normally distributed random effect for cluster. Call the model “cox2”.</p>
+</blockquote>
+<pre class="r"><code>cox2 &lt;- coxph(Surv(endtime, y1) ~ age + sex + a + frailty(clust, dist = &quot;gauss&quot;), data = survdat1)</code></pre>
+</div>
+<div id="b.-21" class="section level4">
+<h4>b.</h4>
+<blockquote>
+<p>Examine the model coefficients. Does being a babyboomer have a relevant effect on alcohol addiction in your opinion?</p>
+</blockquote>
+<pre class="r"><code>summary(cox2)</code></pre>
+<pre><code>Call:
+coxph(formula = Surv(endtime, y1) ~ age + sex + a + frailty(clust, 
+    dist = &quot;gauss&quot;), data = survdat1)
+
+  n= 3075, number of events= 456 
+
+                          coef   se(coef) se2     Chisq  DF    p
+age                       0.2197 0.01797  0.01796  149.3  1.00 0
+sex                       1.0144 0.09980  0.09975  103.3  1.00 0
+a                         1.4782 0.10720  0.10709  190.2  1.00 0
+frailty(clust, dist = &quot;ga                         1052.2 28.91 0
+
+    exp(coef) exp(-coef) lower .95 upper .95
+age     1.246     0.8028     1.203     1.290
+sex     2.758     0.3626     2.268     3.354
+a       4.385     0.2280     3.554     5.410
+
+Iterations: 6 outer, 24 Newton-Raphson
+     Variance of random effect= 1.439799 
+Degrees of freedom for terms=  1.0  1.0  1.0 28.9 
+Concordance= 0.873  (se = 0.014 )
+Likelihood ratio test= 1089  on 31.91 df,   p=0</code></pre>
+<p>Yes pretty high hazard ratio</p>
+</div>
+<div id="c.-16" class="section level4">
+<h4>c.</h4>
+<blockquote>
+<p>The estimated random effects for each cluster can be obtained from the model fit using:</p>
+</blockquote>
+<pre class="r"><code>frailties &lt;- cox2$frail
+mean(frailties)</code></pre>
+<pre><code>[1] -1.500942e-17</code></pre>
+<pre class="r"><code>var(frailties)</code></pre>
+<pre><code>[1] 1.34293</code></pre>
+<blockquote>
+<p>Examine these estimated frailties (mean, variance). Compare the variance with the estimated variance of the frailties from the model fit.</p>
+</blockquote>
+<p>Variance here is lower than in the summary</p>
+</div>
+</div>
+<div id="advanced" class="section level3">
+<h3>12. (advanced)</h3>
+<blockquote>
+<p>The probability of alcohol addiction at 12 months, corrected for censoring, is the cumulative incidence at 12 months. From the hazard, cumulative incidence at time t can be calculated as:</p>
+</blockquote>
+<blockquote>
+<p>For a Cox model with time-fixed covariates age, sex, a, and frailties B, this can be written as</p>
+</blockquote>
+<p>with the cumulative baseline hazard at time t, and indicating individuals j within clusters i. Using this expression, we can build a so called plugin estimator for the cumulative incidence of alcohol addiction at 12 months for the group of babyboomers, in the following manner: 1. Compute for each individual with a=1 (babyboomers):</p>
+<ol start="2" style="list-style-type: decimal">
+<li>The plugin estimator for cumulative incidence for the babyboomers is the average of the Fij’s calculated in the previous step. In an analogous way, the cumulative incidence of alcohol addiction in the non-babyboomer group can be calculated (removing the term for a=1 from the model).</li>
+</ol>
+<p>Exercise: perform these calculations to estimate the cumulative incidence of alcohol addiction at 12 months, for both groups. Note that the frailties first have to be pasted to the data, and that the cumulative baseline hazard can be obtained from the model using the basehaz() function. Probably you will have to look at the answers for the right R commands.</p>
+</div>
+</div>
 <div id="session-information" class="section level2">
 <h2>Session information</h2>
 <!-- Insert the session information into the document -->
@@ -3400,36 +4043,37 @@ attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
 other attached packages:
- [1] lmerTest_2.0-36     car_2.1-6           nlme_3.1-131       
- [4] lme4_1.1-15         Matrix_1.2-12       tidyr_0.8.0        
- [7] bindrcpp_0.2        broom_0.4.3         epistats_0.1.0     
-[10] ggplot2_2.2.1       here_0.1            purrr_0.2.4        
-[13] magrittr_1.5        data.table_1.10.4-3 dplyr_0.7.4        
+ [1] ggfortify_0.4.2     survival_2.41-3     mlmRev_1.0-6       
+ [4] lmerTest_2.0-36     car_2.1-6           nlme_3.1-131       
+ [7] lme4_1.1-15         Matrix_1.2-12       tidyr_0.8.0        
+[10] bindrcpp_0.2        broom_0.4.3         epistats_0.1.0     
+[13] ggplot2_2.2.1       here_0.1            purrr_0.2.4        
+[16] magrittr_1.5        data.table_1.10.4-3 dplyr_0.7.4        
 
 loaded via a namespace (and not attached):
- [1] Rcpp_0.12.15        lattice_0.20-35     assertthat_0.2.0   
- [4] rprojroot_1.3-2     digest_0.6.15       psych_1.7.8        
- [7] utf8_1.1.3          R6_2.2.2            plyr_1.8.4         
-[10] backports_1.1.2     acepack_1.4.1       MatrixModels_0.4-1 
-[13] evaluate_0.10.1     pillar_1.1.0        rlang_0.1.6        
-[16] lazyeval_0.2.1      rstudioapi_0.7      minqa_1.2.4        
-[19] SparseM_1.77        nloptr_1.0.4        rpart_4.1-12       
-[22] checkmate_1.8.5     rmarkdown_1.8       labeling_0.3       
-[25] splines_3.4.3       readr_1.1.1         stringr_1.2.0      
-[28] foreign_0.8-69      htmlwidgets_1.0     munsell_0.4.3      
-[31] compiler_3.4.3      pkgconfig_2.0.1     base64enc_0.1-3    
-[34] mnormt_1.5-5        mgcv_1.8-23         htmltools_0.3.6    
-[37] nnet_7.3-12         tidyselect_0.2.3    htmlTable_1.11.2   
-[40] gridExtra_2.3       tibble_1.4.2        Hmisc_4.1-1        
-[43] crayon_1.3.4        MASS_7.3-48         grid_3.4.3         
-[46] gtable_0.2.0        git2r_0.21.0        scales_0.5.0       
-[49] cli_1.0.0           stringi_1.1.6       reshape2_1.4.3     
-[52] latticeExtra_0.6-28 Formula_1.2-2       RColorBrewer_1.1-2 
-[55] tools_3.4.3         forcats_0.2.0       glue_1.2.0         
-[58] hms_0.4.1           parallel_3.4.3      pbkrtest_0.4-7     
-[61] survival_2.41-3     yaml_2.1.16         colorspace_1.3-2   
-[64] cluster_2.0.6       knitr_1.19          bindr_0.1          
-[67] haven_1.1.1         quantreg_5.35      </code></pre>
+ [1] binom_1.1-1         splines_3.4.3       Formula_1.2-2      
+ [4] assertthat_0.2.0    latticeExtra_0.6-28 yaml_2.1.16        
+ [7] pillar_1.1.0        backports_1.1.2     lattice_0.20-35    
+[10] quantreg_5.35       glue_1.2.0          digest_0.6.15      
+[13] RColorBrewer_1.1-2  checkmate_1.8.5     minqa_1.2.4        
+[16] colorspace_1.3-2    htmltools_0.3.6     plyr_1.8.4         
+[19] psych_1.7.8         pkgconfig_2.0.1     SparseM_1.77       
+[22] haven_1.1.1         scales_0.5.0        MatrixModels_0.4-1 
+[25] git2r_0.21.0        tibble_1.4.2        htmlTable_1.11.2   
+[28] mgcv_1.8-23         nnet_7.3-12         lazyeval_0.2.1     
+[31] pbkrtest_0.4-7      cli_1.0.0           mnormt_1.5-5       
+[34] crayon_1.3.4        evaluate_0.10.1     MASS_7.3-48        
+[37] forcats_0.2.0       foreign_0.8-69      tools_3.4.3        
+[40] hms_0.4.1           stringr_1.2.0       munsell_0.4.3      
+[43] cluster_2.0.6       compiler_3.4.3      rlang_0.1.6        
+[46] grid_3.4.3          nloptr_1.0.4        rstudioapi_0.7     
+[49] htmlwidgets_1.0     base64enc_0.1-3     labeling_0.3       
+[52] rmarkdown_1.8       gtable_0.2.0        reshape2_1.4.3     
+[55] R6_2.2.2            gridExtra_2.3       knitr_1.19         
+[58] utf8_1.1.3          bindr_0.1           Hmisc_4.1-1        
+[61] rprojroot_1.3-2     readr_1.1.1         stringi_1.1.6      
+[64] parallel_3.4.3      Rcpp_0.12.15        rpart_4.1-12       
+[67] acepack_1.4.1       tidyselect_0.2.3   </code></pre>
 </div>
 </div>
 
