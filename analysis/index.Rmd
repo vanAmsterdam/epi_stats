@@ -54,6 +54,8 @@ statistic courses in the Epidemiology Graduate Program of the Julius Center, Utr
 
 [assignments](mim_assignments.html)
 
+[presentation](mim_presentation_lc.html)
+
 # Notes and commmon errors
 
 **working directory**

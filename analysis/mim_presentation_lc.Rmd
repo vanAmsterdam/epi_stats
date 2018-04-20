@@ -1,0 +1,289 @@
+---
+title: "Presentation lung cancer survival prediction"
+author: "Wouter van Amsterdam"
+date: 2018-04-20
+output: word_document
+---
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+```
+
+<!-- Update knitr chunk options -->
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+<!-- Insert the date the file was last updated -->
+```{r last-updated, echo=FALSE, results='asis'}
+```
+
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+```{r code-version, echo=FALSE, results='asis'}
+```
+
+<!-- Add your analysis here -->
+
+
+## Setup R environment
+
+
+```{r}
+library(dplyr)
+library(data.table)
+library(magrittr)
+library(purrr)
+library(here) # for tracking working directory
+library(ggplot2)
+library(epistats)
+library(broom)
+library(survival)
+```
+
+## Get Data
+
+```{r}
+lc <- read.csv(here("data", "lungca.csv"))
+
+cont_vars <- c("age", "Karn.phys", "Karn.pt", "wtloss")
+
+lc %<>% 
+  mutate(status = status - 1,
+         sex = factor(sex, levels = c("1", "2"), labels = c("male", "female")),
+         wtloss = 0.453592 * wtloss,
+         ECOG.phys = factor(ifelse(ECOG.phys == "3", "2", ECOG.phys)),
+         ECOG.phys = factor(ECOG.phys, levels = c("0", "1", "2"), 
+                            labels = c("0", "1", "2-3")))
+         # age = age - mean(age))
+
+
+str(lc)
+```
+
+```{r}
+summary(lc)
+nna(lc)
+```
+
+```{r}
+table(lc$ECOG.phys, lc$sex)
+```
+
+
+```{r}
+lc %>%
+  data.table::melt(measure.vars = cont_vars) %>% 
+  ggplot(aes(x = value)) + 
+  geom_histogram() + 
+  facet_grid(sex~variable, scales = "free_x") + 
+  theme_minimal()
+```
+
+Recode Karnophsky as factors
+
+```{r}
+factor_vars <- c("center", "sex", "ECOG.phys", "Karn.phys", "Karn.pt")
+lc %<>%
+  mutate_at(vars(factor_vars), funs(as.factor))
+
+```
+
+
+
+```{r}
+lc %>%
+  ggplot(aes(x = calories, y = wtloss)) + 
+  geom_point() + theme_minimal()
+```
+
+```{r}
+lc %>%
+  mutate(
+    wt_loss_ratio = wtloss / calories
+  ) %>%
+  ggplot(aes(x = wt_loss_ratio)) + 
+  geom_histogram()
+```
+
+### Overview of survival
+
+```{r}
+require(ggfortify)
+surv_plot <- lc %>%
+  survfit(Surv(time / 365, status) ~ 1, data = .) %>%
+  autoplot() + theme_minimal() + 
+  labs(x = "Time (years)",
+       y = "Survival probability") + 
+  ggtitle("Overview of survival (Kaplan-Meier estimate)")
+surv_plot
+```
+
+```{r}
+survfit1 <- survfit(Surv(time, status) ~ 1, data = lc)
+print(survfit1)
+```
+
+
+```{r}
+require(ggfortify)
+lc %>%
+  mutate(dummy_variable = T,
+         status = factor(status, levels = c(0, 1), labels = c("censored", "deceased"))) %>%
+  survfit(Surv(time / 365, dummy_variable) ~ status, data = .) %>%
+  autoplot() + theme_minimal()
+```
+
+
+```{r}
+lc %>%
+  coxph(Surv(time, status) ~ age + sex + ECOG.phys + Karn.phys + Karn.pt + calories + wtloss, 
+        data = .) %>%
+  summary()
+```
+
+Model with random intercept per center
+
+Random slopes make no sense -> why different effect of age in different centers?
+
+```{r}
+fit1 <- coxph(Surv(time, status) ~ age + sex + ECOG.phys + Karn.phys + Karn.pt + calories * wtloss + frailty(center, dist = "gauss"),
+        data = lc)
+# summary(fit)
+
+fit2 <- coxph(Surv(time, status) ~ age + sex + ECOG.phys + Karn.phys + Karn.pt + calories * wtloss,
+        data = lc)
+
+fits <- list(with_random_full = fit1, no_random_full = fit2)
+
+map_df(fits, extractAIC)
+
+extractAIC(fit1)
+extractAIC(fit2)
+
+anova(fit1, fit2, test = "Chisq")
+```
+
+With manual likelihood-ratio test for chi-square distribution with 1 degree 
+of freedom
+
+```{r}
+pchisq(2*(logLik(fit1) - logLik(fit2)), df = 1, lower.tail = F)
+```
+
+
+Follow LRT the model with random intercept per center is better. 
+
+Use this random part, now reduce fixed part.
+
+```{r}
+fit_full <- coxph(Surv(time, status) ~ age + sex + ECOG.phys + Karn.phys + Karn.pt + calories * wtloss + frailty(center, dist = "gauss"), data = lc)
+                  
+```
+
+```{r}
+fit <- fit_full
+drop1(fit, test = "Chisq")
+```
+
+```{r}
+fit <- coxph(Surv(time, status) ~ sex + ECOG.phys + Karn.phys + Karn.pt + calories * wtloss + frailty(center, dist = "gauss"),
+        data = lc)
+drop1(fit, test = "Chisq")
+```
+
+```{r}
+fit <- coxph(Surv(time, status) ~ sex + ECOG.phys + Karn.phys + calories * wtloss + frailty(center, dist = "gauss"),
+        data = lc)
+drop1(fit, test = "Chisq")
+```
+
+
+```{r}
+fit <- coxph(Surv(time, status) ~ sex + ECOG.phys + Karn.phys + calories + wtloss + frailty(center, dist = "gauss"),
+        data = lc)
+drop1(fit, test = "Chisq")
+```
+
+```{r}
+fit <- coxph(Surv(time, status) ~ sex + ECOG.phys + Karn.phys + wtloss + frailty(center, dist = "gauss"),
+        data = lc)
+drop1(fit, test = "Chisq")
+```
+
+```{r}
+fit <- coxph(Surv(time, status) ~ sex + ECOG.phys + wtloss + frailty(center, dist = "gauss"),
+        data = lc)
+drop1(fit, test = "Chisq")
+```
+
+```{r}
+fit <- coxph(Surv(time, status) ~ sex + ECOG.phys + frailty(center, dist = "gauss"),
+        data = lc)
+drop1(fit, test = "Chisq")
+```
+
+```{r}
+fit_final <- coxph(Surv(time, status) ~ sex + ECOG.phys + frailty(center, dist = "gauss"), data = lc)
+summary(fit_final)
+```
+
+```{r}
+knitr::kable(extract_RR(fit_final))
+```
+
+```{r}
+cox.zph(fit_final)
+```
+
+```{r}
+lc %<>% mutate(lp = fit_final$linear.predictors)
+lc %>%
+  mutate(lp_quantile = quant(lp, n.tiles = 3, label = "risk group ")) %>%
+  survfit(Surv(time / 365, status) ~ lp_quantile, data = .) %>%
+  autoplot() + theme_minimal() +
+  labs(x = "Time (years)",
+       y = "Survival probability") + 
+  ggtitle("Overview of survival (Kaplan-Meier estimate)", "strata by terciles of linear predictor")
+```
+
+```{r}
+lc %>%
+  survfit(Surv(time / 365, status) ~ sex, data = .) %>%
+  autoplot() + theme_minimal() +
+  labs(x = "Time (years)",
+       y = "Survival probability") + 
+  ggtitle("Overview of survival (Kaplan-Meier estimate)", "strata by sex")
+```
+
+```{r}
+lc %>%
+  survfit(Surv(time / 365, status) ~ ECOG.phys, data = .) %>% 
+  autoplot() + theme_minimal() +
+  labs(x = "Time (years)",
+       y = "Survival probability") +
+  ggtitle("Overview of survival (Kaplan-Meier estimate)",
+          "strata by ECOG performance score")
+
+```
+
+
+```{r}
+fit_sex <- coxph(Surv(time, status)~ strata(sex) + ECOG.phys + frailty(center, "gauss"), data = lc)
+plot(survfit(fit_sex), fun = "cloglog",
+     main = "c-loglog plot for final model stratified by sex",
+     col = c("blue", "red"))
+legend("topleft", c("male", "female"), col = c("blue", "red"), lty = 1)
+fit_ecog <- coxph(Surv(time, status)~ sex + strata(ECOG.phys) + frailty(center, "gauss"), data = lc)
+plot(survfit(fit_ecog), fun = "cloglog", col = c("green", "blue", "red"),
+     main = "c-loglog plot for final model stratified by ECOG performance status")
+legend("topleft", legend = c("0", "1", "2-3"), lty = 1, col = c("green", "blue", "red"))
+```
+
+
+## Session information
+
+<!-- Insert the session information into the document -->
+```{r session-info}
+```

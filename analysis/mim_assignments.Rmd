@@ -162,7 +162,10 @@ fits[[2]] %>%
 
 ```{r}
 require(lme4)
-lmer(normexam ~ standlrt + (1 | school), data = london, REML = F)
+fit0 <- lm(normexam ~ standlrt, data = london)
+
+fit1 <- lmer(normexam ~ standlrt + (1 | school), data = london, REML = F)
+fit1
 ```
 
 
@@ -171,13 +174,18 @@ lmer(normexam ~ standlrt + (1 | school), data = london, REML = F)
 > Add a random slope to the model in (a). Interpret this model.
 
 ```{r}
-lmer(normexam ~ standlrt + (standlrt | school), data = london, REML = F)
+fit2 <- lmer(normexam ~ standlrt + (standlrt | school), data = london, REML = F)
+fit2
 ```
 
 On average, children with average baseline score, score avarage on the normalized 
 exams. There is a positive correlation with baseline score and normalized exam.
 Schools differ in overall normalized exam scores, and the correlation between 
 baseline score and normalized exam score differs between schools
+
+```{r}
+anova(fit2, fit1)
+```
 
 
 ## 3.
@@ -1694,6 +1702,477 @@ I'm inclined to add the sd of 'diagnose1' to the intercept, but the numbers
 don't add up.
 
 Residual sd = 0.058
+
+# Day 4
+
+> CASE I: Contraception use of women in Bangladesh
+Note: today’s quiz questions are about this case.
+
+## 1.
+
+> First, let’s make some preparations. The dataset Contraception is located in the package mlmRev. Function glmer() that is needed to fit the GLMMs is located in the package lme4.
+
+
+### a. 
+
+> Open RStudio and try to load package lme4 using library(lme4). Is the package installed?
+
+```{r}
+library(lme4)
+```
+
+### b. 
+
+> When the package lme4 is not on this computer, it needs to be installed using install.packages("lme4"). After installing the package, load it. When R complains about other missing packages, install and load those too.
+
+### c.
+
+> Load package mlmRev, if needed install it first.
+
+```{r}
+require(mlmRev)
+```
+
+
+## 2.
+
+> Examine dataset Contraception.
+
+### a. 
+
+> Load the data using data(Contraception). Open the description using help(Contraception) (and read it!).
+
+```{r}
+data("Contraception")
+cc <- Contraception
+str(cc)
+```
+
+
+### b.
+
+> Variable livch is a factor variable containing the number of living children a woman has at the time of the study, which could be used to explain the use of contraceptives. Hint: you can use Contraception$livch to access the column livch in the dataset Contraception. Do you think this coding is a wise choice? Would it have been better to use the exact number of children?
+
+This depends on whether the association is linear. 
+
+If it is linear, it would have been better to keep the absolute values,
+otherwise using them as factors should be pretty similar, except when 
+there is actually a big difference between 3 and more, which may actually 
+be possible as there are people who will never use contraception, and they 
+may have more than 3 children, while other people who would use contraception 
+can also 'stop at 3'
+
+In general: better to keep in raw data and only categorize when necessary 
+during statistical modeling later on.
+
+### c. 
+
+> age is the only continuous variable that is used, examine its distribution using the boxplot() function. Try the summary() function too. Does the distribution of age appear to be symmetrical? Does it need to be?
+
+```{r}
+boxplot(cc$age)
+```
+
+Not symmertrical, does not need to be (it is a determinant, the assumption 
+is that there is a linear relationsiop between the outcome, not on the 
+distribution of the determinant itself)
+
+### d.
+
+> Explore the dataset by examining different rows, for instance Contraception[1:10,] shows the first 10 rows, Contraception[100:110,] shows rows 100 to 110.
+
+```{r}
+cc[20:30,]
+```
+
+
+## 3.
+
+> Make some tables to examine the relationship between the use of contraceptives and different factors using the table() command. For more information on table(), use ?table.
+
+### a.
+
+ > Make a crosstable of urban and use. What’s the percentage of women in rural areas using contraception? And what’s the percentage of women in urban areas using contraception?
+
+We'll use data.table for easy subsetting
+ 
+```{r}
+setDT(cc)
+cc[, tabl(use, urban)]
+```
+
+Seems like more use in urban areas
+ 
+### b. 
+
+> Examine the crosstable of livch and use. Does there seem to be a relationship between the number of children and the use of contraception?
+
+```{r}
+cc[, tabl(use, livch)]
+```
+
+```{r}
+cc %>%
+  ggplot(aes(x = livch, fill = use)) + 
+  geom_bar()
+```
+
+
+Yes, most use for people with 2 living childer
+
+### c.
+
+> Does the use of contraception seem to differ between districts in this sample?
+
+```{r}
+cc %>%
+  group_by(district) %>%
+  summarize(mean_use = mean(use == "Y")) %>%
+  mutate(district = factor(district, levels = levels(district)[order(mean_use)])) %>%
+  ggplot(aes(y = district, x = mean_use)) + 
+  geom_point()
+```
+
+Yes, pretty different per district
+
+## 4.
+
+> We will fit regression models to predict contraception use as a function of the number of children, age, and whether women live in urban or rural areas.
+
+### a. 
+
+> Fit a standard logistic model for use, regressed on main effects of livch, age and urban. This can be done using:
+
+```{r}
+mod0 <- glm(use ~  livch + age + urban, family = binomial, data = cc)
+summary(mod0)
+```
+
+
+> Examine the coefficients using summary(mod0). 
+What  meaning does for instance the coefficient for age have? 
+
+Higher odds of using contraception in lower age
+
+> How do we obtain the odds ratio corresponding to the effect of age on contraception use? 
+Take exponent
+
+> Is the effect of age linear? (Make a table of proportions of contraceptive use against age, and make an appropriate plot.)
+
+We can do this by binning age, and calculating the log-odds of contraception 
+use in each stratum
+
+```{r}
+cc %>%
+  mutate(age_bin = quant(age, 10),
+         use_logical = use == "Y") %>%
+  group_by(age_bin) %>%
+  summarize(prop_ci_use = list(binom.confint_logical(use_logical))) %>%
+  mutate(
+    prop_use = map_dbl(prop_ci_use, "mean"),
+    prop_use_lo = map_dbl(prop_ci_use, "lower"),
+    prop_use_hi = map_dbl(prop_ci_use, "upper"),
+    logit_use = logit(prop_use),
+    logit_use_lo = logit(prop_use_lo),
+    logit_use_hi = logit(prop_use_hi)
+  ) %>% 
+  ggplot(aes(x = age_bin, y = logit_use, ymin = logit_use_lo, ymax = logit_use_hi)) + 
+  geom_errorbar()
+  
+```
+
+Clearly no linear trend, looks more like quadratic
+
+Though keep in mind that this is marginal over all other covariates.
+
+However since there are only a few and they are all discrete, it is 
+unlikely that co-'variation' between age and these other covariates would 
+explain this non-linear trend between age and the logit of use
+
+### b.
+
+> Adapt the previous model by adding a quadratic age component:
+
+```{r}
+mod1 <- glm(use ~  livch + age + I(age^2) + urban, family = binomial, data = cc)
+summary(mod1)
+drop1(mod1)
+```
+
+> Based on the Wald p-value of age2, did the model improve significantly? And if you compare the AIC’s?
+
+Both according to wald and AIC we should keep it in
+
+### c.
+
+> Now fit a logistic model for use, regressed on main effects of livch, age, I(age^2) and urban, and with a random intercept for each district. This can be done using:
+
+```{r}
+mod2 <- glmer(use ~ livch + age + I(age^2) + urban + (1 | district), family = binomial, data = cc)
+
+```
+
+> (Disregard any warning messages for now.)
+Examine the fixed coefficients of mod2, compare these to the coefficients of mod1.
+
+```{r}
+summary(mod2)
+```
+
+```{r}
+compareCoefs(mod2, mod1)
+```
+
+Using the random intercept per district, the fixed effect of livch is higher,
+
+linear effect of age is smaller, quadratic effect unchaged, fixed effect of 
+urban smaller
+
+### d.
+
+> The AIC can again be obtained from each model using the summary() function. Based on the AIC, do you prefer mod1 or mod2?
+
+```{r}
+AIC(mod2, mod1)
+```
+
+Prefer mod2
+
+### e.
+
+> We can also use a likelihood ratio test to compare mod1 and mod2. Do this as follows (commands can be pasted in R, comments appear after the # character):
+
+```{r}
+d1 <- as.numeric(-2*logLik(mod1)) #is the -2LL for mod1
+d2 <- as.numeric(-2*logLik(mod2)) #is the -2LL for mod2
+ldif <- d1 - d2 #is the -2LL difference
+degfr <- 1 #difference in the number of parameters
+pchisq(ldif, degfr, lower.tail = FALSE)/2 #to compute the p-value
+
+```
+
+Or:
+
+```{r}
+anova(mod2, mod1, test = "Chisq")
+```
+
+P-value of latter version is the same but not divided by 2
+
+> Why is the p-value divided by 2?
+
+Variance of random effects are always greater >= 0, so it can be tested 
+one-sided, thus the p-value divided by 2
+
+> Why is degfr equal to 1?
+
+1 additional parameter estimated: variance of random intercepts
+
+> Based on the likelihood ratio test, do you prefer mod1 or mod2?
+
+mod2
+
+### f. 
+
+> Fit model mod3, which is similar to mod2 but also contains a random “slope” for urban. Models mod2 and mod3 can be compared using anova(mod2, mod3). (Note that you could not compare mod1 and mod2 this way, because one contains a random explanatory variable and the other doesn’t.) Which model do you prefer? Try to interpret the coefficients of this model.
+
+```{r}
+mod3 <- glmer(use ~ livch + age + I(age^2) + urban + (urban | district), family = binomial, data = cc)
+anova(mod3, mod2, test = "Chisq")
+```
+
+Mod3 is better
+ 
+CASE II: Melanoma mortality
+
+5. 
+Preparation
+a.	Load dataset Mmmec and examine its help file.
+b.	How many rows does dataset Mmmec have? Use the nrow() command.
+c.	Explore dataset  Mmmec by looking at different sets of rows.
+
+6. 
+Descriptive statistics.
+a.	Examine whether the number of malignant melanoma deaths seems to be different for counties with a high dose of UVB versus counties with a low dose of UVB (dichotomizing using the median UVB dose). This can be done as follows, plotting two separate histograms:
+
+par(mfrow = c(2, 1)) #tell R to plot two graphs below each other in one figure
+hist(Mmmec$deaths[Mmmec$uvb >= median(Mmmec$uvb)], xlim = c(0, 350), ylim = c(0, 80), breaks = 10*(0:35)) #histogram for high UVB
+hist(Mmmec$deaths[Mmmec$uvb < median(Mmmec$uvb)], xlim = c(0, 350), ylim = c(0, 80), breaks = 10*(0:35)) #histogram for low UVB
+
+b.	Compare the two histograms.
+c.	What is the function of the xlim, ylim and breaks arguments for hist()?
+d.	Look at the help file for hist(), see if you can change the axis labels and the main title.
+Note that if needed, the graphics panel can be cleared using graphics.off(),
+
+7. 
+a.	Fit a Poisson regression model for deaths, regressed on a main effect of uvb. The model can be obtained using glm(), just as in exercise 4a. Choose the correct family. Use the argument offset = log(expected). Call the model pmod0. Is the estimated effect of UVB radiation on the number of malignant melanoma deaths in each county from pmod0 positive or negative?
+b. 	Fit a Poisson regression model for deaths, regressed on a main effect of uvb, and including a random intercept for region. Use the same offset as pmod0. Use function glmer(), and call this model pmod1. Is the estimated effect of UVB radiation on the number of malignant melanoma deaths in each county from pmod1 positive or negative?
+c.	Compare the fit of pmod0 and pmod1 using the AIC. Hint: this can be done just as in exercise 4d. Based on the AIC, do you prefer pmod0 or pmod1?
+d.	Based on the likelihood ratio test, do you prefer pmod0 or pmod1? Use the method from exercise 4e. You will need to explicitly ask for the maximum log likelihood, using the function logLik.
+
+8. 
+a.	Fit a model similar to pmod1, but also including a random slope for uvb within each region. Call this model pmod2.
+b.	Use anova() to compare pmod1 and pmod2. Which model do you prefer?
+
+ 
+9. 
+Let’s examine the effect of UVB radiation on the number of malignant melanoma deaths in more detail.
+a.	Fit a model similar to pmod1, but with a fixed main effect of nation, as well as a fixed interaction of nation with uvb. This can be done using:
+
+pmod3 <- glmer(deaths ~ uvb*nation + (1|region), family = poisson, data = Mmmec, offset = log(expected))
+
+b. 	Compare pmod1 and pmod3 using anova().
+c.	Examine the coefficients of pmod3.
+d.	To aid in the interpretation of pmod3, we will plot the predicted outcome ln(deaths/expected) against the UVB dose in each nation, using the fixed effects. R is a powerful tool for producing plots, but it can be complicated. We will build the plots in steps as follows:
+
+fixef(pmod3) #are the fixed effects from pmod3
+
+uvb.Belgium <- seq(min(Mmmec$uvb[Mmmec$nation == "Belgium"]), max(Mmmec$uvb[Mmmec$nation == "Belgium"]), 0.001) #is a sequence of possible uvb values within the observed range for Belgium, we will use this in the plots
+
+#similarly for the other nations:
+uvb.W.Germany <- seq(min(Mmmec$uvb[Mmmec$nation == "W.Germany"]), max(Mmmec$uvb[Mmmec$nation == "W.Germany"]), 0.001)
+uvb.Denmark  <- seq(min(Mmmec$uvb[Mmmec$nation == "Denmark"]), max(Mmmec$uvb[Mmmec$nation == "Denmark"]), 0.001)
+uvb.France <- seq(min(Mmmec$uvb[Mmmec$nation == "France"]), max(Mmmec$uvb[Mmmec$nation == "France"]), 0.001)
+uvb.UK <- seq(min(Mmmec$uvb[Mmmec$nation == "UK"]), max(Mmmec$uvb[Mmmec$nation == "UK"]), 0.001)
+uvb.Italy <- seq(min(Mmmec$uvb[Mmmec$nation == "Italy"]), max(Mmmec$uvb[Mmmec$nation == "Italy"]), 0.001)
+uvb.Ireland <- seq(min(Mmmec$uvb[Mmmec$nation == "Ireland"]), max(Mmmec$uvb[Mmmec$nation == "Ireland"]), 0.001)
+uvb.Luxembourg <- seq(min(Mmmec$uvb[Mmmec$nation == "Luxembourg"]), max(Mmmec$uvb[Mmmec$nation == "Luxembourg"]), 0.001)
+uvb.Netherlands <- seq(min(Mmmec$uvb[Mmmec$nation == "Netherlands"]), max(Mmmec$uvb[Mmmec$nation == "Netherlands"]), 0.001)
+
+graphics.off() #clear the graphics panel
+par(lwd = 3, cex.main = 1.6, cex.axis = 1.6, cex.lab = 1.6) #set some global parameters for the plot, line width is 3, we will use character size 1.6
+
+#plot the predicted outcome for Belgium (given the fixed effects):
+plot(uvb.Belgium, fixef(pmod3)["(Intercept)"] + fixef(pmod3)["uvb"]*uvb.Belgium, type = "l", col = "blue", xlim = c(-10, 15), ylim = c(-0.9, 0.9), xlab = "UVB", ylab = "Predicted ln(deaths/expected)")
+
+#add the other nations to the plot:
+lines(uvb.W.Germany, fixef(pmod3)["(Intercept)"] + fixef(pmod3)["uvb"]*uvb.W.Germany + fixef(pmod3)["nationW.Germany"] + fixef(pmod3)["uvb:nationW.Germany"]*uvb.W.Germany, col = "darkgreen")
+
+lines(uvb.Denmark, fixef(pmod3)["(Intercept)"] + fixef(pmod3)["uvb"]*uvb.Denmark + fixef(pmod3)["nationDenmark"] + fixef(pmod3)["uvb:nationDenmark"]*uvb.Denmark, col = "red")
+
+lines(uvb.France, fixef(pmod3)["(Intercept)"] + fixef(pmod3)["uvb"]*uvb.France + fixef(pmod3)["nationFrance"] + fixef(pmod3)["uvb:nationFrance"]*uvb.France, col = "grey")
+
+lines(uvb.UK, fixef(pmod3)["(Intercept)"] + fixef(pmod3)["uvb"]*uvb.UK + fixef(pmod3)["nationUK"] + fixef(pmod3)["uvb:nationUK"]*uvb.UK, col = "yellow")
+
+lines(uvb.Italy, fixef(pmod3)["(Intercept)"] + fixef(pmod3)["uvb"]*uvb.Italy + fixef(pmod3)["nationItaly"] + fixef(pmod3)["uvb:nationItaly"]*uvb.Italy, col = "black")
+
+lines(uvb.Ireland, fixef(pmod3)["(Intercept)"] + fixef(pmod3)["uvb"]*uvb.Ireland + fixef(pmod3)["nationIreland"] + fixef(pmod3)["uvb:nationIreland"]*uvb.Ireland, col = "lightgreen")
+
+lines(uvb.Luxembourg, fixef(pmod3)["(Intercept)"] + fixef(pmod3)["uvb"]*uvb.Luxembourg + fixef(pmod3)["nationLuxembourg"] + fixef(pmod3)["uvb:nationLuxembourg"]*uvb.Luxembourg, col = "purple")
+
+lines(uvb.Netherlands, fixef(pmod3)["(Intercept)"] + fixef(pmod3)["uvb"]*uvb.Netherlands + fixef(pmod3)["nationNetherlands"] + fixef(pmod3)["uvb:nationNetherlands"]*uvb.Netherlands, col = "orange")
+
+#add a legend:
+legend(8, 0.9, legend = c("Belgium", "W.Germany", "Denmark", "France", "UK", "Italy", "Ireland", "Luxembourg", "Netherlands"), col = c("blue", "darkgreen", "red", "grey", "yellow", "black", "lightgreen", "purple", "orange"), lty = c(1, 1, 1, 1, 1, 1, 1, 1, 1), cex = 1.6)
+
+
+Try to explain what was done when we computed for instance fixef(pmod3)["(Intercept)"] + fixef(pmod3)["uvb"]*uvb.Netherlands + fixef(pmod3)["nationNetherlands"] + fixef(pmod3)["uvb:nationNetherlands"]*uvb.Netherlands
+	
+
+Examine the plot and try to explain these results.
+ 
+## CASE III: babyboomers and alcohol addiction 
+
+> The dataset survdat1 contains the survival data on alcohol addiction, sex, age and being a baby boomer, from today’s lecture.
+
+### 10. 
+
+#### a.
+
+> Load dataset survdat1 and package survival.
+
+```{r}
+library(survival)
+load(here("data", "Survdat1.Rdata"))
+str(survdat1)
+```
+
+#### b.
+
+> Examine survdat1 using descriptive statistics as you see fit.
+
+```{r}
+summary(survdat1)
+```
+
+Look at distribution of outcomes and survival distribution
+
+```{r}
+require(ggfortify)
+survdat1 %>%
+  mutate(dummy_event = T, 
+         status = factor(y1, levels = c(1, 0), 
+                         labels = c("event", "censored"))) %>%
+  survfit(Surv(endtime, dummy_event)~status, data = .) %>%
+  autoplot() + 
+  theme_minimal()
+```
+
+Most events occur before censoring, nice
+
+#### c.
+
+> Be sure to make a cross-table of exposure a (being a babyboomer yes or no), and the indicator for alcohol addiction y1. Is it straightforward to estimate the probability of alcohol addiction at 12 months from the observed frequencies?
+
+No, there is sensoring
+
+```{r}
+setDT(survdat1)
+survdat1[, tabl(y1, a)]
+```
+
+
+### 11.
+
+#### a.
+
+> Fit a Cox proportional-hazards model for time-to-alcohol addiction, with fixed effects of age, sex and being a babyboomer, and a normally distributed random effect for cluster. Call the model “cox2”.
+
+```{r}
+cox2 <- coxph(Surv(endtime, y1) ~ age + sex + a + frailty(clust, dist = "gauss"), data = survdat1)
+```
+
+#### b.
+
+> Examine the model coefficients. Does being a babyboomer have a relevant effect on alcohol addiction in your opinion?
+
+```{r}
+summary(cox2)
+```
+
+Yes pretty high hazard ratio
+
+#### c. 
+
+> The estimated random effects for each cluster can be obtained from the model fit using:
+
+```{r}
+frailties <- cox2$frail
+mean(frailties)
+var(frailties)
+```
+
+> Examine these estimated frailties (mean, variance). Compare the variance with the estimated variance of the frailties from the model fit.
+
+Variance here is lower than in the summary
+
+### 12. (advanced)
+
+> The probability of alcohol addiction at 12 months, corrected for censoring, is the cumulative incidence at 12 months. From the hazard, cumulative incidence at time t can be calculated as:
+ 
+> For a Cox model with time-fixed covariates age, sex, a, and frailties B, this can be written as
+ 
+
+
+with  the cumulative baseline hazard at time t, and indicating individuals j within clusters i. Using this expression, we can build a so called plugin estimator for the cumulative incidence of alcohol addiction at 12 months for the group of babyboomers, in the following manner:
+1.	Compute for each individual with a=1 (babyboomers):
+ 
+
+2.	The plugin estimator for cumulative incidence for the babyboomers is the average of the Fij’s calculated in the previous step.
+In an analogous way, the cumulative incidence of alcohol addiction in the non-babyboomer group can be calculated (removing the term for a=1 from the model).
+
+Exercise: perform these calculations to estimate the cumulative incidence of alcohol addiction at 12 months, for both groups. Note that the frailties first have to be pasted to the data, and that the cumulative baseline hazard can be obtained from the model using the basehaz() function. Probably you will have to look at the answers for the right R commands.
+
 
 ## Session information
 
