@@ -1,0 +1,32 @@
+# Practical Day 1: Exercise 3
+# Posterior predictive check
+
+model{
+# likelihood of the data entered as a sequence of n Bernoulli trials
+
+  for (i in 1:n){
+    x[i] ~ dbern(ppe)
+  }
+
+# prior
+  ppe ~ dbeta(1,1)
+
+# discrepancy measure in the data
+  ppe1 <- sum(x[1:70])/70
+  ppe2 <- sum(x[71:141])/71
+  dif <- ppe1-ppe2
+
+# posterior predictive distribution
+  postpred.ype1 ~ dbin(ppe, 70)
+  postpred.ype2 ~ dbin(ppe, 71)
+
+# discrepancy measure in the replicated data
+  postpred.ppe1 <- sum(postpred.ype1)/70
+  postpred.ppe2 <- sum(postpred.ype2)/71
+  postpred.dif <- postpred.ppe1-postpred.ppe2
+
+# posterior predictive p-value
+  p <- step(postpred.dif - dif)
+
+}
+

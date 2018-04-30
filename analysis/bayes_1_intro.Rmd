@@ -1,0 +1,113 @@
+---
+title: "Intro to Bayesian statistics"
+author: "Wouter van Amsterdam"
+date: 2018-04-30
+output: html_notebook
+---
+
+# Intro
+
+Tutor: Herbert Hoijtink
+
+# Overview
+
+1. Prior distribution
+2. Density of the data
+3. Posterior distribution
+
+
+
+# Prior distributions
+
+Prior elicitation: getting formal prior knowledge from researchers
+
+## Beta distribution
+
+Probablilities: Beta distribution
+
+$$Beta(\alpha = n_{successes} + 1, \beta = n_{failures} + 1)$$
+
+
+Always formulate a prior distirbution, even if you don't use it in your analysis
+
+$$h(\theta) \sim \theta^{\alpha-1}(1-\theta)^{\beta-1}$$
+
+Mode of Beta:
+
+$$Mode(\theta) = \frac{\alpha-1}{\alpha+\beta-2}$$
+
+
+Mean 
+
+$$E(\theta) = \frac{\alpha}{\alpha + \beta}$$
+
+Variance
+
+$$var(\theta) = \frac{\alpha\beta}{(\alpha+\beta)^2(\alpha+\beta+1)}$$
+
+
+
+With bayes:
+
+Sample parameters from posterior distributions
+
+You can do inference on combinations of the parameters, 
+just sample them, create combination, and then compute mean / variance / median / 95% CI etc
+
+
+
+## P-value
+
+$$P = P(T(y^{rep})>T(y)|H_0)$$
+
+Where $T$ is the test statistic.
+
+They are only usefull when the null-hypothesis is a probable description of the 
+population you are interested in.
+
+
+Anything between setting up experiments and doing analysis that involves 
+using your data is questionable.
+
+
+For t-test and F-test (both are pivot tests):
+p-value is uniformly distributed under null-hypothesis
+
+Not pivot tests:
+
+- chi-square test
+- likelihood ratio test
+
+Then asymptotically, p-value is uniformly distributed (not for smaller samples)
+
+
+P value is probability of data under null-hypothesis, but not probability 
+of the hypothesis given the data.
+
+
+### P-value in Bayesian statistics
+
+Posterior predictive p-value
+
+Discrepency measure (test statistic that also takes into account the prior knowledge)
+
+1. take null model, with distribution with unknown theta (model should be interesting and tell something!)
+2. calculate posterior probability from data and prior distributions
+3. sample theta from posterior distribution
+4. sample data with sampled theta from hypothesized model
+5. calculate discrepency measure
+6. calculate proportions of successes and failures
+
+In general, not normally distributed under null-hypothesis
+
+These p-value should be close to 0.5 to reject null-hypothesis
+
+Start with model that is interesting
+
+
+Sobel: theory needs to be falsifyable (Popper) but also plausible
+
+
+
+Science is not objective, objectiveness is the asymptote of science
+

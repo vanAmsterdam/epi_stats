@@ -1,0 +1,19 @@
+# Lab meeting 1: Exercise 1
+
+model{
+
+# for the likelihood of the data
+ype ~ dbin(ppe,npe)
+ypc ~ dbin(ppc,npc)
+
+# prior distributions
+ppe ~ dbeta(41,66)
+ppc ~ dbeta(46,86)
+
+# other interesting quantities
+
+# contrast
+ratio <- ppe/ppc
+risk_diff <- ppe - ppc
+
+}
