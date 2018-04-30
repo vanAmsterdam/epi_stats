@@ -106,7 +106,7 @@ Start with model that is interesting
 
 
 Sobel: theory needs to be falsifyable (Popper) but also plausible
-
+ 
 
 
 Science is not objective, objectiveness is the asymptote of science
