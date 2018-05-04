@@ -1,0 +1,20 @@
+
+model{
+beta.0 ~ dnorm(0, .001); # prior for the intercept
+beta.1 ~ dnorm(0, .001); # prior for regression coefficient for x
+beta.2 ~ dnorm(0, .001); # prior for regression coefficient for z
+beta.3 ~ dnorm(0, .001); # prior for regression coefficient for intercation xz
+tau.e ~ dgamma(.5, .5); # prior for the error precision for Y
+
+sigma2.e<-1/tau.e
+sigma.e<-sqrt(sigma2.e)
+
+# Conditional probability of the data
+# A regression model
+
+for(i in 1:N){
+y.prime[i] <- beta.0 + beta.1*x[i] + beta.2*z[i] + beta.3*x[i]*z[i] ; # predicted value of Y
+y[i] ~ dnorm(y.prime[i], tau.e); # conditional distribution of y
+}
+}
+

@@ -11,9 +11,9 @@
 
 <meta name="author" content="Wouter van Amsterdam" />
 
-<meta name="date" content="2018-04-30" />
+<meta name="date" content="2018-05-02" />
 
-<title>Intro to Bayesian statistics</title>
+<title>Bayes hypothesis testing</title>
 
 <script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -304,169 +304,95 @@ div.tocify {
 
 
 
-<h1 class="title toc-ignore">Intro to Bayesian statistics</h1>
+<h1 class="title toc-ignore">Bayes hypothesis testing</h1>
 <h4 class="author"><em>Wouter van Amsterdam</em></h4>
-<h4 class="date"><em>2018-04-30</em></h4>
+<h4 class="date"><em>2018-05-02</em></h4>
 
 </div>
 
 
-<div id="intro" class="section level1">
-<h1>Intro</h1>
-<p>Tutor: Herbert Hoijtink</p>
-</div>
-<div id="overview" class="section level1">
-<h1>Overview</h1>
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+<!-- Update knitr chunk options -->
+<!-- Insert the date the file was last updated -->
+<p><strong>Last updated:</strong> 2018-05-04</p>
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+<p><strong>Code version:</strong> fc4400b</p>
+<!-- Add your analysis here -->
+<div id="define-hypotheses" class="section level1">
+<h1>Define hypotheses</h1>
+<p>Formulate meaningfull hypotheses based on theory</p>
+<p>Bayes factor:</p>
+<p>Balance fit with complexity of 2 hypothesis</p>
+<p>Bayes factor: the support of the data for the informative hypothesis, is x times larger than the support for the uninformative hypothesis</p>
+<p>Fit: scale 0 to 1 (1 is perfect) Complexity: e.g. number of possible orderings of means (mu1 &gt; mu2 &gt; mu3 is 1 / 6 possible permutations)</p>
+<p>Possible set of hypothesis</p>
+<ul>
+<li>Hi</li>
+<li>Hi` (competing hypothesis)</li>
+<li>Hc (complementing hypothesis)</li>
+</ul>
+<p>Interpretation is in terms of odds (can be turned into conditional hypothesis probabilities, conditional on the data)</p>
+<p>Possible to compute:</p>
+<p>BF informative vs uninformative BF informative vs complementing</p>
+<p>Bayes factor</p>
 <ol style="list-style-type: decimal">
-<li>Prior distribution</li>
-<li>Density of the data</li>
-<li>Posterior distribution</li>
+<li>is a measure of support (also for null-hypothesis)</li>
+<li>bayes factor can be indecisive (around 1)</li>
+<li>can update: collect more data</li>
+<li>can compar more than two hypotheses</li>
+<li>something is going on, and we do know what</li>
+</ol>
+<p>Drawbacks</p>
+<ul>
+<li>not controlling overall type 1 and 2 errors (only conditional errors)</li>
+<li>no cut-off value for decisions (need to think of what level of evidence you want)</li>
+<li>multiple operalizations of a single hypothesis possible (subjective, pre-formulate and publish)</li>
+</ul>
+<p>Posterior model probability</p>
+<ul>
+<li>odds to probability -&gt; Bayesian error probability (variant on type 1 and 2 errors)</li>
+<li>evaluates both fit and complexity</li>
+<li>not a classical probability</li>
+<li>add up to 1 for all hypotheses tested</li>
+<li>sensitive to number of hypotheses (only include relevant hypotheses)</li>
+<li>they are the probability of the hypothesis, given the data (not the probability of the data, given the hypothesis)</li>
+</ul>
+<p>Don’t develop model and perform hypothesis testing on the same data</p>
+<p>Bayesian model update: study synthesis</p>
+<p>Can combine PMPs from different studies</p>
+<div id="technical-detials-in-bain" class="section level3">
+<h3>Technical detials (in Bain)</h3>
+<p>Based on multi-normal distribution approximations of the posterior distribution</p>
+<p>Prior distribution based on (part of) the data, should be centered at 0, uninformative, and of the same shape as the posterior distribution</p>
+<p>Complexity of hypothesis is the proportion of the prior distribution in agreement with the hypothesis</p>
+<p>Fit is proportion of posterio distribution in agreement with the hypothesis</p>
+<p>Bayesian model averaging / ensembling; (selecting subsets of predictors)</p>
+<p>Utrecht Applied Data Science</p>
+<ol start="6" style="list-style-type: decimal">
+<li>Gu. Mulder, Approximate adjusted fractional Bayes factors</li>
 </ol>
 </div>
-<div id="prior-distributions" class="section level1">
-<h1>Prior distributions</h1>
-<p>Prior elicitation: getting formal prior knowledge from researchers</p>
-<div id="beta-distribution" class="section level2">
-<h2>Beta distribution</h2>
-<p>Probablilities: Beta distribution</p>
-<p><span class="math display">\[Beta(\alpha = n_{successes} + 1, \beta = n_{failures} + 1)\]</span></p>
-<p>Always formulate a prior distirbution, even if you don’t use it in your analysis</p>
-<p><span class="math display">\[h(\theta) \sim \theta^{\alpha-1}(1-\theta)^{\beta-1}\]</span></p>
-<p>Mode of Beta:</p>
-<p><span class="math display">\[Mode(\theta) = \frac{\alpha-1}{\alpha+\beta-2}\]</span></p>
-<p>Mean</p>
-<p><span class="math display">\[E(\theta) = \frac{\alpha}{\alpha + \beta}\]</span></p>
-<p>Variance</p>
-<p><span class="math display">\[var(\theta) = \frac{\alpha\beta}{(\alpha+\beta)^2(\alpha+\beta+1)}\]</span></p>
-<p>With bayes:</p>
-<p>Sample parameters from posterior distributions</p>
-<p>You can do inference on combinations of the parameters, just sample them, create combination, and then compute mean / variance / median / 95% CI etc</p>
-</div>
-<div id="p-value" class="section level2">
-<h2>P-value</h2>
-<p><span class="math display">\[P = P(T(y^{rep})&gt;T(y)|H_0)\]</span></p>
-<p>Where <span class="math inline">\(T\)</span> is the test statistic.</p>
-<p>They are only usefull when the null-hypothesis is a probable description of the population you are interested in.</p>
-<p>Anything between setting up experiments and doing analysis that involves using your data is questionable.</p>
-<p>For t-test and F-test (both are pivot tests): p-value is uniformly distributed under null-hypothesis</p>
-<p>Not pivot tests:</p>
-<ul>
-<li>chi-square test</li>
-<li>likelihood ratio test</li>
-</ul>
-<p>Then asymptotically, p-value is uniformly distributed (not for smaller samples)</p>
-<p>P value is probability of data under null-hypothesis, but not probability of the hypothesis given the data.</p>
-<div id="p-value-in-bayesian-statistics" class="section level3">
-<h3>P-value in Bayesian statistics</h3>
-<p>Posterior predictive p-value</p>
-<p>Discrepency measure (test statistic that also takes into account the prior knowledge)</p>
-<ol style="list-style-type: decimal">
-<li>take null model, with distribution with unknown theta (model should be interesting and tell something!)</li>
-<li>calculate posterior probability from data and prior distributions</li>
-<li>sample theta from posterior distribution</li>
-<li>sample data with sampled theta from hypothesized model</li>
-<li>calculate discrepency measure</li>
-<li>calculate proportions of successes and failures</li>
-</ol>
-<p>In general, not normally distributed under null-hypothesis</p>
-<p>These p-value should be close to 0.5 to reject null-hypothesis</p>
-<p>Start with model that is interesting</p>
-<p>Sobel: theory needs to be falsifyable (Popper) but also plausible</p>
-<p>** Science is not objective, objectiveness is the asymptote of science **</p>
-</div>
-</div>
-</div>
-<div id="day-2-gibbs-sampler" class="section level1">
-<h1>Day 2 Gibbs sampler</h1>
-<p>Posterior distribution of parameters is what we want</p>
-<p>Situtuations</p>
-<ul>
-<li>analytical expression (1 parameter)</li>
-<li>Gibbs sampler (sample parameters from known distribution)</li>
-<li>Metropolis-Hastings (sample parameters from unknown shape)</li>
-</ul>
-<p>Gibbs is special case of Hastings, which is special case of Markov Chain Monte Carlo</p>
-<div id="gibbs" class="section level2">
-<h2>Gibbs</h2>
-<p>Conjugate priors: posterior is the same as prior distirbution</p>
-<p>Trace plots should be fat caterpillars (not going anywhere)</p>
-</div>
-<div id="metropolis-hastings" class="section level2">
-<h2>Metropolis-Hastings</h2>
-<p>Fit a known distribution (proposal distribution) to the empirical posterior distribution</p>
-<p>Assessment of convergence: Gelman and Rubin statistic</p>
-<p>within-chain variability / (within chain + between chain variability)</p>
-<p>Should be close to 1 (between chain variation should be low)</p>
-<p>Problems with convergence: narrow bivariate (/ multivariate) distribution: hard to sample the whole distribution</p>
-<div id="convergence-check" class="section level3">
-<h3>Convergence check</h3>
-<ul>
-<li>trace plot</li>
-<li>gelman rubin statisic</li>
-<li>running quantiles</li>
-<li>autocorrelations</li>
-</ul>
-<p>No verification of convergence</p>
-<p>If parameters did not converge, you can:</p>
-<ul>
-<li>Use (many) more iterations</li>
-<li>Use a different parametrization (e.g., center predictors)</li>
-<li>Use different priors (e.g., multivariate normal prior (i.e., dmnorm(,)) for parameters which are correlated)</li>
-<li>Use other initial values</li>
-</ul>
-</div>
-</div>
-</div>
-<div id="day-2-deviance-information-criterion" class="section level1">
-<h1>Day 2 Deviance information criterion</h1>
-<ul>
-<li>hypothesis testing: special case of comparing 2 nested models</li>
-<li>model selection: compare 2 or more models</li>
-</ul>
-<p>Bayesian options</p>
-<ul>
-<li>Bayes factor</li>
-<li>Posterior predictive P-value (hypothesis testing)</li>
-<li>Deviance information factor</li>
-</ul>
-<div id="deviance-information-factor" class="section level2">
-<h2>Deviance information factor</h2>
-<p>model misfit + model complexity</p>
-<p>smaller is better</p>
-<p><span class="math display">\[AIC = -2 \log(f(y|\hat{\theta}_y) + 2p\]</span></p>
-<p>AIC = Kullback-Leibler distance</p>
-<p>BIC = maximize the marginal model probability (cf. Bayes Factor)</p>
-<p><span class="math display">\[BIC = -2 \log(f(y|\hat{\theta}_y) + p\log(n)\]</span></p>
-<p><span class="math display">\[DIC = -2 \log(f(y|\bar{\theta}_y) + p_D\]</span></p>
-<p>Where <span class="math inline">\(\bar{\theta}_y\)</span> the Bayesian parameter estimate And <span class="math inline">\(p_D\)</span> the dimensionality of the model (harder to determine)</p>
-<p>True distribution: <span class="math inline">\(p(.)\)</span> model under consideration: <span class="math inline">\(f(.|\theta)\)</span></p>
-<p>K-L distance</p>
-<p><span class="math display">\[E_{p(y)}[\log p(y) - \log f(y|\theta)]\]</span></p>
-<p>Derivation of DIC is based on finding an expression for the <strong>bias</strong></p>
-<p>Spiegelalter paper for derivation of DIC + 20 responses</p>
-<p>Other expression</p>
-<p><span class="math display">\[DIC = Dbar = \]</span></p>
-<p>Rules of thumb</p>
-<ul>
-<li>difference &gt; 10: model with higher DIC is ruled out</li>
-<li>between 5 and 10: difference is still substantial</li>
-<li>difference &lt; 5: warrant definite conclusions</li>
-</ul>
-<p>Comparisons of models can be hard when:</p>
-<ul>
-<li>one model integrates out dependencies of parameters</li>
-<li>other model uses conditional parameters (each conditional on the others)</li>
-</ul>
-<p>Comparing models with AIC (marginal vs condiational / cluster): Vaida</p>
-<p>Comparing DIC with AIC</p>
-<p>In a random effects modeling context: - DIC is based on f (y|z, theta): Inferences to other observations from same clusters - AIC is (typically) based on f (y|theta): Inferences to other clusters from same population - BIC is based on f (y): Inferences to other populations (?)</p>
-<p>In a more general context, DIC is sometimes described as a Bayesian generalization of the AIC.</p>
-<ul>
-<li>Parameterization of DIC: approximate posterio normaily is preferred (due to 2nd order Taylor expansion based on normal distribution)</li>
-<li>when stochastic parents is descrete node: unclear if DIC is defined</li>
-</ul>
-<p>pm mail Email: <a href="mailto:E.L.Hamaker@uu.nl">E.L.Hamaker@uu.nl</a></p>
-<p>Faster algorithm: Hamiltonian MC</p>
+<div id="session-information" class="section level2">
+<h2>Session information</h2>
+<!-- Insert the session information into the document -->
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 3.3.2 (2016-10-31)
+Platform: x86_64-apple-darwin13.4.0 (64-bit)
+Running under: macOS Sierra 10.12.6
+
+locale:
+[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+loaded via a namespace (and not attached):
+ [1] backports_1.1.0 magrittr_1.5    rprojroot_1.2   tools_3.3.2    
+ [5] htmltools_0.3.6 yaml_2.1.16     Rcpp_0.12.14    stringi_1.1.6  
+ [9] rmarkdown_1.8   knitr_1.18      git2r_0.20.0    stringr_1.2.0  
+[13] digest_0.6.13   evaluate_0.10.1</code></pre>
 </div>
 </div>
 

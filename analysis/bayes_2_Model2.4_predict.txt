@@ -1,0 +1,58 @@
+# Bayes cursus EPI/IOPS
+# Practical Day 2: Exercise 1 and 2
+
+model{
+
+  # likelihood of the data
+  for (i in 1:length(depr)){
+    logit(p[i]) <- alpha + b.gender * gender[i] + b.age * age[i] + b.problems * problems[i] + b.household * household[i]
+    depr[i] ~ dbern(p[i])
+  }
+
+
+
+
+  # prior distributions for the intercept and regression coefficients
+  alpha ~ dnorm(0, 0.0001)
+  b.gender ~ dnorm(0, 0.0001)
+  b.age ~ dnorm(0, 0.0001)
+  b.problems ~ dnorm(0, 0.0001)
+  b.household ~ dnorm(0, 0.0001)
+
+
+
+
+  # odds ratios
+  odds0 <- exp(alpha)
+  or.gender <- exp(b.gender)
+  or.age <- exp(b.age)
+  or.problems <- exp(b.problems)
+  or.household <- exp(b.household)
+
+
+  # prediction of depression for new patient
+  pred_depr <- depr[1047]
+  pred_p <- p[1047]
+
+
+
+
+  # variables not in the model
+
+#  mgender <- mean(gender[])
+#  mage <- mean(age[])
+#  mconsult <- mean(consult[])
+#  meduc <- mean(educ[])
+#  mhousehold <- mean(household[])
+#  mpartner <- mean(partner[])
+#  mdiagnosis <- mean(diagnosis[])
+#  mproblems <- mean(problems[])
+#  msomatic <- mean(somatic[])
+#  mantidep <- mean(antidep[])
+#  mdepGP <- mean(depGP[])
+#  mcidi1 <- mean(cidi1[])
+#  mcidi2 <- mean(cidi2[])
+
+
+
+}

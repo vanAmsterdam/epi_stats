@@ -1,0 +1,29 @@
+
+model {
+############################################
+  # Prior distributions
+############################################
+  beta.0.m ~ dnorm(1, .001); # prior for the intercept for M
+  beta.0.y ~ dnorm(1, .001); # prior for the intercept for Y
+
+  a ~ dnorm(0, .01); # prior for a
+  b ~ dnorm(0, .01); # prior for b
+
+  cp ~ dnorm(0, .11); # prior for c?
+  tau.e.M ~ dgamma(.5, .5); # prior for the error precision for M
+  tau.e.Y ~ dgamma(.5, .5); # prior for the error precision for Y
+  
+  ab <-a*b
+
+############################################
+  # Conditional probability of the data
+  # A regression model
+############################################
+  for(i in 1:N){
+    m.prime[i] <- beta.0.m + a*(x[i]); # predicted value of M, predictor is mean-centered in R
+    y.prime[i] <- beta.0.y + cp*(x[i]) + b*(m[i]) ; # predicted value of Y, predictor is mean-centered in R
+    m[i] ~ dnorm(m.prime[i], tau.e.M); # conditional distribution of m
+    y[i] ~ dnorm(y.prime[i], tau.e.Y); # conditional distribution of y
+  }  
+}
+

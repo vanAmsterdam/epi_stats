@@ -1,0 +1,1404 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+<meta name="author" content="Wouter van Amsterdam" />
+
+<meta name="date" content="2018-05-03" />
+
+<title>Bayesian statistics assignments day 4, regression, mediation and moderation</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/font-awesome-4.5.0/css/font-awesome.min.css" rel="stylesheet" />
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+
+<div class="container-fluid main-container">
+
+<!-- tabsets -->
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+</script>
+
+<!-- code folding -->
+
+
+
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+  padding-left: 25px;
+  text-indent: 0;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">epi_stats</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/jdblischak/workflowr">
+    <span class="fa fa-github"></span>
+     
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">Bayesian statistics assignments day 4, regression, mediation and moderation</h1>
+<h4 class="author"><em>Wouter van Amsterdam</em></h4>
+<h4 class="date"><em>2018-05-03</em></h4>
+
+</div>
+
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+<!-- Update knitr chunk options -->
+<!-- Insert the date the file was last updated -->
+<p><strong>Last updated:</strong> 2018-05-04</p>
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+<p><strong>Code version:</strong> fc4400b</p>
+<!-- Add your analysis here -->
+<pre class="r"><code>library(dplyr)
+library(data.table)
+library(magrittr)
+library(purrr)
+library(here) # for tracking working directory
+library(ggplot2)
+library(epistats)
+library(broom)
+library(rjags)</code></pre>
+<div id="day-4" class="section level1">
+<h1>Day 4</h1>
+<div id="linear-regression" class="section level2">
+<h2>Linear regression</h2>
+<pre class="r"><code># This code runs a Bayesian linear regression analysis using the package rjags.
+# To start, import the data set LinearRegressionCubic.csv.
+
+MyData &lt;- read.csv(file=here(&quot;data&quot;, &quot;LinearRegressionCubic.csv&quot;), header=TRUE, sep=&quot;,&quot;)
+N&lt;-dim(MyData)[1]
+str(MyData)</code></pre>
+<pre><code>&#39;data.frame&#39;:   12 obs. of  2 variables:
+ $ X: num  3.941 3.241 6.039 0.893 4.874 ...
+ $ Y: num  4.37 3.9 5.33 3.32 5.05 ...</code></pre>
+<p>Define priors and likelihood in bugs language</p>
+<pre class="r"><code># writing out the .txt file with the model
+
+modelstring &lt;- as.character(&quot;
+model{
+beta.0 ~ dnorm(0, .001); # prior for the intercept
+beta.1 ~ dnorm(0, .001); # prior for b1
+beta.2 ~ dnorm(0, .001); # prior for b2
+beta.3 ~ dnorm(0, .001); # prior for b3
+tau.e ~ dgamma(.5, .5); # prior for the error precision for Y
+
+sigma2.e&lt;-1/tau.e
+sigma.e&lt;-sqrt(sigma2.e)
+
+# Conditional probability of the data
+# A regression model
+
+for(i in 1:N){
+y.prime[i] &lt;- beta.0 + beta.1*x[i]+ beta.2*x[i]*x[i]+ beta.2*x[i]*x[i]*x[i]; # predicted value of Y
+y[i] ~ dnorm(y.prime[i], tau.e); # conditional distribution of y
+}
+}
+&quot;) # closes the model as string
+
+model.file.name &lt;- &quot;bayes_4_Linear Regression.txt&quot;
+write(x=modelstring, file=here(&quot;analysis&quot;, model.file.name), append=FALSE)</code></pre>
+<p>Compile the model and run simulations</p>
+<pre class="r"><code>library(&#39;rjags&#39;)
+
+jags &lt;- jags.model(here(&quot;analysis&quot;, model.file.name),
+                   data = list(&#39;x&#39; = MyData$X,
+                               &#39;y&#39; = MyData$Y,
+                               &#39;N&#39; = N),
+                   n.chains = 3)</code></pre>
+<pre><code>Compiling model graph
+   Resolving undeclared variables
+   Allocating nodes
+Graph information:
+   Observed stochastic nodes: 12
+   Unobserved stochastic nodes: 5
+   Total graph size: 84
+
+Initializing model</code></pre>
+<pre class="r"><code>out=coda.samples(jags, variable.names=c(&quot;beta.0&quot;,&quot;beta.1&quot;,&quot;beta.2&quot;, &quot;beta.3&quot;, &quot;tau.e&quot;),
+                       n.iter=100)
+
+summary(out)</code></pre>
+<pre><code>
+Iterations = 1:100
+Thinning interval = 1 
+Number of chains = 3 
+Sample size per chain = 100 
+
+1. Empirical mean and standard deviation for each variable,
+   plus standard error of the mean:
+
+           Mean        SD  Naive SE Time-series SE
+beta.0 3.217120  0.318557 0.0183919      0.0448638
+beta.1 0.189071  0.132688 0.0076607      0.0301716
+beta.2 0.004321  0.002559 0.0001477      0.0004866
+beta.3 3.797530 33.625335 1.9413596      1.9275900
+tau.e  4.928648  2.105195 0.1215435      0.1406338
+
+2. Quantiles for each variable:
+
+             2.5%        25%      50%       75%     97.5%
+beta.0   2.634800   2.989520 3.196389  3.422728  3.877031
+beta.1  -0.063137   0.090952 0.196015  0.297135  0.409774
+beta.2  -0.000527   0.002329 0.004471  0.006268  0.009365
+beta.3 -59.184523 -20.866721 4.112455 26.911716 74.310320
+tau.e    1.556246   3.363222 4.657906  6.172727  9.749661</code></pre>
+<p>Check model conversion</p>
+<pre class="r"><code># Coda
+library(coda)
+
+model.as.mcmc.list &lt;- as.mcmc.list(out)
+
+gelman.diag(model.as.mcmc.list)</code></pre>
+<pre><code>Potential scale reduction factors:
+
+       Point est. Upper C.I.
+beta.0       1.17       1.51
+beta.1       1.25       1.72
+beta.2       1.11       1.36
+beta.3       1.00       1.01
+tau.e        1.01       1.04
+
+Multivariate psrf
+
+1.17</code></pre>
+<pre class="r"><code>gelman.plot(model.as.mcmc.list)</code></pre>
+<p><img src="figure/bayes_assignments_part4.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>plot(model.as.mcmc.list, trace=TRUE, density=FALSE)</code></pre>
+<p><img src="figure/bayes_assignments_part4.Rmd/unnamed-chunk-5-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Gelman numbers are above 1.1</p>
+<p>Does not look like conversion, run additional samples</p>
+<pre class="r"><code># Running additional iterations
+out2=coda.samples(jags, variable.names=c(&quot;beta.0&quot;,&quot;beta.1&quot;,&quot;beta.2&quot;, &quot;beta.3&quot;, &quot;tau.e&quot;),
+                 n.iter=2000)
+
+model.as.mcmc.list &lt;- as.mcmc.list(out2)
+
+gelman.diag(model.as.mcmc.list)</code></pre>
+<pre><code>Potential scale reduction factors:
+
+       Point est. Upper C.I.
+beta.0       1.01       1.03
+beta.1       1.02       1.04
+beta.2       1.02       1.05
+beta.3       1.00       1.00
+tau.e        1.00       1.00
+
+Multivariate psrf
+
+1.01</code></pre>
+<pre class="r"><code>gelman.plot(model.as.mcmc.list)</code></pre>
+<p><img src="figure/bayes_assignments_part4.Rmd/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>plot(model.as.mcmc.list, trace=TRUE, density=FALSE)</code></pre>
+<p><img src="figure/bayes_assignments_part4.Rmd/unnamed-chunk-6-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>summary(out2)</code></pre>
+<pre><code>
+Iterations = 101:2100
+Thinning interval = 1 
+Number of chains = 3 
+Sample size per chain = 2000 
+
+1. Empirical mean and standard deviation for each variable,
+   plus standard error of the mean:
+
+           Mean        SD  Naive SE Time-series SE
+beta.0  3.22540  0.373322 4.820e-03      0.0220337
+beta.1  0.19253  0.172742 2.230e-03      0.0126735
+beta.2  0.00411  0.003203 4.135e-05      0.0002026
+beta.3 -0.03474 31.495551 4.066e-01      0.4118185
+tau.e   4.91649  2.167285 2.798e-02      0.0449229
+
+2. Quantiles for each variable:
+
+             2.5%        25%      50%       75%    97.5%
+beta.0   2.486635   2.989651 3.227075  3.451927  3.97486
+beta.1  -0.162704   0.083606 0.195937  0.306711  0.52513
+beta.2  -0.001985   0.002026 0.004055  0.006053  0.01078
+beta.3 -61.250466 -21.759906 0.011697 21.204839 62.39244
+tau.e    1.684106   3.336975 4.575266  6.150341  9.94270</code></pre>
+<p>Looks like conversions after about 2000 iterations</p>
+<p>Let’s burn in with 2000 and then draw samples</p>
+<pre class="r"><code>jags &lt;- jags.model(here(&quot;analysis&quot;, model.file.name),
+                   data = list(&#39;x&#39; = MyData$X,
+                               &#39;y&#39; = MyData$Y,
+                               &#39;N&#39; = N),
+                   n.chains = 3)</code></pre>
+<pre><code>Compiling model graph
+   Resolving undeclared variables
+   Allocating nodes
+Graph information:
+   Observed stochastic nodes: 12
+   Unobserved stochastic nodes: 5
+   Total graph size: 84
+
+Initializing model</code></pre>
+<pre class="r"><code>update(jags, 2000)
+
+out3=coda.samples(jags, variable.names=c(&quot;beta.0&quot;,&quot;beta.1&quot;,&quot;beta.2&quot;, &quot;beta.3&quot;, &quot;tau.e&quot;),
+                 n.iter=2000)
+
+model.as.mcmc.list &lt;- as.mcmc.list(out3)
+plot(out3, density = F)</code></pre>
+<p><img src="figure/bayes_assignments_part4.Rmd/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Conversion is still not perfect.</p>
+<p>Let’s center X</p>
+<pre class="r"><code>jags_scaled &lt;- jags.model(here(&quot;analysis&quot;, model.file.name),
+                   data = list(&#39;x&#39; = as.numeric(scale(MyData$X, center = T, scale = T)),
+                               &#39;y&#39; = MyData$Y,
+                               &#39;N&#39; = N),
+                   n.chains = 3)</code></pre>
+<pre><code>Compiling model graph
+   Resolving undeclared variables
+   Allocating nodes
+Graph information:
+   Observed stochastic nodes: 12
+   Unobserved stochastic nodes: 5
+   Total graph size: 84
+
+Initializing model</code></pre>
+<pre class="r"><code>update(jags_scaled, 2000)
+
+out4=coda.samples(jags_scaled, variable.names=c(&quot;beta.0&quot;,&quot;beta.1&quot;,&quot;beta.2&quot;, &quot;beta.3&quot;, &quot;tau.e&quot;),
+                 n.iter=2000)
+
+model.as.mcmc.list_scaled &lt;- as.mcmc.list(out4)
+plot(out4, density = F)</code></pre>
+<p><img src="figure/bayes_assignments_part4.Rmd/unnamed-chunk-8-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Looks better</p>
+<pre class="r"><code># After the chains have converged
+# combine draws from chains
+draws.to.analyze.as.one.list &lt;- 
+  as.mcmc(do.call(rbind,model.as.mcmc.list_scaled))
+
+#obtain mean, medians, and quantiles
+summary.stats &lt;- summary(draws.to.analyze.as.one.list)
+summary.stats</code></pre>
+<pre><code>
+Iterations = 1:6000
+Thinning interval = 1 
+Number of chains = 1 
+Sample size per chain = 6000 
+
+1. Empirical mean and standard deviation for each variable,
+   plus standard error of the mean:
+
+           Mean      SD Naive SE Time-series SE
+beta.0  4.10876  0.1875 0.002420       0.004515
+beta.1  0.58233  0.2701 0.003487       0.008215
+beta.2  0.09308  0.1065 0.001375       0.003307
+beta.3 -0.61803 31.5349 0.407113       0.407113
+tau.e   4.50875  2.0413 0.026353       0.035097
+
+2. Quantiles for each variable:
+
+            2.5%       25%     50%     75%   97.5%
+beta.0   3.73255   3.99093  4.1093  4.2246  4.4825
+beta.1   0.04591   0.41113  0.5792  0.7546  1.1112
+beta.2  -0.12030   0.02414  0.0942  0.1613  0.3061
+beta.3 -62.72616 -21.82877 -0.2710 20.7755 60.0552
+tau.e    1.48331   2.99429  4.2150  5.6576  9.3417</code></pre>
+<pre class="r"><code>#obtain highest-posterior density interval
+HPD.interval &lt;- HPDinterval(draws.to.analyze.as.one.list, 
+                            prob=.95)
+HPD.interval</code></pre>
+<pre><code>              lower      upper
+beta.0   3.73256527  4.4826107
+beta.1   0.04850974  1.1133041
+beta.2  -0.13216101  0.2897348
+beta.3 -62.28888504 60.3325574
+tau.e    1.20151586  8.5582099
+attr(,&quot;Probability&quot;)
+[1] 0.95</code></pre>
+<p>No indication of cubic effect, only linear effect</p>
+</div>
+<div id="mediation-analysis" class="section level2">
+<h2>Mediation analysis</h2>
+<p>Load data and define in buggs language</p>
+<pre class="r"><code># This code runs a Bayesian mediation analysis using the package rjags.
+# To start, import the data set waterconsumption.csv.
+
+MyData &lt;- read.csv(file=here(&quot;data&quot;, &quot;waterconsumption.csv&quot;), header=TRUE, sep=&quot;,&quot;)
+N&lt;-dim(MyData)[1]
+
+modelstring &lt;- as.character(&quot;
+model {
+############################################
+  # Prior distributions
+############################################
+  beta.0.m ~ dnorm(1, .001); # prior for the intercept for M
+  beta.0.y ~ dnorm(1, .001); # prior for the intercept for Y
+
+  a ~ dnorm(5, .11); # prior for a
+  b ~ dnorm(5, .11); # prior for b
+
+  cp ~ dnorm(0, .11); # prior for c?
+  tau.e.M ~ dgamma(.5, .5); # prior for the error precision for M
+  tau.e.Y ~ dgamma(.5, .5); # prior for the error precision for Y
+  
+  ab &lt;-a*b
+
+############################################
+  # Conditional probability of the data
+  # A regression model
+############################################
+  for(i in 1:N){
+    m.prime[i] &lt;- beta.0.m + a*(x[i]-70.18); # predicted value of M, predictor is mean-centered
+    y.prime[i] &lt;- beta.0.y + cp*(x[i]-70.18) + b*(m[i]-3.06) ; # predicted value of Y, predictor is mean-centered
+    m[i] ~ dnorm(m.prime[i], tau.e.M); # conditional distribution of m
+    y[i] ~ dnorm(y.prime[i], tau.e.Y); # conditional distribution of y
+  }  
+}
+&quot;) # closes the model as string
+
+#############################################################################################################################
+# Write out the BUGS code to a file
+#############################################################################################################################
+model.file.name &lt;- here(&quot;analysis&quot;, &quot;bayes_4_Single Mediator Model.txt&quot;)
+write(x=modelstring, file=model.file.name, append=FALSE)</code></pre>
+<p>Compile model and sample</p>
+<pre class="r"><code>library(rjags)
+
+mediation.model &lt;- jags.model(model.file.name,
+                   data = list(&#39;x&#39; = MyData$x,
+                               &#39;m&#39; = MyData$m,
+                               &#39;y&#39; = MyData$y,
+                               &#39;N&#39; = N),
+                 n.chains = 3)</code></pre>
+<pre><code>Compiling model graph
+   Resolving undeclared variables
+   Allocating nodes
+Graph information:
+   Observed stochastic nodes: 100
+   Unobserved stochastic nodes: 7
+   Total graph size: 219
+
+Initializing model</code></pre>
+<pre class="r"><code>out=coda.samples(mediation.model,
+                 variable.names=c(&quot;a&quot;, &quot;ab&quot;,&quot;b&quot;, &quot;cp&quot;, &quot;beta.0.m&quot;, 
+                   &quot;beta.0.y&quot;, &quot;tau.e.M&quot;, &quot;tau.e.Y&quot;),
+                 n.iter=10000)
+
+summary(out)</code></pre>
+<pre><code>
+Iterations = 1:10000
+Thinning interval = 1 
+Number of chains = 3 
+Sample size per chain = 10000 
+
+1. Empirical mean and standard deviation for each variable,
+   plus standard error of the mean:
+
+           Mean     SD  Naive SE Time-series SE
+a        0.3458 0.1253 0.0007233      0.0007234
+ab       0.1603 0.0799 0.0004613      0.0004894
+b        0.4628 0.1479 0.0008537      0.0009894
+beta.0.m 3.0606 0.1410 0.0008138      0.0008180
+beta.0.y 3.2390 0.1426 0.0008232      0.0008232
+cp       0.2037 0.1352 0.0007806      0.0009169
+tau.e.M  1.0530 0.2121 0.0012247      0.0012761
+tau.e.Y  1.0315 0.2093 0.0012086      0.0012775
+
+2. Quantiles for each variable:
+
+             2.5%    25%    50%    75%  97.5%
+a         0.09854 0.2617 0.3457 0.4296 0.5933
+ab        0.03034 0.1027 0.1517 0.2081 0.3388
+b         0.17349 0.3642 0.4618 0.5599 0.7577
+beta.0.m  2.78562 2.9664 3.0607 3.1553 3.3378
+beta.0.y  2.95769 3.1427 3.2388 3.3337 3.5162
+cp       -0.06492 0.1131 0.2038 0.2939 0.4695
+tau.e.M   0.67752 0.9014 1.0398 1.1869 1.5088
+tau.e.Y   0.66326 0.8852 1.0168 1.1628 1.4809</code></pre>
+<p>Plot convergence and posterior distributions</p>
+<pre class="r"><code>library(coda)
+
+model.as.mcmc.list &lt;- as.mcmc.list(out)
+draws.to.analyze.as.one.list &lt;- 
+  as.mcmc(do.call(rbind,model.as.mcmc.list)) 
+
+summary(draws.to.analyze.as.one.list)</code></pre>
+<pre><code>
+Iterations = 1:30000
+Thinning interval = 1 
+Number of chains = 1 
+Sample size per chain = 30000 
+
+1. Empirical mean and standard deviation for each variable,
+   plus standard error of the mean:
+
+           Mean     SD  Naive SE Time-series SE
+a        0.3458 0.1253 0.0007233      0.0007233
+ab       0.1603 0.0799 0.0004613      0.0004904
+b        0.4628 0.1479 0.0008537      0.0009836
+beta.0.m 3.0606 0.1410 0.0008138      0.0008138
+beta.0.y 3.2390 0.1426 0.0008232      0.0008232
+cp       0.2037 0.1352 0.0007806      0.0009289
+tau.e.M  1.0530 0.2121 0.0012247      0.0012940
+tau.e.Y  1.0315 0.2093 0.0012086      0.0012775
+
+2. Quantiles for each variable:
+
+             2.5%    25%    50%    75%  97.5%
+a         0.09854 0.2617 0.3457 0.4296 0.5933
+ab        0.03034 0.1027 0.1517 0.2081 0.3388
+b         0.17349 0.3642 0.4618 0.5599 0.7577
+beta.0.m  2.78562 2.9664 3.0607 3.1553 3.3378
+beta.0.y  2.95769 3.1427 3.2388 3.3337 3.5162
+cp       -0.06492 0.1131 0.2038 0.2939 0.4695
+tau.e.M   0.67752 0.9014 1.0398 1.1869 1.5088
+tau.e.Y   0.66326 0.8852 1.0168 1.1628 1.4809</code></pre>
+<pre class="r"><code># diagnostics of convergence
+gelman.diag(model.as.mcmc.list)</code></pre>
+<pre><code>Potential scale reduction factors:
+
+         Point est. Upper C.I.
+a                 1          1
+ab                1          1
+b                 1          1
+beta.0.m          1          1
+beta.0.y          1          1
+cp                1          1
+tau.e.M           1          1
+tau.e.Y           1          1
+
+Multivariate psrf
+
+1</code></pre>
+<pre class="r"><code>gelman.plot(model.as.mcmc.list)</code></pre>
+<p><img src="figure/bayes_assignments_part4.Rmd/unnamed-chunk-12-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>plot(model.as.mcmc.list, trace=TRUE, density=FALSE)</code></pre>
+<p><img src="figure/bayes_assignments_part4.Rmd/unnamed-chunk-12-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>plot(model.as.mcmc.list, trace=FALSE, density=TRUE)</code></pre>
+<p><img src="figure/bayes_assignments_part4.Rmd/unnamed-chunk-12-3.png" width="672" style="display: block; margin: auto;" /></p>
+<p>No signs of non-convergence</p>
+<p>For parameters a, ab, and b, we have a clear sign that they are greater than 0 For cp, a parameter value of 0 false within the 95% credible interval</p>
+<p>There is a clear indication of mediation, and not of a direct effect</p>
+<pre class="r"><code># running additional iterations
+out2=coda.samples(mediation.model,
+                 variable.names=c(&quot;a&quot;, &quot;ab&quot;,&quot;b&quot;, &quot;cp&quot;, &quot;beta.0.m&quot;, 
+                                  &quot;beta.0.y&quot;, &quot;tau.e.M&quot;, &quot;tau.e.Y&quot;),
+                 n.iter=10000)
+
+model.as.mcmc.list &lt;- as.mcmc.list(out2)
+draws.to.analyze.as.one.list &lt;- 
+  as.mcmc(do.call(rbind,model.as.mcmc.list)) 
+
+#obtain mean, medians, and quantiles
+summary.stats &lt;- summary(draws.to.analyze.as.one.list)
+summary.stats</code></pre>
+<pre><code>
+Iterations = 1:30000
+Thinning interval = 1 
+Number of chains = 1 
+Sample size per chain = 30000 
+
+1. Empirical mean and standard deviation for each variable,
+   plus standard error of the mean:
+
+           Mean      SD  Naive SE Time-series SE
+a        0.3459 0.12450 0.0007188      0.0007188
+ab       0.1594 0.07972 0.0004602      0.0004919
+b        0.4608 0.14983 0.0008651      0.0009959
+beta.0.m 3.0609 0.14103 0.0008143      0.0008143
+beta.0.y 3.2398 0.14269 0.0008238      0.0008238
+cp       0.2048 0.13542 0.0007818      0.0008941
+tau.e.M  1.0503 0.21182 0.0012229      0.0012612
+tau.e.Y  1.0296 0.20985 0.0012115      0.0012827
+
+2. Quantiles for each variable:
+
+             2.5%    25%    50%    75%  97.5%
+a         0.10131 0.2627 0.3465 0.4291 0.5903
+ab        0.03031 0.1023 0.1508 0.2061 0.3404
+b         0.16696 0.3612 0.4603 0.5596 0.7573
+beta.0.m  2.78310 2.9681 3.0602 3.1542 3.3392
+beta.0.y  2.95726 3.1448 3.2417 3.3348 3.5200
+cp       -0.06298 0.1144 0.2057 0.2962 0.4702
+tau.e.M   0.67845 0.9010 1.0364 1.1852 1.5021
+tau.e.Y   0.65867 0.8823 1.0168 1.1636 1.4772</code></pre>
+<pre class="r"><code>#obtain highest-posterior density interval
+HPD.interval &lt;- HPDinterval(draws.to.analyze.as.one.list, 
+                            prob=.95)
+HPD.interval</code></pre>
+<pre><code>               lower     upper
+a         0.09869551 0.5858006
+ab        0.01585411 0.3171830
+b         0.16885314 0.7585184
+beta.0.m  2.78864073 3.3438283
+beta.0.y  2.96150563 3.5230678
+cp       -0.06320280 0.4699538
+tau.e.M   0.66313290 1.4780816
+tau.e.Y   0.63099396 1.4432357
+attr(,&quot;Probability&quot;)
+[1] 0.95</code></pre>
+<div id="repeat-with-different-priors" class="section level3">
+<h3>Repeat with different priors:</h3>
+<p>First center predictors in the data (X and M) without scaling to unit variance</p>
+<pre class="r"><code>scale2 &lt;- function(x, ...) as.numeric(scale(x, ...))
+df &lt;- MyData %&gt;%
+  mutate_at(vars(x, m), scale2, center = T, scale = F)</code></pre>
+<p>Define 3 priors</p>
+<ol style="list-style-type: decimal">
+<li>Uniform [0,3] for both a &amp; b</li>
+<li>Uniform [-3,3] for both a &amp; b</li>
+<li>Normal (0, prec=.01) for both a &amp; b</li>
+</ol>
+<pre class="r"><code>model_string_upos &lt;- as.character(&quot;
+model {
+############################################
+  # Prior distributions
+############################################
+  beta.0.m ~ dnorm(1, .001); # prior for the intercept for M
+  beta.0.y ~ dnorm(1, .001); # prior for the intercept for Y
+
+  a ~ dunif(0, 3); # prior for a
+  b ~ dunif(0, 3); # prior for b
+
+  cp ~ dnorm(0, .11); # prior for c?
+  tau.e.M ~ dgamma(.5, .5); # prior for the error precision for M
+  tau.e.Y ~ dgamma(.5, .5); # prior for the error precision for Y
+  
+  ab &lt;-a*b
+
+############################################
+  # Conditional probability of the data
+  # A regression model
+############################################
+  for(i in 1:N){
+    m.prime[i] &lt;- beta.0.m + a*(x[i]); # predicted value of M, predictor is mean-centered in R
+    y.prime[i] &lt;- beta.0.y + cp*(x[i]) + b*(m[i]) ; # predicted value of Y, predictor is mean-centered in R
+    m[i] ~ dnorm(m.prime[i], tau.e.M); # conditional distribution of m
+    y[i] ~ dnorm(y.prime[i], tau.e.Y); # conditional distribution of y
+  }  
+}
+&quot;) # closes the model as string
+
+#############################################################################################################################
+# Write out the BUGS code to a file
+#############################################################################################################################
+model_file_upos &lt;- here(&quot;analysis&quot;, &quot;bayes_4_mediation_uniform_positive.txt&quot;)
+write(x=model_string_upos, file=model_file_upos, append=FALSE)
+mediation.model_upos &lt;- jags.model(model_file_upos,
+                   data = list(&#39;x&#39; = df$x,
+                               &#39;m&#39; = df$m,
+                               &#39;y&#39; = df$y,
+                               &#39;N&#39; = N),
+                 n.chains = 3)</code></pre>
+<pre><code>Compiling model graph
+   Resolving undeclared variables
+   Allocating nodes
+Graph information:
+   Observed stochastic nodes: 100
+   Unobserved stochastic nodes: 7
+   Total graph size: 206
+
+Initializing model</code></pre>
+<pre class="r"><code>model_string_unif &lt;- as.character(&quot;
+model {
+############################################
+  # Prior distributions
+############################################
+  beta.0.m ~ dnorm(1, .001); # prior for the intercept for M
+  beta.0.y ~ dnorm(1, .001); # prior for the intercept for Y
+
+  a ~ dunif(-3, 3); # prior for a
+  b ~ dunif(-3, 3); # prior for b
+
+  cp ~ dnorm(0, .11); # prior for c?
+  tau.e.M ~ dgamma(.5, .5); # prior for the error precision for M
+  tau.e.Y ~ dgamma(.5, .5); # prior for the error precision for Y
+  
+  ab &lt;-a*b
+
+############################################
+  # Conditional probability of the data
+  # A regression model
+############################################
+  for(i in 1:N){
+    m.prime[i] &lt;- beta.0.m + a*(x[i]); # predicted value of M, predictor is mean-centered in R
+    y.prime[i] &lt;- beta.0.y + cp*(x[i]) + b*(m[i]) ; # predicted value of Y, predictor is mean-centered in R
+    m[i] ~ dnorm(m.prime[i], tau.e.M); # conditional distribution of m
+    y[i] ~ dnorm(y.prime[i], tau.e.Y); # conditional distribution of y
+  }  
+}
+&quot;) # closes the model as string
+
+#############################################################################################################################
+# Write out the BUGS code to a file
+#############################################################################################################################
+model_file_unif &lt;- here(&quot;analysis&quot;, &quot;bayes_4_mediation_uniform.txt&quot;)
+write(x=model_string_unif, file=model_file_unif, append=FALSE)
+mediation.model_unif &lt;- jags.model(model_file_unif,
+                   data = list(&#39;x&#39; = df$x,
+                               &#39;m&#39; = df$m,
+                               &#39;y&#39; = df$y,
+                               &#39;N&#39; = N),
+                 n.chains = 3)</code></pre>
+<pre><code>Compiling model graph
+   Resolving undeclared variables
+   Allocating nodes
+Graph information:
+   Observed stochastic nodes: 100
+   Unobserved stochastic nodes: 7
+   Total graph size: 207
+
+Initializing model</code></pre>
+<pre class="r"><code>model_string_norm &lt;- as.character(&quot;
+model {
+############################################
+  # Prior distributions
+############################################
+  beta.0.m ~ dnorm(1, .001); # prior for the intercept for M
+  beta.0.y ~ dnorm(1, .001); # prior for the intercept for Y
+
+  a ~ dnorm(0, .01); # prior for a
+  b ~ dnorm(0, .01); # prior for b
+
+  cp ~ dnorm(0, .11); # prior for c?
+  tau.e.M ~ dgamma(.5, .5); # prior for the error precision for M
+  tau.e.Y ~ dgamma(.5, .5); # prior for the error precision for Y
+  
+  ab &lt;-a*b
+
+############################################
+  # Conditional probability of the data
+  # A regression model
+############################################
+  for(i in 1:N){
+    m.prime[i] &lt;- beta.0.m + a*(x[i]); # predicted value of M, predictor is mean-centered in R
+    y.prime[i] &lt;- beta.0.y + cp*(x[i]) + b*(m[i]) ; # predicted value of Y, predictor is mean-centered in R
+    m[i] ~ dnorm(m.prime[i], tau.e.M); # conditional distribution of m
+    y[i] ~ dnorm(y.prime[i], tau.e.Y); # conditional distribution of y
+  }  
+}
+&quot;) # closes the model as string
+
+#############################################################################################################################
+# Write out the BUGS code to a file
+#############################################################################################################################
+model_file_norm &lt;- here(&quot;analysis&quot;, &quot;bayes_4_mediation_normal.txt&quot;)
+write(x=model_string_norm, file=model_file_norm, append=FALSE)
+mediation.model_norm &lt;- jags.model(model_file_norm,
+                   data = list(&#39;x&#39; = df$x,
+                               &#39;m&#39; = df$m,
+                               &#39;y&#39; = df$y,
+                               &#39;N&#39; = N),
+                 n.chains = 3)</code></pre>
+<pre><code>Compiling model graph
+   Resolving undeclared variables
+   Allocating nodes
+Graph information:
+   Observed stochastic nodes: 100
+   Unobserved stochastic nodes: 7
+   Total graph size: 206
+
+Initializing model</code></pre>
+<p>Combine models in a data frame for easy manipulation</p>
+<pre class="r"><code>models &lt;- data.frame(model_prior = c(&quot;uniform_positive&quot;, &quot;uniform&quot;, &quot;normal&quot;))
+models %&lt;&gt;% 
+  mutate(model = list(uniform_positive = mediation.model_upos, 
+                                  uniform = mediation.model_unif,
+                                  normal = mediation.model_norm))</code></pre>
+<p>Burnin 10000 and then sample 10000</p>
+<pre class="r"><code>nburnin = 10000
+nsample = 10000
+
+params = c(&quot;a&quot;, &quot;ab&quot;,&quot;b&quot;, &quot;cp&quot;, &quot;beta.0.m&quot;, 
+                                  &quot;beta.0.y&quot;, &quot;tau.e.M&quot;, &quot;tau.e.Y&quot;)
+
+burnin_and_sample &lt;- function(model, params, nburnin, nsamples) {
+  update(model, nburnin)
+  samples = coda.samples(model, n.iter = nsamples, variable.names = params)
+  return(samples)
+}
+
+models %&lt;&gt;%
+  mutate(samples = map(model,
+                        ~burnin_and_sample(.x, params, nburnin = nburnin, nsamples = nsample)))</code></pre>
+<p>Check convergence for the samples</p>
+<pre class="r"><code>plot(models$samples[[1]], density = F)</code></pre>
+<p><img src="figure/bayes_assignments_part4.Rmd/unnamed-chunk-18-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Looks good</p>
+<pre class="r"><code>plot(models$samples[[2]], density = F)</code></pre>
+<p><img src="figure/bayes_assignments_part4.Rmd/unnamed-chunk-19-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Looks good</p>
+<pre class="r"><code>plot(models$samples[[3]], density = F)</code></pre>
+<p><img src="figure/bayes_assignments_part4.Rmd/unnamed-chunk-20-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Looks good</p>
+<p>Let’s grab the HDR confidence intervals for the parameters</p>
+<pre class="r"><code>hpds &lt;- models$samples %&gt;%
+  # map(samples_to_mcmc) %&gt;%
+  map(HPDinterval) %&gt;%
+  map(as.data.frame) %&gt;%
+  map(~mutate(.x, parameter = params)) %&gt;%
+  rbindlist(idcol = &quot;model&quot;)
+hpds</code></pre>
+<pre><code>               model        lower     upper     lower.1   upper.1
+ 1: uniform_positive  0.105621217 0.5853159  0.09951715 0.5882949
+ 2: uniform_positive  0.009077496 0.2979239  0.01596196 0.3098036
+ 3: uniform_positive  0.148044297 0.7241933  0.16815155 0.7581877
+ 4: uniform_positive -0.274828652 0.2704848 -0.28678138 0.2706222
+ 5: uniform_positive  2.947682186 3.5054355  2.96366901 3.5277247
+ 6: uniform_positive -0.057646591 0.4731576 -0.05976687 0.4695230
+ 7: uniform_positive  0.673382796 1.4964816  0.64504045 1.4645014
+ 8: uniform_positive  0.643617462 1.4631991  0.62586650 1.4410677
+ 9:          uniform  0.093327986 0.5873783  0.08746387 0.5737137
+10:          uniform  0.012415448 0.3073995  0.01265630 0.3032819
+11:          uniform  0.150877153 0.7262261  0.16267329 0.7370952
+12:          uniform -0.278442146 0.2703357 -0.28071318 0.2712802
+13:          uniform  2.960760205 3.5212219  2.95945640 3.5179271
+14:          uniform -0.044674647 0.4819173 -0.05270166 0.4807385
+15:          uniform  0.655411786 1.4710077  0.66090780 1.4745598
+16:          uniform  0.641273459 1.4446559  0.64781819 1.4554341
+17:           normal  0.094782095 0.5869782  0.08968757 0.5789416
+18:           normal  0.017202135 0.3082296  0.01557243 0.3063304
+19:           normal  0.149999540 0.7349633  0.17079038 0.7475425
+20:           normal -0.285031471 0.2756471 -0.27902512 0.2741271
+21:           normal  2.945829451 3.5073682  2.96213844 3.5230771
+22:           normal -0.051708550 0.4778827 -0.06635080 0.4707546
+23:           normal  0.657962326 1.4701043  0.65807944 1.4707823
+24:           normal  0.630610807 1.4410640  0.64807304 1.4544943
+               model        lower     upper     lower.1   upper.1
+        lower.2   upper.2 parameter
+ 1:  0.09451316 0.5763615         a
+ 2:  0.01832552 0.3029132        ab
+ 3:  0.15712048 0.7370966         b
+ 4: -0.27118554 0.2788492        cp
+ 5:  2.95054403 3.5042995  beta.0.m
+ 6: -0.06560117 0.4652729  beta.0.y
+ 7:  0.67098776 1.4826153   tau.e.M
+ 8:  0.63628954 1.4498356   tau.e.Y
+ 9:  0.09354860 0.5902558         a
+10:  0.01720291 0.3136825        ab
+11:  0.15703099 0.7294611         b
+12: -0.27377233 0.2780746        cp
+13:  2.97847205 3.5354221  beta.0.m
+14: -0.05962933 0.4679094  beta.0.y
+15:  0.64819723 1.4791892   tau.e.M
+16:  0.63702419 1.4485782   tau.e.Y
+17:  0.08425099 0.5810194         a
+18:  0.01289972 0.3106834        ab
+19:  0.16087310 0.7447107         b
+20: -0.27163583 0.2767797        cp
+21:  2.97326566 3.5294494  beta.0.m
+22: -0.05353831 0.4774362  beta.0.y
+23:  0.66402691 1.4826502   tau.e.M
+24:  0.64600570 1.4597588   tau.e.Y
+        lower.2   upper.2 parameter</code></pre>
+<p>Plot parameter credible intervals</p>
+<pre class="r"><code>hpds %&gt;%
+  ggplot(aes(ymin = lower, ymax = upper, x = parameter, col = model)) + 
+  geom_errorbar(position = &quot;dodge&quot;, width = .25) + 
+  coord_flip() + theme_minimal()</code></pre>
+<p><img src="figure/bayes_assignments_part4.Rmd/unnamed-chunk-22-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>No real differences for the different priors</p>
+<p>Specifically, none of the confidence bounds for a and b overlap 0, so uniform positive did not enforce this too much</p>
+</div>
+</div>
+<div id="moderation-analysis" class="section level2">
+<h2>Moderation analysis</h2>
+<p>Load data</p>
+<pre class="r"><code># This code runs a Bayesian moderation analysis using the package rjags.
+# To start, import the data set Moderationdata.csv.
+
+MyData &lt;- read.csv(file=here(&quot;data&quot;, &quot;Moderationdata.csv&quot;), header=TRUE, sep=&quot;,&quot;)
+N&lt;-dim(MyData)[1]</code></pre>
+<p>Define model and compile</p>
+<pre class="r"><code># writing out the .bug file with the model
+
+modelstring &lt;- as.character(&quot;
+model{
+beta.0 ~ dnorm(0, .001); # prior for the intercept
+beta.1 ~ dnorm(0, .001); # prior for regression coefficient for x
+beta.2 ~ dnorm(0, .001); # prior for regression coefficient for z
+beta.3 ~ dnorm(0, .001); # prior for regression coefficient for intercation xz
+tau.e ~ dgamma(.5, .5); # prior for the error precision for Y
+
+sigma2.e&lt;-1/tau.e
+sigma.e&lt;-sqrt(sigma2.e)
+
+# Conditional probability of the data
+# A regression model
+
+for(i in 1:N){
+y.prime[i] &lt;- beta.0 + beta.1*x[i] + beta.2*z[i] + beta.3*x[i]*z[i] ; # predicted value of Y
+y[i] ~ dnorm(y.prime[i], tau.e); # conditional distribution of y
+}
+}
+&quot;) # closes the model as string
+
+model.file.name &lt;- here(&quot;analysis&quot;, &quot;bayes_4_Moderation.txt&quot;)
+write(x=modelstring, file=model.file.name, append=FALSE)
+
+library(&#39;rjags&#39;)
+
+jags &lt;- jags.model(model.file.name,
+                   data = list(&#39;x&#39; = MyData$x,
+                               &#39;z&#39; = MyData$z,
+                               &#39;y&#39; = MyData$y,
+                               &#39;N&#39; = N),
+                   n.chains = 3)</code></pre>
+<pre><code>Compiling model graph
+   Resolving undeclared variables
+   Allocating nodes
+Graph information:
+   Observed stochastic nodes: 40
+   Unobserved stochastic nodes: 5
+   Total graph size: 144
+
+Initializing model</code></pre>
+<p>Run some samples</p>
+<pre class="r"><code>out=coda.samples(jags, variable.names=c(&quot;beta.0&quot;,&quot;beta.1&quot;,&quot;beta.2&quot;, &quot;beta.3&quot;, &quot;tau.e&quot;),
+                       n.iter=10000)
+
+summary(out)</code></pre>
+<pre><code>
+Iterations = 1:10000
+Thinning interval = 1 
+Number of chains = 3 
+Sample size per chain = 10000 
+
+1. Empirical mean and standard deviation for each variable,
+   plus standard error of the mean:
+
+          Mean     SD Naive SE Time-series SE
+beta.0 -0.4099 0.2979 0.001720       0.006194
+beta.1  0.9378 0.4103 0.002369       0.008431
+beta.2  1.0725 0.3628 0.002095       0.007554
+beta.3 -0.2910 0.5177 0.002989       0.010497
+tau.e   1.6617 0.3848 0.002221       0.002579
+
+2. Quantiles for each variable:
+
+          2.5%     25%     50%      75%  97.5%
+beta.0 -0.9948 -0.6108 -0.4099 -0.20981 0.1754
+beta.1  0.1288  0.6658  0.9376  1.21124 1.7481
+beta.2  0.3625  0.8307  1.0692  1.31292 1.7879
+beta.3 -1.3199 -0.6335 -0.2914  0.05592 0.7109
+tau.e   0.9920  1.3889  1.6334  1.89926 2.5022</code></pre>
+<p>Analyze convergence</p>
+<pre class="r"><code># Coda
+library(coda)
+
+model.as.mcmc.list &lt;- as.mcmc.list(out)
+
+gelman.diag(model.as.mcmc.list)</code></pre>
+<pre><code>Potential scale reduction factors:
+
+       Point est. Upper C.I.
+beta.0          1       1.00
+beta.1          1       1.01
+beta.2          1       1.01
+beta.3          1       1.01
+tau.e           1       1.00
+
+Multivariate psrf
+
+1</code></pre>
+<pre class="r"><code>gelman.plot(model.as.mcmc.list)</code></pre>
+<p><img src="figure/bayes_assignments_part4.Rmd/unnamed-chunk-26-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>plot(model.as.mcmc.list, trace=TRUE, density=FALSE)</code></pre>
+<p><img src="figure/bayes_assignments_part4.Rmd/unnamed-chunk-26-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>plot(model.as.mcmc.list, trace=FALSE, density=TRUE)</code></pre>
+<p><img src="figure/bayes_assignments_part4.Rmd/unnamed-chunk-26-3.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Convergence is not bad</p>
+<pre class="r"><code># Run additional iterations
+out2=coda.samples(jags, variable.names=c(&quot;beta.0&quot;,&quot;beta.1&quot;,&quot;beta.2&quot;, &quot;beta.3&quot;, &quot;tau.e&quot;),
+                 n.iter=10000)
+model.as.mcmc.list &lt;- as.mcmc.list(out2)
+# combine draws from chains
+draws.to.analyze.as.one.list &lt;- 
+  as.mcmc(do.call(rbind,model.as.mcmc.list))
+
+#obtain mean, medians, and quantiles
+summary.stats &lt;- summary(draws.to.analyze.as.one.list)
+summary.stats</code></pre>
+<pre><code>
+Iterations = 1:30000
+Thinning interval = 1 
+Number of chains = 1 
+Sample size per chain = 30000 
+
+1. Empirical mean and standard deviation for each variable,
+   plus standard error of the mean:
+
+          Mean     SD Naive SE Time-series SE
+beta.0 -0.4182 0.2989 0.001725       0.006184
+beta.1  0.9512 0.4086 0.002359       0.008449
+beta.2  1.0809 0.3660 0.002113       0.007661
+beta.3 -0.3034 0.5199 0.003001       0.010606
+tau.e   1.6563 0.3837 0.002215       0.002732
+
+2. Quantiles for each variable:
+
+          2.5%     25%     50%      75%  97.5%
+beta.0 -0.9922 -0.6196 -0.4219 -0.22130 0.1781
+beta.1  0.1362  0.6833  0.9558  1.22246 1.7491
+beta.2  0.3560  0.8387  1.0846  1.32490 1.7897
+beta.3 -1.3080 -0.6507 -0.3078  0.03753 0.7281
+tau.e   0.9866  1.3863  1.6267  1.89482 2.4881</code></pre>
+<pre class="r"><code>#obtain highest-posterior density interval
+HPD.interval &lt;- HPDinterval(draws.to.analyze.as.one.list, 
+                            prob=.95)
+HPD.interval</code></pre>
+<pre><code>            lower     upper
+beta.0 -0.9892665 0.1797030
+beta.1  0.1570122 1.7647436
+beta.2  0.3732543 1.8054032
+beta.3 -1.3184507 0.7146811
+tau.e   0.9494708 2.4372876
+attr(,&quot;Probability&quot;)
+[1] 0.95</code></pre>
+<div id="plot-region-of-significance" class="section level3">
+<h3>Plot region of significance</h3>
+<p>For which value of the mediator is there a significant effect of the predictor</p>
+<p>We can use out2</p>
+<pre class="r"><code>length(out2)</code></pre>
+<pre><code>[1] 3</code></pre>
+<pre class="r"><code>dim(out2[[1]])</code></pre>
+<pre><code>[1] 10000     5</code></pre>
+<pre class="r"><code>colnames(out2[[1]])</code></pre>
+<pre><code>[1] &quot;beta.0&quot; &quot;beta.1&quot; &quot;beta.2&quot; &quot;beta.3&quot; &quot;tau.e&quot; </code></pre>
+<p>out2 is a list of length 3, 1 for each chain - for each chain, there are 50000 values, which are 10000 samples for 5 parameters</p>
+<p>this is a numeric matrix that can easily be converted to a data frame</p>
+<p>We can combine these into a (very long) data frame</p>
+<p>Let’s us data.table, which is suited for large datasets</p>
+<pre class="r"><code>out2 %&gt;%
+  map(as.data.frame) %&gt;%
+  rbindlist(idcol = &quot;chain&quot;) -&gt; samples
+str(samples)</code></pre>
+<pre><code>Classes &#39;data.table&#39; and &#39;data.frame&#39;:  30000 obs. of  6 variables:
+ $ chain : int  1 1 1 1 1 1 1 1 1 1 ...
+ $ beta.0: num  -0.659 -0.766 -0.763 -0.815 -0.818 ...
+ $ beta.1: num  1.72 1.6 1.66 1.42 1.19 ...
+ $ beta.2: num  1.29 1.65 1.63 1.61 1.8 ...
+ $ beta.3: num  -0.97 -1.455 -1.082 -0.706 -1.006 ...
+ $ tau.e : num  1.526 1.532 0.946 1.25 1.948 ...
+ - attr(*, &quot;.internal.selfref&quot;)=&lt;externalptr&gt; </code></pre>
+<p>Pick a grid of values of the moderator, and calculate the ‘simple slope’ of the predictor for each value</p>
+<pre class="r"><code>table(MyData$z)</code></pre>
+<pre><code>
+ 0  1 
+15 25 </code></pre>
+<p>Z values are binary here, so it doesn’t make a lot of sense to create a region of significance here, but we can do it</p>
+<pre class="r"><code>z_mean &lt;- mean(MyData$z)
+z_values &lt;- seq(0, 1, length.out = 100)</code></pre>
+<p>Now for each z_value, we will calculate the value of the simple slope for each sample</p>
+<p>Add a column for sample number for ease of tracking</p>
+<pre class="r"><code>samples[, sample_id:=.I]</code></pre>
+<pre class="r"><code>simple_slopes &lt;- samples[, list(z = z_values, 
+                                simple_slope = map_dbl(z_values, ~beta.1 + .x * beta.3)),
+                         by = &quot;sample_id&quot;]
+
+slopes_and_samples &lt;- merge(samples, simple_slopes, by = &quot;sample_id&quot;,
+                            all.x = T, all.y = T)</code></pre>
+<pre class="r"><code>dim(slopes_and_samples)</code></pre>
+<pre><code>[1] 3000000       9</code></pre>
+<pre class="r"><code>head(slopes_and_samples)</code></pre>
+<pre><code>   sample_id chain     beta.0   beta.1   beta.2    beta.3    tau.e
+1:         1     1 -0.6588598 1.720996 1.285771 -0.969745 1.525916
+2:         1     1 -0.6588598 1.720996 1.285771 -0.969745 1.525916
+3:         1     1 -0.6588598 1.720996 1.285771 -0.969745 1.525916
+4:         1     1 -0.6588598 1.720996 1.285771 -0.969745 1.525916
+5:         1     1 -0.6588598 1.720996 1.285771 -0.969745 1.525916
+6:         1     1 -0.6588598 1.720996 1.285771 -0.969745 1.525916
+            z simple_slope
+1: 0.00000000     1.720996
+2: 0.01010101     1.711200
+3: 0.02020202     1.701405
+4: 0.03030303     1.691609
+5: 0.04040404     1.681814
+6: 0.05050505     1.672019</code></pre>
+<p>Now we have the simple slope for 100 values of z for all samples</p>
+<p>We can compute the HPDinterval for each z value</p>
+<pre class="r"><code>hpds &lt;- slopes_and_samples[, list(
+  simple_slope = median(simple_slope),
+  hpd = list(HPDinterval(as.mcmc(.SD)))),
+                           by = &quot;z&quot;]</code></pre>
+<p>Now for each value of z we have the HPD interval of all parameters</p>
+<pre class="r"><code>hpds$hpd[[1]]</code></pre>
+<pre><code>                  lower        upper
+sample_id     1.0000000 2.850100e+04
+chain         1.0000000 3.000000e+00
+beta.0       -0.9892665 1.797030e-01
+beta.1        0.1570122 1.764744e+00
+beta.2        0.3732543 1.805403e+00
+beta.3       -1.3184507 7.146811e-01
+tau.e         0.9494708 2.437288e+00
+simple_slope  0.1570122 1.764744e+00
+attr(,&quot;Probability&quot;)
+[1] 0.95</code></pre>
+<p>Grab the upper and lower value for the simple_slope from the hpd intervals and plot</p>
+<pre class="r"><code>hpds %&lt;&gt;%
+  mutate(lower = map_dbl(hpd, ~.x[&quot;simple_slope&quot;,&quot;lower&quot;]),
+         upper = map_dbl(hpd, ~.x[&quot;simple_slope&quot;, &quot;upper&quot;]))
+
+hpds %&gt;%
+  ggplot(aes(x = z)) +
+  geom_line(aes(y = simple_slope)) + 
+  geom_line(aes(y = upper), lty = 2) + 
+  geom_line(aes(y = lower), lty = 2) + 
+  geom_hline(aes(yintercept = 0), lty = 3) + 
+  theme_minimal()</code></pre>
+<p><img src="figure/bayes_assignments_part4.Rmd/unnamed-chunk-37-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+</div>
+<div id="session-information" class="section level2">
+<h2>Session information</h2>
+<!-- Insert the session information into the document -->
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 3.3.2 (2016-10-31)
+Platform: x86_64-apple-darwin13.4.0 (64-bit)
+Running under: macOS Sierra 10.12.6
+
+locale:
+[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+ [1] bindrcpp_0.2      rjags_4-6         coda_0.19-1      
+ [4] broom_0.4.2       epistats_0.1.0    ggplot2_2.2.1    
+ [7] here_0.1          purrr_0.2.4       magrittr_1.5     
+[10] data.table_1.10.4 dplyr_0.7.4      
+
+loaded via a namespace (and not attached):
+ [1] Rcpp_0.12.14     git2r_0.20.0     plyr_1.8.4       bindr_0.1       
+ [5] tools_3.3.2      digest_0.6.13    evaluate_0.10.1  tibble_1.3.4    
+ [9] gtable_0.2.0     nlme_3.1-131     lattice_0.20-35  pkgconfig_2.0.1 
+[13] rlang_0.1.6      psych_1.7.5      yaml_2.1.16      parallel_3.3.2  
+[17] stringr_1.2.0    knitr_1.18       rprojroot_1.2    grid_3.3.2      
+[21] glue_1.2.0       R6_2.2.2         foreign_0.8-69   rmarkdown_1.8   
+[25] tidyr_0.7.2      reshape2_1.4.2   backports_1.1.0  scales_0.4.1    
+[29] htmltools_0.3.6  assertthat_0.2.0 mnormt_1.5-5     colorspace_1.3-2
+[33] labeling_0.3     stringi_1.1.6    lazyeval_0.2.0   munsell_0.4.3   </code></pre>
+</div>
+</div>
+
+<hr>
+<p>
+    This <a href="http://rmarkdown.rstudio.com">R Markdown</a> site was created with <a href="https://github.com/jdblischak/workflowr">workflowr</a>
+</p>
+<hr>
+
+<!-- To enable disqus, uncomment the section below and provide your disqus_shortname -->
+
+<!-- disqus
+  <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+        var disqus_shortname = 'rmarkdown'; // required: replace example with your forum shortname
+
+        /* * * DON'T EDIT BELOW THIS LINE * * */
+        (function() {
+            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+-->
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
