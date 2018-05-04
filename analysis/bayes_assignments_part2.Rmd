@@ -1,0 +1,383 @@
+---
+title: "Assignments for applied Bayesian statistics, part 2"
+author: "Wouter van Amsterdam"
+date: 2018-05-02
+output: html_document
+---
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+```
+
+<!-- Update knitr chunk options -->
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+<!-- Insert the date the file was last updated -->
+```{r last-updated, echo=FALSE, results='asis'}
+```
+
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+```{r code-version, echo=FALSE, results='asis'}
+```
+
+<!-- Add your analysis here -->
+
+
+```{r, 'load_packages'}
+library(dplyr)
+library(data.table)
+library(magrittr)
+library(purrr)
+library(here) # for tracking working directory
+library(ggplot2)
+library(epistats)
+library(broom)
+library(rjags)
+library(Bain)
+```
+
+# Day 3
+
+Run tutorial from bain
+
+```{r, 'step1'}
+# THIS IS BFTUTORIAL.R
+
+# FURTHER EXPLANATION OF THE CODE USED TO RUN BAIN CAN BE FOUND IN THE APPENDIX
+# OF A TUTORIAL ON TESTING HYPOTHESES USING THE BAYES FACTOR 
+
+#***************
+#TUTORIAL STEP 1
+#***************
+# Load libraries. These libraries contain functions such as lm and Bain that will be used in 
+# this R code. Each time you reopen BFTutorial.R you have to execute this step.
+
+library(MASS)
+library(Bain)
+library(psych)
+
+#***************
+#TUTORIAL STEP 2
+#***************
+# Read Data. If you open monin.txt and holbar.txt in a text editor, you can see
+# that variable labels have been inserted between " " in the first line of the file
+# (this is called a header).
+
+monin<-read.table(here("data", "monin.txt"),header=TRUE)
+monin$group<-factor(monin$group)       # this command tells R that group is a factor             
+holubar<-read.table(here("data", "holubar.txt"),header=TRUE)
+holubar$gr <- factor(holubar$gr)       # this command tells R that gr is a factor
+
+#***************
+#TUTORIAL STEP 3
+#***************
+# Compute descriptives for the Monin data. The dependent variable name is attract, 
+# the factor name is group (see also TutorialStep 2).
+
+descrip <- describeBy(monin$attract,monin$group,mat=TRUE)
+print(descrip)
+```
+
+```{r}
+#***************
+#TUTORIAL STEP 4
+#***************
+# Compute the Bayes factor for the Monin data. 
+# If you return to BFTutorial.R after closing it, you always have to rerun 
+# Steps 1 and 2, and lines 44-60.
+
+prepmonin <-  lm(attract~group-1, data=monin)
+varm <- (summary(prepmonin)$sigma)**2
+estm<-coef(prepmonin)
+
+sampm<-table(monin$group)
+
+cov1m <- varm/sampm[1]
+cov2m <- varm/sampm[2]
+cov3m <- varm/sampm[3]
+cov1m <- matrix(cov1m,1,1)
+cov2m <- matrix(cov2m,1,1)
+cov3m <- matrix(cov3m,1,1)
+
+covm<-list(cov1m,cov2m,cov3m)
+
+ERr1<-matrix(c(1,-1,0,0,0,1,-1,0),nrow=2,ncol=4, byrow = TRUE)
+IRr1<-matrix(0,0,0)
+
+resmonin<-Bain(estimate=estm,Sigma=covm,grouppara=1,jointpara=0,n=sampm,ERr1,IRr1)
+```
+
+Add hypothesis of m1 > m2 > m3
+
+```{r}
+# ERr2<-matrix(c(1,-1,0,0,
+#                0,1,-1,0),nrow=2,ncol=4, byrow = TRUE)
+ERr2<-matrix(0,0,0)
+IRr2<-matrix(c(1,-1,0,0,
+               0,1,-1,0),nrow=2,ncol=4, byrow = TRUE)
+
+resmonin2<-Bain(estimate=estm,Sigma=covm,grouppara=1,jointpara=0,n=sampm,ERr2,IRr2)
+
+```
+
+Back to hypothesis m1 = m2 = m3
+
+Add 2 outliers such that H1 is supported
+
+Check means
+
+```{r}
+means <- monin %>%
+  group_by(group) %>%
+  summarize_at(vars(attract), funs(mean, n()))
+means
+
+means <- means$mean
+
+```
+
+Add outliers such that mean 1 and mean 2 are also 0.02
+
+```{r}
+monin_outliers <- monin %>%
+  rbind(c(19 * (means[3] - means[1]), 1)) %>%
+  rbind(c(19 * (means[3] - means[2]), 2))
+
+monin_outliers %>%
+  group_by(group) %>% summarize(mean(attract))
+```
+
+Prepare priors again with new data
+
+```{r}
+
+prepmonin <-  lm(attract~group-1, data=monin_outliers)
+varm <- (summary(prepmonin)$sigma)**2
+estm<-coef(prepmonin)
+
+sampm<-table(monin$group)
+
+cov1m <- varm/sampm[1]
+cov2m <- varm/sampm[2]
+cov3m <- varm/sampm[3]
+cov1m <- matrix(cov1m,1,1)
+cov2m <- matrix(cov2m,1,1)
+cov3m <- matrix(cov3m,1,1)
+
+covm<-list(cov1m,cov2m,cov3m)
+
+ERr3 <- matrix(c(-1, 1, 0, 0,
+                 0, -1, 1, 0),
+               ncol = 4, byrow = T)
+IRr3 <- matrix(0,0,0)
+
+resmonin<-Bain(estimate=estm,Sigma=covm,grouppara=1,jointpara=0,n=sampm,ERr3,IRr3)
+
+
+```
+
+Formulate hyoptheses:
+
+- H1, mu1 = mu2, mu1 > mu3
+- H2, mu2 > mu1 > mu3
+- H0, mu1 = mu2 = mu3
+- Hu, mu1, mu2, mu3
+
+Evaluate on other data
+
+```{r}
+holubar %>%
+  group_by(gr) %>%
+  summarize_at(vars(at), funs(mean, n()))
+```
+
+
+```{r}
+hol_lm <- lm(at ~ gr, data = holubar)
+hol_var <- summary(hol_lm)$sigma^2
+hol_estm <- coef(hol_lm)
+hol_counts <- table(holubar$gr)
+
+
+hol_vcov1 <- matrix(hol_var / hol_counts[1])
+hol_vcov2 <- matrix(hol_var / hol_counts[2])
+hol_vcov3 <- matrix(hol_var / hol_counts[3])
+
+hol_vcovs <- list(hol_vcov1, hol_vcov2, hol_vcov3)
+
+ERr1 <- matrix(c(1, -1, 0, 0), ncol = 4)
+IRr1 <- matrix(c(1, 0, -1, 0), ncol = 4)
+ERr2 <- matrix(0, 0, 0)
+IRr2 <- matrix(c(-1, 1, 0, 0,
+                 1, 0, -1, 0), ncol = 4, byrow = T)
+ERr3 <- matrix(c(1, -1, 0, 0,
+                 0, 1, -1, 0), ncol = 4, byrow = T)
+IRr3 <- matrix(0, 0, 0)
+
+res_hol <- Bain(estimate = hol_estm, Sigma = hol_vcovs, 
+                grouppara = 1, jointpara = 0, n = hol_counts,
+                ERr1, IRr1, ERr2, IRr2, ERr3, IRr3)
+```
+
+
+
+```{r}
+#***************
+#TUTORIAL STEP 5
+#***************
+# Compute the Bayes factor for "all" the hypotheses for the Monin data
+# Note that estm, covm and sampm have already been computed in Step 4.
+
+ERr1<-matrix(c(1,-1,0,0,
+               0,1,-1,0),nrow=2,ncol=4, byrow = TRUE)
+IRr1<-matrix(0,0,0)
+
+ERr2<-matrix(c(1,-1,0,0),nrow=1,ncol=4, byrow = TRUE)
+IRr2<-matrix(0,0,0)
+
+ERr3<-matrix(c(1,0,-1,0),nrow=1,ncol=4, byrow = TRUE)
+IRr3<-matrix(0,0,0)
+
+ERr4<-matrix(c(0,1,-1,0),nrow=1,ncol=4, byrow = TRUE)
+IRr4<-matrix(0,0,0)
+
+resmonin<-Bain(estimate=estm,Sigma=covm,grouppara=1,jointpara=0,n=sampm,ERr1,IRr1,ERr2,IRr2,ERr3,IRr3,ERr4,IRr4)
+
+#***************
+#TUTORIAL STEP 6
+#***************
+# Bayesian updating. Stepwise increasing the sample size for the Monin data
+
+# WARNING: INCREASE THE SIZE OF THE PLOT WINDOW IN THE LOWER RIGHT HAND SCREEN
+# OTHERWISE YOU ARE BOUND TO RECEIVE AN ERROR MESSAGE
+
+# create an object BFmonin in which the Bayes factor for different sample sizes 
+# will be collected.
+BFmonin<-1
+
+# start with an initial sample size of 2+0=2 persons per group an incease by 1 
+# until 2+17=19 persons per group
+
+for (i in 0:17){
+
+  # collect the subset of persons selected in a matrix  
+  subdata <- matrix(0, nrow = 6+3*i, ncol = 2)  # in total 6 initial persons in 3 groups
+                                                # for which 2 variables have been recorded
+  subdata <- monin[c(1:(2+i),20:(21+i),39:(40+i)),1:2] # the first person in the first group is 1
+                                                       # the first person in the second group is 20
+                                                       # the first person in the third group is 39
+  
+  submonin <-  lm(attract~group-1, data=subdata)
+  subvarm <- (summary(submonin)$sigma)**2
+  subestm<-coef(submonin)
+  
+  subsampm<-c(2+i,2+i,2+i)
+  subcov1m <- subvarm/subsampm[1]
+  subcov2m <- subvarm/subsampm[2]
+  subcov3m <- subvarm/subsampm[3]
+  subcov1m <- matrix(subcov1m,1,1)
+  subcov2m <- matrix(subcov2m,1,1)
+  subcov3m <- matrix(subcov3m,1,1)
+  
+  subcovm<-list(subcov1m,subcov2m,subcov3m)
+  
+  ERr1<-matrix(c(1,-1,0,0,0,1,-1,0),nrow=2,ncol=4, byrow = TRUE)
+  IRr1<-matrix(0,0,0)
+  
+  resmonin<-Bain(estimate=subestm,Sigma=subcovm,grouppara=1,jointpara=0,n=subsampm,ERr1,IRr1,print = FALSE)
+  
+  # collect BF0a from the object resmonin and store in BFmonin
+  BFmonin[1+i]<-resmonin[[4]][[3]]
+}
+
+# create a vector containing the sample size per group and plot this versus BF0a 
+NperGroup<-c(2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19)
+plot(NperGroup,BFmonin,ylab="BF0a",xlab="N per Group")
+lines(NperGroup,BFmonin)
+```
+
+Bayes factor keeps changing after addition of more participants
+
+```{r}
+#***************
+#TUTORIAL STEP 7
+#***************
+# Bayesian updating. Posterior Model Probabilities for the Holubar Data
+
+# Create objects containing all 5 PMPs and each separate PMP
+pall<-1
+p1<-1
+p2<-1
+p3<-1
+p4<-1
+p5<-1
+
+for (i in 0:17){
+  
+  subdata <- matrix(0, nrow = 6+3*i, ncol = 2)
+  subdata <- monin[c(1:(2+i),20:(21+i),39:(40+i)),1:2]
+  
+  submonin <-  lm(attract~group-1, data=subdata)
+  subvar  <- (summary(submonin)$sigma)**2
+  subest <-coef(submonin)
+  
+  subsamp<-c(2+i,2+i,2+i)
+  
+  subcov1 <- subvar/subsamp[1]
+  subcov2 <- subvar/subsamp[2]
+  subcov3 <- subvar/subsamp[3]
+  subcov1 <- matrix(subcov1,1,1)
+  subcov2 <- matrix(subcov2,1,1)
+  subcov3 <- matrix(subcov3,1,1)
+  
+  subcov<-list(subcov1,subcov2,subcov3)
+  
+  ERr1<-matrix(c(1,-1,0,0,
+                 0,1,-1,0),nrow=2,ncol=4, byrow = TRUE)
+  IRr1<-matrix(0,0,0)
+  
+  ERr2<-matrix(c(1,-1,0,0),nrow=1,ncol=4, byrow = TRUE)
+  IRr2<-matrix(0,0,0)
+  
+  ERr3<-matrix(c(1,0,-1,0),nrow=1,ncol=4, byrow = TRUE)
+  IRr3<-matrix(0,0,0)
+  
+  ERr4<-matrix(c(0,1,-1,0),nrow=1,ncol=4, byrow = TRUE)
+  IRr4<-matrix(0,0,0)
+  
+  resmonin<-Bain(estimate=subest,Sigma=subcov,grouppara=1,jointpara=0,n=subsamp,ERr1,IRr1,ERr2,IRr2,ERr3,IRr3,ERr4,IRr4)
+
+  pall <- resmonin[[5]][[9]]
+  pall <- as.numeric(levels(pall))[pall]
+  
+  p1[i+1]<-pall[1]
+  p2[i+1]<-pall[2]
+  p3[i+1]<-pall[3]
+  p4[i+1]<-pall[4]
+  p5[i+1]<-pall[5]
+}
+NperGroup<-c(2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19)
+
+# create a legenda for the plot
+leg <- c("H0","Ha1","Ha2","Ha3","Ha")
+
+# give each line a different appearance
+lty <- c(1,2,3,4,5)
+
+plot(NperGroup,p1,type = "l",ylab = "posterior probabilities",xlab="N per Group",ylim=(0:1.0))
+lines(NperGroup,p2,lty=2)
+lines(NperGroup,p3,lty=3)
+lines(NperGroup,p4,lty=4)
+lines(NperGroup,p5,lty=5)
+legend(x = 17, y = 0.95,legend = leg, lty =lty)
+```
+
+## Session information
+
+<!-- Insert the session information into the document -->
+```{r session-info}
+```

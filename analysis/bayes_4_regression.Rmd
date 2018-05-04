@@ -1,0 +1,131 @@
+---
+title: "Bayes Regression"
+author: "Wouter van Amsterdam"
+date: 2018-05-03
+output: html_document
+---
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+```
+
+<!-- Update knitr chunk options -->
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+<!-- Insert the date the file was last updated -->
+```{r last-updated, echo=FALSE, results='asis'}
+```
+
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+```{r code-version, echo=FALSE, results='asis'}
+```
+
+<!-- Add your analysis here -->
+
+# Bayes regressions
+
+Dr. Milica Miocevic
+
+
+Priors for regression coefficients
+
+usually normal
+
+sometimes uniform (e.g. when the range of Y is 0 to 9)
+
+
+For sigma: inverse gamma
+
+Non-intuitive parameterization of inverse gamma
+
+Usefull based on prior data:
+
+$$\sigma_{\epsilon}^2=IG(\nu_0/2, \nu_0\sigma_0^2/2)$$
+
+Higher sample size -> more informative
+
+
+Use gamma for precision is parameterized with the same $\alpha$ and $\beta$
+
+
+For hierarchical models: even diffuse prios can have an influence on the posterior
+(especially variance parameters)
+
+
+Gelman and Shirley (2011) recommendations on convergence:
+
+1. use at least 3 chains with dispersed starting values
+2. PSR < 1.1 seems like convergence
+3. Burn-in up to half of iterations
+
+
+Potential scale reduction factor (PSRF) = Gelman statistic:
+
+- function of ratio of between variability over within-chain variability
+
+
+Credibility interval
+
+- from quantiles: equal tail interval
+- for asymmetrical posteriors: highest posterior density interval (narrowest possible interval that contains 95% of the density)
+
+
+Interpretation: there is 95% probability that when people report 0 as their 
+thirst, they will drink between x and y dl of water
+
+In frequentialist analysis: 95% of intervals constructed following this research
+setup will contain the true value (but this doesn't say anything about the 
+interval at hand)
+
+
+Cool think: credibility intervalas have probabilistic interpretation 
+
+
+## Moderation analysis
+
+- simple intercept = combine intercept and main effect of moderator
+- simple slope = combine beta of determinant and beta of moderator
+
+Usually pick values for contuous moderator of +1 and -1 SD, and report 
+simple intercepts and slopes
+
+## Mediator model
+
+model for mediator based on predictor
+model of x and moderator on y
+
+Other possibility is Structural Equation Modeling with variance-covariance matrix
+
+Product of 2 normally distributed variables is not normally distributed
+
+With Bayes it is no problem, just sample from posterior distribution and
+compute product
+
+
+Multicollinearity in the models can lead to non-convergence
+mean centering can help
+
+
+Diffuse priors vs Bayesian: Miocevic MacKinon Levy 2016
+
+
+Additional options in Bayesian:
+
+- calculate from posterior the probability that the coefficient is larger 
+than a certain cut-off
+
+
+
+
+
+
+
+## Session information
+
+<!-- Insert the session information into the document -->
+```{r session-info}
+```

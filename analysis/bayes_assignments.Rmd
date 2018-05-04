@@ -472,6 +472,510 @@ Perform a Bayesian analysis on some (your own?) data set with uninformative and 
 Perform a posterior predictive pheck to check model assumptions for a particular (your own?) data set
 Present about the difference between classical hypothesis testing and using posterior predictive p-values
 
+# Day 2
+
+> Applied Bayesian Statistics: Lab Meeting 2. Convergence, model selection with the DIC, and prediction.
+Today’s objectives
+Today you will use rjags to sample from the posterior distribution of a logistic regression model, and see if the procedure seems to have converged. You will also practice using the information criterium DIC in the context of the selection of predictors for a logistic regression model. Furthermore, for a person with known predictors but unknown outcome, you will obtain a prediction and credibility interval for the unknown outcome.
+
+## Exercise 1: Evaluating Convergence for a Logistic Regression Model
+
+> In this exercise you will develop a clinical prediction rule for detecting major depressive disorder in primary care. The dataset you will use for this exercise consists of various measures of 1046 participants, aged 18-65 years. These participants were recruited from general practice waiting rooms. Major depressive disorder (depr: 0=no depression, 1=depression) was assessed with the Composite International Diagnostic Interview according to DSM-IV-TR criteria. For this exercise we will predict depression diagnosis with gender (0=male, 1=female).
+
+
+### 1.a Specify your Bayesian logistic regression model for JAGS
+
+#### Step 1. Likelihood
+
+> Open file ModelDay2.txt, and specify a univariate logistic regression model with gender as a predictor variable, such that JAGS can determine the likelihood of the data.
+
+> A logistic regression model could be specified for OpenBUGS as follows:
+
+> # likelihood of the data
+for (i in 1:n){
+logit(p[i]) <- alpha + b.gender*gender[i]
+depr[i] ~ dbern(p[i])}
+
+```{r}
+con1 <- file(here("analysis", "bayes_2_Modelday2.txt"), open = "r")
+lines1 <- readLines(con1)
+
+```
+
+#### Step 2. Priors
+
+> Next, specify prior distributions for all parameters in the model that need to be estimated. What type of prior distributions would you specify for the regression coefficient and for the intercept? How would you specify these distributions to be uninformative?
+
+Take 
+
+- alpha: normal with mean 0, variance 10000 (precision 1/10000)
+- beta: normal with mean 0, variance 10000 (precision 1/10000)
+
+> You can refer to the jags manual for an overview of all available probability distributions (https://sourceforge.net/projects/mcmc-jags/files/Manuals/4.x/jags_user_manual.pdf/download). Pay special attention to what the parameters of each distribution represent - for example, the normal distribution is not specified with a mean and standard deviation as you might expect, but with a mean and a precision (the precision is equal to 1/variance).
+
+#### Step 3. Interesting additional quantities
+
+> You might want to specify the exponent of your regression coefficient in order to interpret directly the posterior distribution of the odds and odds ratios. To do so, include the following commands in the model:
+
+> # odds ratios
+odds0 <- exp(alpha)
+or.gender <- exp(b.gender)
+
+### 1.b Fit the Logistic Regression Model with rjags.
+
+#### Step 1. data
+
+> With these lines of code you can load and specify the data for rjags:
+
+```{r}
+load(here("data", "data_practical2.Rdata"))
+data_prac2_ex1 <- dat_prac2[,1:2]
+n=length(data_prac2_ex1[,1])
+data_ex1 <- list("n"=n, "depr"= data_prac2_ex1[,1],"gender"= data_prac2_ex1[,2])
+```
+
+#### Step 2. initial values
+
+> This time you will have also specify the initial values yourself (instead of generating initial values randomly). You should specify initial values for all the parameters in your model, and put them in a list. Make three of these lists, each with different initial values - one for each chain. Here is an example for the first of your chains:
+
+> Finally, put all three of your lists into a list like so:
+
+
+```{r}
+ins1 <- list(alpha=0, b.gender=1)
+ins2 <- list(alpha = -5, b.gender = 0)
+ins3 <- list(alpha = 5, b.gender = -5)
+ivals <- list(ins1, ins2, ins3)
+```
+
+#### Step 3 rjags model
+
+> Now specify your jags.model() function similar to the exercises from yesterday. Use three chains, and add  inits= ivals as an argument to specify initial values for these chains.
+
+```{r}
+jm_logit <- jags.model(here("analysis", "bayes_2_Modelday2.txt"),
+                       data = data_ex1,
+                       n.chains = length(ivals),
+                       inits = ivals)
+```
+
+####Step 4 Burnin and samples
+
+> Specify that you want to take 2000 samples burnin. Then specify which parameters you want to save, and use coda.samples() to take 2000 samples (per chain) to base your results on. Store the latter samples in object samps_ex1.
+
+```{r}
+nburnin = 2000
+update(jm_logit, nburnin)
+
+nsamps = 2000
+to_save <- c("alpha", "b.gender", "odds0", "or.gender")
+samps_ex1 <- coda.samples(jm_logit, variable.names = to_save, n.iter = nsamps)
+```
+
+###1.c Inspect the convergence of the model
+
+> Inspect the trace plots
+You can obtain trace plots for each parameter with the following line of code:
+
+```{r}
+plot(samps_ex1, density = F)
+```
+
+> Do the three chains seem to mix properly?
+
+Yes pretty good mix
+
+> Inspect the density plots
+You can obtain trace plots for each parameter with the following line of code:
+
+```{r}
+plot(samps_ex1, trace = F)
+```
+
+> Do the densities look nice and smooth? If not, you might want to take more samples.
+
+Yes they are pretty smooth
+
+> Inspect the Gelman Rubin convergence diagnostics
+You can get both plots for the gelman rubin statistics for all the samples, and obtain summary statistics for them in the following way:
+
+```{r}
+gelman.plot(samps_ex1) ##plot gelman rubin statistics
+gelman.diag(samps_ex1) ## table gelman rubin statistics
+
+```
+
+> Does the black line in the plot converge to 1? Are the point estimates and majority of plausible values very close to 1 on equal to 1 for each parameter?
+
+Yes all very close
+
+> Inspect the monte carlo standard errors (naive se) for each parameter
+Use the function summary() on samples_ex1 and inspect the standard errors for each parameter. The monte carlo standard errors (both the naive, and the time series error which is corrected for the autocorrelation of the chain) represent an estimate of the uncertainty contributed by only having a finite number of samples from the posterior. These errors should be small compared to the standard deviation of your estimates - a rule of thumb is that they should be smaller than about 5% of the posterior standard deviation. Is this the case for each parameter?
+
+```{r}
+summary(samps_ex1)
+```
+
+Yes they are lower than 5% from the SD of the parameter
+
+### Conclusion
+
+> Do you think the sampler has converged? If not, consider centering the predictor to avoid a strong correlation between the intercept and slope (as discussed in today’s lecture), and/or taking more samples.
+
+To me it seems pretty converged
+
+> Tip: You can make a scatter plot to visually inspect the correlation between the intercept and slope for the first chain like this:
+
+Make them into a data.frame, bind together by chain
+
+```{r}
+samps_df <- samps_ex1 %>%
+  map(as.data.frame) %>%
+  rbindlist(idcol = "chain")
+```
+
+Plot by chain
+
+```{r}
+samps_df %>%
+  ggplot(aes(x = alpha, y = b.gender)) + 
+  geom_point(alpha = .5) + 
+  facet_wrap(~chain)
+```
+
+Does not seem too narrow in either of the 3 chains
+
+### 1.d Inspect and interpret the results
+
+> Once you have ensured yourself that the sampler has converged (for all parameters) you can continue to report and interpret the posterior results. What is the posterior estimate of the OR for gender? Looking at the 95% Credible Interval would you want to keep this predictor in the model?
+
+> Use the function summary() and your density plots to draw your conclusions.
+
+```{r}
+summary(samps_ex1)
+```
+
+From the 95% credible interval, I would keep the regression coefficient in.
+
+### 1.e Credible and Confidence Intervals
+
+> Describe the difference between the classical Confidence Interval and the Bayesian Credibility Interval.
+
+Check with glm
+
+
+```{r}
+fit_glm <- glm(depr ~ gender, family = binomial, data = data_prac2_ex1)
+summary(fit_glm)
+confint(fit_glm)
+```
+
+The confidence intervals are not the same.
+
+## Exercise 2: Model Selection with the DIC for a Logistic Regression Model
+
+### 2.a Choose five candidate models
+
+> Based on what you know about depressive disorders, select three candidate predictor variables (in addition to gender) from the variables listed below. Choose and write down five interesting candi- date models that you could build with these predictors.
+
+
+> Candidate predictors for the model are:
+gender: 0=male, 1=female
+age: age in years
+educ: educational level, 0=more than primary, 1=only primary
+consult: number of consults in the last 12 months
+household: 0=with others, 1=alone
+partner: 0=with partner, 1=single
+diagnosis: wether GP made diagnosis, 0=diagnosis , 1=only complaint (no diagnosis)
+problems: presentation of mental or social problems at inclusion, 0=no, 1=yes
+somatic: presentation of somatic complaints at inclusion, 0=no, 1=yes
+antidep: antidepressant prescribed in the last 12 months, 0=no, 1=yes
+depGP: depression code at GP, 0=no, 1=yes
+cidi1: any depressed feelings in lifetime, 0=no, 1=yes
+cidi2: any loss of interest in lifetime, 0=no, 1=yes
+
+All could be important, I choose:
+
+- problems
+- age
+- household
+
+models:
+
+- fit0: depr ~ 1
+- fit1: depr ~ gender
+- fit2: depr ~ gender + age
+- fit3: depr ~ gender + age + problems
+- fit4: depr ~ gender + age + problems + household
+
+### 2.b Specify and fit each of the five models, and monitor the DIC for each model.
+
+First inspect the data
+
+```{r}
+str(dat_prac2)
+```
+
+Setup a container for the models
+
+```{r}
+library(formula.tools)
+models <- data.frame(
+  model = 0:4,
+  outcome = "depr",
+  rhs_char = c("1", 
+               "gender", 
+               "gender + age", 
+               "gender + age + problems", 
+               "gender + age + problems + household")
+)
+models %<>%
+  mutate(
+    model_file = paste0("bayes_2_Model2.", model, ".txt"),
+    model_file_full = here("analysis", model_file),
+    formula_char = paste0(outcome, "~", rhs_char),
+    covariates = map(formula_char, ~rhs.vars(formula(.x))),
+    parameters = map(covariates, ~{
+      params = c("alpha")
+      if (length(.x) > 0) params = c(params, paste0("b.", .x))
+      return(params)})
+    )
+models$parameters
+```
+
+
+
+Declare starting values for each model
+
+These should be lists with values named per variable
+
+We will set starting values between -5 and 5 for each of them, as they 
+are all regression coefficients. To make sure not all variables 
+start with the same coefficient, we will cycle the starting values
+
+```{r}
+nmodels <- nrow(models)
+start_values <- c(-5, 0, 5)
+nchains = length(start_values)
+# models$formula_char %>%
+#   map(formula) %>% 
+#   map(rhs.vars) %>%
+#   map(print)
+
+start_values_list <- vector(length = nmodels, mode = "list")
+for (i in 1:nmodels) {
+  params = models$parameters[i][[1]]
+  nparams = length(params)
+
+  start_values_model <- vector(length = nchains, mode = "list")
+  
+  for (j in 1:nchains) {
+    start_values_model[[j]] <- vector(length = nparams, mode = "list")
+    names(start_values_model[[j]]) <- params
+
+    ## assign value of alpha
+    start_values_model[[j]][["alpha"]] <- start_values[j]
+
+    ## assign values of other variables
+    if (nparams > 1) {
+      for (k in 2:(nparams)) {
+        shifter = 1 + ((1 + j + k) %% 3)
+        start_values_model[[j]][[k]] <- start_values[shifter]
+      }
+    }
+  }
+  start_values_list[[i]] <- start_values_model
+}
+print(start_values_list[[2]])
+```
+
+
+Compile the models, store them in a list
+
+
+```{r}
+start_values_list[[2]][[1]]
+```
+
+
+```{r}
+dat_prac2_cage <- mutate(dat_prac2, age = (age - min(age)) / diff(range(age)))
+j_models <- map2(models$model_file_full, start_values_list,
+                 ~jags.model(.x, 
+                             data = dat_prac2_cage,
+                             inits = .y,
+                            n.chains = 3)) 
+
+```
+
+```{r}
+models %<>%
+  mutate(jags_model = j_models,
+         init_values = start_values_list,
+         out_vars = c("alpha", setdiff(rhs_char, "1")))
+```
+
+
+> Do not forget to specify prior distributions and initial values for all parameters in each logistic regression model you run. For each model, inspect the convergence, examine and write down the posterior results: posterior means and 95% CIs of the parameters in each model, and the DIC.
+
+Now burnin each model and extract the relevant parameters
+
+```{r}
+nburnin = 2000
+niter = 2000
+
+burnin_and_run <- function(model, params, nburnin, niter) {
+  update(model, nburnin)
+  # out_vars <- c("alpha")
+  # if (length(vars) > 0) {
+  #   out_vars <- c(out_vars, paste0("b.", vars), paste0("or.", vars))
+  # }
+  samples = coda.samples(model, n.iter = niter, variable.names = params)
+  return(samples)
+}
+
+models %<>%
+  mutate(samples = map2(jags_model, parameters,
+                        ~burnin_and_run(.x, .y, nburnin = nburnin, niter = niter)))
+
+```
+
+Check convergence for the models
+
+(implement in ggplot later)
+
+```{r}
+# models %>%
+  # mutate(sample_df = samples %>%
+  #          map(~as.data.frame(.x[[1]])) %>%
+  #          rbindlist(idcol = "chain", fill = T))
+
+```
+
+```{r}
+plot(models$samples[1][[1]])
+plot(models$samples[2][[1]])
+plot(models$samples[3][[1]])
+plot(models$samples[4][[1]])
+plot(models$samples[5][[1]])
+```
+
+
+
+Extract the DIC
+
+```{r}
+models %<>% 
+  mutate(dic = map(jags_model, ~dic.samples(.x, n.iter = niter, type = "pD")))
+
+```
+
+Look at DICs
+
+```{r}
+get_dic <- function(x) {
+  deviance <- sum(x$deviance)
+  psum <- sum(x[[2]])
+  penalized_deviance = deviance + psum
+  return(penalized_deviance)
+}
+
+models %<>%
+  mutate(dic_value = map_dbl(dic, get_dic))
+```
+
+```{r}
+models %>%
+  select(outcome, rhs_char, dic_value)
+```
+
+
+> Obtaining the right variables for your analysis and putting these data in a list
+For each model you need to specify the right data. For this you need to see in which columns of the dataframe dat_prac2 your variables of interest are stored. You need to select these columns, store them in an object, and then store those in a list for rjags. For example, if you want to select the variables depr, gender and partner, you can go about it in the following way:
+
+> head(dat_prac2)  ###Use this code to see an abbreviated version of the dataframe, and count in which columns your variables are
+### we see that depr is in column 1, gender in 2, and partner in 7.
+##Store each column you need in an object with an appropriate name:
+depr <- dat_prac2[,1] 
+gend <- dat_prac2[,2]
+part <- dat_prac2[,7]
+
+> n=length(data_prac2_ex1[,1])  ### don't forget to specify n too - the number of observations which is needed for your for loop.
+
+> ###Now state which object belongs with which variable in your jags model code, and put this in a list you can supply to rjags:
+
+> data_m1 <- list("n"=n, "depr"=depr, "gender" = gend, "partner" = part)
+Monitoring the DIC
+To keep track of the dic, add the following (adjusted) line of code after using coda.samples()
+
+> ##in the first argument you specify which rjags model to sample the dic for, the second how many samples to take, and the third the type of penalty function (pD for the DIC).
+dic.mod1 <- dic.samples(model = rjags_ex1, n.iter=2000, type = "pD")
+To obtain the dic, call dic.mod1 and write down the penalized deviance.
+
+### 2.c Which variables are included in your final model?
+
+All
+
+> Report and interpret the posterior results of your final model.
+
+Exercise 3: Prediction with a Bayesian Logistic Regression Model
+In this exercise you will predict the probability of depression for a new patient using Bayesian prediction.
+
+## 3.a Add the data for the new patient to the data set
+
+> Add the data for the predictor variables for the new patient at the bottom (last row) of the data frame dat_prac2. Specify the depression score as NA, indicating that this is a missing observation.
+
+> You can do this with the following code:
+
+> load("data_practical2.Rdata")
+
+```{r}
+data_new_patient=c(NA,2,3.50000E+01,2.00000E+00,0.00000E+00,0.00000E+00, 0.00000E+00,1.00000E+00,1.00000E+00,1.00000E+00,
+                   0.00000E+00,0.00000E+00,1.00000E+00,1.00000E+00)
+dat_prac2[1047,] <- data_new_patient
+dat_prac2_cage_pred <- mutate(dat_prac2, age = (age - min(age)) / diff(range(age)))
+```
+
+> Is the new patient male or female? Has he/she been prescribed antidepressants?
+
+### 3.b Run the model and report and interpret the results
+
+> Report and interpret the 95% CI of the predicted probability of depression for this patient. Don’t forget to request depr[1047] and p[1047] as parameters to save samples for. What are your conclusions?
+
+```{r}
+final_init <- start_values_list[[5]]
+final_params <- models$parameters[5][[1]]
+
+jm_predict <- jags.model(here("analysis", "bayes_2_Model2.4_predict.txt"),
+                         data = dat_prac2_cage_pred, 
+                         inits = final_init, n.chains = length(final_init))
+
+update(jm_predict, nburnin)
+samp_predict <- coda.samples(jm_predict, variable.names = c(final_params, "pred_depr", "pred_p"),
+                             n.iter = niter)
+```
+
+```{r}
+summary(samp_predict)
+```
+
+
+### 3.c Dealing with missing data
+
+> Compare this Bayesian approach of handling missing data with classical missing data methods you are familiar with. What are differences and similarities?
+
+Does not work with missing values
+
+
+> Today’s considerations for your presentation on Friday:
+Fit a Bayesian logistic regression model on your own data
+
+> Discuss differences and similarities between the DIC and other information criteria.
+
+> Use a Bayesian model for prediction with your own data set
+
+> Discuss missing data analysis from a Bayesian perspective
+
 
 ## Session information
 

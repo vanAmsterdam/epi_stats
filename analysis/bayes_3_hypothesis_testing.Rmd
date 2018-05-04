@@ -1,0 +1,118 @@
+---
+title: "Bayes hypothesis testing"
+author: "Wouter van Amsterdam"
+date: 2018-05-02
+output: html_document
+---
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+```
+
+<!-- Update knitr chunk options -->
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+<!-- Insert the date the file was last updated -->
+```{r last-updated, echo=FALSE, results='asis'}
+```
+
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+```{r code-version, echo=FALSE, results='asis'}
+```
+
+<!-- Add your analysis here -->
+
+# Define hypotheses
+
+Formulate meaningfull hypotheses based on theory
+
+
+Bayes factor:
+
+Balance fit with complexity of 2 hypothesis
+
+Bayes factor: the support of the data for the informative hypothesis, 
+is x times larger than the support for the uninformative hypothesis
+
+Fit: scale 0 to 1 (1 is perfect)
+Complexity: e.g. number of possible orderings of means (mu1 > mu2 > mu3 is 1 / 6 possible permutations)
+
+Possible set of hypothesis
+
+- Hi
+- Hi` (competing hypothesis)
+- Hc (complementing hypothesis)
+
+Interpretation is in terms of odds (can be turned into conditional hypothesis probabilities, conditional on the data)
+
+Possible to compute:
+
+BF informative vs uninformative
+BF informative vs complementing
+
+Bayes factor
+
+1. is a measure of support (also for null-hypothesis)
+2. bayes factor can be indecisive (around 1)
+3. can update: collect more data
+4. can compar more than two hypotheses
+5. something is going on, and we do know what
+
+Drawbacks
+
+- not controlling overall type 1 and 2 errors (only conditional errors)
+- no cut-off value for decisions (need to think of what level of evidence you want)
+- multiple operalizations of a single hypothesis possible (subjective, pre-formulate and publish)
+
+Posterior model probability
+
+- odds to probability -> Bayesian error probability (variant on type 1 and 2 errors)
+- evaluates both fit and complexity
+- not a classical probability
+- add up to 1 for all hypotheses tested
+- sensitive to number of hypotheses (only include relevant hypotheses)
+- they are the probability of the hypothesis, given the data (not the probability of the data, given the hypothesis)
+
+Don't develop model and perform hypothesis testing on the same data
+
+
+Bayesian model update: study synthesis
+
+Can combine PMPs from different studies
+
+### Technical detials (in Bain)
+
+Based on multi-normal distribution approximations of the posterior distribution
+
+Prior distribution based on (part of) the data, should be centered at 0,
+uninformative, and of the same shape as the posterior distribution
+
+Complexity of hypothesis is the proportion of the prior distribution in 
+agreement with the hypothesis
+
+Fit is proportion of posterio distribution in agreement with the hypothesis
+
+
+
+
+
+
+Bayesian model averaging / ensembling; (selecting subsets of predictors)
+
+Utrecht Applied Data Science
+
+6. Gu. Mulder, Approximate adjusted fractional Bayes factors
+
+
+
+
+
+## Session information
+
+<!-- Insert the session information into the document -->
+```{r session-info}
+```

@@ -1,0 +1,754 @@
+---
+title: "Bayesian statistics assignments day 4, regression, mediation and moderation"
+author: "Wouter van Amsterdam"
+date: 2018-05-03
+output: html_document
+---
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+```
+
+<!-- Update knitr chunk options -->
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+<!-- Insert the date the file was last updated -->
+```{r last-updated, echo=FALSE, results='asis'}
+```
+
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+```{r code-version, echo=FALSE, results='asis'}
+```
+
+<!-- Add your analysis here -->
+
+
+```{r}
+library(dplyr)
+library(data.table)
+library(magrittr)
+library(purrr)
+library(here) # for tracking working directory
+library(ggplot2)
+library(epistats)
+library(broom)
+library(rjags)
+```
+
+# Day 4
+
+## Linear regression
+
+```{r}
+# This code runs a Bayesian linear regression analysis using the package rjags.
+# To start, import the data set LinearRegressionCubic.csv.
+
+MyData <- read.csv(file=here("data", "LinearRegressionCubic.csv"), header=TRUE, sep=",")
+N<-dim(MyData)[1]
+str(MyData)
+```
+
+Define priors and likelihood in bugs language
+
+```{r}
+# writing out the .txt file with the model
+
+modelstring <- as.character("
+model{
+beta.0 ~ dnorm(0, .001); # prior for the intercept
+beta.1 ~ dnorm(0, .001); # prior for b1
+beta.2 ~ dnorm(0, .001); # prior for b2
+beta.3 ~ dnorm(0, .001); # prior for b3
+tau.e ~ dgamma(.5, .5); # prior for the error precision for Y
+
+sigma2.e<-1/tau.e
+sigma.e<-sqrt(sigma2.e)
+
+# Conditional probability of the data
+# A regression model
+
+for(i in 1:N){
+y.prime[i] <- beta.0 + beta.1*x[i]+ beta.2*x[i]*x[i]+ beta.2*x[i]*x[i]*x[i]; # predicted value of Y
+y[i] ~ dnorm(y.prime[i], tau.e); # conditional distribution of y
+}
+}
+") # closes the model as string
+
+model.file.name <- "bayes_4_Linear Regression.txt"
+write(x=modelstring, file=here("analysis", model.file.name), append=FALSE)
+```
+
+Compile the model and run simulations
+
+```{r}
+library('rjags')
+
+jags <- jags.model(here("analysis", model.file.name),
+                   data = list('x' = MyData$X,
+                               'y' = MyData$Y,
+                               'N' = N),
+                   n.chains = 3)
+
+out=coda.samples(jags, variable.names=c("beta.0","beta.1","beta.2", "beta.3", "tau.e"),
+                       n.iter=100)
+
+summary(out)
+```
+
+Check model conversion
+
+```{r}
+# Coda
+library(coda)
+
+model.as.mcmc.list <- as.mcmc.list(out)
+
+gelman.diag(model.as.mcmc.list)
+gelman.plot(model.as.mcmc.list)
+plot(model.as.mcmc.list, trace=TRUE, density=FALSE)
+```
+
+Gelman numbers are above 1.1
+
+Does not look like conversion, run additional samples
+
+```{r}
+# Running additional iterations
+out2=coda.samples(jags, variable.names=c("beta.0","beta.1","beta.2", "beta.3", "tau.e"),
+                 n.iter=2000)
+
+model.as.mcmc.list <- as.mcmc.list(out2)
+
+gelman.diag(model.as.mcmc.list)
+gelman.plot(model.as.mcmc.list)
+plot(model.as.mcmc.list, trace=TRUE, density=FALSE)
+
+summary(out2)
+```
+
+Looks like conversions after about 2000 iterations
+
+Let's burn in with 2000 and then draw samples
+
+
+```{r}
+jags <- jags.model(here("analysis", model.file.name),
+                   data = list('x' = MyData$X,
+                               'y' = MyData$Y,
+                               'N' = N),
+                   n.chains = 3)
+
+
+update(jags, 2000)
+
+out3=coda.samples(jags, variable.names=c("beta.0","beta.1","beta.2", "beta.3", "tau.e"),
+                 n.iter=2000)
+
+model.as.mcmc.list <- as.mcmc.list(out3)
+plot(out3, density = F)
+```
+
+
+
+Conversion is still not perfect.
+
+Let's center X
+
+```{r}
+jags_scaled <- jags.model(here("analysis", model.file.name),
+                   data = list('x' = as.numeric(scale(MyData$X, center = T, scale = T)),
+                               'y' = MyData$Y,
+                               'N' = N),
+                   n.chains = 3)
+
+
+update(jags_scaled, 2000)
+
+out4=coda.samples(jags_scaled, variable.names=c("beta.0","beta.1","beta.2", "beta.3", "tau.e"),
+                 n.iter=2000)
+
+model.as.mcmc.list_scaled <- as.mcmc.list(out4)
+plot(out4, density = F)
+```
+
+Looks better
+
+
+
+```{r}
+# After the chains have converged
+# combine draws from chains
+draws.to.analyze.as.one.list <- 
+  as.mcmc(do.call(rbind,model.as.mcmc.list_scaled))
+
+#obtain mean, medians, and quantiles
+summary.stats <- summary(draws.to.analyze.as.one.list)
+summary.stats
+
+#obtain highest-posterior density interval
+HPD.interval <- HPDinterval(draws.to.analyze.as.one.list, 
+                            prob=.95)
+HPD.interval
+
+```
+
+No indication of cubic effect, only linear effect
+
+## Mediation analysis
+
+Load data and define in buggs language
+
+```{r}
+# This code runs a Bayesian mediation analysis using the package rjags.
+# To start, import the data set waterconsumption.csv.
+
+MyData <- read.csv(file=here("data", "waterconsumption.csv"), header=TRUE, sep=",")
+N<-dim(MyData)[1]
+
+modelstring <- as.character("
+model {
+############################################
+  # Prior distributions
+############################################
+  beta.0.m ~ dnorm(1, .001); # prior for the intercept for M
+  beta.0.y ~ dnorm(1, .001); # prior for the intercept for Y
+
+  a ~ dnorm(5, .11); # prior for a
+  b ~ dnorm(5, .11); # prior for b
+
+  cp ~ dnorm(0, .11); # prior for c?
+  tau.e.M ~ dgamma(.5, .5); # prior for the error precision for M
+  tau.e.Y ~ dgamma(.5, .5); # prior for the error precision for Y
+  
+  ab <-a*b
+
+############################################
+  # Conditional probability of the data
+  # A regression model
+############################################
+  for(i in 1:N){
+    m.prime[i] <- beta.0.m + a*(x[i]-70.18); # predicted value of M, predictor is mean-centered
+    y.prime[i] <- beta.0.y + cp*(x[i]-70.18) + b*(m[i]-3.06) ; # predicted value of Y, predictor is mean-centered
+    m[i] ~ dnorm(m.prime[i], tau.e.M); # conditional distribution of m
+    y[i] ~ dnorm(y.prime[i], tau.e.Y); # conditional distribution of y
+  }  
+}
+") # closes the model as string
+
+#############################################################################################################################
+# Write out the BUGS code to a file
+#############################################################################################################################
+model.file.name <- here("analysis", "bayes_4_Single Mediator Model.txt")
+write(x=modelstring, file=model.file.name, append=FALSE)
+```
+
+Compile model and sample
+
+```{r}
+library(rjags)
+
+mediation.model <- jags.model(model.file.name,
+                   data = list('x' = MyData$x,
+                               'm' = MyData$m,
+                               'y' = MyData$y,
+                               'N' = N),
+                 n.chains = 3)
+out=coda.samples(mediation.model,
+                 variable.names=c("a", "ab","b", "cp", "beta.0.m", 
+                   "beta.0.y", "tau.e.M", "tau.e.Y"),
+                 n.iter=10000)
+
+summary(out)
+```
+
+Plot convergence and posterior distributions
+
+```{r}
+library(coda)
+
+model.as.mcmc.list <- as.mcmc.list(out)
+draws.to.analyze.as.one.list <- 
+  as.mcmc(do.call(rbind,model.as.mcmc.list)) 
+
+summary(draws.to.analyze.as.one.list)
+
+# diagnostics of convergence
+gelman.diag(model.as.mcmc.list)
+gelman.plot(model.as.mcmc.list)
+plot(model.as.mcmc.list, trace=TRUE, density=FALSE)
+plot(model.as.mcmc.list, trace=FALSE, density=TRUE)
+```
+
+No signs of non-convergence
+
+For parameters a, ab, and b, we have a clear sign that they are greater than 0
+For cp, a parameter value of 0 false within the 95% credible interval
+
+There is a clear indication of mediation, and not of a direct effect
+
+
+```{r}
+# running additional iterations
+out2=coda.samples(mediation.model,
+                 variable.names=c("a", "ab","b", "cp", "beta.0.m", 
+                                  "beta.0.y", "tau.e.M", "tau.e.Y"),
+                 n.iter=10000)
+
+model.as.mcmc.list <- as.mcmc.list(out2)
+draws.to.analyze.as.one.list <- 
+  as.mcmc(do.call(rbind,model.as.mcmc.list)) 
+
+#obtain mean, medians, and quantiles
+summary.stats <- summary(draws.to.analyze.as.one.list)
+summary.stats
+
+#obtain highest-posterior density interval
+HPD.interval <- HPDinterval(draws.to.analyze.as.one.list, 
+                            prob=.95)
+HPD.interval
+
+```
+
+### Repeat with different priors:
+
+First center predictors in the data (X and M) without scaling to unit variance
+
+```{r}
+scale2 <- function(x, ...) as.numeric(scale(x, ...))
+df <- MyData %>%
+  mutate_at(vars(x, m), scale2, center = T, scale = F)
+```
+
+Define 3 priors
+
+1. Uniform [0,3] for both a & b
+2. Uniform [-3,3] for both a & b
+3. Normal (0, prec=.01) for both a & b
+
+```{r}
+model_string_upos <- as.character("
+model {
+############################################
+  # Prior distributions
+############################################
+  beta.0.m ~ dnorm(1, .001); # prior for the intercept for M
+  beta.0.y ~ dnorm(1, .001); # prior for the intercept for Y
+
+  a ~ dunif(0, 3); # prior for a
+  b ~ dunif(0, 3); # prior for b
+
+  cp ~ dnorm(0, .11); # prior for c?
+  tau.e.M ~ dgamma(.5, .5); # prior for the error precision for M
+  tau.e.Y ~ dgamma(.5, .5); # prior for the error precision for Y
+  
+  ab <-a*b
+
+############################################
+  # Conditional probability of the data
+  # A regression model
+############################################
+  for(i in 1:N){
+    m.prime[i] <- beta.0.m + a*(x[i]); # predicted value of M, predictor is mean-centered in R
+    y.prime[i] <- beta.0.y + cp*(x[i]) + b*(m[i]) ; # predicted value of Y, predictor is mean-centered in R
+    m[i] ~ dnorm(m.prime[i], tau.e.M); # conditional distribution of m
+    y[i] ~ dnorm(y.prime[i], tau.e.Y); # conditional distribution of y
+  }  
+}
+") # closes the model as string
+
+#############################################################################################################################
+# Write out the BUGS code to a file
+#############################################################################################################################
+model_file_upos <- here("analysis", "bayes_4_mediation_uniform_positive.txt")
+write(x=model_string_upos, file=model_file_upos, append=FALSE)
+mediation.model_upos <- jags.model(model_file_upos,
+                   data = list('x' = df$x,
+                               'm' = df$m,
+                               'y' = df$y,
+                               'N' = N),
+                 n.chains = 3)
+
+
+
+model_string_unif <- as.character("
+model {
+############################################
+  # Prior distributions
+############################################
+  beta.0.m ~ dnorm(1, .001); # prior for the intercept for M
+  beta.0.y ~ dnorm(1, .001); # prior for the intercept for Y
+
+  a ~ dunif(-3, 3); # prior for a
+  b ~ dunif(-3, 3); # prior for b
+
+  cp ~ dnorm(0, .11); # prior for c?
+  tau.e.M ~ dgamma(.5, .5); # prior for the error precision for M
+  tau.e.Y ~ dgamma(.5, .5); # prior for the error precision for Y
+  
+  ab <-a*b
+
+############################################
+  # Conditional probability of the data
+  # A regression model
+############################################
+  for(i in 1:N){
+    m.prime[i] <- beta.0.m + a*(x[i]); # predicted value of M, predictor is mean-centered in R
+    y.prime[i] <- beta.0.y + cp*(x[i]) + b*(m[i]) ; # predicted value of Y, predictor is mean-centered in R
+    m[i] ~ dnorm(m.prime[i], tau.e.M); # conditional distribution of m
+    y[i] ~ dnorm(y.prime[i], tau.e.Y); # conditional distribution of y
+  }  
+}
+") # closes the model as string
+
+#############################################################################################################################
+# Write out the BUGS code to a file
+#############################################################################################################################
+model_file_unif <- here("analysis", "bayes_4_mediation_uniform.txt")
+write(x=model_string_unif, file=model_file_unif, append=FALSE)
+mediation.model_unif <- jags.model(model_file_unif,
+                   data = list('x' = df$x,
+                               'm' = df$m,
+                               'y' = df$y,
+                               'N' = N),
+                 n.chains = 3)
+
+
+
+model_string_norm <- as.character("
+model {
+############################################
+  # Prior distributions
+############################################
+  beta.0.m ~ dnorm(1, .001); # prior for the intercept for M
+  beta.0.y ~ dnorm(1, .001); # prior for the intercept for Y
+
+  a ~ dnorm(0, .01); # prior for a
+  b ~ dnorm(0, .01); # prior for b
+
+  cp ~ dnorm(0, .11); # prior for c?
+  tau.e.M ~ dgamma(.5, .5); # prior for the error precision for M
+  tau.e.Y ~ dgamma(.5, .5); # prior for the error precision for Y
+  
+  ab <-a*b
+
+############################################
+  # Conditional probability of the data
+  # A regression model
+############################################
+  for(i in 1:N){
+    m.prime[i] <- beta.0.m + a*(x[i]); # predicted value of M, predictor is mean-centered in R
+    y.prime[i] <- beta.0.y + cp*(x[i]) + b*(m[i]) ; # predicted value of Y, predictor is mean-centered in R
+    m[i] ~ dnorm(m.prime[i], tau.e.M); # conditional distribution of m
+    y[i] ~ dnorm(y.prime[i], tau.e.Y); # conditional distribution of y
+  }  
+}
+") # closes the model as string
+
+#############################################################################################################################
+# Write out the BUGS code to a file
+#############################################################################################################################
+model_file_norm <- here("analysis", "bayes_4_mediation_normal.txt")
+write(x=model_string_norm, file=model_file_norm, append=FALSE)
+mediation.model_norm <- jags.model(model_file_norm,
+                   data = list('x' = df$x,
+                               'm' = df$m,
+                               'y' = df$y,
+                               'N' = N),
+                 n.chains = 3)
+
+
+
+
+```
+
+Combine models in a data frame for easy manipulation
+
+```{r}
+models <- data.frame(model_prior = c("uniform_positive", "uniform", "normal"))
+models %<>% 
+  mutate(model = list(uniform_positive = mediation.model_upos, 
+                                  uniform = mediation.model_unif,
+                                  normal = mediation.model_norm))
+
+```
+
+
+Burnin 10000 and then sample 10000
+
+```{r}
+nburnin = 10000
+nsample = 10000
+
+params = c("a", "ab","b", "cp", "beta.0.m", 
+                                  "beta.0.y", "tau.e.M", "tau.e.Y")
+
+burnin_and_sample <- function(model, params, nburnin, nsamples) {
+  update(model, nburnin)
+  samples = coda.samples(model, n.iter = nsamples, variable.names = params)
+  return(samples)
+}
+
+models %<>%
+  mutate(samples = map(model,
+                        ~burnin_and_sample(.x, params, nburnin = nburnin, nsamples = nsample)))
+
+
+```
+
+Check convergence for the samples
+
+```{r}
+plot(models$samples[[1]], density = F)
+```
+
+Looks good
+
+```{r}
+plot(models$samples[[2]], density = F)
+```
+
+Looks good
+
+```{r}
+plot(models$samples[[3]], density = F)
+```
+
+Looks good
+
+Let's grab the HDR confidence intervals for the parameters
+
+```{r}
+hpds <- models$samples %>%
+  # map(samples_to_mcmc) %>%
+  map(HPDinterval) %>%
+  map(as.data.frame) %>%
+  map(~mutate(.x, parameter = params)) %>%
+  rbindlist(idcol = "model")
+hpds
+```
+
+Plot parameter credible intervals
+
+```{r}
+hpds %>%
+  ggplot(aes(ymin = lower, ymax = upper, x = parameter, col = model)) + 
+  geom_errorbar(position = "dodge", width = .25) + 
+  coord_flip() + theme_minimal()
+```
+
+No real differences for the different priors
+
+Specifically, none of the confidence bounds for a and b overlap 0, 
+so uniform positive did not enforce this too much
+
+
+
+
+## Moderation analysis
+
+Load data
+
+```{r}
+# This code runs a Bayesian moderation analysis using the package rjags.
+# To start, import the data set Moderationdata.csv.
+
+MyData <- read.csv(file=here("data", "Moderationdata.csv"), header=TRUE, sep=",")
+N<-dim(MyData)[1]
+```
+
+Define model and compile
+
+```{r}
+# writing out the .bug file with the model
+
+modelstring <- as.character("
+model{
+beta.0 ~ dnorm(0, .001); # prior for the intercept
+beta.1 ~ dnorm(0, .001); # prior for regression coefficient for x
+beta.2 ~ dnorm(0, .001); # prior for regression coefficient for z
+beta.3 ~ dnorm(0, .001); # prior for regression coefficient for intercation xz
+tau.e ~ dgamma(.5, .5); # prior for the error precision for Y
+
+sigma2.e<-1/tau.e
+sigma.e<-sqrt(sigma2.e)
+
+# Conditional probability of the data
+# A regression model
+
+for(i in 1:N){
+y.prime[i] <- beta.0 + beta.1*x[i] + beta.2*z[i] + beta.3*x[i]*z[i] ; # predicted value of Y
+y[i] ~ dnorm(y.prime[i], tau.e); # conditional distribution of y
+}
+}
+") # closes the model as string
+
+model.file.name <- here("analysis", "bayes_4_Moderation.txt")
+write(x=modelstring, file=model.file.name, append=FALSE)
+
+library('rjags')
+
+jags <- jags.model(model.file.name,
+                   data = list('x' = MyData$x,
+                               'z' = MyData$z,
+                               'y' = MyData$y,
+                               'N' = N),
+                   n.chains = 3)
+```
+
+Run some samples
+
+```{r}
+out=coda.samples(jags, variable.names=c("beta.0","beta.1","beta.2", "beta.3", "tau.e"),
+                       n.iter=10000)
+
+summary(out)
+```
+
+Analyze convergence
+
+```{r}
+# Coda
+library(coda)
+
+model.as.mcmc.list <- as.mcmc.list(out)
+
+gelman.diag(model.as.mcmc.list)
+gelman.plot(model.as.mcmc.list)
+plot(model.as.mcmc.list, trace=TRUE, density=FALSE)
+plot(model.as.mcmc.list, trace=FALSE, density=TRUE)
+```
+
+Convergence is not bad
+
+```{r}
+# Run additional iterations
+out2=coda.samples(jags, variable.names=c("beta.0","beta.1","beta.2", "beta.3", "tau.e"),
+                 n.iter=10000)
+model.as.mcmc.list <- as.mcmc.list(out2)
+# combine draws from chains
+draws.to.analyze.as.one.list <- 
+  as.mcmc(do.call(rbind,model.as.mcmc.list))
+
+#obtain mean, medians, and quantiles
+summary.stats <- summary(draws.to.analyze.as.one.list)
+summary.stats
+
+#obtain highest-posterior density interval
+HPD.interval <- HPDinterval(draws.to.analyze.as.one.list, 
+                            prob=.95)
+HPD.interval
+```
+
+
+
+### Plot region of significance
+
+For which value of the mediator is there a significant effect of the predictor
+
+We can use out2
+
+```{r}
+length(out2)
+dim(out2[[1]])
+colnames(out2[[1]])
+
+```
+
+out2 is a list of length 3, 1 for each chain
+- for each chain, there are 50000 values, which are 10000 samples for 5 parameters
+
+this is a numeric matrix that can easily be converted to a data frame
+
+We can combine these into a (very long) data frame
+
+Let's us data.table, which is suited for large datasets
+
+```{r}
+out2 %>%
+  map(as.data.frame) %>%
+  rbindlist(idcol = "chain") -> samples
+str(samples)
+```
+
+Pick a grid of values of the moderator, and 
+calculate the 'simple slope' of the predictor for each value
+
+```{r}
+table(MyData$z)
+```
+
+Z values are binary here, so it doesn't make a lot of sense to create a 
+region of significance here, but we can do it
+
+```{r}
+z_mean <- mean(MyData$z)
+z_values <- seq(0, 1, length.out = 100)
+```
+
+Now for each z_value, we will calculate the value of the simple slope for each sample
+
+Add a column for sample number for ease of tracking
+
+```{r}
+samples[, sample_id:=.I]
+```
+
+
+```{r}
+simple_slopes <- samples[, list(z = z_values, 
+                                simple_slope = map_dbl(z_values, ~beta.1 + .x * beta.3)),
+                         by = "sample_id"]
+
+slopes_and_samples <- merge(samples, simple_slopes, by = "sample_id",
+                            all.x = T, all.y = T)
+```
+
+```{r}
+dim(slopes_and_samples)
+head(slopes_and_samples)
+```
+
+Now we have the simple slope for 100 values of z for all samples
+
+We can compute the HPDinterval for each z value
+
+```{r}
+hpds <- slopes_and_samples[, list(
+  simple_slope = median(simple_slope),
+  hpd = list(HPDinterval(as.mcmc(.SD)))),
+                           by = "z"]
+```
+
+Now for each value of z we have the HPD interval of all parameters
+
+```{r}
+hpds$hpd[[1]]
+```
+
+Grab the upper and lower value for the simple_slope from the hpd intervals and plot
+
+```{r}
+hpds %<>%
+  mutate(lower = map_dbl(hpd, ~.x["simple_slope","lower"]),
+         upper = map_dbl(hpd, ~.x["simple_slope", "upper"]))
+
+hpds %>%
+  ggplot(aes(x = z)) +
+  geom_line(aes(y = simple_slope)) + 
+  geom_line(aes(y = upper), lty = 2) + 
+  geom_line(aes(y = lower), lty = 2) + 
+  geom_hline(aes(yintercept = 0), lty = 3) + 
+  theme_minimal()
+```
+
+
+
+## Session information
+
+<!-- Insert the session information into the document -->
+```{r session-info}
+```

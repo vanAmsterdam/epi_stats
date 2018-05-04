@@ -109,5 +109,147 @@ Sobel: theory needs to be falsifyable (Popper) but also plausible
  
 
 
-Science is not objective, objectiveness is the asymptote of science
+** Science is not objective, objectiveness is the asymptote of science **
+
+# Day 2 Gibbs sampler
+
+Posterior distribution of parameters is what we want
+
+Situtuations
+
+- analytical expression (1 parameter)
+- Gibbs sampler (sample parameters from known distribution)
+- Metropolis-Hastings (sample parameters from unknown shape)
+
+Gibbs is special case of Hastings, which is special case of Markov Chain Monte Carlo
+
+## Gibbs
+
+Conjugate priors: posterior is the same as prior distirbution
+
+
+Trace plots should be fat caterpillars (not going anywhere)
+
+## Metropolis-Hastings
+
+Fit a known distribution (proposal distribution) to the empirical posterior distribution
+
+
+Assessment of convergence: Gelman and Rubin statistic
+
+within-chain variability / (within chain + between chain variability)
+
+Should be close to 1 (between chain variation should be low)
+
+Problems with convergence: narrow bivariate (/ multivariate) distribution:
+hard to sample the whole distribution
+
+### Convergence check
+
+- trace plot
+- gelman rubin statisic
+- running quantiles
+- autocorrelations
+
+
+No verification of convergence
+
+If parameters did not converge, you can:
+
+- Use (many) more iterations
+- Use a different parametrization (e.g., center predictors)
+- Use different priors (e.g., multivariate normal prior (i.e., dmnorm(,)) for parameters which are correlated)
+- Use other initial values
+
+# Day 2 Deviance information criterion
+
+- hypothesis testing: special case of comparing 2 nested models
+- model selection: compare 2 or more models
+
+Bayesian options
+
+- Bayes factor
+- Posterior predictive P-value (hypothesis testing)
+- Deviance information factor
+
+## Deviance information factor
+
+model misfit + model complexity
+
+smaller is better
+
+$$AIC = -2 \log(f(y|\hat{\theta}_y) + 2p$$
+
+AIC = Kullback-Leibler distance 
+
+BIC = maximize the marginal model probability (cf. Bayes Factor)
+
+$$BIC = -2 \log(f(y|\hat{\theta}_y) + p\log(n)$$
+
+
+
+$$DIC = -2 \log(f(y|\bar{\theta}_y) + p_D$$
+
+Where $\bar{\theta}_y$ the Bayesian parameter estimate
+And $p_D$ the dimensionality of the model (harder to determine)
+
+
+True distribution: $p(.)$
+model under consideration: $f(.|\theta)$
+
+K-L distance
+
+$$E_{p(y)}[\log p(y) - \log f(y|\theta)]$$
+
+Derivation of DIC is based on finding an expression for the **bias**
+
+Spiegelalter paper for derivation of DIC
++ 20 responses
+
+
+Other expression
+
+$$DIC = Dbar = $$
+
+
+Rules of thumb
+
+- difference > 10: model with higher DIC is ruled out
+- between 5 and 10: difference is still substantial
+- difference < 5: warrant definite conclusions
+
+
+Comparisons of models can be hard when:
+
+- one model integrates out dependencies of parameters
+- other model uses conditional parameters (each conditional on the others)
+
+
+Comparing models with AIC (marginal vs condiational / cluster): Vaida
+
+Comparing DIC with AIC
+
+In a random effects modeling context:
+- DIC is based on f (y|z, theta): Inferences to other observations from
+same clusters
+- AIC is (typically) based on f (y|theta): Inferences to other clusters from
+same population
+- BIC is based on f (y): Inferences to other populations (?)
+
+In a more general context, DIC is sometimes described as a Bayesian
+generalization of the AIC.
+
+
+- Parameterization of DIC: approximate posterio normaily is preferred (due to 2nd order Taylor expansion based on normal distribution)
+- when stochastic parents is descrete node: unclear if DIC is defined
+
+pm mail Email: E.L.Hamaker@uu.nl
+
+Faster algorithm: Hamiltonian MC
+
+
+
+
+
+
 
