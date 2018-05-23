@@ -1,0 +1,623 @@
+---
+title: "Assignments Missing Data"
+author: "Wouter van Amsterdam"
+date: 2018-05-23
+output: html_document
+---
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+```
+
+<!-- Update knitr chunk options -->
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+<!-- Insert the date the file was last updated -->
+```{r last-updated, echo=FALSE, results='asis'}
+```
+
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+```{r code-version, echo=FALSE, results='asis'}
+```
+
+<!-- Add your analysis here -->
+
+## Setup
+
+
+### Load some packages
+
+```{r, message = F}
+library(epistats) # contains 'fromParentDir' and other handy functions
+library(magrittr) # for 'piping'  '%>%'
+library(dplyr)    # for data mangling, selecting columns and filtering rows
+library(ggplot2)  # awesome plotting library
+library(stringr)  # for working with strings
+library(purrr)    # for the 'map' function, which is an alternative for lapply, sapply, mapply, etc.
+library(here)     # for managing working directory (in rstudio project)
+```
+
+# Day 2
+
+> Introduction
+You are an epidemiology consultant. You are asked to participate in a cohort study on annual influenza vaccine effectiveness. The aim of the study is to assess whether annual influenza vaccination reduces the risk of hospitalisation. The data consist of observations on eligible subjects who did, or did not, receive the annual influenza vaccine. The endpoint in this study is hospitalisation during the influenza epidemic period. Note that the vaccine was not randomly allocated; rather vaccination status may depend on characteristics of the participants in the study.
+
+> Variable	Description	Values	Meaning
+vacc	Influenza vaccination	0	Unvaccinated
+1	Vaccinated
+age	Age	Continuous	Years
+sex	Sex	0	Male
+1	Female
+cvd	Cardiovascular disease	0	Absent
+1	Present
+pulm	Pulmonary disease	0	Absent
+1	Present
+DM	Diabetus mellitus	0	Absent
+1	Present
+contact	Number of GP contacts	Discrete	Count
+hosp	Hospitalisation status	0	No hospitalisation
+1	Hospitalisation
+Preparation
+The research question you will address here is whether influenza vaccination affects hospitalisation. As vaccination was not randomized, confounder adjustment is necessary. To address this effect, we here will fit the following regression model:
+
+```{r}
+Formula <- formula(hosp ~ vacc + DM + cvd + pulm + I(log(contact)) + age + sex)
+```
+
+> Let’s first install and load some relevant R packages
+
+```{r}
+# install.packages(c("VIM", "mnormt"))
+library("VIM")
+library("mnormt")
+
+```
+
+> We can load the data from the cohort study on annual influenza vaccine effectiveness as follows:
+
+> load("miss.data.uni.RData") # if the data is in your working directory
+load(file.choose()) # if it is not
+
+```{r}
+load(here("data", "miss.data.uni.RData"))
+```
+
+
+> Before undertaking any analysis, we initialize a random seed so you can compare results with peers.
+
+```{r}
+set.seed(111111)
+```
+
+> Question 1. How many observations do we have? What percentage observations is missing, on each variable?
+
+```{r}
+summary(miss.data.uni)
+str(miss.data.uni)
+
+```
+
+```{r}
+# pctMissing <- function(x) round(colMeans(is.na(x)) * 100, 2) 
+# pct.missing <- pctMissing(miss.data.uni)
+# pct.missing
+nna(miss.data.uni)
+nna(miss.data.uni, prop = T)
+```
+
+```{r}
+# miss.cvd <- is.na(miss.data.uni$cvd) # Indicators of missing information on cvd.
+
+miss.data.uni %<>% mutate(miss.cvd = is.na(cvd))
+
+```
+
+
+> We can inspect the presence of missing values more thoroughly using aggr():
+
+```{r}
+aggr(miss.data.uni, numbers = TRUE)
+```
+
+
+## Simple methods
+
+> We will now pursue several strategies for handling the missing values for cvd in our dataset. We will start the analysis with three simple methods:
+
+> Complete case analysis (CCA),
+Dropping predictors with missing values,
+Mean imputation.
+For all imputation methods, we will store the estimated regression coefficient for influenza vaccination and the corresponding standard error.
+
+```{r}
+results.vacc <- data.frame("b" = numeric(), "se" = numeric())
+
+```
+
+## A. Complete case analysis (CCA)
+
+> In this approach, we simply omit participants with one or more missing values from the statistical analysis. This is also the default approach in glm() (and many other statistical software packages):
+
+
+```{r}
+CCAmodel <- glm(Formula, family = binomial(), data = miss.data.uni)
+CCAmodel
+```
+
+### Question 2. 
+
+> How many participants were used for estimating the parameters of CCAmodel?
+
+30207 (residual degrees of freedom + 1)
+
+```{r}
+results.vacc["CCA",] <- c(coef(CCAmodel)["vacc"], coef(summary(CCAmodel))["vacc", "Std. Error"])
+
+```
+
+### Question 3. 
+
+> How does CCA affect the distribution of the variable cvd? Inspect the mean, the standard deviation and the correlation with vacc in the figure below.
+
+Figure missing by copying.
+
+In the complete case analysis, cvd has a lower prevalence, 
+a more or less equal variance
+
+### Question 4. 
+
+> What is the adjusted odds ratio for vacc, and the corresponding 95% confidence interval? Is annual influenza vaccination effective in reducing the risk of hospitalisation?
+
+```{r}
+extract_RR(CCAmodel)
+```
+
+CI for adjusted OR of vacc includes 1, so no.
+
+### Question 5. 
+
+> Does the CCA approach yield unbiased estimates for the regression coefficients and corresponding standard errors?
+
+Not unbiased, and standard errors are higher than needed
+
+## B. Drop covariates
+
+> Rather than omitting participants with missing values, it is possible to omit covariates with one or more missing values. Since we only have missing data for cvd, we can omit this variable from the statistical analysis and use all 40000 participants for estimating the adjusted odds ratio of influenza vaccination.
+
+```{r}
+dropmodel <- glm(hosp ~ vacc + DM + pulm + I(log(contact)) + age + sex, data = miss.data.uni, family = binomial()) 
+dropmodel
+
+```
+
+```{r}
+results.vacc["Drop", ] <- c(coef(dropmodel)["vacc"], coef(summary(dropmodel))["vacc", "Std. Error"])
+
+```
+
+### Question 6. 
+
+> What is a key problem of aformentioned approach?
+
+We can no longer use a full (and maybe correct) model.
+If many variables have some missings, we end up with an empty model
+
+## C. Mean imputation
+
+> Another common approach is to replace each missing value by the mean of their observed values. This approach results in an imputed dataset, here denoted as mean.imputed.data:
+
+```{r}
+mean.imputed.data <- miss.data.uni 
+mean.imputed.data$cvd[miss.data.uni$miss.cvd] <- mean(miss.data.uni$cvd, na.rm = TRUE)
+summary(mean.imputed.data)
+
+```
+
+### Question 7. 
+
+> How does mean imputation affect the mean of the imputed variable cvd?
+
+It doesn't
+
+```{r}
+mean(miss.data.uni$cvd, na.rm = TRUE) # Results from CCA
+mean(mean.imputed.data$cvd) # Results from mean imputation
+
+```
+
+### Question 8. 
+
+> How does mean imputation affect the standard deviation of the imputed variable cvd?
+
+Goes down
+
+```{r}
+sd(miss.data.uni$cvd, na.rm = TRUE) # Results from CCA
+sd(mean.imputed.data$cvd) # Results from mean imputation
+
+```
+
+### Question 9. 
+
+> How does mean imputation affect the correlation between the imputed variable cvd and the treatment vacc?
+
+```{r}
+cor(miss.data.uni, use = "complete.obs")["cvd", "vacc"]
+cor(mean.imputed.data)["cvd", "vacc"]
+
+```
+
+Correlation goes down
+
+A summary is given below:
+
+```{r}
+dsets <- rbindlist(list(
+  original_data = miss.data.uni,
+  complete_cases = miss.data.uni[complete.cases(miss.data.uni),],
+  mean_imputed = mean.imputed.data
+), idcol = "dataset")
+dsets[, list(N = .N,
+             cor_cvd_vacc = cor(cvd, vacc, use = "complete.obs"),
+             mean_cvd = mean(cvd, na.rm = T),
+             sd_cvd = sd(cvd, na.rm = T)), by = "dataset"]
+```
+
+
+### Question 10. 
+
+> Estimate the adjusted odds ratio for influenza vaccination in the imputed data. Do you expect
+an unbiased estimate of the effect of vaccination?
+an unbiased estimate of the error of the effect of vaccination?
+
+```{r}
+meanmodel <- glm(Formula, data = mean.imputed.data, family = binomial())
+meanmodel
+
+```
+
+If missing were completely at random (which it isn't), the results would 
+be unbiased, but it's not.
+
+Errors are too low (artificial precision created by imputation)
+
+```{r}
+results.vacc["Mean imputation", ] <- c(coef(meanmodel)["vacc"], coef(summary(meanmodel))["vacc", "Std. Error"])
+
+```
+
+## Regression
+
+> As demonstrated in the previous exercises, all of the aforementioned approaches are problematic in clinical practice. Complete case analysis is only valid when data are MCAR, but even then may be ineffective because information from many participants is ignored. Alternatively, when covariates with missing values are dropped from the analysis model, adjustment for corresponding confounders is no longer possible (which may again lead to bias). Finally, when replacing missing values by their observed mean, we ignore (and therefore distort) their potential relation with other variables. One approach to account for this correlation is to generate subject-specific imputations, rather than imputing the same value for all subjects. This approach requires the development of a so-called prediction model, which can be developed using the complete data at hand. As cvd represents a binary variable, we can use logistic regression analysis to generate predictions for the missing values. The dependent variable is then cvd, and the independent variables are all remaining variables including the outcome hosp.
+
+> In the following four methods, we will add increasing layers of complexity, to model the data more adequately. Note that the mean imputation we performed earlier is equivalent to an intercept-only regression model.
+
+## D. Predict
+
+> As a first attempt, we can simply impute missing values with their predicted value, conditional on the observed values. The model to produce these predicted values conditional on the other variables is:
+
+```{r}
+imp.outcome <- "cvd"
+imp.predictors <- "hosp + vacc + DM + pulm + I(log(contact)) + age + sex"
+imp.formula <- formula(paste(imp.outcome, "~", imp.predictors) )
+impmodel1   <- glm(imp.formula, data = miss.data.uni, family = binomial())
+
+```
+
+> For binary variables, this predicted value represents a probability (type = "response"). Imputed values can then be generated as follows:
+
+```{r}
+regression1.data <- miss.data.uni
+regression1.data$cvd[miss.data.uni$miss.cvd] <- prob.cvd2 <- predict(impmodel1, newdata = miss.data.uni[miss.data.uni$miss.cvd, ], type = "response")
+
+```
+
+### Question 11. 
+
+> How does imputation affect the mean, the standard deviation and the correlation of the imputed variable cvd?
+
+```{r}
+mean(regression1.data$cvd) 
+sd(regression1.data$cvd) 
+cor(regression1.data)["cvd", "vacc"]
+
+```
+
+Mean goes up, SD goes down, correlation with treatment goes up
+
+> An overview of the distribution for cvd is given below:
+
+
+
+> We can now estimate the effect of influenza vaccination:
+
+```{r}
+regression1model <- glm(Formula, data = regression1.data, family = binomial())
+regression1model 
+results.vacc["Regression 1", ] <- c(coef(regression1model)["vacc"], coef(summary(regression1model))["vacc", "Std. Error"])
+
+```
+
+### Question 12. 
+
+> Do you think this approach yields valid estimates for the effect of influenza vaccination?
+
+If the missing values can be completely explained by the imputation model, then it is 
+unbiased, however, precision is artificially higher
+
+> It may be clear that the prediction that is used for imputation may still differ from the actual (unknown) value. Predicted values, however, do not portray this uncertainty, and may therefore distort subsequent analyses.
+
+## E. Predict + noise
+
+> We can improve upon the prediction method by adding an appropriate amount of random noise to the predicted value (van Buuren 2012). For binary outcomes, we can add model-based noise by generating the imputed value from a binomial distribution of one ‘trial’ (size = 1), conditional on covariates:
+
+```{r}
+N <- sum(miss.data.uni$miss.cvd) # Number of missing cvd
+regression2.data <- miss.data.uni
+regression2.data$cvd[miss.data.uni$miss.cvd] <- rbinom(n = N, size = 1, prob = prob.cvd2)
+
+```
+
+### Question 13. 
+
+> How does imputation affect the mean, the standard deviation and the correlation of the imputed variable cvd?
+
+Mean remains the same, SD goes up, correlation goes down
+
+```{r}
+mean(regression1.data$cvd) 
+sd(regression1.data$cvd) 
+cor(regression1.data)["cvd", "vacc"]
+mean(regression2.data$cvd) 
+sd(regression2.data$cvd) 
+cor(regression2.data)["cvd", "vacc"]
+
+```
+
+
+> Again, we can estimate the effect of influenza vaccination:
+
+```{r}
+regression2model <- glm(Formula, data = regression2.data, family = binomial())
+regression2model 
+results.vacc["Regression 2", ] <- c(coef(regression2model)["vacc"], coef(summary(regression2model))["vacc", "Std. Error"])
+
+```
+
+
+> It may be clear that regression method 2 already works quite well. In practice, however, the predict + noise method may become problematic when sample sizes are relatively small and for this reason more advanced imputation methods are preferred. We therefore consider 2 additional extensions below.
+
+### F. Predict + noise + parameter uncertainty
+
+> Adding noise is a major step forward, but not quite right. The method in the previous section requires that the intercept and slope of the imputation model impmodel1 are known. However, the values of these parameters are estimated from the data at hand, and are particularly uncertain when sample sizes are relatively small. Hence, we can further improve our imputations as follows. Rather that directly using the estimated regression coefficients for generating predicted values for cvd, we can add variability in these coefficients by relating to their standard error.
+
+> For each patient, generate a random draw of regression coefficients from the multivariate Student-t distribution (rmt() from the  mnormt package). Ideally, we only need to do this for patients with missing values (denoted by miss.cvd). As we want to incorporate the uncertainty of the coefficients into the predictions, we cannot simply use predict(imp.model1) anymore. We will have to code it ourselves, as follows.
+
+> We start with drawing coefficients from a multivariate Student-t distribution:
+
+```{r}
+beta.i3 <- rmt(N, mean=impmodel1$coef, S=vcov(impmodel1), df=impmodel1$df.residual)
+head(beta.i3)
+str(beta.i3)
+```
+
+> Now we have to structure our data with missing cvd observations, so that we can apply our regression coefficients afterwards to calculate the individual predictions. The predict() function does this behind the scenes, but can no longer be used here as we are changing the regression coefficients. Hence, we will use the model.matrix() function to prepare the data:
+
+```{r}
+r3.pred.data <- model.matrix(formula(paste("~", imp.predictors)),
+                             data=miss.data.uni[miss.data.uni$miss.cvd,])
+head(r3.pred.data)
+str(r3.pred.data)
+
+```
+
+Note that this is just the data with added intercept and log transformation,
+in the form of a numeric matrix
+
+> Now that we have our data, we can calulate the linear predictors and use the inverse logit to produce the probabilities of cvd.
+
+```{r}
+prob.cvd3 <- rep(NA, N)
+
+system.time({
+for (i in 1:N) {
+  prob.cvd3[i] <- 1/(1+exp(-r3.pred.data[i,] %*% beta.i3[i,]))
+}
+})
+```
+
+We can also do this without a for-loop, using element-wise matrix multiplication
+and rowsummation
+
+```{r}
+dim(beta.i3)
+dim(r3.pred.data)
+system.time({
+prob.cvd3.1 <- 1 / (1 + exp(rowSums(-r3.pred.data * beta.i3)))
+})
+max(abs(prob.cvd3 - prob.cvd3.1))
+```
+
+Which is a lot faster since it exploits R's vectorization optimizations
+
+> And finally, we again draw cvd from a binomial distribution to account for sampling variation:
+
+```{r}
+regression3.data <- miss.data.uni
+regression3.data$cvd[miss.data.uni$miss.cvd] <- rbinom(n = N, size = 1, prob = prob.cvd3)
+
+```
+
+> The resulting distribution for cvd is given below:
+
+> Again, we use the imputed data to estimate the effect for influenza vaccination:
+
+```{r}
+regression3model <- glm(Formula, data = regression3.data, family = binomial())
+regression3model 
+results.vacc["Regression 3", ] <- c(coef(regression3model)["vacc"], coef(summary(regression3model))["vacc", "Std. Error"])
+
+```
+
+### G. Multiple Imputation
+
+> So far, we have analyzed imputed datasets as if all their data were actually observed. It may be clear that this approach is problematic, as it ignores any uncertainty arising from imputation. Moreover, because the imputation methods based on regression imputed values through random sampling, the validity of imputations becomes highly dependent on chance. In order to preserve all uncertainty arising from imputation, we need to repeat the sampling procedures many times, and generate many imputed datasets. Then, values that can reliably be imputed will not vary much across imputed datasets, whereas other values that are difficult to impute will substantially vary across imputed datasets. This variation in imputations for a certain missing value can lead to differences in the analysis of imputed datasets, thereby reflecting to what extent our results (i.e. odds ratio of influenza vaccination) are affected by the presence of missing data.
+
+> Briefly, we can repeat the imputation procedure as follows:
+
+```{r}
+n.imp <- 50 # Number of predictions per patient.
+results.vacc4 <- as.data.frame(matrix(NA, ncol = 5, nrow = n.imp)) # Save distribution of vacc for each imputed dataset
+colnames(results.vacc4) <- c("mean", "sd", "cor", "beta.vacc", "se.vacc")
+
+# Initialize full dataset
+regression4.data <- miss.data.uni
+
+# Initiatize data for which imputations are needed
+r4.pred.data <- model.matrix(formula(paste("~", imp.predictors)),
+                             data=miss.data.uni[miss.data.uni$miss.cvd,])
+
+# Multiple Imputation
+for (j in 1:n.imp) { 
+  beta.i4 <- rmt(N, mean=impmodel1$coef, S=vcov(impmodel1), df=impmodel1$df.residual)
+  prob.cvd4 <- rep(NA, N)
+  for (i in 1:N) {
+    prob.cvd4[i] <- 1/(1+exp(-r4.pred.data[i,] %*% beta.i4[i,]))
+  }
+
+  regression4.data$cvd[miss.data.uni$miss.cvd] <- rbinom(n = N, size = 1, prob = prob.cvd4)
+  regression4model   <- glm(Formula, data = regression4.data, family = binomial())
+
+  # Save the results
+  results.vacc4$mean[j] <- mean(regression4.data$cvd)
+  results.vacc4$sd[j] <- sd(regression4.data$cvd)
+  results.vacc4$cor[j] <- cor(regression4.data)["cvd", "vacc"]
+  results.vacc4$beta.vacc[j] <- coef(regression4model)["vacc"]
+  results.vacc4$se.vacc[j]    <- coef(summary(regression4model))["vacc", "Std. Error"]
+}
+
+```
+
+> We then obtain 50 imputed datasets, for which each one we can assess the distribution of vacc and its log odds ratio:
+
+```{r}
+print(results.vacc4)
+
+```
+
+
+> Although it is helpful to present results separately for each imputed dataset, this is often impractical. For this reason, Rubin has proposed some rules to combine the results across datasets. For simple statistics such as the mean or standard deviation, we can simply take the average:
+
+```{r}
+apply(results.vacc4[,c("mean", "sd", "cor", "beta.vacc")], 2, mean)
+
+```
+
+> More technically, suppose that Q̂ l is the estimate of the lth repeated imputation, then the combined estimate is equal to
+
+Q¯=1m∑l=1mQ̂ l
+To calculate the standard error of the pooled estimates, we need to account for variation within and between the imputed datasets. In other words, it is not sufficient to take the average of results.vacc4$se.vacc to obtain the standard error of the pooled regression coefficient for vacc. Instead, the total error variance of Q¯ is given as:
+
+T=U¯+(1+1m)B
+
+where m is the amount of generated imputations (i.e. n.imp). Further, we have:
+
+U¯=1m∑l=1mU¯l
+where the square root of U¯l denotes the complete-data standard errors results.vacc4$se.vacc. Finally, we have:
+
+B=1m−1∑l=1m(Q̂ l−Q¯)2
+The standard error for the pooled regression coefficient for vacc is thus given as:
+
+Qbar <- mean(results.vacc4$beta.vacc)
+U <- sum(results.vacc4$se.vacc**2)/n.imp
+B <- sum((results.vacc4$beta.vacc - Qbar)**2)/(n.imp-1)
+se.beta.vacc <- sqrt(U + (1+1/n.imp)*B)
+se.beta.vacc
+## [1] 0.1448822
+# Store results
+results.vacc["Regression 4", ] <- c(Qbar, se.beta.vacc)
+H. Multiple Imputation in mice()
+We can directly apply all of the aforementioned steps via the mice() package:
+
+data.mice <- model.frame(formula(paste("~ 0 + ", imp.predictors, "+", imp.outcome)), data = miss.data.uni, na.action = 'na.pass')
+data.mice$cvd <- as.factor(data.mice$cvd)
+colnames(data.mice)[5] <- "logContact"
+head(data.mice)
+##   hosp vacc DM pulm   logContact age sex  cvd
+## 1    0    1  0    1 3.295836....  66   0 <NA>
+## 2    0    1  0    0 1.386294....  73   1    1
+## 3    0    1  0    0 2.079441....  75   1    1
+## 4    0    1  0    0 1.945910....  76   1    1
+## 5    0    1  0    0 1.945910....  77   1    1
+## 6    0    1  0    0 1.609437....  78   1    1
+# Initialize Imputation Model
+setup.imp <- mice(data.mice, maxit=0)
+
+# Lets ensure logistic regression is used for imputation
+setup.imp$method["cvd"] <- "logreg"
+
+# Start the imputation. No Gibbs sampler is needed (hence maxit=1)
+dat.imp <- mice(data.mice, method = setup.imp$method, m = n.imp, maxit = 1, printFlag = F)
+
+# Start the analyses
+regression5model <- with(data=dat.imp, exp=glm(hosp ~ vacc + DM + cvd + pulm + logContact + age + sex, family = binomial()))
+
+# Use Rubin's rules
+pooledEst <- pool(regression5model)
+
+# Store results
+results.vacc["Regression 5", ] <- c(pooledEst$qbar["vacc"], sqrt(pooledEst$t["vacc", "vacc"]))
+Comparison
+For comparison, we will now analyze the original data where no missing values were presen. We can then compare the coefficients and standard errors of our models to what we would have obtained if we had had the full data. First we load and inspect the full data:
+
+load("full.data.RData")
+And apply the logistic model:
+
+fullmodel <- glm(Formula, data = FULL.data, family = binomial())
+results.vacc["Original data", ] <- c(coef(fullmodel)["vacc"], coef(summary(fullmodel))["vacc", "Std. Error"])
+Question 14. For which method are the obtained parameter estimates closest to estimates of the full data model?
+
+results.vacc
+##                          b        se
+## CCA             -1.6821152 0.4929982
+## Drop            -0.4011813 0.1444709
+## Mean imputation -0.3876875 0.1446818
+## Regression 1    -0.4210747 0.1447589
+## Regression 2    -0.4128386 0.1447509
+## Regression 3    -0.4189637 0.1447335
+## Regression 4    -0.4146575 0.1448822
+## Regression 5    -0.4186311 0.1468475
+## Original data   -0.4347318 0.1448477
+Or use the following function to compute the percentage difference between the estimates obtained with the different strategies, and the estimates obtained on the full data:
+
+PCT.diff <- function(x, ref = ncol(x)) 
+{
+  x <- t(as.matrix(x))
+  y <- round(t(((x[ , -ref] - x[ , ref]) / x[, ref])[, -ref] * 100), 2)
+  y[ , ] <- paste(y, "%", sep = "")
+  noquote(y)
+}
+
+PCT.diff(results.vacc)
+##                 b       se     
+## CCA             286.93% 240.36%
+## Drop            -7.72%  -0.26% 
+## Mean imputation -10.82% -0.11% 
+## Regression 1    -3.14%  -0.06% 
+## Regression 2    -5.04%  -0.07% 
+## Regression 3    -3.63%  -0.08% 
+## Regression 4    -4.62%  0.02%  
+## Regression 5    -3.7%   1.38%
+References
+van Buuren, Stef. 2012. Flexible Imputation of Missing Data. Chapman & Hall/Crc Interdisciplinary Statistics Series. Boca Raton, Fla.: CRC Press.
+
+
+## Session information
+
+<!-- Insert the session information into the document -->
+```{r session-info}
+```
