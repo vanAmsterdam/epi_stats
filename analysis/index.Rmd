@@ -56,6 +56,14 @@ statistic courses in the Epidemiology Graduate Program of the Julius Center, Utr
 
 [presentation](mim_presentation_lc.html)
 
+## Applied Bayesian statistics
+
+[presentation](https://docs.google.com/presentation/d/1-xPRPq_CFF4BsuQpn3yaFx6g3Iz07qfNEPvXSqfVp-E/edit?usp=sharing)
+
+## Missing data
+
+[assignments](md_assignments.html)
+
 # Notes and commmon errors
 
 **working directory**
