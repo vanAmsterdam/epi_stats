@@ -1,0 +1,7 @@
+Description of throat.txt
+
+In a survey of 35 patients having surgery with a general anesthetic, patients were asked whether or not they experienced a sore throat (throat=0 for
+no, throat=1 for yes).  The duration of the surgery in minutes was also recorded, and the type of device
+used to secure the airway (0 = laryngeal mask airway; 1=tracheal tube)
+
+(Data taken from Agresti, 1996).
