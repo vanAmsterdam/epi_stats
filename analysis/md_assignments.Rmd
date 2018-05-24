@@ -121,7 +121,7 @@ miss.data.uni %<>% mutate(miss.cvd = is.na(cvd))
 > We can inspect the presence of missing values more thoroughly using aggr():
 
 ```{r}
-aggr(miss.data.uni, numbers = TRUE)
+# aggr(miss.data.uni, numbers = TRUE)
 ```
 
 
@@ -641,6 +641,509 @@ PCT.diff(results.vacc)
 van Buuren, Stef. 2012. Flexible Imputation of Missing Data. Chapman & Hall/Crc Interdisciplinary Statistics Series. Boca Raton, Fla.: CRC Press.
 
 # Day 3
+
+> Missing Data practical III
+Valentijn de Jong and Thomas Debray
+May 2018
+This practical was developed using R version 3.4.3.
+
+> Introduction
+You are an epidemiology consultant. You are asked to participate in a cohort study on annual influenza vaccine effectiveness. The aim of the study is to assess whether annual influenza vaccination reduces the risk of hospitalisation. The data consist of observations on eligible subjects who did, or did not, receive the annual influenza vaccine. The endpoint in this study is hospitalisation during the influenza epidemic period. Note that the vaccine was not randomly allocated; rather vaccination status may depend on characteristics of the participants in the study.
+
+> Variable	Description	Values	Meaning
+vacc	Influenza vaccination	0	Unvaccinated
+1	Vaccinated
+age	Age	Continuous	Years
+sex	Sex	0	Male
+1	Female
+cvd	Cardiovascular disease	0	Absent
+1	Present
+pulm	Pulmonary disease	0	Absent
+1	Present
+DM	Diabetus mellitus	0	Absent
+1	Present
+contact	Number of GP contacts	Discrete	Count
+hosp	Hospitalisation status	0	No hospitalisation
+1	Hospitalisation
+Preparation
+The research question you will address here is whether influenza vaccination affects hospitalisation. As vaccination was not randomized, confounder adjustment is necessary? To address this effect, we here will fit the following regression model:
+
+```{r}
+Formula <- formula(hosp ~ vacc + DM + cvd + pulm + I(log(contact)) + age + sex)
+
+```
+
+## Multivariate missingness
+
+> Yesterday we attempted to handle univariate missingness in a variety of ways. For regression-based imputation methods, imputation of Yj is based on the remaining columns Y−j as predictors. The rationale is that conditioning on Y−j preserves the relations among the Yj in the imputed data. Today we will consider multivariate missingness. As indicated by van Buuren et al. (2006), this has major implications for most imputation methods:
+the predictors Y−j themselves contain missing values;
+“circular” dependence occurs, where ymisj depends on ymish and ymish depends on ymisj (h≠j), because in general Yj and Yh are correlated, even given other variables;
+especially with large k (number of covariates with missing values) and small n, collinearity or empty cells occur;
+rows or columns can be ordered, e.g., as with longitudinal data;
+variables are of different types (e.g., binary, unordered, ordered, continuous), thereby making the application of theoretically convenient models, such as the multivariate normal, theoretically inappropriate;
+the relation between Yj and predictors Y−j is complex, e.g., nonlinear, or subject to censoring processes;
+imputation can create impossible combinations such as pregnant fathers.
+In this practical, we will adopt fully conditional specification (FCS) for imputing multivariate data. Briefly, this approach involves specifying a separate conditional density P(Yj|Yâj,θj) for each variable with missing values (Yâj). This density is used to impute ymisj given yâj, for example, by linear or logistic regression applied to the cases in yobsj. Imputation under FCS is done by iterating over all conditionally specified imputation models, each iteration consisting of one cycle through all Yj.
+
+> Inspecting the data
+First, load the data with missing observations.
+
+```{r}
+load(here("data", "miss.data.multi.RData")) # if the data is in your working directory
+```
+
+> load(file.choose()) # if it is not
+
+## Question 1. 
+
+> How many observations do we have? What percentage observations is missing, on each variable?
+
+```{r}
+summary(miss.data.multi)
+str(miss.data.multi)
+pct.missing <- round(colMeans(is.na(miss.data.multi)) * 100, 2) 
+pct.missing
+miss.cvd <- is.na(miss.data.multi$cvd) # Indicators of missing information on cvd.
+
+```
+
+## Question 2. 
+
+> Do you think the missingness was caused by a MAR or MNAR mechanism? Why?
+
+```{r}
+miss.data.multi %>%
+  group_by(is.na(cvd)) %>%
+  summarize_all(nna, prop = T)
+```
+
+There are clear differences between missingness within strata of missing value for cvd.
+So clearly not MCAR.
+
+We cannot tell from the data whether they are MAR or MNAR
+
+> First, we will explore how inefficient Complete Case Analysis becomes in the case of multivariate missingnes. Subsequently, we will use Multiple imputation to analyse the data more adequately. For all approaches, we will store the estimated regression coefficient for influenza vaccination and the corresponding standard error.
+
+```{r}
+results.vacc <- data.frame("b" = numeric(), "se" = numeric())
+
+```
+
+## Analysis of the original data
+
+> For comparison, we will include results from the original data, before missing values were introduced. We can then assess the validity of estimated regression coefficients and standard errors.
+
+```{r}
+load(here("data", "full.data2.RData"))
+fullmodel <- glm(Formula, data = FULL.data, family = binomial())
+results.vacc["Original data", ] <- c(coef(fullmodel)["vacc"], coef(summary(fullmodel))["vacc", "Std. Error"])
+```
+
+> The estimated log hazard ratio for influenza vaccination is plotted below, together with its 95% confidence interval: 
+
+```{r}
+coefplot::coefplot(fullmodel)
+```
+
+## Ignoring missingness
+
+## A. Complete case analysis (CCA)
+
+> Fit the prespecified model. Complete case analysis is the default option in glm() (as is common in statistical software), so we can easily fit it as follows:
+
+```{r}
+CCAmodel <- glm(Formula, family = binomial(), data = miss.data.multi)
+CCAmodel
+results.vacc["CCA", ] <- c(coef(CCAmodel)["vacc"], coef(summary(CCAmodel))["vacc", "Std. Error"])
+
+```
+
+## Question 3. 
+
+> Does this method use all information in the data set? Hint: check the degrees of freedom and consider the number of estimated parameters in the regression model.
+
+no, the degrees of freedom are much lower than the total number of patients
+
+
+## Multiple imputation
+
+> We are now going to perform multiple imputation, using the mice package.
+
+```{r}
+require(mice)
+```
+
+
+> MICE requires that categorical (including binary) variables are entered as factors. Then MICE can automatically select a plausible distribution for each variable.
+
+> MICE.data <- with(miss.data.multi, data.frame(sex = factor(sex), 
+                                              age = age, 
+                                              vacc = factor(vacc), 
+                                              cvd = factor(cvd), 
+                                              pulm = factor(pulm), 
+                                              DM = factor(DM), 
+                                              contact = contact, 
+                                              hosp = factor(hosp)))
+                                              
+With dplyr:
+
+```{r}
+factor_vars <- c("sex", "vacc", "cvd", "pulm", "DM", "hosp")
+MICE.data <- mutate_at(miss.data.multi, vars(factor_vars), funs(as.factor))
+```
+
+> We begin by performing a dry run for the multiple imputation procedure.
+
+```{r}
+set.seed(25042017)
+
+```
+
+```{r}
+# Configuration of the MICE model
+MICE.0 <- mice(MICE.data, maxit = 0)
+MICE.0
+
+```
+
+## Question 4. 
+
+> Interpret the output of MICE.0 (use ?mice ) + What does “Imputation methods” tell us? Why is this important? + For which variables do you want to impute? + Which variables do you want to use as predictors in the imputation model? + And which are used by default?
+
+```{r}
+str(MICE.data)
+```
+
+methods for binary variables are all logistic regression
+method for contact is pmm (predictive mean matching). it is an integer, poisson would be good too.
+
+note that it did not use a random seed (we could give it as an argument in mice)
+
+## B. MICE - default
+
+> By default, mice() will generate 5 imputed datasets and perform 5 iterations in the Gibbs sampler. Please be patient, as this takes a few minutes.
+
+```{r}
+MICE.imp.data.default <- mice(MICE.data)
+
+```
+
+> We can inspect the imputation for each variable as follows. Here, we will focus on the contact variable. Since we are generating 5 imputed datasets through a Gibbs sampler with maxit iterations, we have a total of m * maxit (i.e. 5×5) imputed datasets. In practice, we only use the imputed datasets from the last iteration of the Gibbs sampler. However, we can use imputed datasets from earlier iterations of the Gibbs sampler to assess whether imputed values lead to consistent characterics of the corresponding variables. Hereto, we can construct so-called trace line plots, which portray the value of an estimate against the iteration number. Below, we plot the mean and standard deviation of the imputed (not observed) values against the iteration number for each of the m replications. On convergence, the streams should intermingle and be free of any trend.
+
+```{r}
+plot(MICE.imp.data.default, y = "contact", layout = c(2,1))
+
+```
+
+
+## Question 5. 
+
+> Do you think that the Gibbs sampler has properly converged? Try to increase the number of iterations and evaluate whether convergence has improved (and how many interations were needed to reach convergence)
+
+Seems like ok mixing without trend (althoug 5 iterations is not too much)
+
+```{r}
+MICE.imp.data.20 <- mice(MICE.data, maxit = 20)
+plot(MICE.imp.data.20, y = "contact", layout = c(2,1))
+```
+
+After 5 iterations, not much is changed
+
+> We can now analyze the imputed datasets and store the results. We fit a logistic regression model in each imputed data set, and combine the results using Rubin’s rules. Note that when applying the with() statement to MICE.imp.data.default, the  glm() command recognizes this is a dataset with multiple imputations.
+
+```{r}
+# Start the analyses
+MIversion1 <- with(data = MICE.imp.data.default, exp = glm(hosp ~ vacc + DM + cvd + pulm + I(log(contact)) + age + sex, family = binomial()))
+
+# Use Rubin's rules
+pooledEst <- pool(MIversion1)
+
+# Store results
+results.vacc["MI - default", ] <- c(pooledEst$qbar[2], sqrt(pooledEst$t[2,2]))
+
+```
+
+## C. MICE - regression
+
+> So far, we have configured MICE to decide by itself how to impute each variable with missing values. As indicated, all binary variables have been imputed using logistic regression whereas missing values for contact have been imputed using predictive mean matching. We will now specify our own imputation method for this variable, and adopt linear regression for imputing  log(contact):
+
+```{r}
+MICE.data <- with(miss.data.multi, data.frame(sex = factor(sex), 
+                                              age = age, 
+                                              vacc = factor(vacc), 
+                                              cvd = factor(cvd), 
+                                              pulm = factor(pulm), 
+                                              DM = factor(DM), 
+                                              contact = contact,
+                                              log.contact = log(contact), 
+                                              hosp = factor(hosp)))
+
+```
+
+> Note that we now have 2 variables contact and log.contact for the number of GP contacts. In order to ensure that mice() does not impute these variables twice, it needs to be informed about their relation. This can be achieved by means of passive imputation. Briefly, passive imputation can be used to ensure that a data transform always depends on the most recently generated imputations. Here, we will use passive imputation to ensure that imputed values for contact are obtained via  log.contact (which is imputed via linear regression).
+
+> Recall that performing a dry run in mice() generates an empty multiply imputed data set with information on the imputation procedure.
+
+```{r}
+# Configuration of the MICE model
+MICE.0 <- mice(MICE.data, maxit = 0)
+MICE.0
+
+```
+
+log.contact is still pmm
+
+> We will now modify the imputation procedure to impute log-transformed values of contact using linear regression. First, we need to modify the predictor matrix to indicate that we will impute via the variable log.contact rather than via contact.
+
+> We have now specified that the variable contact should no longer be used for imputation. The next step is to specify that we want to impute log.contact via linear regression:
+
+
+```{r}
+pred <- MICE.0$predictorMatrix
+pred[, "contact"] <- 0
+pred
+```
+
+> Each variable in our data set MICE.data has a row and a column in the predictor matrix. A value of 1 indicates that the column variable was used to impute missing values for the row variable. For example, the 1 at entry [vacc, sex] indicates that variable sex was used to impute the incomplete variable vacc. Note that the diagonal is zero because a variable is not allowed to impute itself. The row of sex contains all zeros because there were no missing values in sex. We can modify the predictor matrix to specify which variables should be used for imputation:
+
+```{r}
+method <- MICE.0$method
+method["log.contact"] <- "norm"
+```
+
+> Finally, we need to specify the relation between contact and log.contact, so that we can directly obtain imputed values for  contact via log.contact:
+
+```{r}
+method["contact"] <- "~I(exp(log.contact))"
+```
+
+> We can now start the imputation procedure:
+
+```{r}
+# Start the imputation
+MICE.imp.data.regress <- mice(MICE.data, method = method, pred = pred, print = F)
+plot(MICE.imp.data.regress, y="log.contact", layout=c(2,1))
+
+```
+
+## Question 6. 
+
+> Do you think that the Gibbs sampler has properly converged? Did you need fewer iterations to reach convergence as compared to MICE.imp.data.default?
+
+again it looks pretty ok after 3 or 4 iterations
+
+> Again, we can estimate the adjusted odds ratio for influenza vaccination in the imputed datasets:
+
+```{r}
+
+# Start the analyses
+MIversion2 <- with(data = MICE.imp.data.regress, exp = glm(hosp ~ vacc + DM + cvd + pulm + I(log(contact)) + age + sex, family = binomial()))
+
+# Use Rubin's rules
+pooledEst <- pool(MIversion2)
+
+# Store results
+results.vacc["MI - regression 1", ] <- c(pooledEst$qbar[2], sqrt(pooledEst$t[2,2]))
+
+```
+
+## Question 7. 
+
+>Interpret MICE.imp.data.default and MICE.imp.data.regress. Which method would you prefer for imputing binary and continuous variables?
+
+for binary, both are equal (using logistic regression)
+
+for continous, probably log-normal is better (the regress variant). At least it makes more sense
+
+> A complete overview of the imputation methods in mice can be found by
+
+```{r}
+methods(mice)
+```
+
+## Congeniality
+
+> Recall that we have missing values for the outcome variable hosp.
+
+```{r}
+summary(miss.data.multi$hosp)
+```
+
+> Although we can impute missing outcome values, this is not necessary if our analysis model includes the same variables as the imputation model. In that case, imputation does not add any new information, and missing values for hosp can be considered to be ignorable:
+
+```{r}
+# Identify for which subjects we have data for 'hosp'
+hosp.observed <- which(!is.na(miss.data.multi$hosp))
+
+# Start the analyses in patients with complete data for 'hosp'
+MIversion3 <- with(data = MICE.imp.data.regress, exp = glm(hosp ~ vacc + DM + cvd + pulm + I(log(contact)) + age + sex, family = binomial(), subset=hosp.observed))
+
+# Use Rubin's rules
+pooledEst <- pool(MIversion3)
+
+# Store results
+results.vacc["MI - regression 2", ] <- c(pooledEst$qbar[2], sqrt(pooledEst$t[2,2]))
+
+```
+
+```{r}
+results.vacc %>%
+  tibble::rownames_to_column(var = "model") %>%
+  mutate(upper = b + 1.96 * se,
+         lower = b - 1.96 * se) %>%
+  ggplot(aes(x = model, y = b)) + 
+  geom_point() + geom_linerange(aes(ymin = lower, ymax = upper), lty = 2)
+```
+
+
+> More technically, patients with imputed Y contain no information about the regression of Y on X. However, this does not mean that patients with missing outcomes are useless (von Hippel 2007). As Little writes, “cases with Y missing can provide a minor amount of information for the regression of interest, by improving prediction of missing X’s for cases with Y present”.
+
+> Let’s now investigate imputation issues that arise when modeling interaction terms. To this purpose, we will investigate whether the effect of influenza vaccination is affected by pulmonary disease (pulm). In the original data, we can do this as follows:
+
+```{r}
+# Placeholder for results
+results.interaction <- data.frame(b=numeric(), se=numeric())
+
+# Fit the model
+model.int.FULL <- glm(hosp ~ vacc + DM + cvd + pulm + I(log(contact)) + age + sex + vacc*pulm, data = FULL.data, family = binomial())
+
+# The estimate of interest is the interaction term
+results.interaction["Original data", ] <- c(coef(model.int.FULL)["vacc:pulm"], coef(summary(model.int.FULL))["vacc:pulm", "Std. Error"])
+```
+
+We can also estimate the interaction in the complete cases:
+
+```{r}
+# Fit the model
+model.int.CCA <- glm(hosp ~ vacc + DM + cvd + pulm + I(log(contact)) + age + sex + vacc*pulm, data = miss.data.multi, family = binomial())
+# The estimate of interest is the interaction term
+results.interaction["CCA", ] <- c(coef(model.int.CCA)["vacc:pulm"], coef(summary(model.int.CCA))["vacc:pulm", "Std. Error"])
+results.interaction
+```
+
+
+> The estimated log hazard ratio for the interaction between influenza vaccination and pulmonary disease is plotted below, together with its 95% confidence interval: 
+
+> Evidently, as we have missing values for vacc, pulm and most of the confounders, aforementioned approach is not feasible in the “actual” dataset. For this reason, we can adopt multiple imputation. Previously, we imputed missing values using regression analysis (MICE.imp.data.regress) and we can use the resulting datasets to analyze the interaction:
+
+```{r}
+# Start the analyses
+MIversion5 <- with(data = MICE.imp.data.regress, exp = glm(hosp ~ vacc + DM + cvd + pulm + I(log(contact)) + age + sex + vacc*pulm, family = binomial()))
+
+# Use Rubin's rules
+pooledEst <- pool(MIversion5)
+
+# Store results
+results.interaction["MI - uncongenial", ] <- c(pooledEst$qbar[9], sqrt(pooledEst$t[9,9]))
+results.interaction
+```
+
+
+> This yields:
+
+> Note that we obtain attenuated results for the interaction term. This is because the standard MICE algorithm only models main effects, such that our analysis model including an interaction term has become uncongenial/incompatible with the imputation model (which ignores any interaction terms). To avoid this problem we need to add interactions of interest to the imputation model.
+
+```{r}
+MICE2.data <- with(miss.data.multi, data.frame(sex = factor(sex), 
+                                              age = age, 
+                                              vacc = factor(vacc), 
+                                              cvd = factor(cvd), 
+                                              pulm = factor(pulm), 
+                                              DM = factor(DM), 
+                                              contact = contact,
+                                              log.contact = log(contact), 
+                                              hosp = factor(hosp),
+                                              i_vacc_pulm = factor(vacc*pulm)))
+head(MICE2.data)
+
+```
+
+> One approach is to account for the interaction i_vacc_pulm is adopt passive imputation (von Hippel 2009, Seaman, Bartlett, and White (2012)). Unfortunately, this approach generally leads to bias as the missing values are imputed from a model which assumes additive effects. A solution to this problem is to impute the interaction variable i_vacc_pulm directly, as if it were ‘just another variable’ (JAV). The consequence of this is that in the imputed datasets, the imputed values of the interaction variable  i_vacc_pulm will not necessarily be equal to the product of vacc and pulm. Although it has been demonstrated that JAV provides consistent estimation when X is MCAR von Hippel (2009), it generally leads to biased results when data are MAR (Seaman, Bartlett, and White 2012). As an example, we apply the JAV approach to our data:
+
+```{r}
+# Configuration of the MICE model
+MICE2.0 <- mice(MICE2.data, maxit = 0)
+
+# Passive imputation for 'contact'
+pred <- MICE2.0$predictorMatrix
+pred[,"contact"] <- 0
+method <- MICE2.0$method
+method["log.contact"] <- "norm"
+method["contact"] <- "~I(exp(log.contact))"
+
+# Start the imputation
+MICE.imp.data.interaction <- mice(MICE2.data, method = method, pred = pred, print = F)
+plot(MICE.imp.data.interaction, y="i_vacc_pulm", layout = c(2,1))
+
+```
+
+
+## Question 8. Did the Gibbs sampler converge?
+
+No, lines are not yet mixing nicely
+
+```{r}
+# Start the analyses
+MIversion6 <- with(data = MICE.imp.data.interaction, exp = glm(hosp ~ vacc + DM + cvd + pulm + I(log(contact)) + age + sex + i_vacc_pulm, family = binomial()))
+
+# Use Rubin's rules
+pooledEst <- pool(MIversion6)
+
+# Store results
+results.interaction["MI - JAV linear", ] <- c(pooledEst$qbar[9], sqrt(pooledEst$t[9,9]))
+
+```
+
+
+> Note that the JAV approach as implemented here suffers from convergence problems and is not able to preserve the treatment-covariate interaction. This problem arises because we are trying to impute vacc * pulm using a logistic regression model where the linear predictor is given by vacc + pulm + hosp + DM + cvd + log.contact + age + sex. Evidently predicting an interaction via a linear sum does not work. For this reason, other imputation methods such as classification and regression trees (CART) have been proposed (Doove, Van Buuren, and Dusseldorp 2014). The CART approach searches for a split that is most predictive of the response variable by searching through all predictor variables. Within the subgroups created from one predictor variable, a new split is searched within the same variable or other predictor variables. Since splits are conditional on previous splits, the variables used may indicate interaction effects (Doove, Van Buuren, and Dusseldorp 2014). Note that maxit is set to a very high number, as achieving convergence remains difficult.
+
+
+```{r}
+method["i_vacc_pulm"] <- "cart"
+
+# Start the imputation
+MICE.imp.data.interaction2 <- mice(MICE2.data, method = method, pred = pred, print = F, maxit = 200)
+plot(MICE.imp.data.interaction2, y="i_vacc_pulm", layout=c(2,1))
+
+
+# Start the analyses
+MIversion7 <- with(data = MICE.imp.data.interaction2, exp = glm(hosp ~ vacc + DM + cvd + pulm + I(log(contact)) + age + sex + i_vacc_pulm, family = binomial()))
+
+# Use Rubin's rules
+pooledEst <- pool(MIversion7)
+
+# Store results
+results.interaction["MI - JAV nonlinear", ] <- c(pooledEst$qbar[9], sqrt(pooledEst$t[9,9]))
+
+```
+
+> This yields:
+
+```{r}
+results.interaction %>%
+  tibble::rownames_to_column(var = "model") %>%
+  mutate(upper = b + 1.96 * se,
+         lower = b - 1.96 * se) %>% 
+  ggplot(aes(x = model, y = b)) + 
+  geom_point() + geom_linerange(aes(ymin = lower, ymax = upper), lty = 2)
+```
+
+
+> To conclude, there is currently no perfect approach to impute transformed variables and interaction terms. Previously, Seaman, Bartlett, and White (2012) formally compared predictive mean matching (PMM), passive imputation and JAV. They found that none of the three MI methods worked well in MAR scenarios. In general, JAV performed better than passive imputation or PMM for linear regression with an interaction effect. However, for logistic regression (as is the case here), the best performing imputation method was PMM.
+
+##Final questions
+
+## Question 9 (“Bonus”). 
+
+> Assess the influence of adjusting the number of multiple imputations and/or the number of iterations. How many imputation and iterations do you think we need?
+
+## References
+
+> Doove, L.L., S. Van Buuren, and E. Dusseldorp. 2014. “Recursive Partitioning for Missing Data Imputation in the Presence of Interaction Effects.” Computational Statistics & Data Analysis 72 (April): 92–104. doi:10.1016/j.csda.2013.10.025.
+Seaman, Shaun R., Jonathan W. Bartlett, and Ian R. White. 2012. “Multiple Imputation of Missing Covariates with Non-Linear Effects and Interactions: An Evaluation of Statistical Methods.” BMC Med Res Methodol 12 (April): 46. doi:10.1186/1471-2288-12-46.
+van Buuren, Stef, J. P.L. Brand, C. G.M. Groothuis-Oudshoorn, and D. B. Rubin. 2006. “Fully Conditional Specification in Multivariate Imputation.” Journal of Statistical Computation and Simulation 76 (12): 1049–64. doi:10.1080/10629360600810434.
+von Hippel, Paul T. 2007. “Regression with Missing Ys: An Improved Strategy for Analyzing Multiply Imputed Data.” Sociological Methodology 37 (1): 83–117. doi:10.1111/j.1467-9531.2007.00180.x.
+———. 2009. “How to Impute Interactions, Squares, and Other Transformed Variables.” Sociological Methodology 39 (1): 265–91. doi:10.1111/j.1467-9531.2009.01215.x.
 
 
 
