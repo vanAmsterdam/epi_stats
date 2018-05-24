@@ -1,0 +1,132 @@
+---
+title: "Missing data notes"
+author: "Wouter van Amsterdam"
+date: 2018-01-19
+output: html_document
+---
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+```
+
+<!-- Update knitr chunk options -->
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+<!-- Insert the date the file was last updated -->
+```{r last-updated, echo=FALSE, results='asis'}
+```
+
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+```{r code-version, echo=FALSE, results='asis'}
+```
+
+<!-- Add your analysis here -->
+
+## Intro
+
+Tutor: Thomas Debray
+
+## Multiple missing variables
+
+Initialize imputed dataset with some arbitrary mechanism (zero, mean, random, model based on complete cases...)
+
+Updated with Gibbs sampler
+
+Or: do jomo (joint imputation), assume multivariate normal distribution
+
+## Congeniality
+
+assumptions in the analysis model should also be present in the imputation model
+
+potential sources of uncongeniality
+
+- adjustment for confounders
+- nonlinearity terms
+- covariate interactions
+- between-study heterogeneity (e.g. in IPD-MA)
+---> ignoring clustering with imputation will reduce heterogeneity between studies
+- transformed versions of a variable (e.g. BMI)
+
+### strategies to remove congeniality
+
+- generate new variables for interactions, as 'just another variable' in the imputation model (not perfect but works ok; could be that imputed interaction is not X1*X2, works but doesn't make a lot of sense)
+- passive imputation: impute original data, and calculate the interaction
+- flexible model: imputing variables with non-linear trends (e.g. broken-stick)
+
+## Imputation with time-to-event
+
+Don't just include event indicator and time (imputation model assumes linear association with time)
+
+better (for Cox):
+
+- include D, and the cumulative baseline hazard
+- include D and the Nelson-Aalen estimator
+
+for accelerated failure time models: think about interactions between covariates and time
+
+## Individual patient missing data
+
+- Partially missing data missing data missing datamissing data
+- Systematically missing data missing data missing datamissing data
+- Entire studie(s) missing studie(s) missing studie(s) missing studie(s) missing
+- Combination of above aboveissues issues
+
+-> imputation models should account for clustering
+
+### strategies
+
+imputation strategy
+- within-study imputation
+- stratified imputation (stack all data, include study ID as dummy variable)
+- hierarchical imputation (e.g. mixed effects models; for example allow for a different intercept of the imputation models in each study)
+
+imputation paradigm
+- fully conditional specification (FCS)
+- joint modeling (JM)
+
+fully condiational specification
+- FCS-2stage (resche-rigon & white)
+- FCS-GLM (Debray, binary, continous and count); works when clusters are small; computationally intensive
+
+joint modeling
+- JM-JOMO (quartagno); (bias when few people and/or few studies; conservative w.r.t. heterogeneity)
+
+for IPD-MA with clustered data, use each measurement*timepoint as different variable (only works when time-points are fixed between patients)
+
+## Predictive mean matching
+
+For semi-continous data, 
+- e.g. mixture (packyears, or count of bacteries)
+- seasonal data
+
+predictive mean matching ('nearest neighbor' matching)
+
+- never generates values that are impossible;
+- take best matches
+- add noise
+
+stable performance
+- free of distributional assumptoins
+- accurate inferences in extreme conditions
+
+less powerfull wehn
+- missing outlying values in very skewed data
+- small datasets
+- multivariate missingness
+
+
+mahalanobis;
+
+
+
+
+
+## Session information
+
+<!-- Insert the session information into the document -->
+```{r session-info}
+```

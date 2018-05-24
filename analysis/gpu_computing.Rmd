@@ -33,6 +33,44 @@ library(gpuR)
 detectGPUs()
 ```
 
+### Simple benchmark
+
+on CPU
+
+```{r}
+dim_pow = 8
+n = 10^dim_pow
+n_rows = 10^ceiling(dim_pow / 2)
+n_cols = 10^floor(dim_pow / 2)
+
+matA = matrix(rnorm(n), nrow = n_rows)
+matB = matrix(rnorm(n), nrow = n_rows)
+
+system.time(matA %*% t(matB))
+system.time(matA + matB)
+```
+
+on GPU with matrix in RAM
+
+```{r}
+gpuA = gpuMatrix(rnorm(n), nrow = n_rows, ncol = n_cols, type = "double")
+gpuB = gpuMatrix(rnorm(n), nrow = n_rows, ncol = n_cols, type = "double")
+
+system.time(gpuA %*% t(gpuB))
+system.time(gpuA + gpuB)
+```
+
+on GPU with matrix in GPU-RAM
+
+```{r}
+vclA = vclMatrix(rnorm(n), nrow = n_rows, ncol = n_cols, type = "double")
+vclB = vclMatrix(rnorm(n), nrow = n_rows, ncol = n_cols, type = "double")
+
+# system.time(vclA %*% t(vclB))
+system.time(vclA + vclB)
+```
+
+
 
 ### Simulate data
 

@@ -35,6 +35,7 @@ knitr::read_chunk("chunks.R")
 library(epistats) # contains 'fromParentDir' and other handy functions
 library(magrittr) # for 'piping'  '%>%'
 library(dplyr)    # for data mangling, selecting columns and filtering rows
+library(data.table)# for advanced subsetting and rbindlist
 library(ggplot2)  # awesome plotting library
 library(stringr)  # for working with strings
 library(purrr)    # for the 'map' function, which is an alternative for lapply, sapply, mapply, etc.
@@ -72,7 +73,7 @@ Formula <- formula(hosp ~ vacc + DM + cvd + pulm + I(log(contact)) + age + sex)
 
 ```{r}
 # install.packages(c("VIM", "mnormt"))
-library("VIM")
+# library("VIM")
 library("mnormt")
 
 ```
@@ -573,7 +574,9 @@ setup.imp <- mice(data.mice, maxit=0)
 setup.imp$method["cvd"] <- "logreg"
 
 # Start the imputation. No Gibbs sampler is needed (hence maxit=1)
+system.time({
 dat.imp <- mice(data.mice, method = setup.imp$method, m = n.imp, maxit = 1, printFlag = F)
+})
 
 # Start the analyses
 regression5model <- with(data=dat.imp, 
@@ -612,8 +615,12 @@ results.vacc
 ```
 
 
+In terms of bias:
+
 For regression 2 (predict + noise), 1 (predict), 
 4 (manual multiple imputation) and 5 (mice, equivalent to 4)
+
+Only regression 5 has also has increased SE (which is appropriate, since we have fewer dataa0)
 
 > Or use the following function to compute the percentage difference between the estimates obtained with the different strategies, and the estimates obtained on the full data:
 
@@ -632,6 +639,9 @@ PCT.diff(results.vacc)
 
 > References
 van Buuren, Stef. 2012. Flexible Imputation of Missing Data. Chapman & Hall/Crc Interdisciplinary Statistics Series. Boca Raton, Fla.: CRC Press.
+
+# Day 3
+
 
 
 
