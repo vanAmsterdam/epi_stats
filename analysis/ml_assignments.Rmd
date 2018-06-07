@@ -1,0 +1,1015 @@
+---
+title: "Machine learning and applications in medicine, assignments"
+author: "Wouter van Amsterdam"
+output: html_notebook
+---
+
+# setup R
+
+```{r}
+library(here)
+library(dplyr)
+library(ggplot2)
+library(magrittr)
+library(data.table)
+library(purrr)
+```
+
+
+# day 1
+
+#1. Unsupervised learning: Principle components analysis (PCA)
+PCA on the autism data: determine the PC's, look at the Scree plot that ndactes the amount of variance explained, plot PC2 against PC1 and label the points by Genetic Syndrome group.
+
+
+
+```{r}
+
+# Read the dataset Autism.csv.
+dat <- read.csv(here("data", "Autism.csv"))
+
+# select 322 verbal subjects:
+dat <- dat[dat$verbal=="verbal",]
+head(dat)
+```
+
+```{r}
+# make separate object for ADI-R items
+Items <- dat[,-(1:3)]
+# and version of the data with only Items and the genetic group variable
+dat1 <- dat[,-(1:2)]
+
+# run PCA analysis using the function prcomp
+pca.Items <- prcomp(Items,scale=TRUE)
+
+# what does the result from prcomp look like?
+summary(pca.Items)
+```
+
+```{r}
+# plot the first 2 PCs
+par(mfrow=c(1,1),mai=c(1,1.5,0.2,1.5))
+plot(pca.Items$x[,1],pca.Items$x[,2],
+     xlab="PC1",ylab="PC2",
+     col = as.integer(dat$Genetic_Syndrome),
+     pch=as.character(as.integer(dat$Genetic_Syndrome)),
+     cex=1.2,cex.axis=1.3,cex.lab=1.3,asp=1)
+
+# compute means of PC1 and PC2 for each genetic group
+mn.pc1.Items <- tapply(pca.Items$x[,1],INDEX = dat$Genetic_Syndrome,FUN=mean)
+mn.pc2.Items <- tapply(pca.Items$x[,2],INDEX = dat$Genetic_Syndrome,FUN=mean)
+# add these to the PCA plot
+points(x=mn.pc1.Items,y=mn.pc2.Items,col="black",pch=19,cex=3)
+points(x=mn.pc1.Items,y=mn.pc2.Items,col=1:8,pch=19,cex=2)
+```
+
+This was a simple application of PCA, using the prcomp function. Mathematically, PCA is done using the so called Singular Value Decomposition (SVD) of the data matrix X, see for instance: https://stats.idre.ucla.edu/r/codefragments/svd_demos/. SVD is also a powerful tool for image compression, as shown on the same url, as well as on: http://andrew.gibiansky.com/blog/mathematics/cool-linear-algebra-singular-value-decomposition/. The image compression examples show that PCs may actually contain a lot of detailed information.
+
+#1. Image compression
+
+read in image
+
+```{r}
+require(caTools)
+bayes <- read.gif(here("data", "Thomas_Bayes.gif"))
+bayes <- bayes$image
+
+nrows = dim(bayes)[1]
+ncols = dim(bayes)[2]
+
+bayes_pca <- prcomp(bayes, scale = T)
+rot <- bayes_pca$rotation
+npcas = 30
+bayes_pca_space_compressed_30 <- bayes_pca$x[, 1:npcas]
+bayes_reconstructed_30 <- bayes_pca_space_compressed_30 %*% t(rot[, 1:npcas])
+
+npcas = 100
+bayes_pca_space_compressed_100 <- bayes_pca$x[, 1:npcas]
+bayes_reconstructed_100 <- bayes_pca_space_compressed_100 %*% t(rot[, 1:npcas])
+
+
+image(t(bayes[rev(1:nrows),]), col = gray(1:1e3 / 1e3), main = "original")
+image(t(bayes_reconstructed_30[rev(1:nrows),]), col = gray(1:1e3 / 1e3), main = "compressed, 30 pcas")
+image(t(bayes_reconstructed_100[rev(1:nrows),]), col = gray(1:1e3 / 1e3), main = "compressed, 100 pcas")
+
+```
+
+
+#1. Supervised learning: binary classification of autism data
+
+```{r}
+
+# first restrict the data to two groups: 1 and 4, use a logical selection vector
+select14 <- dat1$Genetic_Syndrome %in% levels(dat1$Genetic_Syndrome)[c(1,4)]
+table(dat[select14,]$Genetic_Syndrome)
+```
+
+```{r}
+# add the PCs to the data
+dat.pca <- cbind(dat,pca.Items$x)
+
+# Method 1: logistic regression on the 1st two Principle Components
+datglm.fit <- glm(Genetic_Syndrome=="22q11DS"~PC1+PC2,data=dat.pca[select14,],family = "binomial")
+summary(datglm.fit)
+```
+
+```{r}
+# Now run crossvalidation (more about this tomorrow), to estimate the test ('out of sample') error. We will use the function cv.glm from the boot package 
+library(boot)
+# if needed, install the boot package:
+# install.packages("boot")
+
+# make a cost function for cv.glm, giving the binary classification error,
+# using a cutoff on the predicted probability of 0.5
+cost <- function(r, pi = 0) mean(abs(r-pi) > 0.5)
+cv.err=cv.glm(dat.pca[select14,],datglm.fit,cost) # leave-one-out cv (LOOCV)
+
+c(out.of.sample.error=cv.err$delta[2])
+```
+
+
+
+```{r}
+# also compute the error in the training data
+in.sample.error <- cost(datglm.fit$fitted.values,dat.pca[select14,]$Genetic_Syndrome=="22q11DS")
+c(in.sample.error=in.sample.error)
+```
+
+```{r}
+# now use 1NN for classification
+library(class)
+# if needed, install the boot package:
+# install.packages("class")
+NN1.train <- knn(train=dat.pca[select14,c("PC1","PC2")], 
+                 test =dat.pca[select14,c("PC1","PC2")], 
+                 cl=dat.pca[select14,c("Genetic_Syndrome")], 
+                 k = 1, l = 0, prob = FALSE, use.all = TRUE)
+table(NN1.train,dat.pca[select14,c("Genetic_Syndrome")])
+c(in.sample.error.1NN=cost(NN1.train!=dat.pca[select14,c("Genetic_Syndrome")])) # in sample error
+```
+
+```{r}
+# LOOCV for out of sample error:
+NN1.cv1 <- knn.cv(train=dat.pca[select14,c("PC1","PC2")], 
+          cl=dat.pca[select14,c("Genetic_Syndrome")], 
+          k = 1, l = 0, prob = FALSE, use.all = TRUE)
+table(NN1.cv1,dat.pca[select14,c("Genetic_Syndrome")])
+c(out.sample.error.1NN=cost(NN1.cv1!=dat.pca[select14,c("Genetic_Syndrome")]))  # error
+```
+For the contrast between group 1 and 4, we can obtain reasonably good separation from logistic regression, with 5.3% out-of-sample error, using only the first 2 PC's. The in-sample (training) error is 2.7%, indicating some overfitting. We also see that 1NN has in-sample error = 0, but the out-of-sample error is estimated by LOOCV as 3.6%, so also here some overfitting.
+
+Q1: try to find the value of k for which kNN has the lowest out of sample error.
+
+```{r}
+ks = 1:(nrow(dat) / 3)
+
+knn_fits <- map(ks, ~knn(train=dat.pca[select14,c("PC1","PC2")], 
+                 test =dat.pca[select14,c("PC1","PC2")], 
+                 cl=dat.pca[select14,c("Genetic_Syndrome")], 
+                 k = .x, l = 0, prob = FALSE, use.all = TRUE))
+
+train_errors <- map_dbl(knn_fits,
+                   ~cost(.x!=dat.pca[select14,c("Genetic_Syndrome")])) # in sample error
+
+# LOOCV for out of sample error:
+set.seed(123)
+knn_cvs <- map(ks, function(x) knn.cv(train=dat.pca[select14,c("PC1","PC2")],
+                           cl=dat.pca[select14,c("Genetic_Syndrome")], 
+                           k = x, l = 0, prob = FALSE, use.all = TRUE))
+          
+test_errors <- map_dbl(knn_cvs, ~cost(.x!=dat.pca[select14,c("Genetic_Syndrome")]))  # error
+
+plot(x = ks, y = train_errors, pch = 1, xlim = c(0, 50))
+lines(x = ks, y = test_errors, type = 'l', lty = 2)
+which.min(test_errors)
+```
+
+
+Q2: this classification task was rather easy, given that we already saw in the PCA plot that the groups 1 and 4 are well separated. A harder task seems to be the contrast between groups 1 and 5 ("TSC"). Modify the above code to see how logistic regression and kNN perform for this contrast. Again, also use Q1 here.
+
+```{r}
+ks = 1:(nrow(dat) / 3)
+
+select15 <- dat.pca$Genetic_Syndrome %in% levels(dat.pca$Genetic_Syndrome)[c(1, 5)]
+
+knn_fits <- map(ks, ~knn(train=dat.pca[select15,c("PC1","PC2")], 
+                 test =dat.pca[select15,c("PC1","PC2")], 
+                 cl=dat.pca[select15,c("Genetic_Syndrome")], 
+                 k = .x, l = 0, prob = FALSE, use.all = TRUE))
+
+train_errors <- map_dbl(knn_fits,
+                   ~cost(.x!=dat.pca[select15,c("Genetic_Syndrome")])) # in sample error
+
+# LOOCV for out of sample error:
+set.seed(123)
+knn_cvs <- map(ks, function(x) knn.cv(train=dat.pca[select15,c("PC1","PC2")],
+                           cl=dat.pca[select15,c("Genetic_Syndrome")], 
+                           k = x, l = 0, prob = FALSE, use.all = TRUE))
+          
+test_errors <- map_dbl(knn_cvs, ~cost(.x!=dat.pca[select15,c("Genetic_Syndrome")]))  # error
+
+plot(x = ks, y = train_errors, pch = 1, xlim = c(0, 50))
+lines(x = ks, y = test_errors, type = 'l', lty = 2)
+which.min(test_errors)
+```
+
+
+
+#1. SVM on the ADI_R items of the Genetic Syndorme Autism data
+We have seen in the previous Exercise that the contrast between Genetic groups 1 and 5 based on the first two Principle Components, did not achieve a low error, suing Logist Regresison or kNN
+Here we will use the original 34 Items form the ADI-R questionnaire to classify this contrast
+```{r}
+
+# This first part is equal to Exercise 1.1.
+# Read the dataset Autism.csv.
+# dat <- read.csv("Autism.csv")
+
+# select 322 verbal subjects:
+dat <- dat[dat$verbal=="verbal",]
+head(dat)
+```
+
+```{r}
+# make separate object for ADI-R items
+Items <- dat[,-(1:3)]
+# and version of the data with only Items and the genetic group variable
+dat1 <- dat[,-(1:2)]
+```
+
+```{r}
+library(caret)
+# if needed, install the boot package:
+# install.packages("caret")
+
+# first restrict the data to two groups: 1 and 5, use a logical selection vector
+select15 <- dat1$Genetic_Syndrome %in% levels(dat1$Genetic_Syndrome)[c(1,5)]
+table(dat[select15,]$Genetic_Syndrome)
+```
+
+```{r}
+# Fit SVM with linear kernel, default Cost parameter
+svm.fit <- train(x=Items[select15,],
+                 y=factor(dat[select15,]$Genetic_Syndrome),
+                 method="svmLinear",preProcess="scale")
+names(svm.fit)
+svm.fit$results
+```
+
+```{r}
+# Fit SVM with linear kernel, tune Cost parameter
+ctrl <- trainControl(method = "LOOCV", savePred=T)
+
+svm.fit.tuned <- train(x=Items[select15,],
+                       y=factor(dat[select15,]$Genetic_Syndrome),
+                       method="svmLinear",
+                       preProcess="scale",
+                       trControl = ctrl,
+                       tuneGrid=data.frame(C=c(0.2,0.5,1,2,5,10) ) )
+svm.fit.tuned$results
+svm.fit.tuned$bestTune
+```
+
+SVM with radial kernel
+
+
+```{r}
+items2 <- Items
+colnames(items2) <- make.names(colnames(Items))
+levels(dat$Genetic_Syndrome) <- make.names(levels(dat$Genetic_Syndrome))
+
+ctrl2 <- trainControl(method = "repeatedcv", repeats = 5,
+                     summaryFunction=twoClassSummary,	# Use AUC to pick the best model
+                     classProbs=TRUE)
+
+tune_grid <- expand.grid(sigma = c(.005, .01, .015, 0.2),
+                    C = c(.25, .5, 0.75, 0.9, 1, 1.1, 1.25, 1.5)
+)
+
+svm.fit.radial.tuned <- train(x=items2[select15,],
+                       y=factor(dat[select15,]$Genetic_Syndrome),
+                       method="svmRadial",
+                       tuneGrid = tune_grid,
+                       preProcess="scale",
+                       metric = "ROC",
+                       trControl = ctrl2)
+
+svm.fit.radial.tuned$results
+svm.fit.radial.tuned$bestTune
+
+```
+
+# Day 2
+
+#== 1. Data generation 
+Simulation of data matrix (X) with continuous outcome (y) 
+Generate X consisting of 8 covariates; cor(xi, xj)=0.5.
+```{r}
+corX <- matrix(0.5, 8, 8); diag(corX) =1;
+nsize=100; mu=c(rep(0,8)); covX = corX;
+library(MASS)
+X = mvrnorm(nsize, mu, covX)
+mean(X); cov(X);
+# Generate outcome variable y with effect size = (3,1.5,0,0,2,0,0,0), and error with sd(error) = 3.
+Betas = c(3,1.5,0,0,2,0,0,0)
+error <- rnorm(100, 0, 3)
+y = X%*%Betas + error
+hist(y)
+dat = data.frame(cbind(X,y))
+names(dat) <- c(paste("X",1:8,sep=""), "y")
+write.csv(dat, here("data", "dat1.csv"), row.names=F)
+```
+
+Q1. Assumptions of linear regression are a.o.: Linearity and additivity, statistical independence (time-series), 
+homoscedasticity of errors, normality of error distribution. Can you explain (or describe) the assumptions?
+
+```{r}
+# Run the linear regression analysis using the generated/simulated data
+dat <- read.csv(here("data", "dat1.csv"))
+lm.fit =lm(y~.,data=dat)
+summary(lm.fit)
+# Check if error is normaly distributed.
+err = y-predict(lm.fit)
+plot(err)
+qqnorm(err, pch = 1, frame = FALSE)
+qqline(err, col = "steelblue", lwd = 2)
+
+```
+
+#== 2. Validation set approach
+
+Split the data in training & test datasets
+```{r}
+train=sample(1:nsize, 0.66*nsize)
+lm.fit.train =lm(y~.,data=dat, subset=train)
+summary(lm.fit.train)
+mean((dat$y-predict(lm.fit.train,dat))[-train]^2)
+```
+
+### Q2. 
+
+> What did you compute "mean((dat$y-predict(lm.fit.train,dat))[-train]^2)"? 
+This is called the "mean squared error (MSE)". MSE = squared (bias) + variance.
+Run the validation set approach several times, and write the MSE. Are they the same?
+
+No, it is dependent on the split
+
+```{r}
+# When you want to reproduce the exact same set of random numbers, you can use "set.seed()" function.
+set.seed(20180605)
+train=sample(1:nsize, 0.66*nsize)
+lm.fit.train =lm(y~.,data=dat, subset=train)
+#summary(lm.fit.train)
+mean((dat$y-predict(lm.fit.train,dat))[-train]^2)
+```
+
+#== 3.Cross-validation (CV) and bootstrap
+
+Leave-One-Out Cross-Validation (LOOCV) and K-fold CV
+```{r}
+# You can also use glm function. 
+glm.fit=glm(y~.,data=dat)
+coef(glm.fit)
+lm.fit=lm(y~.,data=dat)
+coef(lm.fit)
+
+# Now run LOOCV and compute cv.error
+library(boot)
+# if needed, install the boot package:
+# install.packages("boot")
+glm.fit=glm(y~.,data=dat)
+cv.err=cv.glm(dat,glm.fit)
+cv.err$delta
+
+# As this is a linear model we could calculate the leave-one-out 
+# cross-validation estimate without any extra model-fitting.
+muhat <- fitted(glm.fit)
+dat.diag <- glm.diag(glm.fit)
+cv.err2 <- mean((glm.fit$y - muhat)^2/(1 - dat.diag$h)^2)
+# Want to know more? See ISLR book, p180.
+
+# k-Fold Cross-Validation: 
+cv.error.10=rep(0,10)
+for (i in 1:10){
+  glm.fit=glm(y~.,data=dat)
+  cv.error.10[i]=cv.glm(dat,glm.fit,K=10)$delta[1]
+}
+cv.error.10
+```
+
+Bootstrap: Estimating the Accuracy of a Linear Regression Model
+```{r}
+# Example of wrting a simple function: boot.fn(inp1, inp2). What would be the output?
+boot.fn=function(data,index)
+  return(coef(lm(y~.,data=dat,subset=index)))
+boot.fn(dat,1:10)
+boot.fn(dat,1:100)
+boot.fn(dat,sample(100,100,replace=T)) # can you explain the difference between this & the above?
+
+# Next we use the boot() function to compute the SE of 1000 bootstrap estiamtes.
+boot(dat,boot.fn,1000)
+# Compare with the asymptotic standard error 
+summary(lm(y~.,data=dat))$coef
+```
+
+#== 1. Model Selection
+
+Generate a new data set with Varying signals, and high correlation between predictors.
+p=50, n=100. effects = (10,10,5,5,5, 1,...,1 (10 times), 0.. (the rest) ), cor=0.7.
+```{r}
+# Generate data
+set.seed(3)
+n <- 100    # Number of observations
+p <- 50     # Number of predictors included in model
+CovMatrix <- outer(1:p, 1:p, function(x,y) {.7^abs(x-y)})
+X <- mvrnorm(n, rep(0,p), CovMatrix)
+y <- 10 * apply(X[, 1:2], 1, sum) + 
+  5 * apply(X[, 3:5], 1, sum) +
+  apply(X[, 6:15], 1, sum) +
+  rnorm(n, 0, 3)  
+hist(y)
+dat = data.frame(cbind(X,y))
+names(dat) <- c(paste("X",1:50,sep=""), "y")
+write.csv(dat, here("data", "dat50.csv"), row.names=F)
+```
+
+Stepwise selection
+```{r}
+# Fit a linear model
+lm.fit =lm(y~.,data=dat)
+summary(lm.fit)
+
+# Forward and Backward Stepwise Selection
+null.fit = lm(y~1,data=dat) 
+full.fit=lm(y~.,data=dat)
+step(null.fit, scope=list(lower=null.fit, upper=full.fit), direction="forward")
+step(full.fit, scope=list(upper=full.fit), direction="backward")
+step(null.fit, scope = list(upper=full.fit), data=dat, direction="both")
+
+# You can also use regsubsets() from the leaps package.
+# install.packages("leaps")
+library(leaps)
+regfit.fwd=regsubsets(y~.,data=dat,nvmax=10,method="forward")
+summary(regfit.fwd)
+coef(regfit.fwd,10)
+```
+
+Ridge, lasso, Elastic net
+```{r}
+library(glmnet)
+
+# Split data into train and test sets
+train_rows <- sample(1:n, .66*n)
+X.train <- X[train_rows, ]
+X.test <- X[-train_rows, ]
+
+y.train <- y[train_rows]
+y.test <- y[-train_rows]  
+
+# Fit models:
+fit.lasso <- glmnet(X.train, y.train, family="gaussian", alpha=1)
+fit.ridge <- glmnet(X.train, y.train, family="gaussian", alpha=0)
+fit.elnet <- glmnet(X.train, y.train, family="gaussian", alpha=.5)
+
+
+# 10-fold Cross validation for each alpha = 0, 0.1, ... , 0.9, 1.0
+
+fit.lasso.cv <- cv.glmnet(X.train, y.train, type.measure="mse", alpha=1, 
+                          family="gaussian")
+fit.ridge.cv <- cv.glmnet(X.train, y.train, type.measure="mse", alpha=0,
+                          family="gaussian")
+fit.elnet.cv <- cv.glmnet(X.train, y.train, type.measure="mse", alpha=.5,
+                          family="gaussian")
+
+for (i in 0:10) {
+  assign(paste("fit", i, sep=""), cv.glmnet(X.train, y.train, type.measure="mse", 
+                                            alpha=i/10,family="gaussian"))
+}
+
+#Plot solution path and cross-validated MSE as function of Î»
+
+# Plot solution paths:
+par(mfrow=c(1,2))
+# For plotting options, type '?plot.glmnet' in R console
+plot(fit.lasso, xvar="lambda")
+plot(fit10, main="LASSO")
+
+plot(fit.ridge, xvar="lambda")
+plot(fit0, main="Ridge")
+
+plot(fit.elnet, xvar="lambda")
+plot(fit5, main="Elastic Net")
+
+# MSE on test set
+yhat0 <- predict(fit0, s=fit0$lambda.1se, newx=X.test)
+yhat1 <- predict(fit1, s=fit1$lambda.1se, newx=X.test)
+yhat2 <- predict(fit2, s=fit2$lambda.1se, newx=X.test)
+yhat3 <- predict(fit3, s=fit3$lambda.1se, newx=X.test)
+yhat4 <- predict(fit4, s=fit4$lambda.1se, newx=X.test)
+yhat5 <- predict(fit5, s=fit5$lambda.1se, newx=X.test)
+yhat6 <- predict(fit6, s=fit6$lambda.1se, newx=X.test)
+yhat7 <- predict(fit7, s=fit7$lambda.1se, newx=X.test)
+yhat8 <- predict(fit8, s=fit8$lambda.1se, newx=X.test)
+yhat9 <- predict(fit9, s=fit9$lambda.1se, newx=X.test)
+yhat10 <- predict(fit10, s=fit10$lambda.1se, newx=X.test)
+
+mse0 <- mean((y.test - yhat0)^2)
+mse1 <- mean((y.test - yhat1)^2)
+mse2 <- mean((y.test - yhat2)^2)
+mse3 <- mean((y.test - yhat3)^2)
+mse4 <- mean((y.test - yhat4)^2)
+mse5 <- mean((y.test - yhat5)^2)
+mse6 <- mean((y.test - yhat6)^2)
+mse7 <- mean((y.test - yhat7)^2)
+mse8 <- mean((y.test - yhat8)^2)
+mse9 <- mean((y.test - yhat9)^2)
+mse10 <- mean((y.test - yhat10)^2)
+```
+
+#== 2. Logistic regression
+
+Read the "Heart.csv" data. These data contain a binary outcome AHD for 303 patients 
+who presented with chst pain. An outcome value of Yes indicates the presence of heart 
+disease based on an angiographic test. There are 13 predictors. 
+
+```{r}
+Heart <- read.csv(here("data", "Heart.csv"))
+dim(Heart)
+library(Hmisc)
+Hmisc::describe(Heart)
+```
+Can you write the regression model? (Or logit function). Is this linear? Apply glm() function
+using family="binomial".
+```{r}
+# heart.fit=glm(AHD~.,data=Heart)
+heart.fit=glm(AHD~.,data=Heart, family="binomial")
+summary(heart.fit)
+
+cv.err=cv.glm(Heart,heart.fit)
+warnings()
+
+# Remove the missing values: describe the following.
+keep = !apply(is.na(Heart),1, any)
+heart.comp <- Heart[keep,]
+write.csv(heart.comp, here("data", "heart.comp.csv"), row.names=F)
+# Using complete data, run the logistic regression.
+heart.fit=glm(AHD~.,data=heart.comp, family="binomial")
+summary(heart.fit)
+```
+
+leave-one-out and 10-fold cross-validation prediction error for 
+the Heart data set.  Since the response is a binary variable, an
+appropriate cost function is
+```{r}
+cost <- function(r, pi = 0) mean(abs(r-pi) > 0.5)
+cv.err <- cv.glm(heart.comp,heart.fit, cost, K = nrow(heart.comp))$delta
+cv.10.err <- cv.glm(heart.comp,heart.fit, cost, K = 10)$delta
+glm.diag(heart.fit)
+glm.diag.plots(heart.fit, glm.diag(heart.fit))
+```
+
+
+# Day 3
+
+#== 1. Classification trees
+
+We first use classification trees to analyze the Heart data set. These data contain a binary outcome AHD for 303 patients who presented with chst pain. An outcome value of Yes indicates the presence of heart disease based on an angiographic test. There are 13 predictors. The tree library is used to construct classification and regression trees.
+
+```{r}
+library(tree)
+
+# Read the "Heart.csv" data. 
+Heart <- read.csv(here("data", "Heart.csv"), sep=",", header=T)
+
+library(Hmisc)
+Hmisc::describe(Heart)
+```
+
+> 1. Use the tree() function to fit a classification tree in order to predict
+Yes (in AHD) using all variables but AHD.
+
+```{r}
+# The unpruned tree
+tree.Heart=tree(AHD~.,Heart) 
+# If you want to know more about the function tree(),
+?tree 
+summary(tree.Heart)
+```
+
+> The summary() function lists the variables that are used as internal nodes
+in the tree, the number of terminal nodes, and the (training) error rate.
+Q1. What is the training error rate? Note that for classification trees, the deviance
+is reported. A small deviance indicates a tree that provides
+a good fit to the (training) data. 
+
+> Display the tree structure
+
+```{r}
+plot(tree.Heart)
+text(tree.Heart,pretty=0, cex=0.7)
+# `pretty=0' instructs R to include the category names for any qualitative predictors,
+#rather than simply displaying a letter for each category.
+```
+
+> What is the most important variable (for splitting)? Note that the top internal node corresponds to splitting Thal (Thallium stress test).
+For more details, see ISLR book, p312.
+
+> 2. Now we want to estimate the test error rather than simply computing
+the training error. Split the observations into a training set and a test
+set, build the tree using the training set, and evaluate its performance on
+the test data. 
+
+```{r}
+set.seed(6)
+train=sample(1:nrow(Heart), 153) 
+Heart.test=Heart[-train,]
+AHD.test=Heart.test$AHD
+tree.Heart=tree(AHD~.,Heart,subset=train)
+tree.pred=predict(tree.Heart,Heart.test,type="class")
+table(tree.pred,AHD.test)
+(64+50)/150
+```
+
+> 3. Pruning the tree: The function cv.tree() performs cross-validation in order to
+determine the optimal level of tree complexity; cost complexity pruning
+is used in order to select a sequence of trees for consideration.
+
+```{r}
+set.seed(12)
+cv.Heart=cv.tree(tree.Heart,FUN=prune.misclass)
+names(cv.Heart)
+cv.Heart
+```
+
+> Note that dev corresponds to the cross-validation error rate in this case. Which is the tree with the lowest cross-validation error rate? Plot the error rate as a function of both size and k.
+
+```{r}
+par(mfrow=c(1,2))
+plot(cv.Heart$size,cv.Heart$dev,type="b")
+plot(cv.Heart$k,cv.Heart$dev,type="b")
+
+```
+
+6
+
+> Now apply the prune.misclass() function in order to prune the tree to obtain the nine-node tree.
+
+```{r}
+prune.Heart=prune.misclass(tree.Heart,best=12)
+plot(prune.Heart)
+text(prune.Heart,pretty=0)
+tree.pred=predict(prune.Heart,Heart.test,type="class")
+table(tree.pred,AHD.test)
+(68+54)/150
+
+#If you increase  the value of `best' what happens?
+prune.Heart=prune.misclass(tree.Heart,best=9)
+plot(prune.Heart)
+text(prune.Heart,pretty=0)
+tree.pred=predict(prune.Heart,Heart.test,type="class")
+table(tree.pred,AHD.test)
+(67+47)/150
+```
+
+#== 2. Fitting Regression Trees
+
+> Fit a regression tree to the Boston data set. First, create a training set, and fit the tree to the training data.
+
+```{r}
+library(MASS)
+set.seed(1)
+train = sample(1:nrow(Boston), nrow(Boston)/2)
+tree.boston=tree(medv~.,Boston,subset=train)
+summary(tree.boston)
+plot(tree.boston)
+text(tree.boston,pretty=0)
+```
+
+> In the context of a regression tree, the deviance is simply the sum of squared errors for the tree.
+
+> Use the cv.tree() function to see whether pruning the tree will improve performance.
+
+```{r}
+
+cv.boston=cv.tree(tree.boston)
+plot(cv.boston$size,cv.boston$dev,type='b')
+prune.boston=prune.tree(tree.boston,best=5)
+plot(prune.boston)
+text(prune.boston,pretty=0)
+yhat=predict(tree.boston,newdata=Boston[-train,])
+boston.test=Boston[-train,"medv"]
+plot(yhat,boston.test)
+abline(0,1)
+mean((yhat-boston.test)^2)
+
+```
+
+> For the details, see ISL book, p327.
+
+## 1. Bagging: linear regression (optional)
+
+
+```{r}
+# We use the data set, Dat1.csv, for this exercise.
+dat <- read.csv(here("data", "dat1.csv"))
+lm.fit =lm(y~.,data=dat)
+summary(lm.fit)
+#Fitting a linear model to the variables results in an R squared of .7896:
+
+set.seed(10)
+# Split data into training and test sets (randomly selects 2/3 of the rows for the training data)
+train_rows <- sample(1:nrow(dat), .66*nrow(dat))
+training <- dat[train_rows, ]
+testing <- dat[-train_rows, ]
+
+#The next step is to run a function that implements bagging. In order to do this, 
+#we will be using the foreach package.
+
+# install.packages("foreach")
+library(foreach)
+length_divisor<-4
+iterations<-10
+predictions<-foreach(m=1:iterations,.combine=cbind) %do% {
+  training_positions <- sample(nrow(training), size=floor((nrow(training)/length_divisor)))
+  train_pos<-1:nrow(training) %in% training_positions
+  lm_fit<-lm(y~.,data=training[train_pos,])
+  predict(lm_fit,newdata=testing)  # Recall yhat in Ex2.2
+}
+predictions<-rowMeans(predictions) 
+error<-(sum((testing$y-predictions)^2))/nrow(testing)  # called mse in Ex2.2
+error
+```
+
+The above code randomly samples 1/4 of the training set in each iteration, and generates predictions for the testing set based the sample. Set the number of iterations 10, 100, 1000. Repeat several times. What's happening? 
+
+```{r}
+# Finally, we can place this code into a function to wrap it up nicely:
+require(foreach)
+
+bagging<-function(training,testing,length_divisor=4,iterations=1000)
+{
+  predictions<-foreach(m=1:iterations,.combine=cbind) %do% {
+    training_positions <- sample(nrow(training), size=floor((nrow(training)/length_divisor)))
+    train_pos<-1:nrow(training) %in% training_positions
+    lm_fit<-lm(y~.,data=training[train_pos,])
+    predict(lm_fit,newdata=testing)
+  }
+  predictions<-rowMeans(predictions) 
+  error<-(sum((testing$y-predictions)^2))/nrow(testing)  # called mse in Ex2.2
+  error
+}
+# try out different number of the iterations
+bagging(training, testing, 4, 10)
+bagging(training, testing, 4, 100)
+bagging(training, testing, 4, 1000)
+```
+
+2. Bagging and Random Forest in a classification problem.
+
+Recall that bagging is simply a special case of a random forest with m = p. Therefore, the randomForest() function can be used to perform both random forests and bagging.
+
+```{r}
+require(randomForest)
+# We use the saved heart.comp.csv data. (Recall Ex2.2. Missing entries were removed.)
+# Other option: use rfImpute to impute the missing entries.
+heart <- read.csv(here("data", "heart.comp.csv"), sep=",", header=T)
+# Split the data
+train=sample(1:nrow(heart), 153) 
+
+# Bagging
+bag.heart=randomForest(as.factor(AHD)~.,data=heart,subset=train,mtry=13,importance=TRUE)
+bag.heart
+plot(bag.heart)
+# The red curve is the error rate for the No class, the green curve above is for YES.
+# The black curve is the Out-of-Bag error rate. 
+varImpPlot(bag.heart)
+
+# Now run Random Forest. What is the difference with Bagging?
+rf.heart=randomForest(as.factor(AHD)~.,data=heart,subset=train,mtry=6,importance=TRUE)
+rf.heart
+plot(rf.heart)
+# Let???s see if it improves with more trees.
+rf.heart2=randomForest(as.factor(AHD)~.,data=heart,subset=train,importance=TRUE,ntree=5000)
+rf.heart2
+plot(rf.heart2)
+varImpPlot(rf.heart2)
+```
+
+Now we want to construct ROC curve. We use ROCR package, which works with probabilities and not class labels. 
+
+```{r}
+library(ROCR)
+test = heart[-train,]
+pred<-predict(rf.heart,test, type="prob") 
+heart.pred = prediction(pred[,2], test$AHD)
+heart.perf = performance(heart.pred,"tpr","fpr")
+plot(heart.perf, main="ROC Curve for Random Forest",col=2,lwd=2)
+abline(a=0,b=1,lwd=2,lty=2,col="gray")
+
+#compute area under curve
+auc <- performance(heart.pred,"auc")
+auc <- unlist(slot(auc, "y.values"))
+
+
+# A small example of boosting using Boston housing data. For more options, use caret package.
+
+library(gbm); library(MASS);
+set.seed(1)
+boost.boston=gbm(medv~.,data=Boston[train,],distribution="gaussian",
+                 n.trees=5000,interaction.depth=4)
+summary(boost.boston)
+# compare with Random Forest.
+rf.boston=randomForest(medv~.,data=Boston,subset=train,mtry=6,importance=TRUE)
+varImpPlot(rf.boston)
+
+boost.heart=gbm(I(as.integer(AHD) - 1)~.,data=heart,distribution="bernoulli",
+                 n.trees=5000,interaction.depth=4)
+summary(boost.heart)
+
+boost.pred<-predict(boost.heart,test, type="response", n.trees = 5000) 
+boost.heart.pred = prediction(boost.pred, test$AHD)
+boost.heart.perf = performance(boost.heart.pred,"tpr","fpr")
+performance(boost.heart.pred, "auc")@y.values
+```
+
+# Day 4 time-to-event
+
+# 1. Logistic regression: probabilistic versus hard classification
+
+> We have already seen that some classification methods also can produce probality estimates.
+This was shown yesterday, using ROC curves instead of accuracy/error to evaluate the classifier.
+The aspect of calibration becomes important, next to disccrimination as measured by the ROC curve.
+
+>In this exercise you will use Logistic regression on the heart data to illustrate calibration. The code is given, as a demo.
+In addition, we look at the effect of using different loss functions to fit the model, related to the aspect of Hard or probabilistic classiication, illustrated on the same data by Lasso and Ridge. You have to code this yourself.
+
+```{r}
+library(rms)
+# We will use the saved heart.comp.csv data. (Recall Ex2.2. Missing entries were removed.)
+heart <- read.csv(here("data", "heart.comp.csv"), sep=",", header=T)
+# Split the data in training and test set, using these row-indicators for the training set
+set.seed(567)   # use set.seed to get the same results, each time you run the code
+train_rows=sample(1:nrow(heart), 153) 
+```
+
+> First we fit a full logistic model to the training data
+
+```{r}
+heart.fit=glm(AHD~.,data=heart[train_rows,], family="binomial")
+heart.fit
+```
+
+> Estimate the out-of-sample error by LOOCV and 10-fold CV and by the error in the test-set
+
+```{r}
+library(boot)
+cost <- function(r, pi = 0) mean(abs(r-pi) > 0.5)
+cv.err <- cv.glm(heart[train_rows,],heart.fit, cost, K = nrow(heart[train_rows,]))$delta
+cv.10.err <- cv.glm(heart[train_rows,],heart.fit, cost, K = 10)$delta
+train.error <- cost(heart[train_rows,]$AHD=="Yes",predict(heart.fit,newdata=heart[train_rows,],type="response")>0.5)
+test.error <- cost(heart[-train_rows,]$AHD=="Yes",predict(heart.fit,newdata=heart[-train_rows,],type="response")>0.5)
+c(cv.err=cv.err[2],cv.10.err=cv.10.err[2],test.error=test.error,train.error=train.error)
+```
+
+> Calibration plot and ROC curve on the test data.
+
+```{r}
+library(ROCR)
+pred.test <- predict(heart.fit,newdata=heart[-train_rows,],type="response")
+heart.pred = prediction(pred.test,heart[-train_rows,]$AHD)
+heart.perf = performance(heart.pred,"tpr","fpr")
+#compute area under ROC curve
+auc <- performance(heart.pred,"auc")
+auc <- unlist(slot(auc, "y.values"))
+
+# calibration plot, through the function val.prob from the rms package
+v <- val.prob(p=pred.test,y=heart[-train_rows,]$AHD=="Yes")
+```
+
+```{r}
+plot(heart.perf, main="ROC Curve on test data",col=2,lwd=2)
+text(x=.8,y=.2,labels=paste("AUC: ",format(auc,digits=3)))
+abline(a=0,b=1,lwd=2,lty=2,col="gray")
+```
+
+> Q: What do you conclude about the calibration?
+
+Awesome
+
+> Q: And what about the test error? Is this expected behaviour?
+
+Awesome
+
+> Redo this exercise with a different randomly chosen training sample and test sample
+
+We only have to change the seed in making the train rows, and then re-run the code
+
+```{r}
+set.seed(1234567)   # use set.seed to get the same results, each time you run the code
+train_rows=sample(1:nrow(heart), 153)
+```
+
+Completely different calibration: intercept -0.768, slope 0.521
+AUC = 0.877
+
+
+
+
+# 2. Lasso and Ridge: different loss functions lead to different models
+
+> First, the data are converted in a X matrix and y vector, for use with glmnet
+
+```{r}
+library(glmnet)
+
+# Split data into train and test sets. For glmnet, we need a X-matrix
+X.train <- model.matrix(AHD~.,data=heart[train_rows,])[,-1]
+X.test  <- model.matrix(AHD~.,data=heart[-train_rows,])[,-1]
+
+y.train <- heart[train_rows,"AHD" ]=="Yes"
+y.test <- heart[-train_rows,"AHD" ]=="Yes"
+c(nrow(X.train),length(y.train),nrow(X.test),length(y.test))
+table(y.train)
+table(y.test)
+```
+
+> Fit Lasso and Ridge, using the default type.measure="deviance", which can be specified in cv.glmnet.
+
+> Fill in the code yourself, using the exercises of Day 2.
+
+> Hint: use family="binomial" in the glmnet and cv.glmnet function to do penalized logistic regression
+
+```{r}
+# fit Lasso and Ridge 
+fit.lasso <- glmnet(x = X.train, y = y.train, family = "binomial", alpha = 1)
+fit.ridge <- glmnet(x = X.train, y = y.train, family = "binomial", alpha = 0)
+
+# 10-fold Cross validation for a range of lambda values, to find the optimal value
+fit.lasso.cv.dev <- cv.glmnet(X.train, y.train, type.measure = "deviance", alpha = 1, nfolds = 10, family = "binomial")
+fit.ridge.cv.dev <- cv.glmnet(X.train, y.train, type.measure = "deviance", alpha = 0, nfolds = 10, family = "binomial")
+
+#Plot solution path and cross-validated error as function of lambda
+par(mfrow=c(2,2))
+plot(fit.lasso, xvar="lambda")
+plot(fit.lasso.cv.dev, main="Lasso")
+plot(fit.ridge, xvar="lambda")
+plot(fit.ridge.cv.dev, main="Ridge")
+```
+
+```{r}
+# optimal lambda for Lasso and Ridge
+fit.lasso.cv.dev$lambda.1se
+fit.ridge.cv.dev$lambda.1se
+```
+
+> Q: Now fit Lasso and Ridge, using type.measure="class", for hard classification, which can be specified in cv.glmnet.
+Modify your code above.
+
+
+```{r}
+set.seed(123)
+# 10-fold Cross validation for a range of lambda values, to find the optimal value
+fit.lasso.cv.class <- cv.glmnet(X.train, y.train, type.measure = "class", alpha = 1, nfolds = 10, family = "binomial")
+fit.ridge.cv.class <- cv.glmnet(X.train, y.train, type.measure = "class", alpha = 0, nfolds = 10, family = "binomial")
+
+#Plot solution path and cross-validated error as function of lambda
+par(mfrow=c(2,2))
+plot(fit.lasso.cv.class, main="Lasso")
+plot(fit.ridge.cv.class, main="Ridge")
+
+fit.lasso.cv.class$lambda.1se
+fit.ridge.cv.class$lambda.1se
+
+```
+
+Look at calibration and discrimination
+
+Discrimination
+
+```{r}
+#cv.glm()
+cost(y.train, predict(fit.lasso.cv.dev, X.train, type = "response"))
+cost(y.test, predict(fit.lasso.cv.dev, X.test, type = "response"))
+cost(y.train, predict(fit.lasso.cv.class, X.train, type = "response"))
+cost(y.test, predict(fit.lasso.cv.class, X.test, type = "response"))
+cost(y.train, predict(fit.ridge.cv.dev, X.train, type = "response"))
+cost(y.test, predict(fit.ridge.cv.dev, X.test, type = "response"))
+cost(y.train, predict(fit.ridge.cv.class, X.train, type = "response"))
+cost(y.test, predict(fit.ridge.cv.class, X.test, type = "response"))
+```
+
+
+```{r}
+val.prob(p = predict(fit.lasso.cv.dev, X.test, type = "response", 
+                     s = fit.lasso.cv.dev$lambda.min), y = y.test)
+val.prob(p = predict(fit.lasso.cv.class, X.test, type = "response",
+                     s = fit.lasso.cv.class$lambda.min), y = y.test)
+val.prob(p = predict(fit.ridge.cv.dev, X.test, type = "response"), y = y.test)
+val.prob(p = predict(fit.ridge.cv.class, X.test, type = "response"), y = y.test)
+
+```
+
+```{r}
+table(epistats::quant(preds.1, n.tiles = 5), y.test)
+```
+
+

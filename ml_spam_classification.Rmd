@@ -1,0 +1,45 @@
+---
+title: "Spam classification"
+output: html_notebook
+---
+
+# setup R
+
+```{r}
+library(here)
+library(dplyr)
+library(ggplot2)
+library(magrittr)
+library(data.table)
+library(purrr)
+```
+
+Get data
+
+```{r}
+spam <- read.table(here("data", "spambase.data"), sep = ",")
+str(spam)
+```
+
+Create X and y
+
+```{r}
+spam <- rename(spam, y = V58)
+X <- as.matrix(dplyr::select(spam, -y))
+y <- spam$y
+```
+
+# Try classifiers
+
+## Penalized regression
+
+```{r}
+require(glmnet)
+alphas <- seq(0, 1, length.out = 11)
+
+fits_enet <- map(alphas, ~cv.glmnet(x = X, y = y, alpha = .x, family = "binomial"))
+
+
+```
+
+

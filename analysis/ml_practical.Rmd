@@ -1,0 +1,155 @@
+---
+title: "Machine learning practical, diagnosis in psychiatry"
+output: html_notebook
+---
+
+Setup R
+
+```{r}
+library(here)
+library(dplyr)
+library(ggplot2)
+library(magrittr)
+library(data.table)
+library(purrr)
+
+```
+
+
+Get data
+
+```{r}
+# Commands below are in R:
+
+source(here("analysis/ml_practical_allFunctions.R"))
+
+dataSA <- read.table(here("data", "datah_SA_stdcor.txt"), header = TRUE)
+```
+
+Check labels
+
+```{r}
+table(dataSA$label)
+```
+
+So 64 times ultra-high risk, 62 time normal developing
+
+```{r}
+require(e1071)
+# SVM Model with nested cross-validation
+ModelSA1 <- svmTrain(dataSA, 
+                type = "classification", cost = 2^(-10:0), 
+                innerCross = 5, outerCross = 10,
+                kernel = "radial", gamma=c(0.01, 0.1, 1, 2), 
+                classWeights = c("1" = 1.53))
+
+# View output
+ModelSA1$results
+
+ModelSA1$svm[[1]]$weights
+ModelSA1$svm[[2]]$weights
+# and so on ...
+```
+
+```{r}
+# individual predictions
+# ModelSA1$valPred
+# 
+# # ... and compare them to the targets
+# targetlabels <- dataSA[,1]
+# 
+# 
+# # cross-validation (not nested)
+# ModelSA2 <- svmTrain(data, kernel = "linear", type = "classification", cost = 2^(-10:0), outerCross = 10)
+# 
+# # RBF kernel, add options, e.g.:
+#   , kernel = "radial", gamma=c(0.01, 0.1, 1, 2)
+# 
+# 
+# # to give one class more weight
+# .... classWeights = c("1" = 1.53)
+# 
+# 
+# 
+# # simple ANN with one hidden layer, 2 nodes
+# nnObject <- nnTrain(dataSA, h=2, threshold=0.01, cross=5)
+# # or
+# nn.model <- nnTrain(dataSA, type="regression", h=2, threshold = 0.001, stepmax = 400000, cross = 10)
+# 
+
+```
+
+
+Try PCA
+
+```{r}
+require(ggfortify)
+pca1 <- prcomp(dataSA[, -1])
+autoplot(pca1, data = dataSA, colour = "label")
+```
+
+PCA with radial basis
+
+```{r}
+require(kernlab)
+pca_rb <- kpca(x = dataSA[, -1], kernel = "rbfdot")
+```
+
+
+Load all data
+
+```{r}
+require(stringr)
+dat_files <- grep(x = list.files(here("data")), pattern = "datah", value = T)
+
+dats <- map(dat_files, ~read.table(here("data", .x), header = T))
+map_dbl(dats, nrow)
+```
+
+One of them has fewer rows, let's kick this one out
+
+```{r}
+# dats <- dats[c(3, 5)]
+dats <- dats[-2]
+map_dbl(dats, nrow)
+df <- do.call(cbind, map(dats, ~.x[, -1])) %>% as.data.frame()
+df$label <- dataSA$label
+df <- df[, c(ncol(df), 1:(ncol(df) - 1))]
+```
+
+
+Pick principal components from all source files
+
+```{r}
+npca <- 1
+
+pcas <- map(dats, ~prcomp(.x[, -1]))
+pca_list <- map(pcas, ~.x$x[, 1:npca])
+
+pca_df <- do.call(cbind, pca_list) %>% as.data.frame()
+colnames(pca_df) <- paste0(rep(c("CT", "SA", "VOLcort", "VOLsubc"), each = npca),
+# colnames(pca_df) <- paste0(rep(c("SA", "VOLcort"), each = npca), 
+       paste0(c("_PC"), 1:npca))
+pca_df$label <- dataSA$label
+pca_df <- pca_df[, c(ncol(pca_df), 1:(ncol(pca_df) - 1))]
+```
+
+
+```{r}
+modelPCA <- svmTrain(pca_df, 
+                type = "classification", cost = 2^(-10:0), 
+                innerCross = 5, outerCross = 10,
+                kernel = "radial", gamma=c(0.01, 0.1, 1, 2), 
+                classWeights = c("1" = 1.53))
+modelPCA$results
+```
+
+
+```{r}
+fit.glm <- cv.glmnet(x = as.matrix(df[, -1]), y = df$label, 
+                     family = "binomial", alpha = 0, nfolds = 10,
+                    type.measure = "class")
+mean(fit.glm$cvm)
+```
+
+

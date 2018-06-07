@@ -1,0 +1,70 @@
+---
+title: "Machine learning quizzes"
+author: "Wouter van Amsterdam"
+date: "6/5/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(here)
+library(dplyr)
+library(ggplot2)
+library(magrittr)
+library(data.table)
+library(purrr)
+```
+
+# Day 2 spam
+
+Read data
+
+```{r}
+spam <- read.table(here("data", "spambase.data"), sep = ",")
+str(spam)
+```
+
+Find numer of unique values per column
+
+```{r}
+map_dbl(spam, uniqueN)
+```
+
+We see that the last variable is the label (it's binary)
+
+```{r}
+spam <- rename(spam, y = V58)
+names(spam)
+```
+
+Let's divide in matrices
+
+```{r}
+X <- as.matrix(select(spam, -y))
+y <- spam$y
+```
+
+simple logistic regression 
+
+```{r}
+fit.lr <- glm(y ~ X, family = "binomial")
+summary(fit.lr)
+```
+
+Some very high coefficients with hihg standard errors, seems unstable
+
+Add regularization with cross-validation
+
+```{r}
+require(glmnet)
+alphas <- seq(0, 1, length.out = 11)
+
+fits_enet <- map(alphas, ~cv.glmnet(x = X, y = y, alpha = .x, family = "binomial"))
+par(mfrow =c(3, 4))
+map(fits_enet, plot)
+par(mfrow = c(1,1))
+```
+
