@@ -1,0 +1,72 @@
+---
+title: "Survival analysis notes"
+author: "Wouter van Amsterdam"
+date: "6/11/2018"
+output: html_document
+---
+
+# Day 1
+
+Tutor: Rebecca Stellato
+
+
+### Types of censoring
+
+
+- right censoring (e.g. mortality)
+- left censoring (e.g. when did you attract HIV)
+- double censored (both left and right)
+- interval censoring (event between 2 timepoints of checking)
+
+### Truncation
+
+left truncation, usually due to study design.
+
+e.g. only look at risk of MI for patients older than 60y
+
+patients of congenital disease, only included from first presentation of symptoms
+
+right truncation: when all participants had the diagnosis, e.g. from a cancer registry
+
+## Kaplan-Meijer
+
+Standard error: Greenwood standard error (default)
+
+Use log and then transform back to original
+
+$$\log(S(t)) \pm \log(SE) $$
+
+## Non-proportionality
+
+At any timepoint, there is heterogeneity in the hazards in a (sub)population
+
+The ones with higher hazards will have the event earlier, this makes 
+the average hazard decrease. This will violate the proportionality assumption
+(survivor slection bias)
+
+## Time-axis
+
+Age: as covariate, or as time axis
+
+As time axis: use left truncation (delayed entry)
+
+Happens in cross-sectional analysis with self reported age of event:
+implicitly assumes that subjects did not die before age at interview
+
+Cohort when age is inclusion study, only at risk after inclusion
+- left truncation (aka delayed entry)
+- number at risk at first is very low. Early events can have a big influence 
+on the survival curve
+
+
+# Questions on model checking
+
+best way to check functional form?
+- martingale residuals vs extra covariate, or vs residual of extra covariate against covariates already included in model?
+
+- schoenfeld residuals tested against 3 functions of time (linear, log, KM),
+but we can test against infinetely many functions of time (e.g. quadratic?).
+The more we test, the bigger the odds of rejecting the null. What to do?
+
+
+

@@ -301,6 +301,45 @@ plot(resid(lm(x1~x2+x3)), residuals(fit, type = "partial")[,1])
 plot(x1, residuals(fit, type = "partial")[,1])
 ```
 
+## For cox regression
+
+```{r}
+require(dplyr); require(purrr); require(survival)
+all_covs   <- c("age", "bmi", "gender")
+form_covs  <- c("age", "bmi")
+transforms <- c("I", "log")
+form0 <- Surv(lenfol, fstat) ~ 1
+
+par(mfrow = c(length(form_covs), length(transforms)))
+
+map(form_covs, function(x) {
+  map(transforms, function(trans_func) {
+    # store function name for printing / plotting and grab actual function from 
+    # environment 
+    
+    func_name = trans_func
+    trans_func = get(trans_func)
+    dat = wor %>% mutate_at(vars(x), funs(trans_func))
+    # cox fit of all covariates except x
+    cph_fit = coxph(reformulate(setdiff(all_covs, x), form0[[2]]), data = dat)
+    cph_resids = resid(cph_fit, type = "martingale")
+    
+    # lm fit of x, based on other covariates
+    lm_resids = resid(lm(reformulate(setdiff(all_covs, x), x), data = dat), type = "response")
+    
+    # plots
+    # plot(dat[[x]], cph_resids, xlab = paste(as.expression(trans_func), x));
+    # lines(lowess(dat[[x]], cph_resids))
+    plot(lm_resids, cph_resids, 
+         xlab = paste0(func_name, "(", x, ")"));
+         # xlab = x)
+    lines(lowess(lm_resids, cph_resids))
+  })
+})
+
+
+```
+
 
 ## Session information
 

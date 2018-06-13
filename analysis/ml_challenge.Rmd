@@ -1,0 +1,328 @@
+---
+title: "Machine learning challange"
+output: html_notebook
+---
+
+
+
+Setup R
+
+```{r}
+library(here)
+library(dplyr)
+library(ggplot2)
+library(magrittr)
+library(data.table)
+library(purrr)
+library(epistats)
+```
+
+Read in data
+
+```{r}
+aml <- read.csv(here("data", "AMLtraindata.csv"))
+train_clinical <- readr::read_rds(here("data", "aml_train_clinical.rds"))
+train_clinical_imputed <- readr::read_rds(here("data", "aml_train_clinical_imputed.rds"))
+train_proteomic <- readr::read_rds(here("data", "aml_train_proteomic.rds"))
+
+```
+
+```{r}
+table(aml$Chemo.Simplest, aml$resp.simple)
+prop.table(table(aml$Chemo.Simplest, aml$resp.simple), margin = 1)
+fisher.test(table(aml$Chemo.Simplest, aml$resp.simple))
+```
+
+### Descriptive analysis
+
+```{r}
+require(tableone)
+t1_vars <- c("SEX", "Age.at.Dx", "AHD", "PRIOR.MAL", "PRIOR.CHEMO", 
+"PRIOR.XRT", "Infection", 
+"Chemo.Simplest", "resp.simple")
+t1 <- tableone::CreateTableOne(vars = t1_vars, data = aml)
+print(t1, quote = F, noSpaces = T)
+```
+
+Some distribution checks
+
+```{r}
+ks_pvals <- train_proteomic %>%
+  map_dbl(~ks.test(.x, y = "pnorm")$p.value)
+hist(ks_pvals)
+```
+
+
+## Model
+
+Recode prior malignancy
+
+```{r}
+train_clinical_imputed %<>%
+  mutate(prior_malignancy = PRIOR.CHEMO + PRIOR.XRT >= 1)
+```
+
+
+Define x and y
+y = 1 for treatment resistance
+
+
+```{r}
+y <- as.numeric(aml$resp.simple) - 1
+y_fact <- epistats::logical2factor(as.logical(y))
+X_known_pf <- as.matrix(dplyr::select(train_clinical_imputed,
+                                         Age.at.Dx,
+                                         prior_malignancy))
+X_clin <- as.matrix(dplyr::select(train_clinical_imputed, -resp.simple, - Chemo.Simplest) %>%
+                 mutate_all(as.numeric))
+X_prot <- as.matrix(train_proteomic)
+prot_means <- colMeans(train_proteomic)
+prot_sds <- map_dbl(train_proteomic, sd)
+X_prot <- scale(X_prot, center = T, scale =  T)
+X <- cbind(X_clin, X_prot)
+```
+
+### Logistic regression
+
+Combine 
+
+```{r}
+require(rms)
+# fit_lr <- glm(resp.simple ~ Age.at.Dx + prior_malignancy, data = train_clinical_imputed,
+#                family = "binomial")
+# fit_lr2 <- glm(resp.simple ~ poly(Age.at.Dx, 2) + prior_malignancy, data = train_clinical_imputed,
+#                family = "binomial")
+fit_lr <- lrm(resp.simple ~ Age.at.Dx + prior_malignancy, data = train_clinical_imputed,
+              x = T, y = T)
+fit_lr2 <-lrm(resp.simple ~ poly(Age.at.Dx, 2) + prior_malignancy, 
+              data = train_clinical_imputed,
+              x = T, y = T)
+# summary(fit_lr2)
+# anova(fit_lr2, fit_lr, test = "Chisq")
+```
+
+Validate model
+
+```{r}
+library(rms)
+validate(fit_lr)
+# abs(.3356) / 2 + .5
+val.prob(logit = fit_lr$linear.predictors, y = as.numeric(fit_lr$y))
+```
+
+
+### SVM
+
+```{r}
+library(caret)
+ctrl <- trainControl(method = "cv", number = 10, savePredictions = T, classProbs = T)#,
+                     # summaryFunction = twoClassSummary)
+
+tune_grid_lin <- data.frame(C = c(.25, .5, 0.75, 0.9, 1, 1.1, 1.25, 1.5))
+tune_grid <- expand.grid(sigma = c(.005, .01, .015, 0.2),
+                    C = c(.25, .5, 0.75, 0.9, 1, 1.1, 1.25, 1.5)
+)
+
+fit <- train(y = y_fact, x = X_clin,
+             trControl = ctrl,
+                     # tuneGrid = tune_grid_lin,
+                     # tuneGrid = tune_grid,
+             metric = "ROC",
+             # weights = c(1, 1.54),
+             # maximize = "logLoss",
+             method = "rf")
+fit 
+confusionMatrix(fit)
+```
+
+
+```{r}
+nfolds_out = 5
+nreps_out = 10
+nruns = nfolds_out * nreps_out
+
+train_folds <- createMultiFolds(train_clinical_imputed$resp.simple,
+                          k = nfolds_out, times = nreps_out)
+
+fits  <- vector(mode = "list", length = nruns)
+preds <- vector(mode = "list", length = nruns)
+accs  <- vector(mode = "numeric", length = nruns)
+
+train_X <- as.matrix(dplyr::select(train_clinical_imputed, -resp.simple, -cyto.cat, -Chemo.Simplest, -prior_malignancy))
+train_y <- factor(train_clinical_imputed$resp.simple, labels = c("CR", "RESISTANT"))
+
+for (j in 1:nruns) {
+  cat("run ", j, " out of ", nruns, "\n")
+  ftrain_X <- train_X[train_folds[[j]],]
+  ftrain_y <- train_y[train_folds[[j]]] 
+  ftest_X <- train_X[-train_folds[[j]],]
+  ftest_y <- train_y[-train_folds[[j]]] 
+  
+  upsamp_dat <- upSample(ftrain_X, ftrain_y)
+  levels(upsamp_dat$Class) <- c("CR", "RESISTANT")
+  
+  fit <- train(Class ~ .,
+               data = upsamp_dat,
+               trControl = ctrl,
+               method = "rf")
+  fits[[j]] <- fit
+  
+  pred <- predict(fit, ftest_X)
+  preds[[j]] <- pred
+  
+  acc <- mean(pred == ftest_y)
+  accs[[j]] <- acc
+  
+}
+
+```
+
+```{r}
+nfolds_out = 5
+nreps_out = 10
+nruns = nfolds_out * nreps_out
+
+train_folds <- createMultiFolds(train_clinical_imputed$resp.simple,
+                          k = nfolds_out, times = nreps_out)
+
+fits_prot  <- vector(mode = "list", length = nruns)
+preds_prot <- vector(mode = "list", length = nruns)
+accs_prot  <- vector(mode = "numeric", length = nruns)
+
+train_X_prot <- as.matrix(cbind(dplyr::select(train_clinical_imputed, -resp.simple, -cyto.cat, -Chemo.Simplest, -prior_malignancy), train_proteomic))
+train_y <- factor(train_clinical_imputed$resp.simple, labels = c("CR", "RESISTANT"))
+
+for (j in 1:nruns) {
+  cat("run ", j, " out of ", nruns, "\n")
+  ftrain_X_prot <- train_X_prot[train_folds[[j]],]
+  ftrain_y <- train_y[train_folds[[j]]] 
+  ftest_X_prot <- train_X_prot[-train_folds[[j]],]
+  ftest_y <- train_y[-train_folds[[j]]] 
+  
+  upsamp_dat <- upSample(ftrain_X_prot, ftrain_y)
+  levels(upsamp_dat$Class) <- c("CR", "RESISTANT")
+  
+  fit <- train(Class ~ .,
+               data = upsamp_dat,
+               trControl = ctrl,
+               method = "rf")
+  fits_prot[[j]] <- fit
+  
+  pred <- predict(fit, ftest_X_prot)
+  preds_prot[[j]] <- pred
+  
+  acc <- mean(pred == ftest_y)
+  accs_prot[[j]] <- acc
+  
+}
+
+```
+
+```{r}
+var_imps_prot <- map(fits_prot, varImp) %>% map("importance")
+var_imps_prot <- do.call(cbind, var_imps_prot)
+rowMeans(var_imps_prot) %>% sort(decreasing = T)
+```
+
+Get the variable importance form all
+
+```{r}
+var_imps <- map(fits, varImp) %>% map("importance")
+var_imps <- do.call(cbind, var_imps)
+rowMeans(var_imps) %>% sort(decreasing = T)
+```
+
+Do logistic regression on 3 most important predictors
+
+```{r}
+fit_lr3 <- lrm(resp.simple ~ Age.at.Dx + CD34 + PLT, data = train_clinical_imputed,
+               x = T, y = T)
+fit_lr3_glm <- glm(resp.simple ~ Age.at.Dx + CD34 + PLT, data = train_clinical_imputed,
+               family = "binomial")
+fit_lr3_val <- validate(fit_lr3, B = 100)
+fit_lr3_val[1, 5] / 2 + .5
+val.prob(logit = fit_lr3$linear.predictors, y = as.numeric(fit_lr3$y))
+fit_null <- lrm(resp.simple ~ 1, data = train_clinical_imputed)
+lrtest(fit_null, fit_lr3)
+lrtest(fit_lr, fit_lr3)
+```
+
+
+```{r}
+library(pROC)
+roc_obj <- roc(response = fit_lr3$y, predictor = fit_lr3$linear.predictors)
+plot((roc_obj), print.auc = T)
+```
+
+
+Use shrinkage based on bootstrapping
+
+```{r}
+
+## Use the optimism-corrected slope as the shrinkage factor
+shrinkage.factor <- fit_lr3_val["Slope","index.corrected"]
+
+## Show results
+res.coef <- data.frame(Original = coef(fit_lr3),
+                       Shrunk.boot = c(coef(fit_lr3)[1], coef(fit_lr3)[-1] * shrinkage.factor))
+round(res.coef, 3)
+```
+
+## Predict on new data
+
+```{r}
+library(mice)
+betas <- res.coef$Shrunk.boot
+pvars <- rownames(res.coef)[-1]
+
+aml_test <- read.csv(here("data", "AMLtestdata.csv"))
+aml_test_imputed <- complete(mice::mice(dplyr::select(aml_test, SEX:CD19), m = 1), 1)
+X_test <- model.matrix(reformulate(termlabels = pvars), data = aml_test_imputed)
+
+lp_test <- X_test %*% betas
+p_test <- 1 / (1 + exp(-lp_test))
+class_test <- p_test > .5
+
+```
+
+Export predictions
+
+```{r}
+preddat <- data.frame(
+  X.Patient_id = aml_test$X.Patient_id,
+  p_complete_response = p_test
+)
+save(preddat, file = here("data", "predicted group 1.Rdata"))
+```
+
+
+
+Some glm testing for colleges
+
+```{r}
+fit_glmnet <- glmnet(X_clin, y)
+X_test_2 <- as.matrix(dplyr::select(aml_test_imputed, - Chemo.Simplest) %>%
+                 mutate_all(as.numeric))
+predict(fit_glmnet, newx = X_test)
+```
+
+Check with actual labels
+
+```{r}
+aml_full <- read.csv(here("data", "AML_training.csv"))
+act_labels <- aml_full %>%
+  filter(X.Patient_id %in% aml_test$X.Patient_id) %>%
+  select(X.Patient_id, resp.simple) 
+```
+
+```{r}
+table(class_test, act_labels$resp.simple)
+(58 + 8) / (10 + 8 + 58 + 19)
+prop.table(table(act_labels$resp.simple))
+```
+
+```{r}
+y_test <- as.numeric(as.character(factor(act_labels$resp.simple, levels = c("CR", "RESISTANT"), labels = c(1, 0))))
+val.prob(logit = lp_test, y = y_test)
+```
+
