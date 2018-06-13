@@ -1,0 +1,653 @@
+---
+title: "Survival analysis assignments"
+author: "Wouter van Amsterdam"
+date: "6/11/2018"
+output: html_document
+---
+
+# Setup R
+
+
+```{r}
+library(here)
+library(dplyr)
+library(ggplot2)
+library(magrittr)
+library(data.table)
+library(purrr)
+```
+
+# Day 1
+
+## Exercises Day 1: Introduction to Survival Data and Analysis
+
+> During this computer lab we will
+1)*	Using a very small survival dataset, fill in a survival table by hand.
+2)	Reproduce some results from the lecture, using R and/or SPSS.
+3)	Reproduce remaining results from the lecture, using R and/or SPSS.
+4)	Describe and analyze a study looking at survival times of HIV+ patients.
+5)*	Using a larger version of the WHAS dataset, practice fitting Cox models and interpreting results (quiz question)
+6)*	(Re-)Familiarize yourself with basic sample size calculations for a two-arm trial with a survival outcome.
+7)*	Using a larger version of the WHAS dataset, practice working with dates in SPSS and R.
+8)	Get some descriptive statistics for the dataset to be used in tomorrow’s lecture.
+
+
+> Note 1: Exercises 2 and 3 are re-analyses of the example from the lecture, intended to help you familiarize yourself with basic survival analysis commands in R and/or SPSS. If you are already comfortable with the software, feel free to skip either or both. If you find yourself short on time, give priority to the exercises with an asterisk (*) next to them.
+
+> Note 2: R and SPSS code is available for most exercises. If you get stuck, see day 1 analyses lab.R or day 1 analyses lab.sps. Before running any of the code, be sure to change the path name in the R or SPSS syntax (in R using the setwd() command). Any line preceded by a “#” in R or a “*” in SPSS is a comment, and is to help you understand (or remember) the working of the next line(s) of code.
+
+
+## *1.	
+
+> In a study of children with acute leukemia in partial or complete remission after treatment with prednisone, children were randomized to treatment with 6-MP (6-mercaptopurine) or placebo maintenance. The following times are time to relapse (in months) for the 21 children on 6-MP:
+6 6 6 6+ 7 9+ 10 10+ 11 13 16 17+ 19+ 20+ 22 23 25+ 32+ 32+ 34+ 35+
+(Note: a + indicates a censored relapse time)
+Below is a table summarizing the survival times.
+
+> Time to relapse	nj	dj	pj	S(t)
+6	21	3	0.857	
+7				
+10				
+11				
+13				
+16				
+22				
+23				
+
+### a.	Complete the table. Draw the Kaplan-Meier survivor function by hand. 
+
+### b.	Use your graph to estimate the median survival time.
+
+### c.	Enter the data in the table above in R or SPSS and verify your calculations and graph.
+
+```{r}
+require(survival)
+times <- c(6, 6, 6, 6, 7, 9, 10, 10, 11, 13, 16, 17, 19, 20, 22, 23, 25, 32, 32, 34, 35)
+events<- c(1, 1, 1, 0, 1, 0, 1,  0,  1,  1,  1,  0,  0,  0,  1,  1,  0,  0,  0,  0,  0)
+survs <- Surv(times, events)
+survs
+```
+
+```{r}
+require(ggfortify)
+sfit <- survfit(survs ~ 1)
+summary(sfit)
+print(sfit)
+autoplot(sfit)
+```
+
+### d.	Compare the median survival time with the mean survival time.
+
+```{r}
+print(sfit, print.rmean = T)
+mean(times)
+hist(times)
+hist(times[events == 1])
+```
+
+Mena is pretty close to median here
+
+## 2.
+
+
+> Try to reproduce the analysis of the WHAS100 dataset so far in R and/or SPSS. Most of the necessary R commands are in the PowerPoint presentation. For more help, see Note 2 above. Note: save your script / syntax for Exercise 3!
+a.	Read in the data, saved as whas100.dat. Note that the variable names are not on the first line! See whas100.txt for names and descriptions of variables. SPSS users can give names to each column when reading in the file, or later once the file has been imported. R users can give the columns a name as follows (note that here my data frame is called wor, so I use the names() function on the object wor:
+wor <- data.frame(read.table("whas100.dat"))
+names(wor) <- c("id", "admitdate", "foldate", "los", "lenfol", "fstat", "age", "gender", "bmi")
+b.	Make a Kaplan-Meier graph for the whole sample, and get the median and mean survival times. 
+c.	Add 95% CI bands to the graph (R users: in most versions, this is the default; SPSS users: see this work-around http://www-01.ibm.com/support/docview.wss?uid=swg21476386 )
+d.	Make a Kaplan-Meier graph stratified by sex, and get the estimated median and mean survival times for men and women separately (R users can play around with the options for mean survival times).
+e.	Use the log-rank test to test whether survival functions differ for men and women.
+
+Skipped
+
+## 3.
+
+> Try to reproduce the Cox regression analysis of the WHAS100 dataset in R and/or SPSS. Use your save script/syntax from exercise 2 for reading in the data.
+
+Skipped
+
+## 4.
+
+> A HMO (health maintenance organization) studied the survival time of its HIV+ members. Subjects were enrolled from January 1, 1989 to December 31, 1991. The study ended at December 31, 1995. Members were followed until death due to AIDS or AIDS-related problems. Time to event is in months since enrollment, and the status variable is 1 for death and 0 for censored. Age and prior drugs use were selected as important covariates. The data file is supplied. (HMO-HIV.sav). (We briefly examined this dataset in Classical Methods in Data Analysis.)
+a.	Read the data into R or SPSS and do some preliminary data analysis. Do prior drug use (0 = no, 1 = yes) and age appear to be related to survival time?
+b.	Use the log-rank test to test the null hypothesis of equal survival times for prior drug users and non-prior drug users.
+c.	Build a Cox PH model using both age and drug use as predictors of survival time. Can one of the variables be removed from the model (use the likelihood ratio test)?
+d.	Interpret the results of the final model.
+e.	Plot both the cumulative survival and cumulative hazard functions from the final model. What is the link between the two?
+
+Skipped
+
+## 5.
+
+> Parts of this question will be used in the quiz this afternoon. Please save or print the output and have it on hand (together with this exercise) when you complete the quiz.
+
+```{r}
+wor <- read.table(here("data", "whas500.dat"), header = T)
+# colnames(wor100) <- c("id", "admitdate", "foldate", "los", "lenfol", "fstat", "age", "gender", "bmi")
+
+```
+
+
+> In this morning’s lecture and in the first exercises we looked at a sample of 100 subjects from the Worcester Heart Attack Study. There is a more expanded version of the dataset available, with a sample of 500 subjects and more variables. The dataset is available as whas500.dat (note that variable names are included at the top of the dataset). See whas500.txt for names and descriptions of variables.
+
+### a.	
+
+> Read the data into SPSS or R.
+
+### b.	
+
+> Use a Cox regression model to model survival time using initial systolic blood pressure, initial diastolic blood pressure, history of cardiovascular disease, and congestive heart complications as predictors. Interpret this model.
+
+```{r}
+cfit1 <- coxph(Surv(lenfol, fstat) ~ sbp + dbp + cvd + chf, data = wor)
+summary(cfit1)
+```
+
+
+### c.	
+
+> From the model in (b), estimate the hazard ratio and 95% CI for a 10-point increase in systolic blood pressure.
+
+```{r}
+exp(10*coef(cfit1)[1])
+```
+
+```{r}
+cfit2 <- coxph(Surv(lenfol, fstat) ~ sbp10 + dbp + cvd + chf, 
+               data = mutate(wor, sbp10 = sbp / 10))
+summary(cfit2)
+
+```
+
+
+
+### d.	
+
+> Remove initial systolic and diastolic blood pressure from the model in (b). What is the change in -2 log-likelihood between this model and the model in (b)?
+
+```{r}
+cfit3 <- coxph(Surv(lenfol, fstat) ~ cvd + chf, 
+               data = wor)
+summary(cfit3)
+anova(cfit1, cfit3)
+```
+
+
+## 6.
+
+> During the course Classical Methods in Data Analysis, we introduced a “simple” formula for estimating the necessary sample size for a trial with two arms using a survival outcome. The formula is “simple” because it ignores several important factors (i.e. recruitment time, follow-up time, loss to follow-up) that are important in designing a trial but would make calculation by hand difficult. The basic idea in sample size estimation for a survival outcome is that you first need to estimate the number of events necessary in both groups to achieve a certain level of power at a certain level of α, and then (under rather strict assumptions: everyone is recruited at the same time and followed for the same amount of time, and there are no dropouts, and the HR is constant over the study) translate that into the number of people you need to follow for the length of the study in order to achieve that level of power.
+Assuming that p_E is the survival probability at the end of the study for the experimental group and p_C that for the control group, and assuming a constant HR over the course of the study, we can estimate the HR to be:
+
+$$ HR=(loga(p_E))/(loga(p_C))$$
+
+> The estimate for the minimum number of necessary events, assuming power = 1-β and P(type I error)=α is then:
+
+$$m=((1+HR)/(1-HR))^2 (Z_α+Z_β )^2$$
+
+> The necessary total number of patients (in both arms) is then:
+
+$$ N≥2m/(2-p_E-p_C ) $$
+
+This simple formula is implemented in the ssizeCT.default() function of the powerSurvEpi package in R. The function takes the form ssizeCT.default(power, k, pE, pC, RR, alpha). 
+Watch out!! The pE and pC used in this function are probability of failure in groups E and C over the maximum time period of the study (so 1-p_E and 1-p_C in our formulas above).
+
+The example given in Classical Methods was:
+Q: What is the minimum number of patients required in a trial in order to detect a difference in one-year survival probabilities of 0.6 (control group) vs 0.8 (experimental group), with a power of 80% a significant level (two-sided) α=5%?
+A: 
+HR=(loga(0.8))/(loga(0.6))=0.437→m=((1+0.437)/(1-0.437))^2 (1.96+0.84)^2=52
+
+N≥(2∙52)/(2-0.8-0.6)=174
+We need at least 174 patients (87 in each group).
+If we use the R function above, we get:
+> ssizeCT.default(power=0.80, k=1, pE=1-0.8, pC=1-0.6, RR=log(0.8)/log(0.6), alpha = 0.05)
+nE nC 
+86 86
+so 86 per group or 172 in total.
+
+Give the function a try, see what happens when you vary the power, significance levels, and failure probabilities in the two groups.
+
+Note: there are more advanced versions of sample size estimation functions available in R that allow you to specify design factors more flexibly (of course, they also require you to explicitly make other – hopefully more realistic – assumptions about the design).
+
+*7.
+Use the WHAS500 data from Exercise 5 to practice working with dates in both R and SPSS.
+a.	In R dates from a text file are read in as string variables. The dates are stored in the text file as MM/DD/YYYY. To tell R these should be seen as dates, we use the function as.Date() and the date format "%m/%d/%Y" (%m means the month as a digit 01-12, %d means the day as a digit 01-31, and %Y means the year as a four-digit number; see http://www.statmethods.net/input/dates.html for more information on dates in R.). To use, for instance, the variable admitdate as a date in calculations, use:
+  as.Date(whas5$admitdate, "%m/%d/%Y").
+Re-calculate the length of stay (call it los2) in days (difference between disdate and admitdate). Check los2 against the existing los. Try some other calculations with dates to see what is possible.
+b.	In SPSS: use the Date and Time Wizard (under the menu Transform), then choose “Calculate with dates and times” and “Calculate the number of time units between two dates” in order to re-calculate the length of stay (call it los2) in days (difference between disdate and admitdate). Check los2 against the existing los. Try some other calculations with dates to see what is possible.
+
+
+
+8.
+Tomorrow’s lecture will cover the assumptions made by a Cox regression model and how to check those assumptions. The dataset contains the time to relapse for the acute leukemia patients in Exercise 3, but includes both groups (treatment and placebo) and the white blood cell count (WBCC) for the 42 children. Do some preliminary data analysis: do treatment (1=6-MP, 0=placebo) and WBCC appear to be related to time to relapse? The data is available as leukemia.csv or leukemia.sav.
+
+# Day 2
+
+> Note 1: Exercises 1 and 2 are re-analyses of the examples from this morning’s lecture, intended to help you familiarize yourself with commands in R to check the assumptions of the Cox model, and perform parametric survival analyses, respectively. If you are already comfortable with the software, feel free to skip exercise 1 or refer back to it in other exercises. If you find yourself short on time, give priority to the exercises with an asterisk (*) next to them.
+
+> Exercises with R
+
+## Ex 1.
+
+> We’ll start with reproducing the results from the lecture. 
+
+```{r}
+
+library(survival)		# make survival functions available
+options(digits = 8)		# increase number of digits in results
+leuk <- read.table(here("data", "leukemia.csv"), header = TRUE, sep=",")
+summary(leuk)
+```
+
+			
+> To check in what functional form white blood cell count (WBCC) should be entered into the model, we will build a model with only TREATMENT, calculate the martingale residuals and plot them against WBCC and against the natural log of WBCC, and add a smooth loess curve. We will put both graphs in one plot by first typing
+par(mfrow=c(1,2))
+
+```{r}
+fit1 <- coxph(Surv(TIME, STATUS)~ TREATMENT, data=leuk)
+residM.fit1 <- resid(fit1,type="martingale")
+
+par(mfrow=c(1,2))	#Back to separate graphs
+plot(leuk$WBCC,residM.fit1)
+lines(lowess(leuk$WBCC,residM.fit1))
+plot(log(leuk$WBCC),residM.fit1); lines(lowess(log(leuk$WBCC),residM.fit1))
+par(mfrow = c(1,1))
+```
+
+
+> A logarithmic transformation makes the loess line (almost) linear, indicating that this is the functional form in which WBCC should be entered into the Cox model.
+Let’s define a variable logWBCC and add it to the data frame:
+leuk$logWBCC <- log(leuk$WBCC)
+a)	Check the functional form in which WBCC should be added, but now with the martingale residuals of an empty model (Call this model fit0). What do you see?
+
+```{r}
+fit0 <- coxph(Surv(TIME, STATUS) ~ 1, data = leuk)
+residM.fit0 <- resid(fit0, type = "martingale")
+
+par(mfrow=c(1,2))	#Back to separate graphs
+plot(leuk$WBCC,residM.fit0)
+lines(lowess(leuk$WBCC,residM.fit0))
+plot(log(leuk$WBCC),residM.fit0); lines(lowess(log(leuk$WBCC),residM.fit0))
+par(mfrow = c(1,1))
+```
+
+
+> b)	Fit models with the following predictors and name them fit2 – fit4: logWBCC only; TREATMENT and logWBCC; TREATMENT, logWBCC and their interaction TREATMENT*logWBCC.
+c)	Ask for the log-likelihood of the empty model: fit0$loglik
+Ask for the summaries of the 4 models fit1 - fit4, and for their log-likelihoods.
+d)	Calculate likelihood ratio test values and AIC’s (assume that the empty model, fit0, uses no degrees of freedom) 
+e)	Also compare the models via the likelihood ratio test, with commands like anova(fit1, fit3, test="Chisq")
+	Note that not all comparisons are possible. Why?
+f)	Decide which model is best. Interpret the coefficients of this best model.
+
+> Calculate DfBeta residuals for TREATMENT and logWBCC for fit3:
+residD.fit3 <- resid(fit3,type="dfbeta")
+
+> This results in a column of residuals for TREATMENT and one for logWBCC. Plot these residuals against the respective predictors themselves:
+plot(TREATMENT,residD.fit3[,1])
+plot(logWBCC,residD.fit3[,2], ylab="dfbeta for logWBCC")
+
+> The largest residual for logWBCC is for case 22; you can check this e.g. by printing the residuals or by plotting them against their index: 
+residD.fit3[,2] or plot(residD.fit3[,2])
+Alternatively you can ask for the maximum and minimum value, and for which case this max/min is taken on:
+max(residD.fit3[,2]); which.max(residD.fit3[,2])
+min(residD.fit3[,2]); which.min(residD.fit3[,2])
+g)	What is the value for this dfBeta residual? Fit model 3 again, but now without case 22, and compare the coefficient for logWBCC with the one from the model with all cases:
+summary(fit3)
+summary(coxph(Surv(TIME, STATUS)~ TREATMENT + logWBCC, subset=-22))
+
+> Next we will check the proportional hazards (PH) assumption, both numerically and graphically, first of the model with only TREATMENT (model fit1):
+print(coxzph.fit1.I <- cox.zph(fit1, transform="identity"))
+print(coxzph.fit1.KM <- cox.zph(fit1, transform="km"))
+print(coxzph.fit1.L <- cox.zph(fit1, transform=log))
+par(mfrow=c(1,3))	# graphs are plotted in 1 row, 3 next to each other
+plot(coxzph.fit1.I)
+plot(coxzph.fit1.KM)
+plot(coxzph.fit1.L)
+par(mfrow=c(1,1))
+h)	Now do the same for the best model (fit3).
+
+
+## Exercise 2
+
+> We will now do parametric survival analyses on these same leukemia data.
+Fit the exponential and the Weibull model to the leukemia data, and see if you can reproduce the results from the lecture:
+
+> Kaplan-Meier plot of both treatments:
+leuk.surv <- survfit(Surv(TIME, STATUS) ~ TREATMENT, data=leuk) 
+plot(leuk.surv, lty = 2:3, ylab="survival", xlab = "time")
+legend(30, 1, c("placebo", "treated"), lty = 2:3)
+
+> Complementary log-log vs log time, to check for straight lines (Weibull) and parallel lines (PH assumption):
+plot(leuk.surv, fun = "cloglog", lty = 2:3, )
+legend(1, 1, c("placebo", "treated"), lty = 2:3)
+
+> Fit the exponential model:
+parmod.exp <- survreg(Surv(TIME, STATUS) ~ TREATMENT, leuk, dist="exponential")
+A Weibull model with scale = 1 is equivalent to the exponential model:
+survreg(Surv(TIME, STATUS) ~ TREATMENT, leuk, dist='weibull', scale=1)
+summary(parmod.exp)
+
+> Plot the K-M curves again, and add the estimated exponential curves:
+plot(leuk.surv, lty = 2:3, ylab="survival", xlab = "time") legend(30, 1, c("placebo", "treated"), lty = 2:3)
+curve(1-pexp(x, rate = exp(-2.159)), from=0, to=35, add = TRUE)
+curve(1-pexp(x, rate = exp(-2.159-1.527)), from=0, to=35, add = TRUE)
+
+
+> Now fit the Weibull distribution:
+parmod.wei <- survreg(Surv(TIME, STATUS) ~ TREATMENT, leuk, dist="weibull")  
+summary(parmod.wei)
+
+> plot(leuk.surv, lty = 2:3)
+legend(30, 1, c("placebo", "treated"), lty = 2:3)
+Add the estimated Weibull curves, with shape and scale parameters derived from the AFT form of the distribution. Note that the survreg command gives the AFT form, whereas the pweibull command expects the PH form. (For further details see the help files in R).
+curve(1-pweibull(x, shape = 1/parmod.wei$scale, scale = exp(coef(parmod.wei)[1])), from=0, to=35, add = TRUE)
+curve(1-pweibull(x, shape = 1/parmod.wei$scale, scale = exp(coef(parmod.wei)[1]+coef(parmod.wei)[2])), from=0, to=35, add = TRUE)
+
+> Test whether the Weibull model fits better than the exponential:
+anova(parmod.exp, parmod.wei)
+
+> You can get predicted survival times for given probabilities (e.g. 25%, 50% and 75%):
+predict(parmod.wei, newdata=list(TREATMENT=c(0,1)), type='quantile', p=c(.25, .5, .75)) 
+
+> Note however that these probabilities are for F(t). For survival interpretation these probabilities have to be subtracted from 1.
+
+> a)	Using the fitted Weibull model, what are the median survival times for both treatment groups? What are the times that go with 90% survival probability?
+b)	By which factor are the survival times in treatment group 1 multiplied, compared to treatment group 0?
+c)	How can you obtain this factor from the output of the Weibull model?
+d)	What is the hazard ratio of treatment 0 compared to treatment 1?
+
+## *Ex. 3
+
+> NOTE: This exercise is also covered in today’s quiz.
+In yesterday’s analysis of the WHAS100 data, a Cox model was fitted. Today we are going to check whether the functional form of the predictors (gender, age and bmi) should be changed, whether the proportional hazards assumption holds for the predictors in the final model, and whether there are cases that greatly influence the estimate of the coefficients.
+
+### a)	
+
+> Read the data into R using yesterday’s commands, and call the data frame wor
+
+```{r}
+wor <- read.table(here("data", "whas100.dat"), header = F)
+colnames(wor) <- c("id", "admitdate", "foldate", "los", "lenfol", "fstat", "age", "gender", "bmi")
+str(wor)
+```
+
+### b)	
+
+> Check the functional form of age and BMI.
+
+```{r}
+require(dplyr); require(purrr); require(survival)
+all_covs   <- c("age", "bmi", "gender")
+form_covs  <- c("age", "bmi")
+transforms <- c("I", "log")
+form0 <- Surv(lenfol, fstat) ~ 1
+
+par(mfrow = c(length(form_covs), length(transforms)))
+
+map(form_covs, function(x) {
+  map(transforms, function(trans_func) {
+    # store function name for printing / plotting and grab actual function from 
+    # environment 
+    
+    func_name = trans_func
+    trans_func = get(trans_func)
+    dat = wor %>% mutate_at(vars(x), funs(trans_func))
+    # cox fit of all covariates except x
+    cph_fit = coxph(reformulate(setdiff(all_covs, x), form0[[2]]), data = dat)
+    cph_resids = resid(cph_fit, type = "martingale")
+    
+    # lm fit of x, based on other covariates
+    lm_fit = lm(reformulate(setdiff(all_covs, x), x), data = dat)
+    lm_resids = resid(lm_fit, type = "response")
+    
+    # plots
+    # plot(dat[[x]], cph_resids, xlab = paste(as.expression(trans_func), x));
+    # lines(lowess(dat[[x]], cph_resids))
+    plot(lm_resids, cph_resids, 
+         xlab = paste0(func_name, "(", x, ")"));
+         # xlab = x)
+    lines(lowess(lm_resids, cph_resids))
+  })
+})
+
+
+```
+
+### c)	
+
+> Using the transformed BMI values (abs(bmi – 27)), determine which of the predictors should be entered into the model, and check the proportional hazards assumption for those.
+
+```{r}
+wor %<>% mutate(bmi2 = abs(bmi - 27))
+fit <- coxph(Surv(lenfol, fstat) ~ age + gender + bmi2, data = wor)
+drop1(fit)
+fit <- coxph(Surv(lenfol, fstat) ~ age + bmi2, data = wor)
+drop1(fit)
+cox.zph(fit, transform = "km")
+cox.zph(fit, transform = "identity")
+cox.zph(fit, transform = "log")
+```
+
+Proportionality seems OK
+
+
+### d)
+
+> Use dfbeta “residuals” to check for influential cases.
+	Note: there is a quiz question about these dfbeta residuals.
+	
+```{r}
+dfb_resids <- resid(fit, type = "dfbeta")
+dfb_resids_scaled <- abs(dfb_resids * matrix(1 / coef(fit), ncol = 2, nrow = 100, byrow = T))
+dfb_resids[apply(dfb_resids_scaled, 2, which.max), ]
+dfb_resids_scaled[apply(dfb_resids_scaled, 2, which.max), ]
+```
+
+	
+### e)
+
+> For the quiz: do parametric survival analyses on these data with gender as the only predictor, and give estimates of the effect of gender, in terms of hazards and in terms of survival times.
+
+```{r}
+fit_exp <- survreg(formula = Surv(lenfol, fstat) ~ gender, data = wor, dist = "exponential")
+summary(fit_exp)
+survfit(Surv(lenfol, fstat) ~ gender, data = wor) %>% autoplot
+predict(fit_exp, newdata=list(gender=c(0,1)), type='quantile', p=c(.25, .5, .75)) 
+
+```
+
+
+## *Ex. 4
+
+> NOTE: This exercise is also covered in today’s quiz.
+To demonstrate the effect of ties, and the various ways to deal with them, on coefficient estimates and significance, we will look at a small data set with relatively very many ties. Data are available as ties.txt and ties.sav (for use in SPSS).
+
+```{r}
+ties <- read.table(here("data", "ties.txt"), header = T)
+str(ties)
+```
+
+> Read in the data using Ties<- read.table("ties.txt", header = TRUE) and have a look at the data.
+
+### a)	
+
+> Make a Kaplan-Meier plot for both groups.
+
+```{r}
+require(ggfortify)
+survfit(Surv(TIME, STATUS) ~ GROUP, data = ties) %>%
+  autoplot
+```
+
+### b)
+
+> Use a log-rank test to test for differences in survival between the two groups.
+
+```{r}
+survdiff(Surv(TIME, STATUS) ~ GROUP, data = ties)
+```
+
+### c)
+
+> Now use Cox regression with Breslow’s, Efron’s and the exact method to deal with ties, and check for significance and effect size of GROUP. What are your conclusions as to the Breslow and Efron approximations of the exact method?
+
+```{r}
+map(c("breslow", "efron", "exact"), ~coxph(Surv(TIME, STATUS) ~ GROUP, data = ties,
+                                           ties = .x) %>% summary)
+```
+
+
+d)	Analyze these data in SPSS (using Ties.sav), and compare to the R output.
+
+
+
+
+
+Exercises with SPSS
+
+Ex. 5
+Read in data from NEPHRECT.TXT, containing the nephrectomy data.
+
+a)	Check the Cox PH assumption for AGE by building a model with NEPHRECT as factor and AGE as Strata variable. In Plots… ask for an LML plot and check whether the resulting log cumulative hazard functions are approximately parallel. See what happens if you do the same thing but now with AGE (and NEPHRECT) both as factors. In Plots… you have to indicate that you want Separate Lines for AGE.
+
+b)	Check for influential observations for AGE (with reference class: 1) and NEPHRECT, in the model that contains both these factors (in Save… select Dfbeta(s) and explore the resulting new variables). Which patients are influential, can you explain why from their characteristics?
+
+Ex. 6
+Open the data file MYELOMA.SAV. Use Utilities, Variables... to study the meaning of the variables in the data file.
+
+Determine the best fitting Cox proportional hazards model to explain death from multiple myeloma:
+
+a)	Start by fitting each of the explanatory variables separately.
+
+b)	Use forward and backward methods to build a complete model. The re¬searchers also wish to know whether the effects of the risk factors might be modified by the age or sex of a patient, so, in the final model, test for possible interactions with these two.
+	Note: to fit the interaction term you will also have to fit the main effect (age and / or sex).
+
+c)	Interpret the coefficients from your final model: direction and size of the hazard ratios.
+
+d)	In the Cox menu go to Save... and Hazard function and DfBeta(s). Extra variables will be saved in the data window. HAZ_1 will contain the cumulative hazard. DFB1_1 and DFB2_1 will contain the delta-beta’s. Check them for large residuals and influential observations, by plotting them against case number, and by using Analyze, Descriptive Statistics, Explore and in Statistics… selecting Outliers.
+	Hint: You can make a variable containing case number by going to Transform Compute Variable…, putting PATIENT in Target Variable and $CASENUM in Numeric Expression. OK. ($CASENUM is an internal variable that SPSS uses to keep track of case numbers; we have now copied it to an external variable called PATIENT.)
+
+e)	Check the assumption of proportional hazards by including the interac-tion of time (or ln(time)) with each of the covariates in your model: Statistics, Survival, Cox w/Time-Dep Cov...: in Expression for T_COV_ put ln(T_)*bun, and click Model... In the regular Cox menu, T_COV_ is now available as an extra (time-dependent) covariate. You can check whether including it in your previous model results in a significant improvement. If so, the assumption of proportional hazards has not been fulfilled. Do so for the other covariate as well.
+ 
+# Day 3
+
+> Exercises Day 3: Advanced Cox regression: more on censoring and truncation
+
+> During this computer lab we will
+1 & 3)	Reproduce some of the results from today’s lecture 
+2)	Compare survival of men and women among residents of a retirement community.
+3)	Use a covariate as a stratification variable.
+4-7)	Learn how to work with time-varying covariates in R & SPSS. In R, we have to restructure the data (from “wide” to “counting process” format); in SPSS, we have to calculate time-varying covariates using the syntax. Note that exercises 4 and 5 are in R, and exercises 5 and 7 the same but in SPSS. You may choose which program you wish to use.
+
+> Note: R (and SPSS, where possible) code is available for most exercises. If you get stuck, see lab day 3.R or lab day 3.sps. Before running any of the code, be sure to change the path name in the R or SPSS syntax (in R using the setwd() command)!
+
+
+## 1.
+
+> Try to reproduce the analysis of the anorexia dataset in R, SPSS or both. The data has been saved in as anorexia.sav.
+
+### a.
+
+> Read the data into R (requires installing - if not already done - and loading the foreign library) and plot the cumulative events (1 - KM survival) by clinic. Also plot the log(-log(Survival)) per clinic.
+
+```{r}
+ano <- haven::read_sav(here("data", "anorexia.sav"))
+str(ano)
+
+ano %<>% mutate_if(haven::is.labelled, haven::as_factor)
+str(ano)
+```
+
+```{r}
+survfit(Surv(menstrwk, recover) ~ ins, data = ano) %>% plot(fun = "event")
+survfit(Surv(menstrwk, recover) ~ ins, data = ano) %>% plot(fun = "cloglog")
+
+```
+
+### b.
+
+> Fit a Cox regression one model using only clinic (ins) as an explanatory variable (covariate) for the time to recovery of menses. Use an appropriate test to check the proportionality of the hazards for the two clinics.
+
+```{r}
+fit1 <- coxph(Surv(menstrwk, recover) ~ ins, data = ano)
+cox.zph(fit1, transform = "identity")
+cox.zph(fit1, transform = "km")
+cox.zph(fit1, transform = "log")
+```
+
+### c.
+
+> Fit a Cox regression model using fsh, leptine, AMH, and clinic as explanatory variables. Fit a second model using fsh, leptine, and AMH as explanatory variables, and clinic as a stratum variable. Compare the results of the two models. Why don’t you get an estimated ln(HR) for the second model?
+
+```{r}
+coxph(Surv(menstrwk, recover) ~ fsh + leptine + amh + ins, data = ano)# %>% summary
+coxph(Surv(menstrwk, recover) ~ fsh + leptine + amh + strata(ins), data = ano)# %>% summary
+```
+
+
+
+2.
+A researcher wishes to compare the survival times among men and women in a study of survival among residents of a retirement community in the US. The age at which residents came to live in the retirement home was collected, along with the age of death or moving from the retirement home. The dataset has been saved as retire.csv and retire.RData and contains the following variables:
+obs:		id number
+death:		status variable (1= died, 0 = still alive)
+ageentry:	age of moving into retirement community, in months
+age: 		age at death or last follow-up, in months
+time: 		difference (in months) between age and ageentry
+gender:	1=male, 2=female
+a.	From the lecture on day 1, we recall that this data is right-censored and left-truncated. Nevertheless, for comparison purposes we will begin with a naive model that ignores the left truncation. Fit a Cox PH model to compare the survival times of men and women, using the variable age for the time variable and death for status. Make a graph of the estimated survival functions for men and women (with 95% CIs if possible). Interpret the results. (This step may be done in SPSS or R.) Do you need to do a Cox model here? What would be an alternative for comparing survival of men and women, in this naive approach? 
+b.	Fit an appropriate model in R for the data, taking into account the left truncation of the data (to the best of our knowledge, this analysis cannot be performed in SPSS). Start by producing the Kaplan-Meier plots using left truncation, and using the log rank test. Then move on to the Cox model. Interpret the results. (Hint: to use start and stop times in the coxph function for Cox PH regression in R or in the survfit function for the Kaplan-Meier, you can modify the usual Surv(time, ev) to the “counting process notation” form: Surv(start, stop, ev)  )
+c.	Compare the results from (a) and (b) and explain the differences.
+
+
+3. 
+Try to reproduce the analysis of the TSC dataset. The data has been saved in comma-separated format as TSCdata.csv.
+
+a.	Reproduce the fit of the Weibull model
+b.	Plot the model: you have to use the predict function on the fitted model object, using the quantile option, as in the second example in the helpfile of predict.survreg. Replace newdata=data.frame(ph.ecog=2) with newdata=data.frame(dummy=1) 
+c.	Determine the median predicted age with 95% CI.
+
+
+4. 
+A study was performed in France to examine the association of vascular factors (in subjects aged 65 and older) and the risk of developing dementia. Subjects were seen at three timepoints: at baseline, age and gender were recorded, along with systolic & diastolic blood pressure (SBP and DBP, respectively) and the use of antihypertensives. At two follow-up visits, the latter three variables were recorded again. Patients were followed for four years. The event of interest is a diagnosis of Alzheimer’s disease. Patients who had not developed Alzheimer’s were censored at last moment of follow-up. The data has been saved as FRTCS.csv. Variable descriptions can be found in the file FRTCS.txt.  (This dataset is a selection of the French Three Cities Study – removing subjects with missing data and overselecting subjects with an event – and the results are not directly comparable to the original.)
+a.	In R, data with time-varying covariates are analyzed in a survival regression using the “counting process” data structure. The data must be “expanded” to 3 lines of data per subject, each line with the start and stop times (in, for instance, number of days since the beginning of study) of an interval (baseline to 1st follow-up, 1st to 2nd and 2nd to 3rd follow-up) and the corresponding variables (SBP, DBP, antihypertensives) for the interval are on one line of data. An event variable per record must also be created. In this case, the data was selected so that no events occurred before the third follow-up visit, so event will be 0 for the first two lines, and equal to the variable status.
+Some hints:
+	R will read the date variables in as character variables. To let R know that they are dates (in the form of DDMMMYY) and to use them in calculations, you can use the function as.Date: 
+for instance: as.Date(tcs$date1, "%d%b%y")
+See http://www.statmethods.net/input/dates.html for more information on dates and date formats in R.
+	When you subtract two dates in R, the result is the number of days between the two dates. (To get years, you can divide the result by 365.25.)
+	Make 3 start and stop variables variables (start1 = 0, stop1 = date1-date0, start2 = stop1, stop2 = date2-date0, etc.)
+	Make 3 event variables (0, 0 and status)
+	Then use the reshape() function in R to restructure the data
+	If you get stuck, see the R code for day 3!
+b.	Fit a model using age, gender, systolic and diastolic blood pressure and use of antihypertensives to predict onset of Alzheimer’s. Interpret your findings.
+Hint: Once you have restructured the data, the analysis can be performed relatively easily. As in Exercise 2, we use the “counting process notation” form for the Cox PH function: coxph(Surv(start, stop, ev) ~ ...)).
+c.	If we do not control for use of antihypertensives, is systolic and/or diastolic blood pressure and related to onset of Alzheimer’s?
+
+
+5. [Optional, SPSS]
+Use SPSS to analyze the data from the French Alzheimer’s study (see exercise 4 for details). Read the dataset FRTCS.csv into SPSS. We will then use the “time program” syntax to create time-varying covariates.
+a.	Read the data into SPSS (watch out that the dates get read in as dates and the rest as numeric!). Make 3 new time variables, subtracting date0 from date1, date2, or date_event, resulting in the number of days since date0. (Hint: see the date & time wizard in SPSS or the SPSS syntax for day 3.)
+b.	Use the idea of time program & T_COV from yesterday, but calculate 3 time-varying variables (for sbp, dbp & antihyp), where sbp_tv is equal to sbp0 between date0 and date1 (or: the internal time variable T_ is between 0 and the number of days between date1 and date0), to sbp1 between date1 and date2, and to sbp2 between date2 and date_ev. Here the code for sbp_tv, make dbp_tv in a similar manner:
+TIME PROGRAM.
+COMPUTE sbp_tv = (T_ <= time1)*sbp0 + (T_ > time1 & T_<=time2)*sbp1 + (T_ > time2 & T_<=time)*sbp2.
+(Note that this could also be accomplished with several if statements.)
+Then fit a model using age, gender use these variables in a Cox regression to predict onset of Alzheimer’s. Interpret your findings. (Hint: see yesterday’s numerical check of proportional hazards for clues to the syntax, or the SPSS syntax for day 3). 
+c.	If we do not control for use of antihypertensives, is systolic and/or diastolic blood pressure and related to onset of Alzheimer’s? (Note: you will have to re-run the “time program” syntax with the 2 time-varying blood pressure variables before you can run the Cox regression containing them.)
+
+
+6.
+In the UMARU Impact Study, drug-addicted subjects were randomized to one of two residential treatment programs of different duration (short and long) designed to prevent return to drug use. Subjects were free to leave the program at any time, and time to event was self-reported return to drug us. The data is stored in uis.csv ; information on variables can be found in uis.txt .
+a.	We are interested in the difference between the two treatments. Fit a model using treatment group to predict the time until subjects return to drug use.
+b.	Previous analysis indicated that the hazard ratio for treatment was not constant over time (non- proportional hazard). Since patients are free to leave the clinic at any time, not all patients remain on treatment as long as planned. Also, since both treatments involve being housed in a place without access to drugs, it is possible the positive effect of the longer treatment in part (a) is being driven by this lack of access to drugs. The variable los indicates the length of stay in the clinic. We assume that a patient is on treatment while in the clinic and off treatment once s/he leaves. Fit a model using treatment group, the time-varying variable “off treatment”, and the interaction between treatment and “off treatment”. Interpret the results of this model.
+Hint: the data needs to be in “counting process” notation, with a bit of a twist. For patients who stay on treatment for the duration of the study (los = time), only 1 line of data is necesary and off_tx = no for their full follow-up. For patients with los < time, during the time before los, off_tx = no and during the time after los, off_tx = yes (2 lines of data per patient).
+If you get stuck, see the R code for day 3 for a (not necessarily “the”) solution.
+
+
+7. [Optional, SPSS]
+Use SPSS to analyze the data from the UMARU Impact Study (see exercise 6 for details). The data is stored in uis.csv .
+a.	Fit a model using treatment group to predict the time until subjects return to drug use.
+b.	Fit a model using treatment group, the time-varying variable “off treatment”, and the interaction between treatment group (short/long) and “off treatment”. Interpret the results of this model.
+ 
+
+
