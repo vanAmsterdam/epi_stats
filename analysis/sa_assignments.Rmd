@@ -586,32 +586,125 @@ coxph(Surv(menstrwk, recover) ~ fsh + leptine + amh + strata(ins), data = ano)# 
 ```
 
 
+## 2.
 
-2.
-A researcher wishes to compare the survival times among men and women in a study of survival among residents of a retirement community in the US. The age at which residents came to live in the retirement home was collected, along with the age of death or moving from the retirement home. The dataset has been saved as retire.csv and retire.RData and contains the following variables:
+> A researcher wishes to compare the survival times among men and women in a study of survival among residents of a retirement community in the US. The age at which residents came to live in the retirement home was collected, along with the age of death or moving from the retirement home. The dataset has been saved as retire.csv and retire.RData and contains the following variables:
 obs:		id number
 death:		status variable (1= died, 0 = still alive)
 ageentry:	age of moving into retirement community, in months
 age: 		age at death or last follow-up, in months
 time: 		difference (in months) between age and ageentry
 gender:	1=male, 2=female
-a.	From the lecture on day 1, we recall that this data is right-censored and left-truncated. Nevertheless, for comparison purposes we will begin with a naive model that ignores the left truncation. Fit a Cox PH model to compare the survival times of men and women, using the variable age for the time variable and death for status. Make a graph of the estimated survival functions for men and women (with 95% CIs if possible). Interpret the results. (This step may be done in SPSS or R.) Do you need to do a Cox model here? What would be an alternative for comparing survival of men and women, in this naive approach? 
-b.	Fit an appropriate model in R for the data, taking into account the left truncation of the data (to the best of our knowledge, this analysis cannot be performed in SPSS). Start by producing the Kaplan-Meier plots using left truncation, and using the log rank test. Then move on to the Cox model. Interpret the results. (Hint: to use start and stop times in the coxph function for Cox PH regression in R or in the survfit function for the Kaplan-Meier, you can modify the usual Surv(time, ev) to the “counting process notation” form: Surv(start, stop, ev)  )
-c.	Compare the results from (a) and (b) and explain the differences.
+
+### a.
+
+> From the lecture on day 1, we recall that this data is right-censored and left-truncated. Nevertheless, for comparison purposes we will begin with a naive model that ignores the left truncation. Fit a Cox PH model to compare the survival times of men and women, using the variable age for the time variable and death for status. Make a graph of the estimated survival functions for men and women (with 95% CIs if possible). Interpret the results. (This step may be done in SPSS or R.) Do you need to do a Cox model here? What would be an alternative for comparing survival of men and women, in this naive approach? 
+
+```{r}
+retire <- read.csv(here("data", "retire.csv"))
+str(retire)
+```
+
+```{r}
+survfit(Surv(age / 12, death) ~gender, data = retire) %>% autoplot
+```
+
+Conclusion: immortal until 62.5 years, then in the beginning, males die a little earlier
+
+There is right-censoring, but we need to also account for the left-truncation
+
+### b.
+
+> Fit an appropriate model in R for the data, taking into account the left truncation of the data (to the best of our knowledge, this analysis cannot be performed in SPSS). Start by producing the Kaplan-Meier plots using left truncation, and using the log rank test. Then move on to the Cox model. Interpret the results. (Hint: to use start and stop times in the coxph function for Cox PH regression in R or in the survfit function for the Kaplan-Meier, you can modify the usual Surv(time, ev) to the “counting process notation” form: Surv(start, stop, ev)  )
 
 
-3. 
-Try to reproduce the analysis of the TSC dataset. The data has been saved in comma-separated format as TSCdata.csv.
+```{r}
+survfit(Surv(ageentry / 12, age / 12, death, type = "counting") ~ gender, data = retire) %>% autoplot
+survfit(Surv(ageentry / 12, age / 12, death, type = "counting") ~ gender, data = filter(retire, age > 800)) %>% autoplot
+```
 
-a.	Reproduce the fit of the Weibull model
-b.	Plot the model: you have to use the predict function on the fitted model object, using the quantile option, as in the second example in the helpfile of predict.survreg. Replace newdata=data.frame(ph.ecog=2) with newdata=data.frame(dummy=1) 
-c.	Determine the median predicted age with 95% CI.
+```{r}
+coxph(Surv(ageentry / 12, age / 12, death, type = "counting") ~ gender, data = retire) %>% summary
+
+```
 
 
-4. 
-A study was performed in France to examine the association of vascular factors (in subjects aged 65 and older) and the risk of developing dementia. Subjects were seen at three timepoints: at baseline, age and gender were recorded, along with systolic & diastolic blood pressure (SBP and DBP, respectively) and the use of antihypertensives. At two follow-up visits, the latter three variables were recorded again. Patients were followed for four years. The event of interest is a diagnosis of Alzheimer’s disease. Patients who had not developed Alzheimer’s were censored at last moment of follow-up. The data has been saved as FRTCS.csv. Variable descriptions can be found in the file FRTCS.txt.  (This dataset is a selection of the French Three Cities Study – removing subjects with missing data and overselecting subjects with an event – and the results are not directly comparable to the original.)
-a.	In R, data with time-varying covariates are analyzed in a survival regression using the “counting process” data structure. The data must be “expanded” to 3 lines of data per subject, each line with the start and stop times (in, for instance, number of days since the beginning of study) of an interval (baseline to 1st follow-up, 1st to 2nd and 2nd to 3rd follow-up) and the corresponding variables (SBP, DBP, antihypertensives) for the interval are on one line of data. An event variable per record must also be created. In this case, the data was selected so that no events occurred before the third follow-up visit, so event will be 0 for the first two lines, and equal to the variable status.
-Some hints:
+```{r}
+retire %>%
+  filter(gender == 1) %>%
+  arrange(ageentry)
+```
+
+The first few observations for men all die. So in the risk set, everyone dies, so the estimated probability of survival in that time interval is 0
+The cumulative survival is the cumulative product of all previous survival probabilities, so this stays 0
+
+### c.
+
+> Compare the results from (a) and (b) and explain the differences.
+
+The result from a is overly optimistic. 
+It is conditioned on the fact that everyone survived until that time
+
+Due to the left-truncation, you lose the connection between KM and coxph
+
+## 3. 
+
+> Try to reproduce the analysis of the TSC dataset. The data has been saved in comma-separated format as TSCdata.csv.
+
+```{r}
+tsc <- read.csv(here("data", "TSCdata.csv"))
+str(tsc)
+```
+
+### a.
+
+> Reproduce the fit of the Weibull model
+
+```{r}
+fitw <- survreg(Surv(T1, T2, type = "interval2") ~ 1, data = tsc, dist = "weibull")
+summary(fitw)
+```
+
+### b.
+
+> Plot the model: you have to use the predict function on the fitted model object, using the quantile option, as in the second example in the helpfile of predict.survreg. Replace newdata=data.frame(ph.ecog=2) with newdata=data.frame(dummy=1) 
+
+```{r}
+ptimes <-  seq(.01, 1 - .01, length.out = 1000)
+pred_time <- predict(fitw, newdata = data.frame(dummy=1), type = "quantile", p = ptimes, se = T)
+matplot(cbind(pred_time$fit, pred_time$fit + 2*pred_time$se.fit, pred_time$fit - 2 * pred_time$se.fit),
+        1 - ptimes, 
+        type = 'l', lty = c(1,2,2), xlim = c(0, 100), col = 1)
+```
+
+### c.
+
+> Determine the median predicted age with 95% CI.
+
+```{r}
+pred_median <- predict(fitw, newdata= data.frame(dummy = 1), p = .5, type = "quantile", se = T)
+pred_median$fit
+pred_median$fit + 2 *c(-1, 1) * pred_median$se.fit
+```
+
+
+## 4. 
+
+> A study was performed in France to examine the association of vascular factors (in subjects aged 65 and older) and the risk of developing dementia. Subjects were seen at three timepoints: at baseline, age and gender were recorded, along with systolic & diastolic blood pressure (SBP and DBP, respectively) and the use of antihypertensives. At two follow-up visits, the latter three variables were recorded again. Patients were followed for four years. The event of interest is a diagnosis of Alzheimer’s disease. Patients who had not developed Alzheimer’s were censored at last moment of follow-up. The data has been saved as FRTCS.csv. Variable descriptions can be found in the file FRTCS.txt.  (This dataset is a selection of the French Three Cities Study – removing subjects with missing data and overselecting subjects with an event – and the results are not directly comparable to the original.)
+
+```{r}
+frtcs <- read.csv(here("data", "FRTCS.csv"))
+date_vars <- grep(names(frtcs), pattern = "date", value = T)
+frtcs %<>% mutate_at(vars(date_vars), lubridate::mdy)
+str(frtcs)
+```
+
+
+### a.
+
+> In R, data with time-varying covariates are analyzed in a survival regression using the “counting process” data structure. The data must be “expanded” to 3 lines of data per subject, each line with the start and stop times (in, for instance, number of days since the beginning of study) of an interval (baseline to 1st follow-up, 1st to 2nd and 2nd to 3rd follow-up) and the corresponding variables (SBP, DBP, antihypertensives) for the interval are on one line of data. An event variable per record must also be created. In this case, the data was selected so that no events occurred before the third follow-up visit, so event will be 0 for the first two lines, and equal to the variable status.
+
+> Some hints:
 	R will read the date variables in as character variables. To let R know that they are dates (in the form of DDMMMYY) and to use them in calculations, you can use the function as.Date: 
 for instance: as.Date(tcs$date1, "%d%b%y")
 See http://www.statmethods.net/input/dates.html for more information on dates and date formats in R.
@@ -620,12 +713,81 @@ See http://www.statmethods.net/input/dates.html for more information on dates an
 	Make 3 event variables (0, 0 and status)
 	Then use the reshape() function in R to restructure the data
 	If you get stuck, see the R code for day 3!
-b.	Fit a model using age, gender, systolic and diastolic blood pressure and use of antihypertensives to predict onset of Alzheimer’s. Interpret your findings.
+
+Check if all events are past the last date
+
+```{r}
+sum(!(frtcs$date_event > frtcs$date2))
+```
+
+Add start and stop dates
+
+Make data frame long by measurement date
+
+```{r}
+
+frtcs %<>%
+  mutate(
+    start1 = 0,
+    stop1  = date1 - date0,
+    start2 = stop1, 
+    stop2  = date2 - date0,
+    start3 = stop2,
+    stop3  = date_event - date0,
+    event1 = 0L,
+    event2 = 0L,
+    event3 = status) %>% 
+  mutate_if(function(x) "difftime" %in% class(x), function(x) as.numeric(x) / 365.24)
+
+setDT(frtcs)
+
+
+# frtcs2 <- melt.data.table(frtcs, 
+#                           measure = patterns(sbp = "^sbp", 
+#                                              measurement_date = "^date[0-9]", 
+#                                              dbp = "^dbp"), 
+#                           variable.name = "time_point")
+frtcs2 <- melt.data.table(frtcs, 
+                          measure = patterns(sbp = "^sbp", 
+                                             measurement_date = "^date[0-9]", 
+                                             dbp = "^dbp",
+                                             antihyp = "^antihyp",
+                                             start = "^start",
+                                             stop = "^stop", 
+                                             event = "^event"), 
+                          variable.name = "time_point")
+str(frtcs2)
+frtcs2[id %in% c(1:2, 17),][order(id)]
+```
+
+### b.	
+
+> Fit a model using age, gender, systolic and diastolic blood pressure and use of antihypertensives to predict onset of Alzheimer’s. Interpret your findings.
 Hint: Once you have restructured the data, the analysis can be performed relatively easily. As in Exercise 2, we use the “counting process notation” form for the Cox PH function: coxph(Surv(start, stop, ev) ~ ...)).
-c.	If we do not control for use of antihypertensives, is systolic and/or diastolic blood pressure and related to onset of Alzheimer’s?
 
+```{r}
+fit1 <- coxph(Surv(start, stop, event) ~ age + sex + sbp + dbp + antihyp, data = frtcs2)
+summary(fit1)
+```
 
-5. [Optional, SPSS]
+### c.
+
+> If we do not control for use of antihypertensives, is systolic and/or diastolic blood pressure and related to onset of Alzheimer’s?
+
+```{r}
+fit2 <- coxph(Surv(start, stop, event) ~ age + sex + sbp + dbp, data = frtcs2)
+summary(fit2)
+```
+
+If we do not control for anihypertensives, only sbp is significant
+
+```{r}
+AIC(fit1, fit2)
+```
+
+Fit 1 is a lot better though in terms of AIC
+
+> 5. [Optional, SPSS]
 Use SPSS to analyze the data from the French Alzheimer’s study (see exercise 4 for details). Read the dataset FRTCS.csv into SPSS. We will then use the “time program” syntax to create time-varying covariates.
 a.	Read the data into SPSS (watch out that the dates get read in as dates and the rest as numeric!). Make 3 new time variables, subtracting date0 from date1, date2, or date_event, resulting in the number of days since date0. (Hint: see the date & time wizard in SPSS or the SPSS syntax for day 3.)
 b.	Use the idea of time program & T_COV from yesterday, but calculate 3 time-varying variables (for sbp, dbp & antihyp), where sbp_tv is equal to sbp0 between date0 and date1 (or: the internal time variable T_ is between 0 and the number of days between date1 and date0), to sbp1 between date1 and date2, and to sbp2 between date2 and date_ev. Here the code for sbp_tv, make dbp_tv in a similar manner:
@@ -636,18 +798,343 @@ Then fit a model using age, gender use these variables in a Cox regression to pr
 c.	If we do not control for use of antihypertensives, is systolic and/or diastolic blood pressure and related to onset of Alzheimer’s? (Note: you will have to re-run the “time program” syntax with the 2 time-varying blood pressure variables before you can run the Cox regression containing them.)
 
 
-6.
-In the UMARU Impact Study, drug-addicted subjects were randomized to one of two residential treatment programs of different duration (short and long) designed to prevent return to drug use. Subjects were free to leave the program at any time, and time to event was self-reported return to drug us. The data is stored in uis.csv ; information on variables can be found in uis.txt .
-a.	We are interested in the difference between the two treatments. Fit a model using treatment group to predict the time until subjects return to drug use.
-b.	Previous analysis indicated that the hazard ratio for treatment was not constant over time (non- proportional hazard). Since patients are free to leave the clinic at any time, not all patients remain on treatment as long as planned. Also, since both treatments involve being housed in a place without access to drugs, it is possible the positive effect of the longer treatment in part (a) is being driven by this lack of access to drugs. The variable los indicates the length of stay in the clinic. We assume that a patient is on treatment while in the clinic and off treatment once s/he leaves. Fit a model using treatment group, the time-varying variable “off treatment”, and the interaction between treatment and “off treatment”. Interpret the results of this model.
+## 6.
+
+> In the UMARU Impact Study, drug-addicted subjects were randomized to one of two residential treatment programs of different duration (short and long) designed to prevent return to drug use. Subjects were free to leave the program at any time, and time to event was self-reported return to drug us. The data is stored in uis.csv ; information on variables can be found in uis.txt .
+
+```{r}
+uis <- read.csv(here("data", "uis.csv"))
+factor_vars <- c("hercoc", "ivhx")
+uis %<>% mutate_at(vars(factor_vars), as.factor)
+str(uis)
+```
+
+### a.
+
+> We are interested in the difference between the two treatments. Fit a model using treatment group to predict the time until subjects return to drug use.
+
+```{r}
+fit1 <- coxph(Surv(time, event) ~ treat, data = uis)
+summary(fit1)
+```
+
+### b.
+
+> Previous analysis indicated that the hazard ratio for treatment was not constant over time (non- proportional hazard). Since patients are free to leave the clinic at any time, not all patients remain on treatment as long as planned. Also, since both treatments involve being housed in a place without access to drugs, it is possible the positive effect of the longer treatment in part (a) is being driven by this lack of access to drugs. The variable los indicates the length of stay in the clinic. We assume that a patient is on treatment while in the clinic and off treatment once s/he leaves. Fit a model using treatment group, the time-varying variable “off treatment”, and the interaction between treatment and “off treatment”. Interpret the results of this model.
 Hint: the data needs to be in “counting process” notation, with a bit of a twist. For patients who stay on treatment for the duration of the study (los = time), only 1 line of data is necesary and off_tx = no for their full follow-up. For patients with los < time, during the time before los, off_tx = no and during the time after los, off_tx = yes (2 lines of data per patient).
 If you get stuck, see the R code for day 3 for a (not necessarily “the”) solution.
 
+Throw to long
 
-7. [Optional, SPSS]
+```{r}
+uis2 <- uis %>%
+  mutate(
+    start1   = 0L,
+    stop1    = los, 
+    start2   = stop1, 
+    stop2    = time,
+    status1  = 0,
+    status2  = event,
+    off_treat1= 0,
+    off_treat2= 1
+  ) %>%
+  as.data.table %>%
+  melt(measure.vars = patterns(
+    start = "^start",
+    stop  = "^stop",
+    status= "^status",
+    off_treat = "^off_treat"
+  ), variable.name = "time_point")
+```
+
+Fix the cases with time equal to los
+
+```{r}
+uis2[los == time][order(id)]
+uis2[los == time, `:=`(start = 0, status = max(status))]
+uis2 <- uis2[!(los == time & time_point == 2)]
+```
+
+Model
+
+```{r}
+coxph(Surv(start, stop, status) ~ treat * off_treat, data = uis2) %>% summary
+```
+
+Now we see a big effect of being 'off treatment', then the hazard ratio is nearly 10
+
+When on treatment, treatment 1 has a lower hazard
+When off treatment, the difference between the treatments is close to 0
+
+> 7. [Optional, SPSS]
 Use SPSS to analyze the data from the UMARU Impact Study (see exercise 6 for details). The data is stored in uis.csv .
 a.	Fit a model using treatment group to predict the time until subjects return to drug use.
 b.	Fit a model using treatment group, the time-varying variable “off treatment”, and the interaction between treatment group (short/long) and “off treatment”. Interpret the results of this model.
  
+# Day 4
+
+> Exercises Day 4: Competing risks and informative censoring
+
+> During this computer lab we will
+1&2)	Reproduce some of the results from today’s lecture in R (or, where possible, SPSS)
+3)	Apply what we’ve learned about competing risks to a dataset on bone marrow transplant patients.
+
+> Note: R (and SPSS, where possible) code is given in the slides or the answers for the exercises. If you get stuck in R, see R code lecture day4.R. Before running any of the code, be sure to change the path name (setwd() function)!
+
+## 1.
+
+> We will reproduce the analysis from the lecture, using R. SPSS users should check the hints at the end of the exercise. All users: save you script/syntax for further use in exercise 2.
+
+### a.
+
+> Make sure the data are in your working directory (or specify the path to the directory where data are located before the filename) and load the data:
+
+```{r}
+pros <- read.csv(here("data", "Byar.csv"))
+str(pros)
+```
+
+### b.
+
+> Study the content of the resulting dataframe prostate (summary(prostate)), and see how the original variables have been categorized. Note especially how the status variable has been redefined into a new variable status1 with fewer (4) classes, using
+with(prostate, table(status, status1, exclude=NULL))
+
+```{r}
+epistats::tabl(pros$status, pros$status1)
+```
+
+### c.
+
+> Fit a cause specific regression for status1 category “Cancer death”:
+(Note that for older versions of the survival library the option ties in the coxph function is named method. You might need to change the following commands accordingly.)
+
+```{r}
+fit_ca <- coxph(Surv(dtime, status1 == "Cancer death") ~ rx1 + age1 + wt1 + pf1 + hx + hg1 + sz1 + sg1, data = pros, ties = "breslow")
+summary(fit_ca)
+```
+
+
+### d.
+
+> Do the same for specific causes “CVD death” and “Other death”.
+
+```{r}
+causes <- c("Cancer death", "CVD death", "Other death")
+fits <- map(causes, ~coxph(Surv(dtime, status1 == .x) ~ rx1 + age1 + wt1 + pf1 + hx + wt1 + hg1 + sz1 + sg1, data = pros, ties = "breslow"))
+fits %>%
+  map(broom::tidy) %>%
+  map("estimate") %>%
+  bind_cols() %>%
+  set_colnames(causes)
+```
+
+
+> SPSS users
+We reproduce the analysis from the lecture as far as possible. Using File, Read Text Data…, read the file prostate.csv with the Byar data into SPSS. You can mostly use the default choices (only in step 2 you need to change “Are variable names included at the top of your file?” to Yes). Continue to step 6 out of 6 and choose Finish.
+
+> The variables sz1, wt1, age1 and sg1 contain missing values (NA), and SPSS gives them type String. Change this to Numeric.
+
+> The data have already been preprocessed to facilitate reproduction of the analysis in the lecture (by categorizing various predictors) except for one last step:
+a.	Recategorize the variable status into status1, which should consist of 4 classes (0=Alive, 1=Cancer death (consisting of the original classes Prostatic cancer and Other cancer), 2=CVD death (consisting of Heart or vascular, Cerebrovascular and Pulmonary embolus) and 3=Other death (Respiratory disease, Other specific non-cancer, Unspecified non-cancer and Unknown cause). Hint: use Transform, Automatic recode… to first make status a Numeric variable with the original classes as value labels; then use Transform, Recode Into Different variables to regroup the classes into the four desired classes given above.
+b.	Use Cox regression with dtime and the new variable status1 to reproduce the cause-specific hazards regressions. For the status variable, choose the appropriate value for indicating the event for all three cause-specific hazard regressions.
+Note that the analysis in the lecture has been done with Breslow’s method of dealing with ties, which is SPSS’ default method.
+
+
+## 2. 
+
+> We continue with our analysis of the prostate cancer data, using R. SPSS users should check the help at the end of the exercise.
+
+### a.
+
+> Now do a sensitivity analysis of the data, assuming (scenario 1) that people who die from another cause, simultaneously die from the specific cause under study:
+
+```{r}
+fit.cancer1.worst1 <- coxph( Surv(dtime,status != "alive" )~
+rx1+age1+wt1+pf1+hx+hg1+sz1+sg1, data = pros, method = "breslow")
+fit.cancer1.worst1
+
+```
+
+### b.
+
+> Next do scenario 2, where it is assumed that people who die from another cause would never have died from the specific cause under study, and would have had a very large censoring time (equal to the largest observed time):
+
+```{r}
+pros$dtime.worst2 <- with(pros,ifelse(status1 %in% c("alive","Cancer death"), dtime, max(dtime)))
+fit.cancer1.worst2 <- coxph(Surv(dtime.worst2,status1 == "Cancer death")~ rx1+age1+wt1+pf1+hx+hg1+sz1+sg1, data = pros, method = "breslow")
+fit.cancer1.worst2
+
+```
+
+Compare differences
+
+```{r}
+library(broom)
+
+tidy(fit.cancer1.worst1)
+tidy(fit.cancer1.worst2)
+tidy(fit.cancer1.worst1)[, -1] - tidy(fit.cancer1.worst2)[, -1]
+```
+
+Redo for CVD
+
+```{r}
+fit.cvd.worst1 <- coxph( Surv(dtime,status != "alive" )~
+rx1+age1+wt1+pf1+hx+hg1+sz1+sg1, data = pros, method = "breslow")
+fit.cvd.worst1
+
+pros$dtime.worst2_cvd <- with(pros,ifelse(status1 %in% c("alive","CVD death"), dtime, max(dtime)))
+fit.cvd.worst2 <- coxph(Surv(dtime.worst2_cvd,status1 == "CVD death")~ rx1+age1+wt1+pf1+hx+hg1+sz1+sg1, data = pros, method = "breslow")
+fit.cvd.worst2
+
+abs(coef(fit.cvd.worst1) - coef(fit.cvd.worst2))
+
+
+
+
+
+```
+
+
+For other death
+
+```{r}
+fit_od <- coxph(Surv(dtime, status1 == "Other death") ~ rx1+age1+wt1+pf1+hx+hg1+sz1+sg1, data = pros, method = "breslow")
+
+pros$dtime.worst2_od <- with(pros,ifelse(status1 %in% c("alive","Other death"), dtime, max(dtime)))
+
+fit_od_w2 <- coxph(Surv(dtime.worst2_od,status1 == "Other death")~ rx1+age1+wt1+pf1+hx+hg1+sz1+sg1, data = pros, method = "breslow")
+
+coefs2 <- map(list(cause_specific = fit_od,
+         worst2 = fit_od_w2), broom::tidy) %>%
+  map("estimate") %>%
+  bind_cols()
+cbind(broom::tidy(fit_od)$term, coefs2, pmap_dbl(coefs2, ~abs(.x - .y)))
+
+```
+
+
+### c.
+
+> To use the Fine-Grey approach, we need another R library (or package), cmprsk. First install it and then load it (e.g. using the functions under the tab Packages). If you want to, you can have a look at the help file of the competing risk regression function crr, by typing
+?crr (or help(crr))
+
+```{r}
+library(cmprsk)
+```
+
+### d.
+
+> For this function, the data need to be in a specific format:
+
+```{r}
+ftime <- as.numeric(pros$dtime )
+cov <- as.matrix(pros[,c("rx1", "age1","wt1","pf1","hx","hg1","sz1","sg1")])
+
+```
+
+### e.
+
+> For cancer, other causes competing, "alive" = censoring:
+For cvd, other causes competing, "alive" = censoring
+
+```{r}
+fstatus1 <- as.numeric(pros$status %in% c("dead - prostatic ca","dead - other ca") )
+fstatus1 <- ifelse(pros$status=="alive",2,fstatus1)
+z1 <- crr(ftime,fstatus1,cov,failcode=1,cencode=2)
+summary(z1)
+
+fstatus2 <- as.numeric(pros$status %in% c("dead - heart or vascular","dead - cerebrovascular","dead - pulmonary embolus"))
+fstatus2 <- ifelse(pros$status=="alive",2,fstatus2)
+z2 <- crr(ftime,fstatus2,cov,failcode=1,cencode=2)
+summary(z2)
+
+```
+
+Cumulative incidence plot for cancer related death
+
+
+```{r}
+print(cinc1 <- with(pros,cuminc(ftime=dtime,fstatus=status1,cencode=1)))
+plot(cinc1,lty=1,color=1:4)
+
+```
+
+
+```{r}
+library(mstate)
+cinc <- with(pros, Cuminc(time = dtime, status = as.integer(status1), failcodes = 2:4))
+plot(cinc, ylim = c(0, 1), col = 2:4)
+```
+
+For only cancer vs non cancer
+
+```{r}
+# cinc2 <- with(pros, Cuminc(time = dtime, status = fstatus1, failcodes = 0:1))
+cinc2 <- with(pros, cuminc(ftime = dtime, fstatus = fstatus1, cencode = 2))
+plot(cinc2[[1]]$time, cinc2[[1]]$est, type = "l", ylim = c(0, 1)); 
+lines(cinc2[[2]]$time, 1 - cinc2[[2]]$est)
+```
+
+
+
+### f.
+
+> Quiz question: For which predictor variable for cause of death “Cancer” do the coefficients from the cause specific hazard regression and the Fine-Grey model have opposite signs?
+
+```{r}
+summary((z1))
+summary((fit_ca))
+```
+
+
+
+
+SPSS users
+Do a sensitivity analysis by
+1.	assuming that people who die from another cause than the one we are interested in, at the same time have the event of interest.
+2.	assuming that people who die from another cause than the one we are interested in, would never have died from the event of interest. You can do this by giving them a follow-up time equal to the maximum observed time (or any larger time, e.g. 100000).
+
+For each variable compare the coefficients from the sensitivity analysis to each other and to the coefficient from the cause specific hazard regression. For which variable are the differences biggest?
+
+
+3. 
+For this exercise we will make use of the dataset bmt (Bone Marrow Transplant). Read in the data using bmt <- read.table("bmt.dat", header = TRUE)
+A description of the variables can be found below:
+Description
+The bmt data frame has 137 rows and 22 columns.
+Format
+This data frame contains the following columns:
+group	Disease Group 1-ALL, 2-AML Low Risk, 3-AML High Risk
+t1 	Time To Death Or On Study Time
+t2 	Disease Free Survival Time (Time To Relapse, Death Or End Of Study)
+d1 	Death Indicator 1-Dead 0-Alive
+d2 	Relapse Indicator 1-Relapsed, 0-Disease Free
+d3 	Disease Free Survival Indicator 1-Dead Or Relapsed, 0-Alive Disease Free)
+ta 	Time To Acute Graft-Versus-Host Disease
+da	Acute GVHD Indicator 1-Developed Acute GVHD 0-Never Developed Acute GVHD)
+tc 	Time To Chronic Graft-Versus-Host Disease
+dc	Chronic GVHD Indicator 1-Developed Chronic GVHD 0-Never Developed Chronic GVHD
+tp	Time To Chronic Graft-Versus-Host Disease
+dp	Platelet Recovery Indicator 1-Platelets Returned To Normal, 0-Platelets Never Returned to Normal
+z1 	Patient Age In Years
+z2 	Donor Age In Years
+z3 	Patient Sex: 1-Male, 0-Female
+z4 	Donor Sex: 1-Male, 0-Female
+z5 	Patient CMV Status: 1-CMV Positive, 0-CMV Negative
+z6 	Donor CMV Status: 1-CMV Positive, 0-CMV Negative
+z7 	Waiting Time to Transplant In Days
+z8 	FAB: 1-FAB Grade 4 Or 5 and AML, 0-Otherwise
+z9 	Hospital: 1-The Ohio State University, 2-Alferd , 3-St. Vincent, 4-Hahnemann
+z10 	MTX Used as a Graft-Versus-Host- Prophylactic: 1-Yes 0-No
+
+In this exercise we will concentrate on disease free survival, and  distinguish between two competing risks, Death or Relapse. We will only use predictors group, dp, z8, z9 and z10. 
+
+a.	Perform a Cox PH regression for disease free survival, where we do not distinguish between death and relapse. Think about how to enter z9 into the model.
+b.	Entering z9 as a factor into the model, why do we get a warning and no estimate for z10? If we want to assess the effect of z10, how can we solve this problem? Run the new model. Do we prefer a model with z9, z10 or neither?
+c.	Make a new variable status that indicates whether for time variable t2 an individual was disease free (0), had died (1) or had relapsed (2).
+d.	Now do a cause specific Cox PH regression for death for variables factor(group), dp, z8 and factor(z9).
+e.	Do a cause specific Cox PH regression for relapse for variables group, dp, z8 and factor(z9).
+f.	Compare the coefficients of the models from parts (b), (d) and (e).
 
 

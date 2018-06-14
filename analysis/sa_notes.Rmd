@@ -14,21 +14,29 @@ Tutor: Rebecca Stellato
 
 
 - right censoring (e.g. mortality)
-- left censoring (e.g. when did you attract HIV)
-- double censored (both left and right)
-- interval censoring (event between 2 timepoints of checking)
+- left censoring (we know the person had the event, but not when; e.g. when did you attract HIV, time until first marijuana use; you don't know when it happend, but at least before some time)
+- double censored (both left and right, time until first marijuana use)
+- interval censoring (event between 2 timepoints of checking, e.g. screening programs)
 
 ### Truncation
 
-left truncation, usually due to study design.
+left truncation, usually due to study design. We know people had not have the event yet
+Conditioning on that people did not have the effect yet
 
-e.g. only look at risk of MI for patients older than 60y
-
-patients of congenital disease, only included from first presentation of symptoms
+- e.g. only look at risk of MI for patients older than 60y
+- patients of congenital disease, only included from first presentation of symptoms
+- survival analysis of residents in a retirement center
 
 right truncation: when all participants had the diagnosis, e.g. from a cancer registry
 
-## Kaplan-Meijer
+### Modeling
+
+Cox regression: right censoring and left truncation is no problem (risk set is dynamic along the time)
+uses start time, stop time and event indicator (= counting process notation)
+
+The other way is also possible (left censoring and right truncation; just by flipping time)
+
+## Kaplan-Meier
 
 Standard error: Greenwood standard error (default)
 
@@ -58,6 +66,10 @@ Cohort when age is inclusion study, only at risk after inclusion
 - number at risk at first is very low. Early events can have a big influence 
 on the survival curve
 
+
+## Joint modeling
+
+combines survival outcomes and time-varying covariates (can include transitions in covariates, slopes, cumulatives)
 
 # Questions on model checking
 
