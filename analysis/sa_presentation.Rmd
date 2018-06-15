@@ -1,0 +1,239 @@
+---
+title: "Survivival analysis presentation - cigarette stains"
+author: "Wouter van Amsterdam"
+date: "6/15/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Setup R
+
+
+
+```{r}
+library(here)
+library(dplyr)
+library(ggplot2)
+library(magrittr)
+library(data.table)
+library(purrr)
+library(survival)
+```
+
+Get data
+
+```{r}
+stain <- read.csv(here("data", "tobaccostain.csv"))
+stain <- stain[-9,]
+str(stain)
+```
+
+Recode some
+
+```{r}
+stain %<>%
+  mutate(
+    age_at_time = age + time_death_days / 365.24,
+    id = 1:n(),
+    cigs_per_year = pyu / tobacco_years, 
+    cigs_at_age_0 = pyu - cigs_per_year * age,
+    tobacco_years_at_0 = tobacco_years - age)
+```
+
+Check if all cigs at 0 are below 0
+
+```{r}
+stain$cigs_at_age_0
+```
+
+
+Create time-varying variable for pack-years
+
+```{r}
+event_times <- filter(stain, death == 1) %>% pull(age_at_time) %>% sort
+setDT(stain)
+
+id_times <- expand.grid(id = stain$id, time1 = head(event_times, -1))
+setDT(id_times)
+id_times[, `:=`(time2 = tail(event_times, -1),
+                time_point = 1:.N), by = "id"]
+
+st_long <- merge(stain, id_times, by = "id")
+st_long <- st_long[, `:=`(
+  first_time = min(time_point[age < time2]),
+  last_time = as.integer(min(max(time_point), min(time_point[time1 >= age_at_time])))), by = "id"]
+st_long <- st_long[time_point > first_time & time_point < last_time]
+st_long[time_point == first_time, time1:=age, by = "id"]
+st_long[, `:=`(
+  pytv = cigs_at_age_0 + cigs_per_year * time1,
+  tobacco_years_tv = tobacco_years_at_0 + time1)]
+st_long[, event:=0]
+st_long[death == 1, event_timepoint := max(time_point), by = "id"]
+st_long[death == 1 & time_point == event_timepoint, event :=1]
+```
+
+
+
+View some distributions
+
+
+
+
+```{r}
+cont_vars <- c("age", "bmi", "tobacco_years", "pyu")
+stain %>% as.data.table %>%
+  melt.data.table(id.vars = "stain", measure.vars = cont_vars) %>%
+  mutate(stain = factor(stain)) %>%
+  ggplot(aes(x = value, fill = stain)) + 
+  geom_histogram(alpha = .7) + 
+  facet_wrap(~variable, scales = "free")
+```
+
+Plot outcomes
+
+```{r}
+stain %>%
+  arrange(-age) %>%
+  mutate(id2 = 1:n(),
+         death = factor(death, levels = c(1, 0), labels = c("yes", "no"))
+         ) %>%
+  ggplot() + geom_linerange(aes(x = id2, ymin = age, ymax = age_at_time, 
+                                col = death)) +
+  # geom_point(aes(x = id2, y = age_at_time), alpha = .5) + 
+  coord_flip() + lims(y = c(20, 100)) + 
+  theme_minimal() + 
+  labs(x = "") + ggplot2::scale_x_continuous(breaks = NULL) + 
+  ggtitle("Overview of follow-up of participants included in the study")
+```
+
+
+
+Check functional form of variables
+
+```{r}
+require(dplyr); require(purrr); require(survival)
+all_covs   <- c("stain", "sex", "age", "bmi", "hypertension", 
+"comorbid_cancer", "harmful_alcohol_use", "tobacco_years", "pyu", 
+"cigarette_no_filters")
+
+form_covs  <- c("age", "bmi", "tobacco_years", "pyu")
+square <- function(x) x^2
+transforms <- c("I", "log", "square", "sqrt")
+form0 <- Surv(time_death_days, death) ~ 1
+
+par(mfrow = c(length(form_covs), length(transforms)))
+
+part_resids <- map_df(form_covs, function(x) 
+  map_df(transforms, function(trans_func) {
+    # store function name for printing / plotting and grab actual function from 
+    # environment 
+    
+    func_name = trans_func
+    trans_func = get(trans_func)
+    dat = stain %>% mutate_at(vars(x), funs(trans_func))
+    # cox fit of all covariates except x
+    cph_fit = coxph(reformulate(setdiff(all_covs, x), form0[[2]]), data = dat)
+    cph_resids = resid(cph_fit, type = "martingale")
+    
+    # lm fit of x, based on other covariates
+    # lm_resids = resid(lm(reformulate(setdiff(all_covs, x), x), data = dat), type = "response")
+    
+    data.frame(x = dat[[x]], resids = cph_resids)
+    
+    # plots
+    # plot(dat[[x]], cph_resids, xlab = paste(as.expression(trans_func), x));
+    # lines(lowess(dat[[x]], cph_resids))
+    # plot(lm_resids, cph_resids, 
+    # plot(dat[[x]], cph_resids, 
+    #      xlab = paste0(func_name, "(", x, ")"));
+         # xlab = x)
+    # lines(lowess(lm_resids, cph_resids))
+    # lines(lowess(dat[[x]], cph_resids))
+  }, .id = "transformation"),
+  .id = "variable"
+)
+
+part_resids %<>% mutate(
+  variable = factor(variable, levels = seq_len(length(form_covs)), labels = form_covs),
+  transformation = factor(transformation, levels = seq_len(length(transforms)), labels = transforms)
+)
+
+part_resids %>%
+  # filter(variable == "bmi" & transformation %in% c("I", "log")) %>%
+  group_by(variable, transformation) %>%
+  mutate_at(vars(x), scale, center = T, scale = T) %>%
+  ungroup() %>%
+  ggplot(aes(x = x, y = resids)) +
+  geom_point() + 
+  geom_smooth() + 
+  facet_grid(variable ~ transformation, scales = "free")
+
+```
+
+Check proportionality
+
+```{r}
+survfit(Surv(time_death_days, death) ~ stain, data = stain) %>% plot(fun = "cloglog")
+```
+
+
+```{r}
+# fit1 <- coxph(Surv(age, age_at_time, death) ~ stain + sex + bmi + hypertension + comorbid_cancer + harmful_alcohol_use + tobacco_years + cigs_per_year * cigarette_no_filters, 
+#               data = stain)
+# summary(fit1)
+require(rms)
+
+fit2 <- coxph(Surv(time1, time2, event) ~ stain + sex + bmi + hypertension + comorbid_cancer + harmful_alcohol_use + rcs(tobacco_years_tv, 4)  + cigarette_no_filters +  rcs(pytv, 4), 
+              data = st_long)
+drop1(fit2, test = "Chisq")
+
+fit3 <- coxph(Surv(time1, time2, event) ~ stain + sex + bmi + hypertension + comorbid_cancer + harmful_alcohol_use + tobacco_years_tv  + cigarette_no_filters * pytv, 
+              data = st_long)
+drop1(fit3, test = "Chisq")
+
+# summary(fit2)
+anova(fit2, fit3)
+
+```
+
+Matched analysis
+
+```{r}
+fit3_m <- coxph(Surv(time1, time2, event) ~ stain + sex + bmi + hypertension + comorbid_cancer + harmful_alcohol_use + tobacco_years  + cigarette_no_filters *  pytv + 
+                  frailty(pair, dist = "gauss"), 
+              data = st_long[matched == 1])
+
+summary(fit3_m)
+
+
+```
+
+
+```{r}
+cbind(coef(fit3), coef(fit3_m))
+```
+
+
+
+
+Plot coefficients
+
+```{r}
+cox.zph(fit3)
+summary(fit3)$coefficients[, c(1, 3)]
+summary(fit3_m)$coefficients[-10, c(1, 2)]
+
+```
+
+```{r}
+coefplot(fit3) + theme_classic() + lims(x = c(-3, 8))
+coefplot(fit3_m) + scale_color_discrete() + theme_classic() + lims(x = c(-3, 8))
+```
+
+
+
+
+
